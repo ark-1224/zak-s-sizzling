@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* Design tokens ported from kiosk.html (Downloads/kiosk.html, lines 10-27), rebranded
+   from "Kalan House" to Zak's Sizzling Hub. Kept as CSS custom properties so both plain
+   CSS and Tailwind utilities (via @theme inline below) can reference the same values. */
+:root {
+  --cream: #f7eedf;
+  --paper: #efe0c4;
+  --ink: #2a2018;
+  --ink-soft: #6e5d4b;
+  --matcha: #d8592b; /* ember - primary brand accent */
+  --matcha-deep: #7a2a14; /* deep char-ember - header/active states */
+  --honey: #cc8a2e; /* mustard - price/cta accent */
+  --honey-soft: #f1dbaa;
+  --berry: #9c2e1c; /* chili - allergen accent */
+  --available: #5f7a3d; /* olive green - in-stock signal only */
+  --line: #e1d0ae;
+  --white: #ffffff;
+  --grey-out: #a69a88;
+  --radius-card: 22px 8px 22px 8px;
+  --radius-soft: 14px;
+  --shadow: 0 10px 28px -14px rgba(42, 32, 24, 0.4);
+}
+
+@theme inline {
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-matcha: var(--matcha);
+  --color-matcha-deep: var(--matcha-deep);
+  --color-honey: var(--honey);
+  --color-honey-soft: var(--honey-soft);
+  --color-berry: var(--berry);
+  --color-available: var(--available);
+  --color-line: var(--line);
+  --color-grey-out: var(--grey-out);
+
+  --radius-card: 22px 8px 22px 8px;
+  --radius-soft: 14px;
+
+  --shadow-card: 0 10px 28px -14px rgba(42, 32, 24, 0.4);
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+}

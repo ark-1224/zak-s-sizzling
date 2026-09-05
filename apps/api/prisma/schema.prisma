@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  staff
+  customer
+
+  @@map("user_role")
+}
+
+enum OrderStatus {
+  pending
+  confirmed
+  preparing
+  ready
+  completed
+  cancelled
+
+  @@map("order_status")
+}
+
+enum PaymentMethod {
+  gcash
+  maya
+  counter
+
+  @@map("payment_method")
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  failed
+  refunded
+
+  @@map("payment_status")
+}
+
+enum KitchenStatus {
+  pending
+  in_progress
+  completed
+
+  @@map("kitchen_status")
+}
+
+model Role {
+  id    Int      @id @default(autoincrement())
+  name  UserRole @unique
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(120)
+  email        String   @unique @db.VarChar(160)
+  passwordHash String   @map("password_hash")
+  roleId       Int      @map("role_id")
+  role         Role     @relation(fields: [roleId], references: [id])
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([roleId])
+  @@map("users")
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique @db.VarChar(80)
+  icon      String?   @db.VarChar(8)
+  sortOrder Int       @default(0) @map("sort_order")
+  isNew     Boolean   @default(false) @map("is_new")
+  products  Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String      @db.VarChar(150)
+  price       Decimal     @db.Decimal(10, 2)
+  barcode     String?     @db.VarChar(64)
+  categoryId  Int         @map("category_id")
+  category    Category    @relation(fields: [categoryId], references: [id])
+  description String?
+  icon        String?     @db.VarChar(8)
+  ingredients String[]    @default([])
+  allergens   String[]    @default([])
+  calories    Int?
+  proteinG    Decimal?    @map("protein_g") @db.Decimal(6, 2)
+  carbsG      Decimal?    @map("carbs_g") @db.Decimal(6, 2)
+  sugarG      Decimal?    @map("sugar_g") @db.Decimal(6, 2)
+  isAvailable Boolean     @default(true) @map("is_available")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  inventory   Inventory?
+  orderItems  OrderItem[]
+
+  @@unique([barcode])
+  @@index([categoryId])
+  @@map("products")
+}
+
+model Inventory {
+  id                Int      @id @default(autoincrement())
+  productId         String   @unique @map("product_id") @db.Uuid
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  stockQty          Int      @default(0) @map("stock_qty")
+  minStockThreshold Int      @default(5) @map("min_stock_threshold")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("inventory")
+}
+
+model Order {
+  id             String      @id @default(uuid()) @db.Uuid
+  orderNumber    String      @unique @map("order_number") @db.VarChar(20)
+  customerName   String?     @map("customer_name") @db.VarChar(120)
+  kioskSessionId String?     @map("kiosk_session_id") @db.VarChar(64)
+  source         String      @default("kiosk") @db.VarChar(20)
+  status         OrderStatus @default(pending)
+  totalAmount    Decimal     @default(0) @map("total_amount") @db.Decimal(10, 2)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  items          OrderItem[]
+  payment        Payment?
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id                   String        @id @default(uuid()) @db.Uuid
+  orderId              String        @map("order_id") @db.Uuid
+  order                Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId            String        @map("product_id") @db.Uuid
+  product              Product       @relation(fields: [productId], references: [id])
+  qty                  Int
+  unitPrice            Decimal       @map("unit_price") @db.Decimal(10, 2)
+  subtotal             Decimal       @db.Decimal(10, 2)
+  specialInstructions  String?       @map("special_instructions") @db.VarChar(140)
+  createdAt            DateTime      @default(now()) @map("created_at")
+  kitchenTask          KitchenTask?
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  orderId        String        @unique @map("order_id") @db.Uuid
+  order          Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method         PaymentMethod
+  status         PaymentStatus @default(pending)
+  amount         Decimal       @db.Decimal(10, 2)
+  reference      String?       @unique @db.VarChar(100)
+  gatewayPayload Json?         @map("gateway_payload")
+  paidAt         DateTime?     @map("paid_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("payments")
+}
+
+model KitchenTask {
+  id          String        @id @default(uuid()) @db.Uuid
+  orderItemId String        @unique @map("order_item_id") @db.Uuid
+  orderItem   OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  status      KitchenStatus @default(pending)
+  startedAt   DateTime?     @map("started_at")
+  completedAt DateTime?     @map("completed_at")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@index([status])
+  @@map("kitchen_tasks")
+}
