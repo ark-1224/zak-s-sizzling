@@ -48,3 +48,68 @@ export async function getProductById(id: string): Promise<Product | null> {
   });
   return product ? toProductDTO(product) : null;
 }
+
+export async function getProductByBarcode(barcode: string): Promise<Product | null> {
+  const product = await prisma.product.findUnique({
+    where: { barcode },
+    include: { category: true, inventory: true },
+  });
+  return product ? toProductDTO(product) : null;
+}
+
+interface ProductInput {
+  name: string;
+  price: number;
+  barcode?: string;
+  categoryId: number;
+  description?: string;
+  icon?: string;
+  stockQty: number;
+  minStockThreshold: number;
+}
+
+export async function createProduct(input: ProductInput): Promise<Product> {
+  const product = await prisma.product.create({
+    data: {
+      name: input.name,
+      price: input.price,
+      barcode: input.barcode || null,
+      categoryId: input.categoryId,
+      description: input.description,
+      icon: input.icon,
+      inventory: { create: { stockQty: input.stockQty, minStockThreshold: input.minStockThreshold } },
+    },
+    include: { category: true, inventory: true },
+  });
+  return toProductDTO(product);
+}
+
+export async function updateProduct(id: string, input: Partial<ProductInput> & { isAvailable?: boolean }): Promise<Product> {
+  const product = await prisma.product.update({
+    where: { id },
+    data: {
+      name: input.name,
+      price: input.price,
+      barcode: input.barcode === undefined ? undefined : input.barcode || null,
+      categoryId: input.categoryId,
+      description: input.description,
+      icon: input.icon,
+      isAvailable: input.isAvailable,
+      inventory:
+        input.stockQty !== undefined || input.minStockThreshold !== undefined
+          ? {
+              upsert: {
+                update: { stockQty: input.stockQty, minStockThreshold: input.minStockThreshold },
+                create: { stockQty: input.stockQty ?? 0, minStockThreshold: input.minStockThreshold ?? 5 },
+              },
+            }
+          : undefined,
+    },
+    include: { category: true, inventory: true },
+  });
+  return toProductDTO(product);
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await prisma.product.delete({ where: { id } });
+}

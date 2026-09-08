@@ -3,6 +3,7 @@ import { createCheckoutSession, parseWebhookEvent, verifyWebhookSignature } from
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
+import { deductStockForOrder } from "../inventory/service";
 
 async function loadPayableOrder(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -62,6 +63,7 @@ export async function confirmCounterPayment(orderId: string) {
     prisma.order.update({ where: { id: order.id }, data: { status: "confirmed" } }),
   ]);
 
+  await deductStockForOrder(order.id); // also emits inventory:updated per line item
   emitPaymentConfirmed(order);
   return getOrderById(order.id);
 }
@@ -85,5 +87,6 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     prisma.order.update({ where: { id: order.id }, data: { status: "confirmed" } }),
   ]);
 
+  await deductStockForOrder(order.id);
   emitPaymentConfirmed(order);
 }

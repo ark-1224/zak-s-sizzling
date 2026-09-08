@@ -38,7 +38,22 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   the counter-payment receipt with a toast explaining online payment isn't set up yet
   (verified live). See "Payments" below for what's needed to test the real gateway path.
 
-Sprint 4 (inventory management, barcode scanning, real-time stock) is next.
+- **Sprint 4** — inventory management, barcode scanning, real-time stock. Full product
+  CRUD (`/admin/products`) and stock management (`/admin/inventory`, low-stock alerts)
+  confirmed live. Barcode lookup (`GET /api/products/barcode/:code`) confirmed via a
+  manually-entered barcode; the scanner-speed keystroke detection (`useBarcodeScanner`)
+  follows the standard HID keyboard-wedge pattern but wasn't distinctly verified against
+  real scanner hardware — hard to simulate genuine scanner-speed input through browser
+  automation. Most notably: **stock deduction tied to payment confirmation and its
+  real-time WebSocket broadcast were verified live** — confirming a paid order deducted
+  stock in the database, and a kiosk browser tab that was never refreshed flipped the
+  affected product to "SOLD OUT" purely from the `inventory:updated` Socket.IO event.
+  One bug was found and fixed during this: a product-deletion safety check (blocking
+  deletion of products with order history) wasn't catching the actual Prisma error type
+  Postgres returns for that constraint, silently falling through to a raw 500 — now
+  returns a proper 409 with a clear message.
+
+Sprint 5 (kitchen display, analytics, backups, data export) is next.
 
 **Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
 any real deployment — it's a dev-only default.

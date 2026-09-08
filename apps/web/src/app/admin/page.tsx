@@ -1,12 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getStoredUser, logout } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import type { AuthUser } from "@zaks/shared-types";
 
-// Placeholder admin landing page — proves the auth/RBAC round-trip end to end.
-// Sprint 4/5 replace this with the real Products/Inventory/Analytics/Users modules.
+const LINKS = [
+  { href: "/admin/products", label: "Products", blurb: "Add, edit, and manage the menu catalog" },
+  { href: "/admin/inventory", label: "Inventory", blurb: "Stock levels, adjustments, low-stock alerts" },
+  { href: "/staff/orders", label: "Orders awaiting payment", blurb: "Confirm counter payments" },
+];
+
 export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -23,10 +28,20 @@ export default function AdminPage() {
           Signed in as <strong>{user.name}</strong> ({user.role})
         </p>
       )}
-      <p className="mt-4 max-w-prose text-sm text-ink-soft">
-        Product/inventory management, analytics, and user administration ship in Sprints
-        4-5. This page currently only proves the Sprint 1 auth + RBAC round-trip.
-      </p>
+
+      <div className="mt-6 grid max-w-xl gap-3">
+        {LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="rounded-xl border border-line bg-white p-4 transition-colors hover:border-matcha"
+          >
+            <div className="font-semibold text-matcha-deep">{link.label}</div>
+            <div className="text-sm text-ink-soft">{link.blurb}</div>
+          </Link>
+        ))}
+      </div>
+
       <button
         onClick={() => {
           logout();
