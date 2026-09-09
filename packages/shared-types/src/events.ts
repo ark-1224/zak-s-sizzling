@@ -1,5 +1,5 @@
-// Socket.IO event map — Sprint 5 will add kitchen-queue events on top of these.
-// Declared now so both apps/api and apps/web import the same typed contract from day one.
+// Socket.IO event map. Declared here so both apps/api and apps/web import the same
+// typed contract from day one.
 
 export interface InventoryUpdatedEvent {
   productId: string;
@@ -13,9 +13,22 @@ export interface PaymentConfirmedEvent {
   kioskSessionId: string | null;
 }
 
+export interface OrderCreatedEvent {
+  orderId: string;
+  orderNumber: string;
+}
+
+export interface KitchenTaskUpdatedEvent {
+  taskId: string;
+  orderId: string;
+  status: "pending" | "in_progress" | "completed";
+}
+
 export interface ServerToClientEvents {
   "inventory:updated": (payload: InventoryUpdatedEvent) => void;
   "payment:confirmed": (payload: PaymentConfirmedEvent) => void;
+  "order:created": (payload: OrderCreatedEvent) => void;
+  "kitchen:task_updated": (payload: KitchenTaskUpdatedEvent) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

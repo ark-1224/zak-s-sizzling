@@ -4,6 +4,7 @@ import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
 import { deductStockForOrder } from "../inventory/service";
+import { createKitchenTasksForOrder } from "../kitchen/service";
 
 async function loadPayableOrder(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -64,6 +65,7 @@ export async function confirmCounterPayment(orderId: string) {
   ]);
 
   await deductStockForOrder(order.id); // also emits inventory:updated per line item
+  await createKitchenTasksForOrder(order.id); // also emits order:created
   emitPaymentConfirmed(order);
   return getOrderById(order.id);
 }
@@ -88,5 +90,6 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
   ]);
 
   await deductStockForOrder(order.id);
+  await createKitchenTasksForOrder(order.id);
   emitPaymentConfirmed(order);
 }

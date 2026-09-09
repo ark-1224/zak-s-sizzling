@@ -81,3 +81,40 @@ export interface OrderDTO {
   items: OrderItemDTO[];
   payment: PaymentDTO | null;
 }
+
+export type KitchenTaskStatus = "pending" | "in_progress" | "completed";
+
+export interface KitchenTaskDTO {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  orderCreatedAt: string;
+  productId: string;
+  productName: string;
+  productIcon: string | null;
+  qty: number;
+  specialInstructions: string | null;
+  status: KitchenTaskStatus;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export interface SalesReportPoint {
+  bucket: string; // e.g. "2026-09-10" for daily, ISO week/month key for weekly/monthly
+  orderCount: number;
+  revenue: number;
+}
+
+export interface TopProductPoint {
+  productId: string;
+  productName: string;
+  qtySold: number;
+  revenue: number;
+}
+
+export interface InventoryMovementPoint {
+  productId: string;
+  productName: string;
+  qtySold: number;
+  currentStock: number | null;
+}

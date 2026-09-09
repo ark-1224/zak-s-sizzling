@@ -3,9 +3,9 @@
 Web-based self-service kiosk with integrated real-time stock inventory and transaction
 management, built for Zak's Sizzling Hub (STI College Bacoor capstone project).
 
-Full roadmap: see the plan this was scaffolded from — Sprint 1 (auth, roles, read-only
-catalog) is the current milestone. Sprints 2-5 (cart/ordering, payments, inventory/barcode,
-kitchen display/analytics) are not built yet.
+All 5 sprints from the original plan are built and verified — see "Status" below for
+what's been confirmed live versus what's still a known gap (PWA/offline sync, hardware
+receipt printing, Railway deployment).
 
 ## Structure
 
@@ -13,7 +13,7 @@ kitchen display/analytics) are not built yet.
 apps/
   web/      Next.js 14 App Router — kiosk, staff, admin, kitchen UI
   api/      Express REST + Socket.IO server, Prisma/PostgreSQL
-  worker/   Scheduled jobs (backups, low-stock sweep) — added in Sprint 5
+  worker/   Scheduled jobs — nightly DB backup, hourly low-stock sweep (node-cron)
 packages/
   shared-types/   Types shared between web and api (entities, WS event map)
 ```
@@ -53,7 +53,31 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   Postgres returns for that constraint, silently falling through to a raw 500 — now
   returns a proper 409 with a clear message.
 
-Sprint 5 (kitchen display, analytics, backups, data export) is next.
+- **Sprint 5** — kitchen display, analytics, backups, data export. **The core
+  requirement — a paid order reaching the kitchen and its status changes broadcasting
+  live — was verified end to end**: confirmed a payment via the API, watched the order
+  appear on `/kitchen` in a browser tab that was never refreshed (via the `order:created`
+  WebSocket event), advanced it Pending → In Progress → Completed (each step confirmed
+  live via `kitchen:task_updated`, with `startedAt`/`completedAt` timestamps set
+  correctly), and watched it drop off the active queue on completion. `/admin/analytics`
+  renders real aggregate queries (sales by day/week/month, top-selling products,
+  inventory movement) — confirmed against actual order data, charts included, not just
+  the API response. CSV export confirmed working for all three report types; PDF/XLSX
+  export are **not implemented** (would need `pdfkit`/`exceljs` — flagged rather than
+  half-built) and return a clear `501` instead of failing silently. The worker's nightly
+  backup job was run manually (can't wait for the real 2 AM trigger) and produced a real,
+  valid 28KB PostgreSQL dump; the hourly low-stock sweep was also run manually and
+  correctly identified all 3 out-of-stock products. Two things worth knowing:
+  "inventory movement" is derived from confirmed order items (units sold), not a
+  dedicated stock-adjustment ledger — the schema doesn't have one, so manual stock
+  corrections aren't reflected in that report, only sales-driven movement. And the
+  worker's backup file is only written to local disk — uploading it to off-server
+  storage (needed once this runs on Railway, whose filesystem is ephemeral) isn't
+  implemented, since no object storage credentials are configured in this environment.
+
+All 5 sprints from the original plan are now built. Remaining known gaps: PWA/offline
+sync, hardware receipt-printer integration, and actual deployment to Railway — none of
+this has run anywhere but `localhost` yet.
 
 **Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
 any real deployment — it's a dev-only default.
@@ -91,7 +115,17 @@ npm run dev
 ```
 
 This starts the Express API on `http://localhost:4000` and the Next.js app on
-`http://localhost:3000` together (via `concurrently`).
+`http://localhost:3000` together (via `concurrently`). The worker isn't part of this —
+run it separately (`npm run dev:worker`) only when you want the scheduled jobs live, or
+trigger a job once without waiting for its schedule:
+
+```bash
+npm run backup:now      # requires PG_DUMP_PATH set to pg_dump's location on this machine
+npm run low-stock:now
+```
+
+Backups are written to `apps/worker/backups/` (gitignored — these are real dumps of
+whatever data is in the database, not something to commit).
 
 ## Sprint 1 verification checklist
 

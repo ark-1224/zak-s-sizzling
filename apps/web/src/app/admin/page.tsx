@@ -9,6 +9,8 @@ import type { AuthUser } from "@zaks/shared-types";
 const LINKS = [
   { href: "/admin/products", label: "Products", blurb: "Add, edit, and manage the menu catalog" },
   { href: "/admin/inventory", label: "Inventory", blurb: "Stock levels, adjustments, low-stock alerts" },
+  { href: "/admin/analytics", label: "Analytics", blurb: "Sales, top sellers, inventory movement, export" },
+  { href: "/kitchen", label: "Kitchen Display", blurb: "Real-time order prep queue" },
   { href: "/staff/orders", label: "Orders awaiting payment", blurb: "Confirm counter payments" },
 ];
 

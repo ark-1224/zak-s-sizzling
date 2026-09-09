@@ -6,9 +6,11 @@ import type { Request } from "express";
 import { authRouter } from "./modules/auth/routes";
 import { categoriesRouter } from "./modules/categories/routes";
 import { inventoryRouter } from "./modules/inventory/routes";
+import { kitchenRouter } from "./modules/kitchen/routes";
 import { ordersRouter } from "./modules/orders/routes";
 import { paymentsRouter } from "./modules/payments/routes";
 import { productsRouter } from "./modules/products/routes";
+import { reportsRouter } from "./modules/reports/routes";
 import { usersRouter } from "./modules/users/routes";
 
 export function createApp() {
@@ -31,9 +33,11 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/categories", categoriesRouter);
   app.use("/api/inventory", inventoryRouter);
+  app.use("/api/kitchen", kitchenRouter);
   app.use("/api/orders", ordersRouter);
   app.use("/api/payments", paymentsRouter);
   app.use("/api/products", productsRouter);
+  app.use("/api/reports", reportsRouter);
   app.use("/api/users", usersRouter);
 
   app.use(notFoundHandler);

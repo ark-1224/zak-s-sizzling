@@ -10,9 +10,12 @@
     "dev": "concurrently -k -n api,web -c blue,green \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w apps/web",
+    "dev:worker": "npm run dev -w apps/worker",
     "db:migrate": "npm run db:migrate -w apps/api",
     "db:seed": "npm run db:seed -w apps/api",
-    "db:studio": "npm run db:studio -w apps/api"
+    "db:studio": "npm run db:studio -w apps/api",
+    "backup:now": "npm run backup:now -w apps/worker",
+    "low-stock:now": "npm run low-stock:now -w apps/worker"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
