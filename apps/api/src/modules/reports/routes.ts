@@ -3,7 +3,7 @@ import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { toCSV } from "../../lib/csv";
-import { getInventoryMovement, getSalesReport, getTopProducts } from "./service";
+import { getInventoryMovement, getProfitability, getSalesReport, getTopProducts } from "./service";
 
 export const reportsRouter = Router();
 
@@ -36,6 +36,14 @@ reportsRouter.get("/inventory-movement", authenticate, authorize("admin", "staff
   }
 });
 
+reportsRouter.get("/profitability", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+  try {
+    res.json(await getProfitability());
+  } catch (err) {
+    next(err);
+  }
+});
+
 // CSV is fully implemented; PDF/XLSX are not (would need pdfkit/exceljs — flagging
 // rather than half-building them). Returns 501 for those so the frontend can show a
 // clear message instead of failing silently.
@@ -54,6 +62,19 @@ reportsRouter.get("/export", authenticate, authorize("admin", "staff"), async (r
       const rows = await getTopProducts(1000);
       csv = toCSV(rows.map((r) => ({ Product: r.productName, "Qty Sold": r.qtySold, "Revenue (PHP)": r.revenue })));
       filename = "top-products.csv";
+    } else if (type === "profitability") {
+      const rows = await getProfitability();
+      csv = toCSV(
+        rows.map((r) => ({
+          Product: r.productName,
+          "Cost (PHP)": r.cost ?? "",
+          "Price (PHP)": r.price,
+          "Margin %": r.marginPct !== null ? r.marginPct.toFixed(1) : "",
+          "Qty Sold": r.qtySold,
+          "Gross Profit (PHP)": r.grossProfit !== null ? r.grossProfit.toFixed(2) : "",
+        }))
+      );
+      filename = "profitability.csv";
     } else if (type === "inventory-movement") {
       const rows = await getInventoryMovement();
       csv = toCSV(

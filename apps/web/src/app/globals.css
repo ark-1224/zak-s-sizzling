@@ -20,6 +20,30 @@
   --radius-card: 22px 8px 22px 8px;
   --radius-soft: 14px;
   --shadow: 0 10px 28px -14px rgba(42, 32, 24, 0.4);
+
+  /* Admin/back-office palette, ported from the Stock Inventory System UI mockup
+     (Downloads/Stock Inventory System UI Mockups/Stock Inventory System.dc.html) —
+     "adm-" prefixed so it never collides with the kiosk tokens above. Deliberately a
+     separate, cooler, data-dense look: the kiosk is customer-facing and warm, the
+     admin/back-office is staff-facing and optimized for scanning tables of numbers. */
+  --adm-bg: #f7f6f3;
+  --adm-surface: #ffffff;
+  --adm-surface-2: #f2f0eb;
+  --adm-line: #e3dfd7;
+  --adm-line-soft: #eceae4;
+  --adm-ink: #1c1b18;
+  --adm-ink-2: #57534a;
+  --adm-ink-3: #8d887d;
+  --adm-accent: #b5502a;
+  --adm-accent-ink: #ffffff;
+  --adm-accent-soft: #f8ebe5;
+  --adm-accent-deep: #8f3d1f;
+  --adm-ok: #3f7a52;
+  --adm-ok-soft: #e8f1ea;
+  --adm-warn: #a8761c;
+  --adm-warn-soft: #f8f0dd;
+  --adm-bad: #a63d2f;
+  --adm-bad-soft: #f8e7e3;
 }
 
 @theme inline {
@@ -43,6 +67,28 @@
   --radius-soft: 14px;
 
   --shadow-card: 0 10px 28px -14px rgba(42, 32, 24, 0.4);
+
+  --font-adm-sans: var(--font-archivo);
+  --font-adm-mono: var(--font-space-mono);
+
+  --color-adm-bg: var(--adm-bg);
+  --color-adm-surface: var(--adm-surface);
+  --color-adm-surface-2: var(--adm-surface-2);
+  --color-adm-line: var(--adm-line);
+  --color-adm-line-soft: var(--adm-line-soft);
+  --color-adm-ink: var(--adm-ink);
+  --color-adm-ink-2: var(--adm-ink-2);
+  --color-adm-ink-3: var(--adm-ink-3);
+  --color-adm-accent: var(--adm-accent);
+  --color-adm-accent-ink: var(--adm-accent-ink);
+  --color-adm-accent-soft: var(--adm-accent-soft);
+  --color-adm-accent-deep: var(--adm-accent-deep);
+  --color-adm-ok: var(--adm-ok);
+  --color-adm-ok-soft: var(--adm-ok-soft);
+  --color-adm-warn: var(--adm-warn);
+  --color-adm-warn-soft: var(--adm-warn-soft);
+  --color-adm-bad: var(--adm-bad);
+  --color-adm-bad-soft: var(--adm-bad-soft);
 }
 
 body {

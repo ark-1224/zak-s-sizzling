@@ -94,6 +94,7 @@ model Product {
   category    Category    @relation(fields: [categoryId], references: [id])
   description String?
   icon        String?     @db.VarChar(8)
+  cost        Decimal?    @db.Decimal(10, 2)
   ingredients String[]    @default([])
   allergens   String[]    @default([])
   calories    Int?

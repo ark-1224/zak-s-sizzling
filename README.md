@@ -79,6 +79,27 @@ All 5 sprints from the original plan are now built. Remaining known gaps: PWA/of
 sync, hardware receipt-printer integration, and actual deployment to Railway — none of
 this has run anywhere but `localhost` yet.
 
+- **Post-Sprint-5: bulk import, user management, cost/profitability, admin redesign**
+  — three gaps identified against a UI mockup reference and the manuscript's own
+  requirements (bulk CSV import and user administration were both explicitly required
+  but never built; per-item profitability needed a `cost` field the schema didn't
+  have). All three were built and verified live: a CSV with a mix of new, updating,
+  and invalid rows produced exactly the expected created/updated/error counts (matched
+  by barcode); a staff account was created, confirmed it can log in, confirmed its
+  sidebar correctly hides "Users & roles", and confirmed hitting `/admin/users`
+  directly still redirects it away — **and confirmed the server itself rejects a staff
+  token with a real 403** (not just a client-side redirect), confirmed an admin can't
+  self-suspend or self-demote (400), and confirmed a suspended account is actually
+  refused login (401), not just hidden in the UI. Profitability renders real
+  cost/price margins from actual sales. The admin/back-office UI was also restyled to
+  a distinct data-dense look (Archivo + Space Mono, new `adm-*` design tokens,
+  persistent sidebar) — deliberately kept separate from the customer kiosk's warm
+  branding, which is untouched. Two scope decisions made and documented in code
+  comments: the mockup's "kiosk/admin/super" role model was **not** adopted (kept our
+  existing admin/staff/customer roles, matching the manuscript's own User Level
+  Diagram); and payment void/refund tracking from the mockup was **not** built, since
+  the manuscript's Limitations section explicitly excludes it.
+
 **Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
 any real deployment — it's a dev-only default.
 

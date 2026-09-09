@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import type { InventoryMovementPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
+import type { InventoryMovementPoint, ProfitabilityPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
 
 // "Confirmed+" = payment succeeded and the order is real (excludes abandoned carts
 // that never got paid, and cancellations).
@@ -93,4 +93,28 @@ export async function getInventoryMovement(): Promise<InventoryMovementPoint[]> 
       currentStock: stockByProduct.get(p.id) ?? null,
     }))
     .sort((a, b) => b.qtySold - a.qtySold);
+}
+
+/** Realized profit from actual sales (qtySold × (price − cost)), not a static
+ *  snapshot — matches the manuscript's "profitability analysis per item" Visual
+ *  Analytics requirement. Products with no `cost` recorded return null margin/profit
+ *  rather than silently treating cost as zero (which would overstate profit). */
+export async function getProfitability(): Promise<ProfitabilityPoint[]> {
+  const [topProducts, products] = await Promise.all([
+    getTopProducts(1000),
+    prisma.product.findMany({ select: { id: true, name: true, price: true, cost: true } }),
+  ]);
+
+  const soldByProduct = new Map(topProducts.map((p) => [p.productId, p.qtySold]));
+
+  return products
+    .map((p) => {
+      const price = Number(p.price);
+      const cost = p.cost ? Number(p.cost) : null;
+      const qtySold = soldByProduct.get(p.id) ?? 0;
+      const marginPct = cost !== null && price > 0 ? ((price - cost) / price) * 100 : null;
+      const grossProfit = cost !== null ? qtySold * (price - cost) : null;
+      return { productId: p.id, productName: p.name, cost, price, marginPct, qtySold, grossProfit };
+    })
+    .sort((a, b) => (b.grossProfit ?? -Infinity) - (a.grossProfit ?? -Infinity));
 }

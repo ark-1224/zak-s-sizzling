@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { downloadAuthenticated } from "@/lib/download";
-import type { InventoryMovementPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
+import { PageHeader, Card, KpiTile, AdmButton } from "@/components/admin/ui";
+import type { InventoryMovementPoint, ProfitabilityPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
 
 type Range = "daily" | "weekly" | "monthly";
 
@@ -14,20 +14,23 @@ export default function AnalyticsPage() {
   const [sales, setSales] = useState<SalesReportPoint[]>([]);
   const [topProducts, setTopProducts] = useState<TopProductPoint[]>([]);
   const [movement, setMovement] = useState<InventoryMovementPoint[]>([]);
+  const [profitability, setProfitability] = useState<ProfitabilityPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async (r: Range) => {
     setLoading(true);
     try {
-      const [s, t, m] = await Promise.all([
+      const [s, t, m, p] = await Promise.all([
         apiFetch<SalesReportPoint[]>(`/api/reports/sales?range=${r}`, { auth: "staff" }),
         apiFetch<TopProductPoint[]>("/api/reports/top-products?limit=8", { auth: "staff" }),
         apiFetch<InventoryMovementPoint[]>("/api/reports/inventory-movement", { auth: "staff" }),
+        apiFetch<ProfitabilityPoint[]>("/api/reports/profitability", { auth: "staff" }),
       ]);
       setSales(s);
       setTopProducts(t);
       setMovement(m);
+      setProfitability(p.filter((x) => x.cost !== null).slice(0, 10));
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Could not load analytics.");
     } finally {
@@ -42,7 +45,7 @@ export default function AnalyticsPage() {
   const totalRevenue = sales.reduce((s, p) => s + p.revenue, 0);
   const totalOrders = sales.reduce((s, p) => s + p.orderCount, 0);
 
-  async function handleExport(type: "sales" | "top-products" | "inventory-movement") {
+  async function handleExport(type: "sales" | "top-products" | "inventory-movement" | "profitability") {
     try {
       await downloadAuthenticated(
         `/api/reports/export?type=${type}&format=csv${type === "sales" ? `&range=${range}` : ""}`,
@@ -54,22 +57,23 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream p-8">
-      <Link href="/admin" className="mb-4 inline-block text-sm text-ink-soft">
-        ← Back to dashboard
-      </Link>
-      <h1 className="font-display mb-6 text-2xl font-semibold text-matcha-deep">Analytics</h1>
+    <div className="flex flex-col gap-4.5">
+      <PageHeader eyebrow="Visual analytics & reports" title="Performance" />
 
-      {message && <div className="mb-4 text-sm text-berry">{message}</div>}
+      {message && <div className="text-sm text-adm-bad">{message}</div>}
 
-      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatTile label="Revenue" value={`₱${totalRevenue.toFixed(2)}`} />
-        <StatTile label="Orders" value={String(totalOrders)} />
-        <StatTile label="Top product" value={topProducts[0]?.productName ?? "—"} />
-        <StatTile label="Low stock" value={String(movement.filter((m) => (m.currentStock ?? 0) <= 5).length)} />
+      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+        <KpiTile label="Revenue" value={`₱${totalRevenue.toFixed(2)}`} />
+        <KpiTile label="Orders" value={String(totalOrders)} />
+        <KpiTile label="Top product" value={topProducts[0]?.productName ?? "—"} />
+        <KpiTile
+          label="Low stock"
+          value={String(movement.filter((m) => (m.currentStock ?? 0) <= 5).length)}
+          color="var(--adm-warn)"
+        />
       </div>
 
-      <Section
+      <Card
         title="Sales"
         actions={
           <div className="flex items-center gap-2">
@@ -77,116 +81,133 @@ export default function AnalyticsPage() {
               <button
                 key={r}
                 onClick={() => setRange(r)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  range === r ? "bg-matcha text-cream" : "bg-white text-ink-soft"
+                className={`rounded-[4px] px-2.5 py-1 text-[11.5px] font-medium ${
+                  range === r ? "border border-adm-accent text-adm-accent" : "text-adm-ink-2"
                 }`}
               >
                 {r}
               </button>
             ))}
-            <button
-              onClick={() => handleExport("sales")}
-              className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-soft"
-            >
+            <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("sales")}>
               Export CSV
-            </button>
+            </AdmButton>
           </div>
         }
       >
-        {loading ? (
-          <div className="text-ink-soft">Loading…</div>
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={sales}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e1d0ae" />
-              <XAxis dataKey="bucket" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v) => `₱${Number(v).toFixed(2)}`} />
-              <Bar dataKey="revenue" fill="#d8592b" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </Section>
+        <div className="p-4">
+          {loading ? (
+            <div className="text-adm-ink-3">Loading…</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={sales}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
+                <XAxis dataKey="bucket" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v) => `₱${Number(v).toFixed(2)}`} />
+                <Bar dataKey="revenue" fill="var(--adm-accent)" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </Card>
 
-      <Section
-        title="Top-selling products"
-        actions={
-          <button
-            onClick={() => handleExport("top-products")}
-            className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-soft"
-          >
-            Export CSV
-          </button>
-        }
-      >
-        {loading ? (
-          <div className="text-ink-soft">Loading…</div>
-        ) : (
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={topProducts} layout="vertical" margin={{ left: 40 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e1d0ae" />
-              <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="productName" width={120} tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Bar dataKey="qtySold" fill="#cc8a2e" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </Section>
+      <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-2">
+        <Card
+          title="Top-selling products"
+          actions={
+            <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("top-products")}>
+              Export CSV
+            </AdmButton>
+          }
+        >
+          <div className="p-4">
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
+                <XAxis type="number" tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="productName" width={120} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="qtySold" fill="var(--adm-warn)" radius={[0, 3, 3, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
 
-      <Section
+        <Card
+          title="Profitability per item"
+          actions={
+            <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("profitability")}>
+              Export CSV
+            </AdmButton>
+          }
+        >
+          {profitability.length === 0 ? (
+            <div className="p-4 text-sm text-adm-ink-3">
+              No products have a cost recorded yet — add one in Products to see margins here.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                    <th className="px-4.5 py-2.75 font-medium">Item</th>
+                    <th className="px-3 py-2.75 text-right font-medium">Cost</th>
+                    <th className="px-3 py-2.75 text-right font-medium">Price</th>
+                    <th className="px-3 py-2.75 text-right font-medium">Margin</th>
+                    <th className="px-4.5 py-2.75 text-right font-medium">Gross</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {profitability.map((p) => (
+                    <tr key={p.productId} className="border-t border-adm-line-soft">
+                      <td className="px-4.5 py-2.75">{p.productName}</td>
+                      <td className="font-adm-mono px-3 py-2.75 text-right text-adm-ink-2">₱{p.cost!.toFixed(2)}</td>
+                      <td className="font-adm-mono px-3 py-2.75 text-right">₱{p.price.toFixed(2)}</td>
+                      <td
+                        className="font-adm-mono px-3 py-2.75 text-right"
+                        style={{ color: (p.marginPct ?? 0) >= 40 ? "var(--adm-ok)" : (p.marginPct ?? 0) >= 25 ? "var(--adm-ink-2)" : "var(--adm-warn)" }}
+                      >
+                        {p.marginPct!.toFixed(1)}%
+                      </td>
+                      <td className="font-adm-mono px-4.5 py-2.75 text-right">₱{(p.grossProfit ?? 0).toFixed(0)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <Card
         title="Inventory movement"
         actions={
-          <button
-            onClick={() => handleExport("inventory-movement")}
-            className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-soft"
-          >
+          <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("inventory-movement")}>
             Export CSV
-          </button>
+          </AdmButton>
         }
       >
-        <div className="overflow-x-auto rounded-xl border border-line bg-white">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-line text-left text-ink-soft">
-                <th className="px-4 py-2.5">Product</th>
-                <th className="px-4 py-2.5">Units sold</th>
-                <th className="px-4 py-2.5">Current stock</th>
+              <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                <th className="px-4.5 py-2.75 font-medium">Product</th>
+                <th className="px-3 py-2.75 text-right font-medium">Units sold</th>
+                <th className="px-4.5 py-2.75 text-right font-medium">Current stock</th>
               </tr>
             </thead>
             <tbody>
               {movement.map((m) => (
-                <tr key={m.productId} className="border-b border-line last:border-0">
-                  <td className="px-4 py-2.5">{m.productName}</td>
-                  <td className="px-4 py-2.5">{m.qtySold}</td>
-                  <td className="px-4 py-2.5">{m.currentStock ?? "—"}</td>
+                <tr key={m.productId} className="border-t border-adm-line-soft">
+                  <td className="px-4.5 py-2.75">{m.productName}</td>
+                  <td className="font-adm-mono px-3 py-2.75 text-right">{m.qtySold}</td>
+                  <td className="font-adm-mono px-4.5 py-2.75 text-right">{m.currentStock ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </Section>
-    </div>
-  );
-}
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-line bg-white p-4">
-      <div className="text-xs text-ink-soft">{label}</div>
-      <div className="font-display mt-1 truncate text-xl font-bold text-matcha-deep">{value}</div>
-    </div>
-  );
-}
-
-function Section({ title, actions, children }: { title: string; actions?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="mb-6">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="font-semibold text-ink">{title}</h2>
-        {actions}
-      </div>
-      {children}
+      </Card>
     </div>
   );
 }

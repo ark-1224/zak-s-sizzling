@@ -9,6 +9,7 @@ export function toProductDTO(p: ProductWithRelations): Product {
     id: p.id,
     name: p.name,
     price: Number(p.price),
+    cost: p.cost ? Number(p.cost) : null,
     barcode: p.barcode,
     categoryId: p.categoryId,
     category: {
@@ -30,6 +31,7 @@ export function toProductDTO(p: ProductWithRelations): Product {
     },
     isAvailable: p.isAvailable,
     stockQty: p.inventory?.stockQty,
+    minStockThreshold: p.inventory?.minStockThreshold,
   };
 }
 
@@ -57,9 +59,10 @@ export async function getProductByBarcode(barcode: string): Promise<Product | nu
   return product ? toProductDTO(product) : null;
 }
 
-interface ProductInput {
+export interface ProductInput {
   name: string;
   price: number;
+  cost?: number;
   barcode?: string;
   categoryId: number;
   description?: string;
@@ -73,6 +76,7 @@ export async function createProduct(input: ProductInput): Promise<Product> {
     data: {
       name: input.name,
       price: input.price,
+      cost: input.cost,
       barcode: input.barcode || null,
       categoryId: input.categoryId,
       description: input.description,
@@ -90,6 +94,7 @@ export async function updateProduct(id: string, input: Partial<ProductInput> & {
     data: {
       name: input.name,
       price: input.price,
+      cost: input.cost,
       barcode: input.barcode === undefined ? undefined : input.barcode || null,
       categoryId: input.categoryId,
       description: input.description,

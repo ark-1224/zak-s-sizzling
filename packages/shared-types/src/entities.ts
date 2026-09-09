@@ -19,6 +19,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  cost: number | null;
   barcode: string | null;
   categoryId: number;
   category?: Category;
@@ -29,6 +30,7 @@ export interface Product {
   nutrition: Nutrition;
   isAvailable: boolean;
   stockQty?: number;
+  minStockThreshold?: number;
 }
 
 export interface AuthUser {
@@ -117,4 +119,54 @@ export interface InventoryMovementPoint {
   productName: string;
   qtySold: number;
   currentStock: number | null;
+}
+
+/** Realized profit from actual sales, not a static price/cost snapshot — null cost/
+ *  margin means the product has no cost recorded yet, not that profit was zero. */
+export interface ProfitabilityPoint {
+  productId: string;
+  productName: string;
+  cost: number | null;
+  price: number;
+  marginPct: number | null;
+  qtySold: number;
+  grossProfit: number | null;
+}
+
+export interface UserAccountDTO {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "staff";
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string;
+  role: "admin" | "staff";
+}
+
+export interface UpdateUserInput {
+  name?: string;
+  role?: "admin" | "staff";
+  isActive?: boolean;
+  password?: string;
+}
+
+export interface BulkImportRowResult {
+  row: number;
+  status: "created" | "updated" | "error";
+  name?: string;
+  message?: string;
+}
+
+export interface BulkImportSummary {
+  total: number;
+  created: number;
+  updated: number;
+  errors: number;
+  results: BulkImportRowResult[];
 }

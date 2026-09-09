@@ -3,7 +3,9 @@ import { Prisma } from "@prisma/client";
 import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
+import { fromCSV, toCSV } from "../../lib/csv";
 import { createProductSchema, updateProductSchema } from "./schema";
+import { bulkImportProducts } from "./bulkImport";
 import {
   createProduct,
   deleteProduct,
@@ -42,6 +44,41 @@ productsRouter.get("/:id", async (req, res, next) => {
     const product = await getProductById(req.params.id);
     if (!product) throw new HttpError(404, "Product not found");
     res.json(product);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Reference sheet with required headers, used by /admin/import's "Download template" link.
+productsRouter.get("/import-template", authenticate, authorize("admin", "staff"), (req, res) => {
+  const sample = {
+    name: "Sample Iced Tea",
+    barcode: "",
+    category: "Drinks",
+    price: 45,
+    cost: 20,
+    stockQty: 25,
+    minStockThreshold: 5,
+    description: "Optional",
+  };
+  const csv = toCSV([sample]);
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", 'attachment; filename="product_import_template.csv"');
+  res.send(csv);
+});
+
+productsRouter.post("/bulk-import", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+  try {
+    const csvText = req.body?.csvText;
+    if (typeof csvText !== "string" || !csvText.trim()) throw new HttpError(400, "csvText is required");
+
+    const rows = fromCSV(csvText);
+    if (rows.length === 0) throw new HttpError(400, "No rows found in the CSV");
+    const REQUIRED_HEADERS = ["name", "category", "price"] as const;
+    const missingHeaders = REQUIRED_HEADERS.filter((h) => !(h in rows[0]));
+    if (missingHeaders.length > 0) throw new HttpError(400, `Missing required column(s): ${missingHeaders.join(", ")}`);
+
+    res.json(await bulkImportProducts(rows));
   } catch (err) {
     next(err);
   }
