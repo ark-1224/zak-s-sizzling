@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
@@ -18,6 +19,7 @@ export function createApp() {
 
   app.use(helmet());
   app.use(cors({ origin: process.env.WEB_ORIGIN ?? "http://localhost:3000", credentials: true }));
+  app.use(cookieParser());
   // Stashes the raw request body on req.rawBody — needed by the PayMongo webhook route
   // to verify the Paymongo-Signature header, which is computed over the exact raw bytes.
   app.use(

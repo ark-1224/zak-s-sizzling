@@ -122,6 +122,30 @@ this has run anywhere but `localhost` yet.
   session gets a real `403` from both the adjustment endpoint and the log endpoint —
   confirmed by hitting the API directly with curl, bypassing the UI entirely.
 
+- **Silent access-token refresh** — staff/admin JWTs expire after 15 minutes by
+  design, but there was no refresh flow wired up yet (a `TODO(Sprint 2+)` sat in
+  `auth/routes.ts` since Sprint 1), so every admin page independently surfaced the raw
+  "Invalid or expired token" string from whichever API call happened to fire after the
+  15 minutes ran out — confusing, and looked like a per-module bug rather than the
+  session-wide issue it actually was. Built the originally-planned flow: login now also
+  sets an httpOnly, `/api/auth`-scoped refresh cookie (7 days); `POST /api/auth/refresh`
+  exchanges it for a new access token, re-checking the user's `isActive`/role against
+  the database on every use (not just the token's signature) so a suspended account
+  loses refresh access within one cycle instead of keeping whatever was baked into the
+  token for up to 7 days. The frontend refreshes proactively in the background
+  (`scheduleTokenRefresh`, started from `StaffGuard` — the shared gate for `/admin`,
+  `/staff`, and `/kitchen`) and reactively on any 401 (`apiFetch`, with concurrent
+  401s sharing one in-flight refresh instead of racing), retrying the original request
+  once before giving up. Verified live: confirmed via curl that login sets the cookie
+  correctly (`HttpOnly`, scoped to `/api/auth`), that `/refresh` succeeds with it and
+  fails cleanly without it, and — the important security case — that suspending a
+  still-logged-in account causes its very next refresh to fail even though its refresh
+  token hasn't expired. In the browser, corrupted the stored access token in
+  localStorage (simulating expiry) with a valid refresh cookie still present and
+  confirmed the page loaded normally with no visible error; then cleared the refresh
+  cookie too (via `/api/auth/logout`) and confirmed a clean redirect to `/login` instead
+  of a raw error string.
+
 **Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
 any real deployment — it's a dev-only default.
 

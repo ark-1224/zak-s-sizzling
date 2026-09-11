@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAccessToken, getStoredUser } from "@/lib/auth";
+import { getAccessToken, getStoredUser, scheduleTokenRefresh } from "@/lib/auth";
 
-// Client-side route guard shared by /admin and /staff. Real enforcement always happens
-// server-side via the API's authenticate/authorize middleware — this just gives
-// logged-out users a sensible redirect instead of a broken page. TODO(Sprint 5): swap
-// for a proper httpOnly-cookie + middleware.ts check once refresh tokens land.
+// Client-side route guard shared by /admin, /staff, and /kitchen. Real enforcement
+// always happens server-side via the API's authenticate/authorize middleware — this
+// just gives logged-out users a sensible redirect instead of a broken page, and kicks
+// off the background access-token refresh (scheduleTokenRefresh) for the session.
 export function StaffGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
@@ -19,6 +19,7 @@ export function StaffGuard({ children }: { children: React.ReactNode }) {
       router.replace("/login");
       return;
     }
+    scheduleTokenRefresh();
     setChecked(true);
   }, [router]);
 
