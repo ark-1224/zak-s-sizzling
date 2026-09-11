@@ -170,3 +170,27 @@ export interface BulkImportSummary {
   errors: number;
   results: BulkImportRowResult[];
 }
+
+export type AdjustmentReason = "restock" | "return" | "damaged" | "spoilage" | "correction" | "other";
+
+export interface StockAdjustmentDTO {
+  id: string;
+  productId: string;
+  productName: string;
+  productIcon: string | null;
+  delta: number;
+  previousQty: number;
+  newQty: number;
+  reason: AdjustmentReason;
+  note: string | null;
+  adjustedByName: string;
+  createdAt: string;
+}
+
+export interface AdjustStockInput {
+  setQty?: number;
+  delta?: number;
+  minStockThreshold?: number;
+  reason?: AdjustmentReason;
+  note?: string;
+}

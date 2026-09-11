@@ -100,6 +100,28 @@ this has run anywhere but `localhost` yet.
   Diagram); and payment void/refund tracking from the mockup was **not** built, since
   the manuscript's Limitations section explicitly excludes it.
 
+- **Stock adjustment log** — a manuscript-review pass against the live app surfaced
+  a real gap: the Stock Adjustments feature explicitly requires "maintaining a log of
+  adjustments," and while `/admin/inventory` could already change stock counts, nothing
+  recorded who changed them, by how much, or why. Added a `stock_adjustments` table
+  (product, delta, previous/new qty, reason, optional note, who, when) and rebuilt the
+  inventory page around it: every adjustment now goes through a modal (`Add/remove` or
+  `Set exact count`, with a live "12 → 15 (+3)" preview) that requires a reason —
+  restock, customer return, damaged goods, spoilage, manual correction, or other,
+  covering the manuscript's named causes plus the two most common real ones. A "Recent
+  adjustments" panel on the same page shows the log itself (filterable by product), not
+  just a changed number. Automatic stock deduction when an order is paid is deliberately
+  **not** written to this log — that's sales-driven movement already tracked via
+  orders/order_items and the inventory-movement report, not an "authorized user"
+  adjustment, so the log stays meaningful instead of being flooded by every sale.
+  Verified live end to end: a +30 restock and a set-to-12 spoilage correction both
+  appeared correctly in the log with accurate before/after quantities, and the kiosk's
+  SOLD OUT ribbon cleared in real time for both restocked items without a refresh.
+  Also verified server-side, not just in the UI: `PATCH /api/inventory/:id` returns a
+  real `400` if a quantity change is submitted without a reason, and an anonymous kiosk
+  session gets a real `403` from both the adjustment endpoint and the log endpoint —
+  confirmed by hitting the API directly with curl, bypassing the UI entirely.
+
 **Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
 any real deployment — it's a dev-only default.
 

@@ -51,6 +51,17 @@ enum KitchenStatus {
   @@map("kitchen_status")
 }
 
+enum AdjustmentReason {
+  restock
+  return
+  damaged
+  spoilage
+  correction
+  other
+
+  @@map("adjustment_reason")
+}
+
 model Role {
   id    Int      @id @default(autoincrement())
   name  UserRole @unique
@@ -69,6 +80,7 @@ model User {
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  stockAdjustments StockAdjustment[]
 
   @@index([roleId])
   @@map("users")
@@ -106,6 +118,7 @@ model Product {
   updatedAt   DateTime    @updatedAt @map("updated_at")
   inventory   Inventory?
   orderItems  OrderItem[]
+  stockAdjustments StockAdjustment[]
 
   @@unique([barcode])
   @@index([categoryId])
@@ -121,6 +134,29 @@ model Inventory {
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   @@map("inventory")
+}
+
+// Audit trail for manual stock changes an admin/staff makes through /admin/inventory
+// (returns, damaged goods, spoilage, manual corrections, restocking) — per the
+// manuscript's Stock Adjustments feature. Automatic deduction when an order is paid
+// is NOT logged here: that's sales-driven movement, already tracked via orders/
+// order_items and the inventory-movement report, not an "authorized user" adjustment.
+model StockAdjustment {
+  id           String           @id @default(uuid()) @db.Uuid
+  productId    String           @map("product_id") @db.Uuid
+  product      Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta        Int
+  previousQty  Int              @map("previous_qty")
+  newQty       Int              @map("new_qty")
+  reason       AdjustmentReason
+  note         String?          @db.VarChar(200)
+  adjustedById String           @map("adjusted_by_id") @db.Uuid
+  adjustedBy   User             @relation(fields: [adjustedById], references: [id])
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  @@index([productId])
+  @@index([createdAt])
+  @@map("stock_adjustments")
 }
 
 model Order {

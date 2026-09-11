@@ -2,29 +2,31 @@ import { prisma } from "../../lib/prisma";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { toProductDTO } from "../products/service";
-import type { Product } from "@zaks/shared-types";
+import type { AdjustmentReason, Product, StockAdjustmentDTO } from "@zaks/shared-types";
+
+type StockChange = { setQty?: number; delta?: number; minStockThreshold?: number };
 
 /**
- * The single place stock ever changes — manual admin adjustments (Sprint 4) and
- * automatic deduction on paid orders (payments/service.ts) both funnel through here,
- * so `isAvailable` and the `inventory:updated` broadcast stay consistent everywhere.
+ * The single place stock ever changes — manual admin adjustments and automatic
+ * deduction on paid orders both funnel through here, so `isAvailable` and the
+ * `inventory:updated` broadcast stay consistent everywhere.
  */
-export async function adjustStock(
+async function applyStockChange(
   productId: string,
-  change: { setQty?: number; delta?: number; minStockThreshold?: number }
-): Promise<Product> {
+  change: StockChange
+): Promise<{ product: Product; previousQty: number; newQty: number }> {
   const inventory = await prisma.inventory.findUnique({ where: { productId } });
   if (!inventory) throw new HttpError(404, "No inventory record for this product");
 
-  const nextQty =
-    change.setQty !== undefined ? change.setQty : Math.max(0, inventory.stockQty + (change.delta ?? 0));
-  const isAvailable = nextQty > 0;
+  const previousQty = inventory.stockQty;
+  const newQty = change.setQty !== undefined ? change.setQty : Math.max(0, previousQty + (change.delta ?? 0));
+  const isAvailable = newQty > 0;
 
   const product = await prisma.$transaction(async (tx) => {
     await tx.inventory.update({
       where: { productId },
       data: {
-        stockQty: nextQty,
+        stockQty: newQty,
         minStockThreshold: change.minStockThreshold ?? inventory.minStockThreshold,
       },
     });
@@ -36,16 +38,48 @@ export async function adjustStock(
   });
 
   const dto = toProductDTO(product);
-  getIO()?.emit("inventory:updated", { productId, isAvailable, stockQty: nextQty });
-  return dto;
+  getIO()?.emit("inventory:updated", { productId, isAvailable, stockQty: newQty });
+  return { product: dto, previousQty, newQty };
 }
 
-/** Deducts stock for every line in a paid order — called once payment is confirmed. */
+/**
+ * Deducts stock for every line in a paid order — called once payment is confirmed.
+ * This is sales-driven movement, not an "authorized user" adjustment, so it's not
+ * written to the stock_adjustments audit log (that's scoped to manual corrections —
+ * see adjustStock below); it's already tracked via orders/order_items instead.
+ */
 export async function deductStockForOrder(orderId: string): Promise<void> {
   const items = await prisma.orderItem.findMany({ where: { orderId } });
   for (const item of items) {
-    await adjustStock(item.productId, { delta: -item.qty });
+    await applyStockChange(item.productId, { delta: -item.qty });
   }
+}
+
+/** Manual, authorized stock adjustment — always logged with who/why for the audit trail. */
+export async function adjustStock(
+  productId: string,
+  change: StockChange & { reason?: AdjustmentReason; note?: string },
+  adjustedById: string
+): Promise<Product> {
+  const { product, previousQty, newQty } = await applyStockChange(productId, change);
+
+  const qtyChanged = change.setQty !== undefined || change.delta !== undefined;
+  if (qtyChanged) {
+    if (!change.reason) throw new HttpError(400, "A reason is required when adjusting stock quantity");
+    await prisma.stockAdjustment.create({
+      data: {
+        productId,
+        delta: newQty - previousQty,
+        previousQty,
+        newQty,
+        reason: change.reason,
+        note: change.note || null,
+        adjustedById,
+      },
+    });
+  }
+
+  return product;
 }
 
 export async function listLowStock(): Promise<Product[]> {
@@ -60,4 +94,30 @@ export async function listLowStock(): Promise<Product[]> {
   });
   const lowStock = rows.filter((p) => p.inventory && p.inventory.stockQty <= p.inventory.minStockThreshold);
   return lowStock.map(toProductDTO);
+}
+
+export async function listStockAdjustments(opts: { productId?: string; limit?: number }): Promise<StockAdjustmentDTO[]> {
+  const rows = await prisma.stockAdjustment.findMany({
+    where: opts.productId ? { productId: opts.productId } : undefined,
+    include: {
+      product: { select: { name: true, icon: true } },
+      adjustedBy: { select: { name: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: opts.limit ?? 50,
+  });
+
+  return rows.map((r) => ({
+    id: r.id,
+    productId: r.productId,
+    productName: r.product.name,
+    productIcon: r.product.icon,
+    delta: r.delta,
+    previousQty: r.previousQty,
+    newQty: r.newQty,
+    reason: r.reason,
+    note: r.note,
+    adjustedByName: r.adjustedBy.name,
+    createdAt: r.createdAt.toISOString(),
+  }));
 }
