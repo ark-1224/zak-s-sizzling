@@ -76,8 +76,23 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   implemented, since no object storage credentials are configured in this environment.
 
 All 5 sprints from the original plan are now built. Remaining known gaps: PWA/offline
-sync, hardware receipt-printer integration, and actual deployment to Railway — none of
-this has run anywhere but `localhost` yet.
+sync and hardware receipt-printer integration.
+
+- **Railway deployment prep** — while setting up the actual Railway project (4
+  services: `api`, `web`, `worker`, and a managed Postgres), found two things that
+  needed fixing before `Deploy` was safe to click. First, `db:migrate` ran
+  `prisma migrate dev`, which is interactive/dev-only — added `db:migrate:deploy`
+  (`prisma migrate deploy`) and chained it into the api service's start command
+  (`npm run db:migrate:deploy -w apps/api && npm run start -w apps/api`) so schema
+  changes apply on every boot before the server accepts traffic. Second, the worker's
+  nightly backup job shells out to `pg_dump`, which doesn't exist in Railway's default
+  Node.js container — rather than fighting that (a `nixpacks.toml` could install it),
+  the nightly cron schedule is now gated to non-production (`apps/worker/src/index.ts`)
+  and production relies on Railway's own managed Postgres backups instead (enable from
+  the Postgres service's dashboard → Backups). `backupDatabase.ts` and
+  `npm run backup:now` are untouched and still work for local dev/demo purposes — the
+  manuscript-required backup feature still exists and runs in this codebase, it's just
+  not the thing actually protecting the production database once deployed.
 
 - **Post-Sprint-5: bulk import, user management, cost/profitability, admin redesign**
   — three gaps identified against a UI mockup reference and the manuscript's own
