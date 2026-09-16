@@ -94,6 +94,60 @@ sync and hardware receipt-printer integration.
   manuscript-required backup feature still exists and runs in this codebase, it's just
   not the thing actually protecting the production database once deployed.
 
+- **Railway deployment — the first live deploy** — prep work above wasn't enough;
+  clicking `Deploy` surfaced a chain of five real bugs, each one hiding the next until
+  the previous was fixed. Documented here since a defense panel may ask what
+  deployment actually involved, not just that it eventually worked.
+  1. **Worker build failed** with `TS7006: Parameter 'p' implicitly has an 'any' type`
+     in `lowStockSweep.ts`. Cause: nothing ran `prisma generate` before `tsc` on a
+     fresh Railway container — locally this was masked by an already-generated client
+     left over from earlier `prisma migrate dev` runs. Railway's own auto-fix bot
+     opened a PR patching *only* `apps/api`'s build script, which didn't help worker.
+     Tried a root-level `postinstall` next — that failed too, because the worker
+     service's Root Directory was scoped to `apps/worker`, breaking both the relative
+     schema path and (more seriously) `@zaks/shared-types` workspace resolution for
+     `api`/`web`. Fix: Root Directory blank (repo root) for all three services, plus
+     `prisma` declared as `apps/worker`'s own explicit devDependency with
+     `prisma generate --schema ../api/prisma/schema.prisma` chained into its build
+     script — matching the pattern already used for `api`, no longer dependent on
+     cross-workspace hoisting behavior that isn't reliable on Railway's isolated
+     per-service builds.
+  2. **Deployed, but the kiosk showed zero products and login failed.** Root cause:
+     `NEXT_PUBLIC_API_URL` was saved without the `https://` prefix — with no protocol,
+     the browser treated it as a relative path and appended it to the *web* domain
+     instead of pointing at the api, so every API call 404'd against Next.js's own
+     404 page. Since `NEXT_PUBLIC_*` values bake into the JS bundle at build time,
+     fixing the variable required a rebuild of `web`, not just a variable save.
+  3. **Still broken after that fix — browser console showed CORS errors** on every
+     request. Chasing CORS was a dead end: a direct `curl` to the api's `/health`
+     endpoint (bypassing the browser entirely) revealed the *real* problem — a flat
+     `502 Bad Gateway — Application failed to respond` from Railway's own edge, not
+     from the app. The CORS errors were a downstream symptom: Railway's fallback error
+     page has no CORS headers, since the request never reached Express's `cors()`
+     middleware at all.
+  4. **Checked the api's deploy logs** and found the process was actually healthy —
+     migrations applied, server started, `listening on http://localhost:8080`. So the
+     502 meant Railway's public domain was routed to the *wrong* target port: earlier
+     guidance had suggested manually entering `4000` as a fallback if Railway's port
+     auto-detection didn't fire, and that stale value was still configured while the
+     app was actually listening on Railway-assigned port `8080`. Fix: regenerated the
+     domain so Railway's auto-detection could re-scan the running container instead of
+     trusting a hand-typed number that can drift across deploys.
+  5. **One CORS error remained** even with the api demonstrably up: `curl -i` on
+     `/health` showed `access-control-allow-origin: https://web-....up.railway.app/`
+     — a trailing slash. `WEB_ORIGIN` had been saved with one; a browser's `Origin`
+     header never includes one, so the `cors` package's exact-string match failed
+     silently. Removed the trailing slash, redeployed, and confirmed clean via
+     `curl` before touching the browser again.
+
+  Final verification used a **fresh browser tab** deliberately, since the tab reused
+  across the whole debugging session had ~500 accumulated console errors from earlier
+  failed attempts that could easily be mistaken for a current failure. Clean tab showed
+  zero console errors, all requests `200`, the real 17-item product catalog (with
+  correct SOLD OUT states for the 3 zero-stock items), and a successful admin login
+  landing on the dashboard with real production data — not assumed working because the
+  build succeeded, actually re-checked end to end after every fix.
+
 - **Post-Sprint-5: bulk import, user management, cost/profitability, admin redesign**
   — three gaps identified against a UI mockup reference and the manuscript's own
   requirements (bulk CSV import and user administration were both explicitly required
