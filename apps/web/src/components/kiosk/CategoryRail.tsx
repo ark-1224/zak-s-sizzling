@@ -12,7 +12,7 @@ interface CategoryRailProps {
 
 export function CategoryRail({ categories, activeCategory, onSelect }: CategoryRailProps) {
   return (
-    <nav className="w-[186px] flex-shrink-0 overflow-y-auto border-r border-line bg-paper py-5.5">
+    <nav className="flex flex-shrink-0 gap-1.5 overflow-x-auto border-b border-line bg-paper px-3 py-2.5 md:w-[186px] md:flex-col md:gap-0 md:overflow-x-visible md:overflow-y-auto md:border-r md:border-b-0 md:px-0 md:py-5.5">
       <CategoryItem label="All items" active={activeCategory === "all"} onClick={() => onSelect("all")} />
       {categories.map((c) => (
         <CategoryItem
@@ -41,10 +41,10 @@ function CategoryItem({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-3 border-l-[3px] px-5.5 py-3.5 text-left text-[15px] font-medium transition-colors ${
+      className={`flex flex-shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-[13px] font-medium whitespace-nowrap transition-colors md:w-full md:flex-shrink md:gap-3 md:rounded-none md:border-t-0 md:border-r-0 md:border-b-0 md:border-l-[3px] md:px-5.5 md:py-3.5 md:text-left md:text-[15px] ${
         active
-          ? "border-matcha bg-gradient-to-r from-available/8 to-transparent font-bold text-matcha-deep"
-          : "border-transparent text-ink-soft"
+          ? "border-matcha bg-available/15 font-bold text-matcha-deep md:bg-gradient-to-r md:from-available/8 md:to-transparent"
+          : "border-line text-ink-soft md:border-transparent"
       }`}
     >
       <span
@@ -52,7 +52,9 @@ function CategoryItem({
       />
       {label}
       {isNew && (
-        <span className="ml-auto rounded-[5px] bg-berry px-1.5 py-0.5 text-[9.5px] font-bold text-white">NEW</span>
+        <span className="rounded-[5px] bg-berry px-1.5 py-0.5 text-[9.5px] font-bold text-white md:ml-auto">
+          NEW
+        </span>
       )}
     </button>
   );

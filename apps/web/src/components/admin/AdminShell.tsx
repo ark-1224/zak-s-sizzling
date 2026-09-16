@@ -51,14 +51,43 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setUser(getStoredUser());
   }, []);
 
+  // Sidebar is a fixed 244px column on desktop but becomes a slide-in drawer below
+  // md — the same fixed-width-sidebar pattern was eating most of the viewport on a
+  // phone, since nothing here was built mobile-first (this app's primary target is a
+  // large kiosk touchscreen, not a phone), but panelists/staff opening it on a small
+  // screen shouldn't see a broken layout.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
+
   return (
-    <div className="font-adm-sans flex min-h-screen bg-adm-bg text-adm-ink">
-      <aside className="sticky top-0 flex h-screen w-61 flex-shrink-0 flex-col gap-5 border-r border-adm-line bg-adm-surface py-5">
+    <div className="font-adm-sans flex min-h-screen flex-col bg-adm-bg text-adm-ink md:flex-row">
+      <div className="sticky top-0 z-30 flex h-13 flex-shrink-0 items-center gap-3 border-b border-adm-line bg-adm-surface px-4 md:hidden">
+        <button
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          className="flex h-8 w-8 items-center justify-center rounded-[5px] border border-adm-line text-adm-ink-2"
+        >
+          <span className="font-adm-mono text-sm">☰</span>
+        </button>
+        <div className="text-[13.5px] font-semibold tracking-tight">Zak&apos;s Sizzling Hub</div>
+      </div>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-[#141310]/45 md:hidden" onClick={() => setMobileOpen(false)} />
+      )}
+
+      <aside
+        className={`fixed top-0 bottom-0 left-0 z-50 flex h-screen w-61 flex-shrink-0 flex-col gap-5 border-r border-adm-line bg-adm-surface py-5 transition-transform duration-200 md:sticky md:z-auto md:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex items-center gap-2.5 px-4.5">
           <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[5px] bg-adm-accent">
             <span className="font-adm-mono text-[11px] font-bold text-white">ZK</span>
