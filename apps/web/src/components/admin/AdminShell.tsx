@@ -89,9 +89,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex items-center gap-2.5 px-4.5">
-          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[5px] bg-adm-accent">
-            <span className="font-adm-mono text-[11px] font-bold text-white">ZK</span>
-          </div>
+          <img src="/logo.jpg" alt="Zak's Sizzling Hub" className="h-7 w-7 flex-shrink-0 rounded-[5px] object-cover" />
           <div className="min-w-0">
             <div className="text-[13.5px] leading-tight font-semibold tracking-tight">Zak&apos;s Sizzling Hub</div>
             <div className="font-adm-mono mt-0.5 text-[10px] text-adm-ink-3">STOCK INVENTORY</div>

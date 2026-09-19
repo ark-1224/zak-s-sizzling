@@ -16,9 +16,11 @@ export function Header({ searchQuery, onSearchChange, onOpenCart }: HeaderProps)
   return (
     <header className="flex flex-shrink-0 items-center gap-2 bg-matcha-deep px-3 py-3 text-cream sm:gap-6 sm:px-7 sm:py-4.5">
       <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[50%_50%_50%_8px] bg-honey text-lg sm:h-10 sm:w-10 sm:text-xl">
-          🔥
-        </div>
+        <img
+          src="/logo.jpg"
+          alt="Zak's Sizzling Hub"
+          className="h-8 w-8 flex-shrink-0 rounded-[50%_50%_50%_8px] object-cover sm:h-10 sm:w-10"
+        />
         <div className="min-w-0">
           <div className="truncate text-[16px] leading-none font-semibold tracking-tight sm:text-[22px]">
             Zak&apos;s Sizzling Hub
