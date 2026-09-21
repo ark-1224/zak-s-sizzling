@@ -73,7 +73,7 @@ export default function KioskHomePage() {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenCart={() => setCartOpen(true)} />
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      <div className="flex min-h-0 flex-1">
         <CategoryRail categories={categories} activeCategory={activeCategory} onSelect={setActiveCategory} />
         <ProductGrid
           title={title}
