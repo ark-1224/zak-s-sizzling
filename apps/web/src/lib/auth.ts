@@ -101,13 +101,27 @@ export function clearScheduledRefresh() {
   refreshTimer = null;
 }
 
-/** Bootstraps (or reuses) an anonymous kiosk-session token for the customer-facing kiosk. */
-export async function ensureKioskSession(): Promise<string> {
-  const existing = getAccessToken("kiosk");
-  if (existing) return existing;
-
+async function mintKioskSession(): Promise<string> {
   const res = await fetch(`${API_URL}/api/auth/kiosk-session`, { method: "POST" });
   const data = (await res.json()) as { token: string; sessionId: string };
   window.localStorage.setItem(KIOSK_TOKEN_KEY, data.token);
   return data.token;
+}
+
+/** Bootstraps (or reuses) an anonymous kiosk-session token for the customer-facing kiosk. */
+export async function ensureKioskSession(): Promise<string> {
+  const existing = getAccessToken("kiosk");
+  if (existing) return existing;
+  return mintKioskSession();
+}
+
+/**
+ * Reactive recovery for apiFetch when a kiosk-authed request 401s. The kiosk session
+ * token expires after 2 hours (apps/api/src/lib/jwt.ts) with no refresh mechanism of
+ * its own — unlike staff logins, a kiosk tab is meant to stay open for a whole shift,
+ * so this will legitimately happen mid-use. Anonymous sessions don't need real
+ * re-authentication, just a fresh token; there's nothing to preserve from the old one.
+ */
+export async function refreshKioskSession(): Promise<string> {
+  return mintKioskSession();
 }

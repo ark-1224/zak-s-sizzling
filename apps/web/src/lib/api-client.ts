@@ -1,4 +1,4 @@
-import { clearStaffSession, getAccessToken, refreshAccessToken } from "./auth";
+import { clearStaffSession, getAccessToken, refreshAccessToken, refreshKioskSession } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -23,6 +23,16 @@ function ensureFreshToken(): Promise<string> {
   return refreshInFlight;
 }
 
+let kioskRefreshInFlight: Promise<string> | null = null;
+function ensureFreshKioskToken(): Promise<string> {
+  if (!kioskRefreshInFlight) {
+    kioskRefreshInFlight = refreshKioskSession().finally(() => {
+      kioskRefreshInFlight = null;
+    });
+  }
+  return kioskRefreshInFlight;
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit & { auth?: "staff" | "kiosk" | "none" } = {}
@@ -40,19 +50,20 @@ export async function apiFetch<T>(
 
   let res = await fetch(`${API_URL}${path}`, { ...rest, headers: finalHeaders });
 
-  // A 401 on a staff/admin call almost always just means the 15-minute access token
-  // expired mid-session — silently renew it via the refresh cookie and retry once
-  // before giving up. The request never reached the route handler (auth middleware
-  // runs first), so nothing has happened server-side yet and retrying is safe even
-  // for POST/PATCH/DELETE.
-  if (res.status === 401 && auth === "staff") {
+  // A 401 almost always just means the token expired mid-session (staff: 15 minutes;
+  // kiosk: 2 hours, with no refresh mechanism of its own since a kiosk tab is meant to
+  // stay open for a whole shift) — silently renew it and retry once before giving up.
+  // The request never reached the route handler (auth middleware runs first), so
+  // nothing has happened server-side yet and retrying is safe even for POST/PATCH/DELETE.
+  if (res.status === 401 && (auth === "staff" || auth === "kiosk")) {
     try {
-      const newToken = await ensureFreshToken();
+      const newToken = auth === "staff" ? await ensureFreshToken() : await ensureFreshKioskToken();
       finalHeaders.Authorization = `Bearer ${newToken}`;
       res = await fetch(`${API_URL}${path}`, { ...rest, headers: finalHeaders });
     } catch {
-      // Refresh itself failed — session is genuinely gone (expired past 7 days,
-      // suspended, etc). Fall through to the normal error path below.
+      // Refresh itself failed (network error, etc). Fall through to the normal error
+      // path below — for staff that means a redirect to /login; kiosk sessions are
+      // anonymous, so there's nothing to redirect to, the error just surfaces as-is.
     }
   }
 
