@@ -12,9 +12,31 @@ console.log("[worker] Zak's Sizzling Hub background worker started");
 // for local dev and for demoing the feature — this only skips the *schedule* in
 // production. Enable Railway's Postgres backups from its dashboard (Postgres service
 // → Backups) as the actual production safety net.
-if (process.env.NODE_ENV !== "production") {
+//
+// Checking `=== "development"` (not `!== "production"`) is deliberate: if NODE_ENV
+// is ever left unset on a deployed service, this must default to NOT scheduling the
+// job, not scheduling it — an unset env var should never silently behave like local
+// dev.
+const isLocalDev = process.env.NODE_ENV === "development";
+
+// Guards against a stalled pg_dump (network blip, lock wait) leaving a backup "running"
+// forever and the next night's trigger piling a second execFile on top of it — pg_dump
+// itself also gets a hard timeout now (see backupDatabase.ts), but this stops a cron
+// tick from starting an overlapping run even during that timeout window.
+let backupRunning = false;
+
+if (isLocalDev) {
   cron.schedule("0 2 * * *", () => {
-    backupDatabase().catch((err) => console.error("[backup] failed:", err));
+    if (backupRunning) {
+      console.warn("[backup] previous run still in progress — skipping this trigger");
+      return;
+    }
+    backupRunning = true;
+    backupDatabase()
+      .catch((err) => console.error("[backup] failed:", err))
+      .finally(() => {
+        backupRunning = false;
+      });
   });
 }
 
@@ -24,7 +46,7 @@ cron.schedule("0 * * * *", () => {
 });
 
 console.log(
-  process.env.NODE_ENV !== "production"
+  isLocalDev
     ? "[worker] scheduled: nightly backup (2:00 AM), hourly low-stock sweep"
-    : "[worker] scheduled: hourly low-stock sweep (nightly backup skipped in production — see Railway's managed Postgres backups)"
+    : "[worker] scheduled: hourly low-stock sweep (nightly backup skipped outside local dev — see Railway's managed Postgres backups)"
 );

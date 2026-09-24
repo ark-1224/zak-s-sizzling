@@ -11,11 +11,15 @@ import path from "node:path";
  * isn't implemented here (no storage credentials configured in this environment) —
  * flagging it rather than pretending it's handled.
  */
+// pg_dump's timeout: long enough for a real dump, short enough that a stalled
+// connection doesn't hang the worker (and block the next scheduled run — see the
+// concurrency guard in index.ts) forever.
+const PG_DUMP_TIMEOUT_MS = 5 * 60 * 1000;
+
 export async function backupDatabase(): Promise<string> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is not set");
 
-  const url = new URL(databaseUrl);
   const pgDumpPath = process.env.PG_DUMP_PATH || "pg_dump";
 
   const outDir = path.resolve(__dirname, "../../backups");
@@ -23,18 +27,17 @@ export async function backupDatabase(): Promise<string> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const outFile = path.join(outDir, `zaks-backup-${timestamp}.sql`);
 
+  // Pass the connection string straight through rather than hand-decomposing it into
+  // -h/-p/-U/-d flags: libpq's own URI parser handles percent-decoding and query-string
+  // params (sslmode, pooler flags, etc.) correctly, where the manual version didn't —
+  // a password containing a literal "%" not part of a valid escape (e.g. "P@ss50%Off")
+  // made decodeURIComponent throw, and any DATABASE_URL query params were silently
+  // dropped since only hostname/port/username/pathname were ever read.
   await new Promise<void>((resolve, reject) => {
     execFile(
       pgDumpPath,
-      [
-        "-h", url.hostname,
-        "-p", url.port || "5432",
-        "-U", decodeURIComponent(url.username),
-        "-d", url.pathname.slice(1),
-        "-F", "p",
-        "-f", outFile,
-      ],
-      { env: { ...process.env, PGPASSWORD: decodeURIComponent(url.password) } },
+      [databaseUrl, "-F", "p", "-f", outFile],
+      { timeout: PG_DUMP_TIMEOUT_MS },
       (error, _stdout, stderr) => {
         if (error) return reject(new Error(`pg_dump failed: ${stderr || error.message}`));
         resolve();
