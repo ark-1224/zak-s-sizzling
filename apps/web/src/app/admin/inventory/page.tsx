@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
 import { PageHeader, Card, AdmButton } from "@/components/admin/ui";
@@ -31,11 +31,24 @@ export default function AdminInventoryPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
 
+  // loadLog is triggered from several independent places (dropdown change, the
+  // inventory:updated socket handler, initial mount, post-save refresh) with no
+  // guarantee they resolve in the order they fired — switching the product filter
+  // quickly could let an older selection's response land after a newer one and
+  // overwrite it. A per-call request id (not a single effect-scoped `cancelled` flag,
+  // since there's no one effect that owns every call site here) makes only the most
+  // recently *initiated* call's result ever get applied.
+  const loadLogRequestId = useRef(0);
+
   const loadLog = useCallback(async (productId: string) => {
+    const requestId = ++loadLogRequestId.current;
     try {
       const query = productId === "all" ? "" : `?productId=${productId}`;
-      setAdjustments(await apiFetch<StockAdjustmentDTO[]>(`/api/inventory/adjustments${query}`, { auth: "staff" }));
+      const result = await apiFetch<StockAdjustmentDTO[]>(`/api/inventory/adjustments${query}`, { auth: "staff" });
+      if (requestId !== loadLogRequestId.current) return;
+      setAdjustments(result);
     } catch (err) {
+      if (requestId !== loadLogRequestId.current) return;
       setMessage(err instanceof ApiError ? err.message : "Could not load the adjustment log.");
     }
   }, []);

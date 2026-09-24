@@ -103,6 +103,7 @@ export function clearScheduledRefresh() {
 
 async function mintKioskSession(): Promise<string> {
   const res = await fetch(`${API_URL}/api/auth/kiosk-session`, { method: "POST" });
+  if (!res.ok) throw new Error("Could not start a kiosk session");
   const data = (await res.json()) as { token: string; sessionId: string };
   window.localStorage.setItem(KIOSK_TOKEN_KEY, data.token);
   return data.token;

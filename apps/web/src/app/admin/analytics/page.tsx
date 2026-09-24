@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { downloadAuthenticated } from "@/lib/download";
@@ -18,29 +18,45 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = useCallback(async (r: Range) => {
-    setLoading(true);
-    try {
-      const [s, t, m, p] = await Promise.all([
-        apiFetch<SalesReportPoint[]>(`/api/reports/sales?range=${r}`, { auth: "staff" }),
-        apiFetch<TopProductPoint[]>("/api/reports/top-products?limit=8", { auth: "staff" }),
-        apiFetch<InventoryMovementPoint[]>("/api/reports/inventory-movement", { auth: "staff" }),
-        apiFetch<ProfitabilityPoint[]>("/api/reports/profitability", { auth: "staff" }),
-      ]);
-      setSales(s);
-      setTopProducts(t);
-      setMovement(m);
-      setProfitability(p.filter((x) => x.cost !== null).slice(0, 10));
-    } catch (err) {
-      setMessage(err instanceof ApiError ? err.message : "Could not load analytics.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Each range switch (daily/weekly/monthly) fires four fresh requests with no
+  // ordering guard between them — clicking through ranges quickly could let an older
+  // response resolve after a newer one and overwrite it with stale data. `cancelled`
+  // here (matching the pattern already used in useCatalog.ts) drops any response that
+  // arrives after the range has since changed again.
   useEffect(() => {
-    load(range);
-  }, [load, range]);
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const [s, t, m, p] = await Promise.all([
+          apiFetch<SalesReportPoint[]>(`/api/reports/sales?range=${range}`, { auth: "staff" }),
+          apiFetch<TopProductPoint[]>("/api/reports/top-products?limit=8", { auth: "staff" }),
+          apiFetch<InventoryMovementPoint[]>("/api/reports/inventory-movement", { auth: "staff" }),
+          apiFetch<ProfitabilityPoint[]>("/api/reports/profitability", { auth: "staff" }),
+        ]);
+        if (cancelled) return;
+        setSales(s);
+        setTopProducts(t);
+        setMovement(m);
+        // marginPct is null whenever price is 0 (a promo/free item), independent of
+        // whether cost is recorded — filtering on cost alone let a 0-price item with a
+        // recorded cost through, and the table below assumes marginPct is always a
+        // number for anything it renders.
+        setProfitability(p.filter((x) => x.cost !== null && x.marginPct !== null).slice(0, 10));
+      } catch (err) {
+        if (cancelled) return;
+        setMessage(err instanceof ApiError ? err.message : "Could not load analytics.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [range]);
 
   const totalRevenue = sales.reduce((s, p) => s + p.revenue, 0);
   const totalOrders = sales.reduce((s, p) => s + p.orderCount, 0);

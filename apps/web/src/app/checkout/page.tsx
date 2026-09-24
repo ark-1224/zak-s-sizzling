@@ -4,9 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/components/kiosk/Toast";
+import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ensureKioskSession } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
+import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import type { OrderDTO, PaymentMethod } from "@zaks/shared-types";
 
 const METHODS: { id: PaymentMethod; label: string; icon: string; blurb: string }[] = [
@@ -24,6 +26,17 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("counter");
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<OrderDTO | null>(null);
+
+  // The idle-timeout only ran on the kiosk home page — a customer who walked away
+  // mid-checkout (stuck on payment selection, or the receipt screen after ordering)
+  // left the kiosk blocked for the next customer indefinitely, with no warning and no
+  // auto-reset. Applies here too now, for every state this page can be in.
+  const { showWarning, stayActive } = useIdleTimer({
+    onReset: () => {
+      clearCart();
+      window.location.href = "/";
+    },
+  });
 
   async function handlePlaceOrder() {
     setPlacing(true);
@@ -76,67 +89,78 @@ export default function CheckoutPage() {
   }
 
   if (placedOrder) {
-    return <ReceiptModal order={placedOrder} onDone={() => (window.location.href = "/")} />;
+    return (
+      <>
+        <ReceiptModal order={placedOrder} onDone={() => (window.location.href = "/")} />
+        <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+      </>
+    );
   }
 
   if (lines.length === 0) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-cream text-center">
-        <div className="font-display text-2xl text-matcha-deep">Your cart is empty</div>
-        <Link href="/" className="rounded-full bg-matcha px-6 py-3 font-bold text-cream shadow-card">
-          Back to menu
-        </Link>
-      </div>
+      <>
+        <div className="flex h-screen flex-col items-center justify-center gap-4 bg-cream text-center">
+          <div className="font-display text-2xl text-matcha-deep">Your cart is empty</div>
+          <Link href="/" className="rounded-full bg-matcha px-6 py-3 font-bold text-cream shadow-card">
+            Back to menu
+          </Link>
+        </div>
+        <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+      </>
     );
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-lg bg-cream px-6 py-8">
-      <Link href="/" className="mb-6 inline-block text-sm text-ink-soft">
-        ← Back to menu
-      </Link>
-      <h1 className="font-display mb-6 text-2xl font-semibold text-matcha-deep">Checkout</h1>
+    <>
+      <div className="mx-auto min-h-screen max-w-lg bg-cream px-6 py-8">
+        <Link href="/" className="mb-6 inline-block text-sm text-ink-soft">
+          ← Back to menu
+        </Link>
+        <h1 className="font-display mb-6 text-2xl font-semibold text-matcha-deep">Checkout</h1>
 
-      <div className="mb-6 rounded-xl border border-line bg-white p-5">
-        {lines.map((l) => (
-          <div key={l.cartId} className="flex justify-between py-1.5 text-sm">
-            <span>
-              {l.qty} × {l.name}
-            </span>
-            <span className="font-semibold">₱{(l.price * l.qty).toFixed(2)}</span>
+        <div className="mb-6 rounded-xl border border-line bg-white p-5">
+          {lines.map((l) => (
+            <div key={l.cartId} className="flex justify-between py-1.5 text-sm">
+              <span>
+                {l.qty} × {l.name}
+              </span>
+              <span className="font-semibold">₱{(l.price * l.qty).toFixed(2)}</span>
+            </div>
+          ))}
+          <div className="mt-3 flex justify-between border-t border-line pt-3 text-lg font-bold">
+            <span>Total</span>
+            <span className="text-honey">₱{total.toFixed(2)}</span>
           </div>
-        ))}
-        <div className="mt-3 flex justify-between border-t border-line pt-3 text-lg font-bold">
-          <span>Total</span>
-          <span className="text-honey">₱{total.toFixed(2)}</span>
         </div>
-      </div>
 
-      <div className="mb-6 space-y-2.5">
-        {METHODS.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setMethod(m.id)}
-            className={`flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-colors ${
-              method === m.id ? "border-matcha bg-available/8" : "border-line bg-white"
-            }`}
-          >
-            <span className="text-2xl">{m.icon}</span>
-            <span>
-              <span className="block font-semibold text-ink">{m.label}</span>
-              <span className="block text-xs text-ink-soft">{m.blurb}</span>
-            </span>
-          </button>
-        ))}
-      </div>
+        <div className="mb-6 space-y-2.5">
+          {METHODS.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setMethod(m.id)}
+              className={`flex w-full items-center gap-3 rounded-xl border-2 p-4 text-left transition-colors ${
+                method === m.id ? "border-matcha bg-available/8" : "border-line bg-white"
+              }`}
+            >
+              <span className="text-2xl">{m.icon}</span>
+              <span>
+                <span className="block font-semibold text-ink">{m.label}</span>
+                <span className="block text-xs text-ink-soft">{m.blurb}</span>
+              </span>
+            </button>
+          ))}
+        </div>
 
-      <button
-        disabled={placing}
-        onClick={handlePlaceOrder}
-        className="w-full rounded-full bg-honey py-4 text-base font-bold text-matcha-deep shadow-card disabled:bg-grey-out disabled:text-white disabled:shadow-none"
-      >
-        {placing ? "Placing order…" : `Place order — ₱${total.toFixed(2)}`}
-      </button>
-    </div>
+        <button
+          disabled={placing}
+          onClick={handlePlaceOrder}
+          className="w-full rounded-full bg-honey py-4 text-base font-bold text-matcha-deep shadow-card disabled:bg-grey-out disabled:text-white disabled:shadow-none"
+        >
+          {placing ? "Placing order…" : `Place order — ₱${total.toFixed(2)}`}
+        </button>
+      </div>
+      <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+    </>
   );
 }

@@ -4,7 +4,9 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
+import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
+import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import type { OrderDTO } from "@zaks/shared-types";
 
 // PayMongo's success_url target (set in apps/api/src/modules/payments/service.ts).
@@ -15,6 +17,16 @@ function CheckoutSuccessContent() {
   const orderId = params.get("order");
   const [order, setOrder] = useState<OrderDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // This page (arrived at from a PayMongo redirect) had no idle-timeout at all — a
+  // customer who walked away here left the kiosk stuck on the receipt indefinitely,
+  // same underlying gap as /checkout. Cart's already empty by this point, so reset is
+  // just "go home."
+  const { showWarning, stayActive } = useIdleTimer({
+    onReset: () => {
+      window.location.href = "/";
+    },
+  });
 
   useEffect(() => {
     if (!orderId) return;
@@ -45,20 +57,33 @@ function CheckoutSuccessContent() {
 
   if (!orderId || error) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-cream text-center">
-        <div className="font-display text-2xl text-matcha-deep">{error ?? "No order to show"}</div>
-        <Link href="/" className="rounded-full bg-matcha px-6 py-3 font-bold text-cream shadow-card">
-          Back to menu
-        </Link>
-      </div>
+      <>
+        <div className="flex h-screen flex-col items-center justify-center gap-4 bg-cream text-center">
+          <div className="font-display text-2xl text-matcha-deep">{error ?? "No order to show"}</div>
+          <Link href="/" className="rounded-full bg-matcha px-6 py-3 font-bold text-cream shadow-card">
+            Back to menu
+          </Link>
+        </div>
+        <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+      </>
     );
   }
 
   if (!order) {
-    return <div className="flex h-screen items-center justify-center text-ink-soft">Confirming your payment…</div>;
+    return (
+      <>
+        <div className="flex h-screen items-center justify-center text-ink-soft">Confirming your payment…</div>
+        <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+      </>
+    );
   }
 
-  return <ReceiptModal order={order} onDone={() => (window.location.href = "/")} />;
+  return (
+    <>
+      <ReceiptModal order={order} onDone={() => (window.location.href = "/")} />
+      <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+    </>
+  );
 }
 
 export default function CheckoutSuccessPage() {

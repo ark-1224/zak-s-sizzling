@@ -159,7 +159,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
         {error && <p className="mb-3 text-sm text-adm-bad">{error}</p>}
 
         <div className="mt-2 flex justify-end gap-2.5">
-          <AdmButton type="button" variant="secondary" onClick={onClose}>
+          <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>
           <AdmButton type="submit" variant="primary" disabled={saving}>
