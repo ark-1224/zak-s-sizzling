@@ -10,6 +10,7 @@ import { CategoryRail } from "@/components/kiosk/CategoryRail";
 import { ProductGrid } from "@/components/kiosk/ProductGrid";
 import { ProductModal } from "@/components/kiosk/ProductModal";
 import { CartDrawer } from "@/components/kiosk/CartDrawer";
+import { MobileCartBar } from "@/components/kiosk/MobileCartBar";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 
 // Kiosk home ("/"). Ported/composed from kiosk.html's #app shell (Downloads/kiosk.html,
@@ -43,11 +44,13 @@ export default function KioskHomePage() {
   const { showWarning, stayActive } = useIdleTimer({ onReset: resetKioskSession });
 
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const matchesCategory = activeCategory === "all" || p.categoryId === activeCategory;
-      const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
+    return products
+      .filter((p) => {
+        const matchesCategory = activeCategory === "all" || p.categoryId === activeCategory;
+        const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      })
+      .sort((a, b) => Number(!a.isAvailable) - Number(!b.isAvailable)); // sold-out items last; Array.sort is stable, so order is otherwise unchanged
   }, [products, activeCategory, searchQuery]);
 
   const activeCategoryObj = categories.find((c) => c.id === activeCategory);
@@ -73,7 +76,7 @@ export default function KioskHomePage() {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenCart={() => setCartOpen(true)} />
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <CategoryRail categories={categories} activeCategory={activeCategory} onSelect={setActiveCategory} />
         <ProductGrid
           title={title}
@@ -84,6 +87,7 @@ export default function KioskHomePage() {
       </div>
       {openProduct && <ProductModal product={openProduct} onClose={() => setOpenProductId(null)} />}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <MobileCartBar onOpenCart={() => setCartOpen(true)} />
       <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
     </div>
   );

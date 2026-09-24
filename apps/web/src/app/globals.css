@@ -17,6 +17,9 @@
   --line: #e1d0ae;
   --white: #ffffff;
   --grey-out: #a69a88;
+  /* Same hue as --honey, darkened so price text on a white card meets WCAG AA (4.5:1)
+     at normal (non-large) text sizes — --honey itself only hits ~2.8:1 on white. */
+  --price-accent: #9c5a1a;
   --radius-card: 22px 8px 22px 8px;
   --radius-soft: 14px;
   --shadow: 0 10px 28px -14px rgba(42, 32, 24, 0.4);
@@ -62,6 +65,7 @@
   --color-available: var(--available);
   --color-line: var(--line);
   --color-grey-out: var(--grey-out);
+  --color-price-accent: var(--price-accent);
 
   --radius-card: 22px 8px 22px 8px;
   --radius-soft: 14px;
