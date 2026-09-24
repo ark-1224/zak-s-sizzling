@@ -40,7 +40,7 @@ export async function createStaffUser(input: {
     const user = await prisma.user.create({
       data: {
         name: input.name,
-        email: input.email,
+        email: input.email.toLowerCase(), // matches loginWithPassword's lowercase lookup
         passwordHash: await bcrypt.hash(input.password, 10),
         roleId: role.id,
       },

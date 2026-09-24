@@ -24,8 +24,12 @@ export function createApp() {
   app.use(cookieParser());
   // Stashes the raw request body on req.rawBody — needed by the PayMongo webhook route
   // to verify the Paymongo-Signature header, which is computed over the exact raw bytes.
+  // limit raised from Express's 100kb default: bulk product import sends the whole CSV
+  // as a JSON string field, which a real catalog of a few hundred items with
+  // descriptions can plausibly exceed.
   app.use(
     express.json({
+      limit: "5mb",
       verify: (req: Request & { rawBody?: Buffer }, _res, buf) => {
         req.rawBody = buf;
       },

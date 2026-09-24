@@ -22,7 +22,10 @@ function issueSession(user: { id: string; name: string; email: string; role: { n
 }
 
 export async function loginWithPassword(email: string, password: string) {
-  const user = await prisma.user.findUnique({ where: { email }, include: { role: true } });
+  // Emails are stored/compared lowercase so "Staff@Zaks.com" and "staff@zaks.com"
+  // aren't treated as different accounts — Postgres varchar comparison is otherwise
+  // case-sensitive.
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() }, include: { role: true } });
   if (!user || !user.isActive) throw new HttpError(401, "Invalid email or password");
 
   const valid = await bcrypt.compare(password, user.passwordHash);

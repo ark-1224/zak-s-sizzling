@@ -101,6 +101,13 @@ export function verifyWebhookSignature(rawBody: Buffer, signatureHeader: string 
   const candidateSignature = parts.li ?? parts.te;
   if (!timestamp || !candidateSignature) return false;
 
+  // A valid signature never expires on its own — without this, a payload+signature
+  // captured once (server logs, a misconfigured proxy) would stay replayable
+  // indefinitely, re-triggering stock deduction for an order already paid for.
+  const REPLAY_WINDOW_MS = 5 * 60 * 1000;
+  const signedAtMs = Number(timestamp) * 1000;
+  if (!Number.isFinite(signedAtMs) || Math.abs(Date.now() - signedAtMs) > REPLAY_WINDOW_MS) return false;
+
   const expected = createHmac("sha256", secret).update(`${timestamp}.${rawBody.toString("utf8")}`).digest("hex");
 
   const expectedBuf = Buffer.from(expected, "hex");

@@ -54,13 +54,24 @@ function generateOrderNumber(): string {
 
 export async function createOrder(input: CreateOrderInput) {
   const productIds = input.items.map((i) => i.productId);
-  const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
+  const products = await prisma.product.findMany({
+    where: { id: { in: productIds } },
+    include: { inventory: true },
+  });
 
   const productById = new Map(products.map((p) => [p.id, p]));
   for (const item of input.items) {
     const product = productById.get(item.productId);
     if (!product) throw new HttpError(404, `Product ${item.productId} not found`);
     if (!product.isAvailable) throw new HttpError(409, `${product.name} is currently unavailable`);
+    // isAvailable only means "more than zero in stock" — it doesn't guarantee enough
+    // units for THIS order. The actual deduction at payment time (applyStockChange)
+    // is what atomically enforces this against true concurrent orders; this check is
+    // the up-front rejection so a customer doesn't get through checkout for something
+    // that was never going to be fulfillable.
+    if (product.inventory && product.inventory.stockQty < item.qty) {
+      throw new HttpError(409, `Only ${product.inventory.stockQty} of ${product.name} left in stock`);
+    }
   }
 
   const lines = input.items.map((item) => {
@@ -113,6 +124,16 @@ export async function getOrderById(id: string): Promise<OrderDTO | null> {
     include: { items: { include: { product: true } }, payment: true },
   });
   return order ? toOrderDTO(order) : null;
+}
+
+/**
+ * kioskSessionId isn't part of OrderDTO (no reason to expose it to every caller), so
+ * route handlers that need to check order ownership for an anonymous kiosk session
+ * ask for it separately rather than it leaking into the public response shape.
+ */
+export async function getOrderOwnerSessionId(id: string): Promise<string | null | undefined> {
+  const order = await prisma.order.findUnique({ where: { id }, select: { kioskSessionId: true } });
+  return order?.kioskSessionId;
 }
 
 /** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */

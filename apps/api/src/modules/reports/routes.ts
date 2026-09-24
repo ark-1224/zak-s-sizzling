@@ -12,6 +12,17 @@ function parseRange(value: unknown): "daily" | "weekly" | "monthly" {
   return "daily";
 }
 
+// A non-numeric ?limit (NaN) previously slipped past the default parameter (which
+// only applies to undefined, not NaN) and silently produced an empty result via
+// .slice(0, NaN); a negative value silently sliced from the end of the list instead
+// of being rejected. Falls back to `fallback` for anything that isn't a positive
+// integer, and caps the top end so a huge value can't force an unbounded query.
+function parseLimit(value: unknown, fallback: number): number {
+  const n = Number(value);
+  if (!Number.isInteger(n) || n <= 0) return fallback;
+  return Math.min(n, 1000);
+}
+
 reportsRouter.get("/sales", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
     res.json(await getSalesReport(parseRange(req.query.range)));
@@ -22,7 +33,7 @@ reportsRouter.get("/sales", authenticate, authorize("admin", "staff"), async (re
 
 reportsRouter.get("/top-products", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    res.json(await getTopProducts(req.query.limit ? Number(req.query.limit) : undefined));
+    res.json(await getTopProducts(parseLimit(req.query.limit, 10)));
   } catch (err) {
     next(err);
   }
