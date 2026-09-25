@@ -8,6 +8,8 @@ import { useCart } from "@/hooks/useCart";
 // Below sm (640px) the logo/name/search/cart-pill couldn't all fit on one row without
 // clipping the search placeholder ("Search m"). Search now drops to its own full-width
 // row below the logo/cart row on mobile; at sm and up it goes back to a single row.
+// Kept slim (py-2.5) because height is the scarce dimension on the 1024x600 kiosk.
+// The cart pill shows the item count and total at all times, even when empty.
 interface HeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -18,7 +20,7 @@ export function Header({ searchQuery, onSearchChange, onOpenCart }: HeaderProps)
   const { count, total } = useCart();
 
   return (
-    <header className="flex flex-shrink-0 flex-col gap-2.5 bg-matcha-deep px-3 pt-3 pb-2.5 text-cream sm:flex-row sm:items-center sm:gap-6 sm:px-7 sm:py-4.5">
+    <header className="flex flex-shrink-0 flex-col gap-2.5 bg-matcha-deep px-3 pt-3 pb-2.5 text-cream sm:flex-row sm:items-center sm:gap-6 sm:px-6 sm:py-2.5">
       <div className="flex items-center gap-2 sm:gap-3">
         <img
           src="/logo.jpg"
@@ -77,7 +79,7 @@ function SearchField({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         aria-label="Search menu"
-        className="min-h-11 w-full min-w-0 bg-transparent text-base text-cream outline-none placeholder:text-cream/70 sm:text-[15px]"
+        className="min-h-12 w-full min-w-0 bg-transparent text-base text-cream outline-none placeholder:text-cream/70 sm:text-lg"
       />
     </label>
   );
@@ -97,9 +99,10 @@ function CartPill({
   return (
     <button
       onClick={onOpenCart}
-      className={`flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-full bg-honey py-2 pr-3 pl-2.5 text-[13px] font-semibold text-matcha-deep shadow-card active:scale-96 sm:gap-3 sm:py-2.5 sm:pr-5 sm:pl-4 sm:text-[15px] ${className}`}
+      aria-label={`View order: ${count} item${count !== 1 ? "s" : ""}, ₱${total.toFixed(2)}`}
+      className={`flex min-h-12 flex-shrink-0 items-center gap-2 rounded-full bg-honey pr-4 pl-2 text-base font-bold text-matcha-deep shadow-card active:scale-96 sm:gap-3 sm:pr-5 sm:text-lg ${className}`}
     >
-      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-matcha-deep text-[11px] font-bold text-cream sm:h-5.5 sm:w-5.5 sm:text-xs">
+      <span className="flex h-8 min-w-8 flex-shrink-0 items-center justify-center rounded-full bg-matcha-deep px-1.5 text-sm font-bold text-cream">
         {count}
       </span>
       <span className="whitespace-nowrap">₱{total.toFixed(2)}</span>

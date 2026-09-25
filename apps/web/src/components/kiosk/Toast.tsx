@@ -26,11 +26,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {/* inset-x-4 + mx-auto + w-fit: centered, shrink-wrapped to the message, but never
           wider than the screen minus 16px gutters. (left-1/2 alone left the toast only
           half the screen to lay text out in, so longer messages became a tall sliver.)
-          bottom-24 on phones keeps it above the sticky "View cart" bar. */}
+          bottom-24 keeps it above the floating "View order" bar. It's information only, so
+          it never takes taps, and z-35 keeps it behind the basket (z-40) and item sheet
+          (z-50) instead of covering their totals and buttons. */}
       <div
         role="status"
-        className={`fixed inset-x-4 bottom-24 z-60 mx-auto w-fit max-w-md rounded-3xl bg-matcha-deep px-5 py-3 text-center text-base font-semibold text-cream shadow-2xl transition-all duration-250 sm:bottom-7 sm:px-6 sm:py-3.5 sm:text-sm ${
-          message ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-5 opacity-0"
+        className={`pointer-events-none fixed inset-x-4 bottom-24 z-35 mx-auto w-fit max-w-md rounded-3xl bg-ink px-5 py-3 text-center text-base font-semibold text-cream shadow-2xl transition-all duration-250 sm:px-6 sm:py-3.5 ${
+          message ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0"
         }`}
       >
         {message}

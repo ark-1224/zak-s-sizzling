@@ -12,7 +12,11 @@ export type IconName =
   | "users"
   | "logout"
   | "menu"
-  | "close";
+  | "close"
+  | "plus"
+  | "check"
+  | "chevronDown"
+  | "chevronRight";
 
 const SHAPES: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -77,6 +81,10 @@ const SHAPES: Record<IconName, React.ReactNode> = {
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
+  chevronDown: <path d="m6 9 6 6 6-6" />,
+  chevronRight: <path d="m9 6 6 6-6 6" />,
 };
 
 export function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: string }) {

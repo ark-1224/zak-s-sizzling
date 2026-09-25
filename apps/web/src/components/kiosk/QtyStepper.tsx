@@ -9,23 +9,23 @@ interface QtyStepperProps {
 
 export function QtyStepper({ qty, onChange, disabled }: QtyStepperProps) {
   return (
-    <div className="flex items-center overflow-hidden rounded-full border border-line bg-white">
+    <div className="flex shrink-0 items-center overflow-hidden rounded-full border border-line bg-white">
       <button
         disabled={disabled}
         onClick={() => qty > 1 && onChange(qty - 1)}
         aria-label="Decrease quantity"
-        className="h-11 w-11 text-lg font-bold text-matcha-deep active:bg-paper disabled:opacity-40"
+        className="h-12 w-12 text-xl font-bold text-matcha-deep active:bg-paper disabled:opacity-40"
       >
         −
       </button>
-      <span className="w-8.5 text-center text-base font-bold" aria-live="polite">
+      <span className="w-9 text-center text-lg font-bold" aria-live="polite">
         {qty}
       </span>
       <button
         disabled={disabled}
         onClick={() => onChange(qty + 1)}
         aria-label="Increase quantity"
-        className="h-11 w-11 text-lg font-bold text-matcha-deep active:bg-paper disabled:opacity-40"
+        className="h-12 w-12 text-xl font-bold text-matcha-deep active:bg-paper disabled:opacity-40"
       >
         +
       </button>

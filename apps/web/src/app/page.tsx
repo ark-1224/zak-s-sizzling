@@ -1,27 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Product } from "@zaks/shared-types";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCart } from "@/hooks/useCart";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
+import { useScrollSpy } from "@/hooks/useScrollSpy";
 import { ensureKioskSession } from "@/lib/auth";
 import { Header } from "@/components/kiosk/Header";
-import { ALL_ITEMS_ICON, CategoryRail } from "@/components/kiosk/CategoryRail";
-import { ProductGrid } from "@/components/kiosk/ProductGrid";
+import { CategoryRail } from "@/components/kiosk/CategoryRail";
+import { MenuList, MenuSkeleton, type MenuSection } from "@/components/kiosk/MenuList";
 import { ProductModal } from "@/components/kiosk/ProductModal";
 import { CartDrawer } from "@/components/kiosk/CartDrawer";
-import { MobileCartBar } from "@/components/kiosk/MobileCartBar";
+import { BasketBar } from "@/components/kiosk/BasketBar";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
+import { useToast } from "@/components/kiosk/Toast";
 
 // Kiosk home ("/"). Ported/composed from kiosk.html's #app shell (Downloads/kiosk.html,
-// lines 365-395). getFilteredProducts() from kiosk.html becomes the useMemo below.
-// Sprint 3: checkout/payment moved to its own /checkout page — this page only manages
-// browsing, the cart drawer, and the idle-timeout session reset.
+// lines 365-395). Sprint 3: checkout/payment moved to its own /checkout page — this page
+// only manages browsing, the cart drawer, and the idle-timeout session reset.
+//
+// Delivery-app layout: the whole menu is one scrolling list grouped into category
+// sections, and the category rail scrolls to a section instead of filtering to it.
 export default function KioskHomePage() {
   const { categories, products, loading, error } = useCatalog();
-  const { clearCart } = useCart();
+  const { addToCart, clearCart } = useCart();
+  const { showToast } = useToast();
 
-  const [activeCategory, setActiveCategory] = useState<number | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
@@ -33,63 +38,103 @@ export default function KioskHomePage() {
     });
   }, []);
 
+  // Same search match and "sold-out items last" ordering as before; the only change is
+  // that results are grouped by category (in the API's sortOrder) instead of flattened.
+  const sections = useMemo<MenuSection[]>(() => {
+    return categories
+      .map((category) => ({
+        category,
+        products: products
+          .filter((p) => p.categoryId === category.id)
+          .filter((p) => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+          .sort((a, b) => Number(!a.isAvailable) - Number(!b.isAvailable)), // stable sort: order otherwise unchanged
+      }))
+      .filter((section) => section.products.length > 0);
+  }, [categories, products, searchQuery]);
+
+  const sectionIds = useMemo(() => sections.map((s) => String(s.category.id)), [sections]);
+  const { containerRef, activeId, scrollToId, scrollToTop } = useScrollSpy(sectionIds);
+
+  // Categories with nothing to show (no search matches, or no products at all) can't be
+  // scrolled to, so the rail dims them.
+  const disabledCategoryIds = useMemo(
+    () => new Set(categories.filter((c) => !sectionIds.includes(String(c.id))).map((c) => c.id)),
+    [categories, sectionIds]
+  );
+
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    scrollToTop();
+  }
+
+  function handleQuickAdd(product: Product) {
+    addToCart(product, 1, "");
+    showToast(`Added 1 × ${product.name} to your order`);
+  }
+
+  const closeProduct = useCallback(() => setOpenProductId(null), []);
+
   function resetKioskSession() {
     clearCart();
     setCartOpen(false);
     setOpenProductId(null);
     setSearchQuery("");
-    setActiveCategory("all");
+    scrollToTop();
   }
 
   const { showWarning, stayActive } = useIdleTimer({ onReset: resetKioskSession });
 
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter((p) => {
-        const matchesCategory = activeCategory === "all" || p.categoryId === activeCategory;
-        const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesCategory && matchesSearch;
-      })
-      .sort((a, b) => Number(!a.isAvailable) - Number(!b.isAvailable)); // sold-out items last; Array.sort is stable, so order is otherwise unchanged
-  }, [products, activeCategory, searchQuery]);
-
-  const activeCategoryObj = categories.find((c) => c.id === activeCategory);
-  const title = activeCategory === "all" ? "All items" : (activeCategoryObj?.name ?? "");
-  const titleIcon = activeCategory === "all" ? ALL_ITEMS_ICON : (activeCategoryObj?.icon ?? undefined);
-  const subtitle = searchQuery
-    ? `Results for "${searchQuery}"`
-    : "Tap an item to see details and customize your order.";
-
   const openProduct = products.find((p) => p.id === openProductId);
-
-  if (loading) {
-    return <div className="flex h-dvh items-center justify-center text-ink-soft">Loading menu…</div>;
-  }
 
   if (error) {
     return (
-      <div className="flex h-dvh items-center justify-center px-4 text-center text-berry">
-        Could not reach the kitchen — {error}
+      <div className="flex h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+        <span aria-hidden="true" className="text-5xl">
+          🔌
+        </span>
+        <p className="font-display text-2xl text-matcha-deep">We couldn&apos;t load the menu</p>
+        <p className="max-w-md text-base text-ink-soft">Please try again, or ask our staff for help. ({error})</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="min-h-14 rounded-full bg-matcha px-8 text-lg font-bold text-cream shadow-card"
+        >
+          Try again
+        </button>
       </div>
     );
   }
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden">
-      <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenCart={() => setCartOpen(true)} />
+      <Header searchQuery={searchQuery} onSearchChange={handleSearchChange} onOpenCart={() => setCartOpen(true)} />
       <div className="flex min-h-0 flex-1">
-        <CategoryRail categories={categories} activeCategory={activeCategory} onSelect={setActiveCategory} />
-        <ProductGrid
-          title={title}
-          titleIcon={titleIcon}
-          subtitle={subtitle}
-          products={filteredProducts}
-          onOpenProduct={setOpenProductId}
-        />
+        {loading ? (
+          <>
+            <div className="w-16 shrink-0 border-r border-line bg-paper md:w-52 lg:w-56" />
+            <MenuSkeleton />
+          </>
+        ) : (
+          <>
+            <CategoryRail
+              categories={categories}
+              activeCategoryId={activeId ? Number(activeId) : null}
+              disabledIds={disabledCategoryIds}
+              onSelect={(id) => scrollToId(String(id))}
+            />
+            <MenuList
+              ref={containerRef}
+              sections={sections}
+              searchQuery={searchQuery}
+              onClearSearch={() => handleSearchChange("")}
+              onOpenProduct={setOpenProductId}
+              onQuickAdd={handleQuickAdd}
+            />
+          </>
+        )}
       </div>
-      {openProduct && <ProductModal product={openProduct} onClose={() => setOpenProductId(null)} />}
+      {openProduct && <ProductModal product={openProduct} onClose={closeProduct} />}
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
-      <MobileCartBar onOpenCart={() => setCartOpen(true)} />
+      <BasketBar onOpenCart={() => setCartOpen(true)} />
       <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
     </div>
   );
