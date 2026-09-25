@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
-import { AdmButton } from "@/components/admin/ui";
+import {
+  AdmButton,
+  admInputClass,
+  admLabelClass,
+  admModalActionsClass,
+  admModalBackdropClass,
+  admModalPanelClass,
+} from "@/components/admin/ui";
 import type { AdjustmentReason, Product } from "@zaks/shared-types";
 
 export const REASON_LABELS: Record<AdjustmentReason, string> = {
@@ -75,18 +82,18 @@ export function AdjustStockModal({
   }
 
   return (
-    <div className="font-adm-sans fixed inset-0 z-50 flex items-center justify-center bg-[#141310]/45 p-5">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-[8px] bg-adm-surface p-6.5 shadow-2xl">
-        <div className="mb-1 text-[10.5px] tracking-[.13em] text-adm-ink-3 uppercase">Adjust stock</div>
+    <div className={admModalBackdropClass}>
+      <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-md`}>
+        <div className="mb-1 text-xs tracking-[.13em] text-adm-ink-3 uppercase md:text-[10.5px]">Adjust stock</div>
         <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold tracking-tight">
-          <span>{product.icon}</span> {product.name}
+          <span>{product.icon}</span> <span className="min-w-0 break-words">{product.name}</span>
         </h2>
 
         <div className="mb-4 flex gap-1 rounded-[6px] border border-adm-line bg-adm-bg p-1">
           <button
             type="button"
             onClick={() => setMode("delta")}
-            className={`flex-1 rounded-[4px] py-1.5 text-[12.5px] font-medium transition-colors ${
+            className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-[12.5px] ${
               mode === "delta" ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
             }`}
           >
@@ -95,7 +102,7 @@ export function AdjustStockModal({
           <button
             type="button"
             onClick={() => setMode("set")}
-            className={`flex-1 rounded-[4px] py-1.5 text-[12.5px] font-medium transition-colors ${
+            className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-[12.5px] ${
               mode === "set" ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
             }`}
           >
@@ -105,12 +112,13 @@ export function AdjustStockModal({
 
         {mode === "delta" ? (
           <div className="mb-4">
-            <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Change by</span>
+            <span className={admLabelClass}>Change by</span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => bump(-1)}
-                className="h-9 w-9 flex-shrink-0 rounded-[5px] border border-adm-line text-base font-bold text-adm-accent"
+                aria-label="Decrease by 1"
+                className="h-11 w-11 flex-shrink-0 rounded-[5px] border border-adm-line text-lg font-bold text-adm-accent md:h-9 md:w-9 md:text-base"
               >
                 −
               </button>
@@ -118,23 +126,25 @@ export function AdjustStockModal({
                 type="number"
                 value={deltaText}
                 onChange={(e) => setDeltaText(e.target.value)}
-                className="font-adm-mono w-full rounded-[5px] border border-adm-line bg-adm-bg px-2.75 py-2 text-center text-[15px] outline-none focus:border-adm-accent"
+                aria-label="Change by"
+                className={`font-adm-mono text-center ${admInputClass}`}
               />
               <button
                 type="button"
                 onClick={() => bump(1)}
-                className="h-9 w-9 flex-shrink-0 rounded-[5px] border border-adm-line text-base font-bold text-adm-accent"
+                aria-label="Increase by 1"
+                className="h-11 w-11 flex-shrink-0 rounded-[5px] border border-adm-line text-lg font-bold text-adm-accent md:h-9 md:w-9 md:text-base"
               >
                 +
               </button>
             </div>
-            <div className="mt-2 flex justify-center gap-1.5">
+            <div className="mt-2 grid grid-cols-4 gap-1.5 md:flex md:justify-center">
               {[-5, -1, 1, 5].map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => bump(n)}
-                  className="font-adm-mono rounded-[4px] border border-adm-line px-2 py-0.5 text-[11px] text-adm-ink-2"
+                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-0 md:px-2 md:py-0.5 md:text-[11px]"
                 >
                   {n > 0 ? `+${n}` : n}
                 </button>
@@ -143,13 +153,13 @@ export function AdjustStockModal({
           </div>
         ) : (
           <label className="mb-4 block">
-            <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">New count</span>
+            <span className={admLabelClass}>New count</span>
             <input
               type="number"
               min="0"
               value={setText}
               onChange={(e) => setSetText(e.target.value)}
-              className="font-adm-mono w-full rounded-[5px] border border-adm-line bg-adm-bg px-2.75 py-2.25 text-[13px] outline-none focus:border-adm-accent"
+              className={`font-adm-mono ${admInputClass}`}
             />
           </label>
         )}
@@ -173,11 +183,11 @@ export function AdjustStockModal({
         </div>
 
         <label className="mb-3 block">
-          <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Reason</span>
+          <span className={admLabelClass}>Reason</span>
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value as AdjustmentReason)}
-            className="w-full rounded-[5px] border border-adm-line bg-adm-bg px-2.75 py-2.25 text-[13px] outline-none focus:border-adm-accent"
+            className={admInputClass}
           >
             {REASONS.map(([value, label]) => (
               <option key={value} value={value}>
@@ -188,20 +198,20 @@ export function AdjustStockModal({
         </label>
 
         <label className="mb-4 block">
-          <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Note (optional)</span>
+          <span className={admLabelClass}>Note (optional)</span>
           <input
             type="text"
             maxLength={200}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="e.g. Recounted during closing shift"
-            className="w-full rounded-[5px] border border-adm-line bg-adm-bg px-2.75 py-2.25 text-[13px] outline-none focus:border-adm-accent"
+            className={admInputClass}
           />
         </label>
 
-        {error && <p className="mb-3 text-sm text-adm-bad">{error}</p>}
+        {error && <p className="mb-3 text-base text-adm-bad md:text-sm">{error}</p>}
 
-        <div className="flex justify-end gap-2.5">
+        <div className={admModalActionsClass}>
           <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>

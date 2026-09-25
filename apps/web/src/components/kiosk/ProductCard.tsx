@@ -36,21 +36,20 @@ export function ProductCard({ product, onOpen }: ProductCardProps) {
           {product.icon}
         </span>
         {out && (
-          <span className="absolute top-1.5 left-1.5 rounded-full bg-ink-soft/95 px-2.25 py-1 text-[10px] font-bold text-cream shadow sm:top-2 sm:left-2 sm:text-[11px]">
+          <span className="absolute top-1.5 left-1.5 rounded-full bg-ink-soft/95 px-2.25 py-1 text-xs font-bold text-cream shadow sm:top-2 sm:left-2">
             Sold out
           </span>
         )}
       </div>
-      <div className="flex flex-1 flex-col gap-1 px-2.5 pt-2 pb-2.5 sm:gap-1.5 sm:px-3.5 sm:pt-3 sm:pb-3.5">
-        <div className="line-clamp-2 min-h-[2.3em] text-[13px] leading-tight font-semibold sm:text-[15.5px]">
+      <div className="flex min-w-0 flex-1 flex-col gap-1 px-2.5 pt-2 pb-2.5 sm:gap-1.5 sm:px-3.5 sm:pt-3 sm:pb-3.5">
+        <div className="line-clamp-2 min-h-[2.3em] text-base leading-tight font-semibold break-words">
           {product.name}
         </div>
-        <div className="mt-auto flex items-center justify-between gap-2 pt-0.5">
-          <span className="text-[14px] font-bold text-price-accent sm:text-[15.5px]">
-            ₱{product.price.toFixed(2)}
-          </span>
+        {/* Stacked until lg: below that the cards are too narrow for price + stock status on one line. */}
+        <div className="mt-auto flex flex-col items-start gap-0.5 pt-0.5 lg:flex-row lg:items-center lg:justify-between lg:gap-2">
+          <span className="text-base font-bold text-price-accent">₱{product.price.toFixed(2)}</span>
           <span
-            className={`flex flex-shrink-0 items-center gap-1 text-[11px] font-semibold ${out ? "text-ink-soft" : "text-available"}`}
+            className={`flex flex-shrink-0 items-center gap-1 text-xs font-semibold ${out ? "text-ink-soft" : "text-available"}`}
           >
             <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${out ? "bg-ink-soft" : "bg-available"}`} />
             {out ? "Unavailable" : "In stock"}

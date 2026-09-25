@@ -11,11 +11,11 @@ export function IdleTimeoutOverlay({ show, onStayActive }: IdleTimeoutOverlayPro
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center bg-[#22301f]/70 p-5">
-      <div className="w-full max-w-sm rounded-card bg-cream p-8 text-center shadow-2xl">
+    <div className="fixed inset-0 z-70 flex items-center justify-center bg-[#22301f]/70 p-3 sm:p-5">
+      <div role="alertdialog" aria-modal="true" aria-label="Still there?" className="w-full max-w-sm rounded-card bg-cream p-6 text-center shadow-2xl sm:p-8">
         <div className="mb-3 text-4xl">⏳</div>
         <h2 className="font-display mb-1.5 text-xl font-semibold text-matcha-deep">Still there?</h2>
-        <p className="mb-6 text-sm text-ink-soft">
+        <p className="mb-6 text-base text-ink-soft">
           This kiosk will reset shortly to keep things moving for the next customer.
         </p>
         <button

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { ProductForm } from "@/components/admin/ProductForm";
-import { PageHeader, Card, AdmButton, StatusPill } from "@/components/admin/ui";
+import { PageHeader, Card, AdmButton, StatusPill, admButtonClass } from "@/components/admin/ui";
 import type { Category, Product } from "@zaks/shared-types";
 
 export default function AdminProductsPage() {
@@ -51,8 +51,8 @@ export default function AdminProductsPage() {
         title="Products"
         actions={
           <>
-            <Link href="/admin/import">
-              <AdmButton variant="secondary">Bulk import</AdmButton>
+            <Link href="/admin/import" className={admButtonClass({ variant: "secondary" })}>
+              Bulk import
             </Link>
             <AdmButton variant="primary" onClick={() => setEditing("new")}>
               + Add product
@@ -61,13 +61,45 @@ export default function AdminProductsPage() {
         }
       />
 
-      {message && <div className="text-sm text-adm-bad">{message}</div>}
+      {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
       {loading ? (
         <div className="text-adm-ink-3">Loading…</div>
       ) : (
         <Card>
-          <div className="overflow-x-auto">
+          <ul className="divide-y divide-adm-line-soft md:hidden">
+            {products.map((p) => (
+              <li key={p.id} className="flex flex-col gap-2.5 px-4 py-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 text-base font-medium break-words">
+                    {p.icon} {p.name}
+                  </div>
+                  <StatusPill tone={p.isAvailable ? "ok" : "bad"}>{p.isAvailable ? "IN STOCK" : "SOLD OUT"}</StatusPill>
+                </div>
+                <dl className="grid grid-cols-2 items-baseline gap-x-3 gap-y-1 text-base">
+                  <dt className="text-sm text-adm-ink-3">Category</dt>
+                  <dd className="min-w-0 break-words text-adm-ink-2">{p.category?.name}</dd>
+                  <dt className="text-sm text-adm-ink-3">Price</dt>
+                  <dd className="font-adm-mono">₱{p.price.toFixed(2)}</dd>
+                  <dt className="text-sm text-adm-ink-3">Cost</dt>
+                  <dd className="font-adm-mono text-adm-ink-2">{p.cost !== null ? `₱${p.cost.toFixed(2)}` : "—"}</dd>
+                  <dt className="text-sm text-adm-ink-3">Stock</dt>
+                  <dd className="font-adm-mono">{p.stockQty ?? "—"}</dd>
+                  <dt className="text-sm text-adm-ink-3">Barcode</dt>
+                  <dd className="font-adm-mono min-w-0 break-all text-adm-ink-2">{p.barcode ?? "—"}</dd>
+                </dl>
+                <div className="grid grid-cols-2 gap-2">
+                  <AdmButton variant="secondary" onClick={() => setEditing(p)}>
+                    Edit
+                  </AdmButton>
+                  <AdmButton variant="danger" onClick={() => handleDelete(p)}>
+                    Delete
+                  </AdmButton>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">

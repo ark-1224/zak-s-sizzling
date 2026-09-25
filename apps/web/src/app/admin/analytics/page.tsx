@@ -76,9 +76,9 @@ export default function AnalyticsPage() {
     <div className="flex flex-col gap-4.5">
       <PageHeader eyebrow="Visual analytics & reports" title="Performance" />
 
-      {message && <div className="text-sm text-adm-bad">{message}</div>}
+      {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
-      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <KpiTile label="Revenue" value={`₱${totalRevenue.toFixed(2)}`} />
         <KpiTile label="Orders" value={String(totalOrders)} />
         <KpiTile label="Top product" value={topProducts[0]?.productName ?? "—"} />
@@ -92,19 +92,20 @@ export default function AnalyticsPage() {
       <Card
         title="Sales"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {(["daily", "weekly", "monthly"] as Range[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
-                className={`rounded-[4px] px-2.5 py-1 text-[11.5px] font-medium ${
-                  range === r ? "border border-adm-accent text-adm-accent" : "text-adm-ink-2"
+                aria-pressed={range === r}
+                className={`min-h-11 rounded-[4px] border px-3 text-base font-medium md:min-h-0 md:px-2.5 md:py-1 md:text-[11.5px] ${
+                  range === r ? "border-adm-accent text-adm-accent" : "border-transparent text-adm-ink-2"
                 }`}
               >
                 {r}
               </button>
             ))}
-            <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("sales")}>
+            <AdmButton variant="secondary" size="compact" onClick={() => handleExport("sales")}>
               Export CSV
             </AdmButton>
           </div>
@@ -131,17 +132,17 @@ export default function AnalyticsPage() {
         <Card
           title="Top-selling products"
           actions={
-            <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("top-products")}>
+            <AdmButton variant="secondary" size="compact" onClick={() => handleExport("top-products")}>
               Export CSV
             </AdmButton>
           }
         >
           <div className="p-4">
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={topProducts} layout="vertical" margin={{ left: 40 }}>
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 0, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="productName" width={120} tick={{ fontSize: 11 }} />
+                <YAxis type="category" dataKey="productName" width={104} tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Bar dataKey="qtySold" fill="var(--adm-warn)" radius={[0, 3, 3, 0]} />
               </BarChart>
@@ -152,18 +153,18 @@ export default function AnalyticsPage() {
         <Card
           title="Profitability per item"
           actions={
-            <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("profitability")}>
+            <AdmButton variant="secondary" size="compact" onClick={() => handleExport("profitability")}>
               Export CSV
             </AdmButton>
           }
         >
           {profitability.length === 0 ? (
-            <div className="p-4 text-sm text-adm-ink-3">
+            <div className="p-4 text-base text-adm-ink-3 md:text-sm">
               No products have a cost recorded yet — add one in Products to see margins here.
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base md:text-sm">
                 <thead>
                   <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
                     <th className="px-4.5 py-2.75 font-medium">Item</th>
@@ -198,13 +199,13 @@ export default function AnalyticsPage() {
       <Card
         title="Inventory movement"
         actions={
-          <AdmButton variant="secondary" className="px-2.5 py-1 text-[11.5px]" onClick={() => handleExport("inventory-movement")}>
+          <AdmButton variant="secondary" size="compact" onClick={() => handleExport("inventory-movement")}>
             Export CSV
           </AdmButton>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-base md:text-sm">
             <thead>
               <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
                 <th className="px-4.5 py-2.75 font-medium">Product</th>

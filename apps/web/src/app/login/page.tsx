@@ -26,34 +26,36 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-cream">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-card bg-white p-8 shadow-card">
+    <div className="flex min-h-dvh items-center justify-center bg-cream px-4 py-8">
+      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-card bg-white p-6 shadow-card sm:p-8">
         <h1 className="font-display mb-1 text-2xl font-semibold text-matcha-deep">Staff &amp; Admin Login</h1>
-        <p className="mb-6 text-sm text-ink-soft">Zak&apos;s Sizzling Hub back office</p>
+        <p className="mb-6 text-base text-ink-soft">Zak&apos;s Sizzling Hub back office</p>
 
-        <label className="mb-3 block text-sm">
+        <label className="mb-3 block text-base">
           <span className="mb-1 block font-medium text-ink">Email</span>
           <input
             type="email"
             required
+            autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-line px-3 py-2 outline-none focus:border-matcha"
+            className="min-h-11 w-full rounded-lg border border-line px-3 text-base outline-none focus:border-matcha"
           />
         </label>
 
-        <label className="mb-5 block text-sm">
+        <label className="mb-5 block text-base">
           <span className="mb-1 block font-medium text-ink">Password</span>
           <input
             type="password"
             required
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-line px-3 py-2 outline-none focus:border-matcha"
+            className="min-h-11 w-full rounded-lg border border-line px-3 text-base outline-none focus:border-matcha"
           />
         </label>
 
-        {error && <p className="mb-4 text-sm text-berry">{error}</p>}
+        {error && <p className="mb-4 text-base text-berry">{error}</p>}
 
         <button
           type="submit"

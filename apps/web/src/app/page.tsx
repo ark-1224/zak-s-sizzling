@@ -6,7 +6,7 @@ import { useCart } from "@/hooks/useCart";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ensureKioskSession } from "@/lib/auth";
 import { Header } from "@/components/kiosk/Header";
-import { CategoryRail } from "@/components/kiosk/CategoryRail";
+import { ALL_ITEMS_ICON, CategoryRail } from "@/components/kiosk/CategoryRail";
 import { ProductGrid } from "@/components/kiosk/ProductGrid";
 import { ProductModal } from "@/components/kiosk/ProductModal";
 import { CartDrawer } from "@/components/kiosk/CartDrawer";
@@ -55,6 +55,7 @@ export default function KioskHomePage() {
 
   const activeCategoryObj = categories.find((c) => c.id === activeCategory);
   const title = activeCategory === "all" ? "All items" : (activeCategoryObj?.name ?? "");
+  const titleIcon = activeCategory === "all" ? ALL_ITEMS_ICON : (activeCategoryObj?.icon ?? undefined);
   const subtitle = searchQuery
     ? `Results for "${searchQuery}"`
     : "Tap an item to see details and customize your order.";
@@ -62,24 +63,25 @@ export default function KioskHomePage() {
   const openProduct = products.find((p) => p.id === openProductId);
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center text-ink-soft">Loading menu…</div>;
+    return <div className="flex h-dvh items-center justify-center text-ink-soft">Loading menu…</div>;
   }
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center text-berry">
+      <div className="flex h-dvh items-center justify-center px-4 text-center text-berry">
         Could not reach the kitchen — {error}
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden">
+    <div className="flex h-dvh w-full flex-col overflow-hidden">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenCart={() => setCartOpen(true)} />
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+      <div className="flex min-h-0 flex-1">
         <CategoryRail categories={categories} activeCategory={activeCategory} onSelect={setActiveCategory} />
         <ProductGrid
           title={title}
+          titleIcon={titleIcon}
           subtitle={subtitle}
           products={filteredProducts}
           onOpenProduct={setOpenProductId}

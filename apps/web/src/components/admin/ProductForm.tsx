@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
-import { AdmButton } from "./ui";
+import { AdmButton, admInputClass, admLabelClass, admModalActionsClass, admModalBackdropClass, admModalPanelClass } from "./ui";
 import type { Category, Product } from "@zaks/shared-types";
 
 // Add/Edit Product modal — fields match the manuscript's wireframe (name, barcode,
@@ -66,18 +66,15 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   }
 
   return (
-    <div className="font-adm-sans fixed inset-0 z-50 flex items-center justify-center bg-[#141310]/45 p-5">
-      <form
-        onSubmit={handleSubmit}
-        className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-[8px] bg-adm-surface p-6.5 shadow-2xl"
-      >
-        <div className="font-adm-mono mb-1 text-[10px] tracking-[.14em] text-adm-ink-3 uppercase">
+    <div className={admModalBackdropClass}>
+      <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-lg`}>
+        <div className="font-adm-mono mb-1 text-xs tracking-[.14em] text-adm-ink-3 uppercase md:text-[10px]">
           {product ? "Edit product" : "New product"}
         </div>
-        <h2 className="mb-5 text-lg font-semibold tracking-tight">{product ? product.name : "Add a product"}</h2>
+        <h2 className="mb-5 text-lg font-semibold tracking-tight break-words">{product ? product.name : "Add a product"}</h2>
 
         <Field label="Name">
-          <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+          <input required value={name} onChange={(e) => setName(e.target.value)} className={admInputClass} />
         </Field>
 
         <Field label={`Barcode${justScanned ? " — scanned!" : ""}`}>
@@ -85,13 +82,13 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
             value={barcode}
             onChange={(e) => setBarcode(e.target.value)}
             placeholder="Scan with a barcode reader, or type manually"
-            className={`font-adm-mono ${inputCls} ${justScanned ? "border-adm-ok" : ""}`}
+            className={`font-adm-mono ${admInputClass} ${justScanned ? "border-adm-ok" : ""}`}
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
           <Field label="Category">
-            <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} className={inputCls}>
+            <select value={categoryId} onChange={(e) => setCategoryId(Number(e.target.value))} className={admInputClass}>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -100,11 +97,11 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
             </select>
           </Field>
           <Field label="Icon (emoji)">
-            <input value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={4} className={inputCls} />
+            <input value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={4} className={admInputClass} />
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
           <Field label="Price (₱)">
             <input
               required
@@ -113,7 +110,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className={`font-adm-mono ${inputCls}`}
+              className={`font-adm-mono ${admInputClass}`}
             />
           </Field>
           <Field label="Cost (₱)">
@@ -124,12 +121,12 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
               placeholder="Optional"
               value={cost}
               onChange={(e) => setCost(e.target.value)}
-              className={`font-adm-mono ${inputCls}`}
+              className={`font-adm-mono ${admInputClass}`}
             />
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
           <Field label="Stock qty">
             <input
               required
@@ -137,7 +134,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
               min="0"
               value={stockQty}
               onChange={(e) => setStockQty(e.target.value)}
-              className={`font-adm-mono ${inputCls}`}
+              className={`font-adm-mono ${admInputClass}`}
             />
           </Field>
           <Field label="Minimum level">
@@ -147,18 +144,18 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
               min="0"
               value={minStockThreshold}
               onChange={(e) => setMinStockThreshold(e.target.value)}
-              className={`font-adm-mono ${inputCls}`}
+              className={`font-adm-mono ${admInputClass}`}
             />
           </Field>
         </div>
 
         <Field label="Description">
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={`min-h-20 resize-none ${inputCls}`} />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={`h-20 resize-none py-2 ${admInputClass}`} />
         </Field>
 
-        {error && <p className="mb-3 text-sm text-adm-bad">{error}</p>}
+        {error && <p className="mb-3 text-base text-adm-bad md:text-sm">{error}</p>}
 
-        <div className="mt-2 flex justify-end gap-2.5">
+        <div className={`mt-2 ${admModalActionsClass}`}>
           <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>
@@ -171,13 +168,10 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   );
 }
 
-const inputCls =
-  "w-full rounded-[5px] border border-adm-line bg-adm-bg px-2.75 py-2.25 text-[13px] outline-none focus:border-adm-accent";
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="mb-3 block">
-      <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">{label}</span>
+      <span className={admLabelClass}>{label}</span>
       {children}
     </label>
   );

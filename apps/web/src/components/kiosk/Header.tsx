@@ -52,8 +52,10 @@ function SearchField({
   className?: string;
 }) {
   return (
-    <div
-      className={`flex min-h-11 min-w-0 items-center gap-2.5 rounded-full border border-white/18 bg-white/12 px-4 py-2 sm:gap-2.5 sm:px-5 sm:py-2.5 ${className}`}
+    // A <label> so tapping anywhere on the pill (icon included) focuses the input, and the
+    // input itself fills the pill's full 44px height rather than a 24px strip in the middle.
+    <label
+      className={`flex min-w-0 cursor-text items-center gap-2.5 rounded-full border border-white/18 bg-white/12 px-4 sm:px-5 ${className}`}
     >
       <svg
         width="17"
@@ -62,6 +64,7 @@ function SearchField({
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
+        aria-hidden="true"
         className="flex-shrink-0 opacity-85"
       >
         <circle cx="11" cy="11" r="7" />
@@ -73,9 +76,10 @@ function SearchField({
         autoComplete="off"
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full min-w-0 bg-transparent text-[14px] text-cream outline-none placeholder:text-cream/55 sm:text-[15px]"
+        aria-label="Search menu"
+        className="min-h-11 w-full min-w-0 bg-transparent text-base text-cream outline-none placeholder:text-cream/70 sm:text-[15px]"
       />
-    </div>
+    </label>
   );
 }
 

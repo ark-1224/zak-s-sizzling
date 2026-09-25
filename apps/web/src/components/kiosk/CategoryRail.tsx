@@ -1,115 +1,161 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Category } from "@zaks/shared-types";
+import { Icon } from "@/components/Icon";
 
 // Ported from kiosk.html's nav.cat-rail / .cat-item (Downloads/kiosk.html, lines 103-134,
 // 527-546).
 //
-// Below md (768px) a vertical rail can't fit full category names next to the NEW badge
-// without truncating ("Sizzling…", or worse "S." — the badge crowding the label off the
-// end). Below that breakpoint this renders as a horizontally scrollable pill bar instead,
-// so every label stays fully readable; the NEW badge becomes a small dot since a pill has
-// no room for a second word. At md and up there's enough width for a real sidebar, so it
-// reverts to the original vertical rail with the NEW text badge.
+// The sidebar stays visible at every width (an adviser/panel requirement). Below md it's
+// a 64px rail showing each category's emoji; from md up it shows icon + name. Emoji alone
+// can be ambiguous for a first-time customer, and `title` tooltips never show on a
+// touchscreen, so the rail has a button that opens the same list with full names as an
+// overlay — and the grid heading names the selected category the moment one is tapped.
+export const ALL_ITEMS_ICON = "🍽️";
+
 interface CategoryRailProps {
   categories: Category[];
   activeCategory: number | "all";
   onSelect: (categoryId: number | "all") => void;
 }
 
+// Full class strings per mode so Tailwind can detect every one of them.
+const MODE = {
+  rail: {
+    item: "justify-center rounded-lg md:justify-start md:gap-3 md:rounded-none md:border-l-[3px] md:px-5 md:py-3.5",
+    active:
+      "bg-matcha/15 font-bold text-matcha-deep md:border-matcha md:bg-transparent md:bg-gradient-to-r md:from-available/8 md:to-transparent",
+    inactive: "text-ink-soft md:border-transparent",
+    label: "hidden md:inline",
+    newDot: "md:hidden",
+    newTag: "hidden md:inline",
+  },
+  panel: {
+    item: "justify-start gap-3 border-l-[3px] px-5 py-3",
+    active: "border-matcha bg-gradient-to-r from-available/8 to-transparent font-bold text-matcha-deep",
+    inactive: "border-transparent text-ink-soft",
+    label: "inline",
+    newDot: "hidden",
+    newTag: "inline",
+  },
+} as const;
+
 export function CategoryRail({ categories, activeCategory, onSelect }: CategoryRailProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setExpanded(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [expanded]);
+
+  const entries: { id: number | "all"; label: string; icon: string; isNew: boolean }[] = [
+    { id: "all", label: "All items", icon: ALL_ITEMS_ICON, isNew: false },
+    ...categories.map((c) => ({ id: c.id, label: c.name, icon: c.icon ?? ALL_ITEMS_ICON, isNew: c.isNew })),
+  ];
+
+  function renderItems(mode: keyof typeof MODE, afterSelect?: () => void) {
+    return entries.map((e) => (
+      <CategoryItem
+        key={e.id}
+        mode={mode}
+        label={e.label}
+        icon={e.icon}
+        isNew={e.isNew}
+        active={activeCategory === e.id}
+        onClick={() => {
+          onSelect(e.id);
+          afterSelect?.();
+        }}
+      />
+    ));
+  }
+
   return (
     <>
       <nav
-        className="flex w-full flex-shrink-0 items-center gap-2 overflow-x-auto border-b border-line bg-paper px-3 py-2.5 md:hidden"
         aria-label="Categories"
+        className="flex w-16 shrink-0 flex-col gap-1 overflow-y-auto border-r border-line bg-paper px-1.5 pt-3 pb-24 sm:pb-4 md:w-52 md:gap-0 md:px-0 md:py-5.5 lg:w-56"
       >
-        <CategoryPill label="All items" active={activeCategory === "all"} onClick={() => onSelect("all")} />
-        {categories.map((c) => (
-          <CategoryPill
-            key={c.id}
-            label={c.name}
-            active={activeCategory === c.id}
-            isNew={c.isNew}
-            onClick={() => onSelect(c.id)}
-          />
-        ))}
+        <button
+          onClick={() => setExpanded(true)}
+          aria-label="Show category names"
+          aria-expanded={expanded}
+          title="Show category names"
+          className="mb-1 flex min-h-11 w-full items-center justify-center rounded-lg border border-line bg-white text-matcha-deep md:hidden"
+        >
+          <Icon name="menu" />
+        </button>
+        {renderItems("rail")}
       </nav>
 
-      <nav
-        className="hidden w-[200px] flex-shrink-0 flex-col overflow-y-auto border-r border-line bg-paper py-5 md:flex lg:w-[220px]"
-        aria-label="Categories"
-      >
-        <CategoryItem label="All items" active={activeCategory === "all"} onClick={() => onSelect("all")} />
-        {categories.map((c) => (
-          <CategoryItem
-            key={c.id}
-            label={c.name}
-            active={activeCategory === c.id}
-            isNew={c.isNew}
-            onClick={() => onSelect(c.id)}
-          />
-        ))}
-      </nav>
+      {expanded && (
+        <>
+          <div className="fixed inset-0 z-40 bg-[#22301f]/45 md:hidden" onClick={() => setExpanded(false)} aria-hidden="true" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Categories"
+            className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col overflow-y-auto bg-paper shadow-2xl md:hidden"
+          >
+            <div className="flex items-center justify-between border-b border-line py-2 pr-2 pl-5">
+              <span className="font-display text-lg font-semibold text-matcha-deep">Categories</span>
+              <button
+                onClick={() => setExpanded(false)}
+                autoFocus
+                aria-label="Close category names"
+                className="flex h-11 w-11 items-center justify-center rounded-full text-ink"
+              >
+                <Icon name="close" />
+              </button>
+            </div>
+            <div className="flex flex-col py-2">{renderItems("panel", () => setExpanded(false))}</div>
+          </div>
+        </>
+      )}
     </>
   );
 }
 
-function CategoryPill({
-  label,
-  active,
-  isNew,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  isNew?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex h-11 flex-shrink-0 items-center gap-1.5 rounded-full border px-4 text-[13px] font-semibold whitespace-nowrap transition-colors active:scale-97 ${
-        active ? "border-matcha bg-matcha/10 text-matcha-deep" : "border-line bg-white text-ink-soft"
-      }`}
-    >
-      {label}
-      {isNew && (
-        <>
-          <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-berry" aria-hidden="true" />
-          <span className="sr-only">New</span>
-        </>
-      )}
-    </button>
-  );
-}
-
 function CategoryItem({
+  mode,
   label,
-  active,
+  icon,
   isNew,
+  active,
   onClick,
 }: {
+  mode: keyof typeof MODE;
   label: string;
+  icon: string;
+  isNew: boolean;
   active: boolean;
-  isNew?: boolean;
   onClick: () => void;
 }) {
+  const m = MODE[mode];
   return (
     <button
       onClick={onClick}
-      className={`flex min-h-11 w-full items-center gap-3 border-l-[3px] px-5.5 py-3.5 text-left text-[15px] leading-tight font-medium transition-colors ${
-        active
-          ? "border-matcha bg-gradient-to-r from-available/8 to-transparent font-bold text-matcha-deep"
-          : "border-transparent text-ink-soft"
+      aria-label={isNew ? `${label} (new)` : label}
+      aria-pressed={active}
+      title={label}
+      className={`flex min-h-11 w-full items-center text-left text-base leading-tight font-medium transition-colors md:text-[15px] ${m.item} ${
+        active ? m.active : m.inactive
       }`}
     >
-      <span
-        className={`h-2 w-2 flex-shrink-0 rounded-[50%_50%_50%_0] rotate-45 ${active ? "bg-matcha" : "bg-line"}`}
-      />
-      <span className="min-w-0 flex-1">{label}</span>
+      <span aria-hidden="true" className="relative text-2xl leading-none md:text-xl">
+        {icon}
+        {isNew && (
+          <span className={`absolute -top-0.5 -right-1 h-2.5 w-2.5 rounded-full border-2 border-paper bg-berry ${m.newDot}`} />
+        )}
+      </span>
+      <span className={`min-w-0 flex-1 ${m.label}`}>{label}</span>
       {isNew && (
-        <span className="flex-shrink-0 rounded-[5px] bg-berry px-1.5 py-0.5 text-[9.5px] font-bold text-white">
+        <span className={`shrink-0 rounded-[5px] bg-berry px-1.5 py-0.5 text-xs font-bold text-white md:text-[9.5px] ${m.newTag}`}>
           NEW
         </span>
       )}

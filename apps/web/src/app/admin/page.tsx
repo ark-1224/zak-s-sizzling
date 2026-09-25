@@ -57,12 +57,12 @@ export default function AdminDashboardPage() {
       {lowStock.length > 0 && (
         <div className="flex flex-wrap items-center gap-3.5 rounded-[6px] border border-adm-warn bg-adm-warn-soft px-4 py-3.5">
           <span className="h-1.75 w-1.75 flex-shrink-0 rounded-full bg-adm-warn" />
-          <div className="text-[13px] font-medium">
+          <div className="min-w-0 flex-1 text-base font-medium md:text-[13px]">
             {lowStock.length} product{lowStock.length !== 1 ? "s" : ""} at or below minimum stock level.
           </div>
-          <div className="ml-auto flex flex-wrap gap-1.5">
+          <div className="flex w-full flex-wrap gap-1.5 md:ml-auto md:w-auto">
             {lowStock.slice(0, 4).map((p) => (
-              <span key={p.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-[11px] text-adm-ink-2">
+              <span key={p.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-xs break-words text-adm-ink-2 md:text-[11px]">
                 {p.name.toUpperCase()} · {p.stockQty}
               </span>
             ))}
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
         <KpiTile label="Active SKUs" value={String(products.length)} sub={`${categoryCount} categories`} />
         <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="At cost" />
         <KpiTile label="Below minimum" value={String(lowStock.filter((p) => (p.stockQty ?? 0) > 0).length)} sub="Reorder soon" color="var(--adm-warn)" />
@@ -78,7 +78,30 @@ export default function AdminDashboardPage() {
       </div>
 
       <Card title="Current inventory levels">
-        <div className="overflow-x-auto">
+        <ul className="divide-y divide-adm-line-soft md:hidden">
+          {products.map((p) => {
+            const level = stockLevel(p);
+            const barColor = level.tone === "ok" ? "var(--adm-ok)" : level.tone === "warn" ? "var(--adm-warn)" : "var(--adm-bad)";
+            return (
+              <li key={p.id} className="flex flex-col gap-2 px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-base font-medium break-words">{p.name}</div>
+                    <div className="text-sm text-adm-ink-2">{p.category?.name}</div>
+                  </div>
+                  <div className="font-adm-mono shrink-0 text-base">{p.stockQty ?? 0} on hand</div>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-adm-surface-2">
+                    <div className="h-full rounded-full" style={{ width: `${level.pct}%`, background: barColor }} />
+                  </div>
+                  <StatusPill tone={level.tone}>{level.label}</StatusPill>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">

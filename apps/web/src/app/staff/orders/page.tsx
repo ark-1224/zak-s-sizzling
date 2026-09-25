@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
+import { PageHeader, Card, AdmButton } from "@/components/admin/ui";
 import type { OrderDTO } from "@zaks/shared-types";
 
 // New in Sprint 3 — lets front-desk staff find counter orders awaiting payment and
@@ -42,41 +43,46 @@ export default function StaffOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cream p-8">
-      <h1 className="font-display text-2xl font-semibold text-matcha-deep">Orders awaiting payment</h1>
-      <p className="mt-1 mb-6 text-sm text-ink-soft">
-        Counter orders show up here once placed. Confirm once the customer has paid.
-      </p>
+    <div className="flex flex-col gap-4.5">
+      <div>
+        <PageHeader eyebrow="Billing & payment" title="Orders awaiting payment" />
+        <p className="text-base text-adm-ink-2 md:text-sm">
+          Counter orders show up here once placed. Confirm once the customer has paid.
+        </p>
+      </div>
 
-      {message && <div className="mb-4 text-sm text-matcha-deep">{message}</div>}
+      {message && <div className="text-base text-adm-ink md:text-sm">{message}</div>}
 
       {loading ? (
-        <div className="text-ink-soft">Loading…</div>
+        <div className="text-adm-ink-3">Loading…</div>
       ) : orders.length === 0 ? (
-        <div className="text-ink-soft">Nothing awaiting payment right now.</div>
+        <div className="text-adm-ink-3">Nothing awaiting payment right now.</div>
       ) : (
-        <div className="space-y-3">
-          {orders.map((order) => (
-            <div key={order.id} className="flex items-center justify-between rounded-xl border border-line bg-white p-4">
-              <div>
-                <div className="font-display font-bold text-matcha-deep">{order.orderNumber}</div>
-                <div className="text-sm text-ink-soft">
-                  {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
+        <Card>
+          <ul className="divide-y divide-adm-line-soft">
+            {orders.map((order) => (
+              <li key={order.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <div className="font-adm-mono text-lg font-bold">{order.orderNumber}</div>
+                  <div className="text-base break-words text-adm-ink-2 md:text-sm">
+                    {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
+                  </div>
+                  <div className="mt-1 text-sm text-adm-ink-3 capitalize">
+                    {order.payment?.method ?? "counter"} · ₱{order.totalAmount.toFixed(2)}
+                  </div>
                 </div>
-                <div className="mt-1 text-xs text-ink-soft">
-                  {order.payment?.method ?? "counter"} · ₱{order.totalAmount.toFixed(2)}
-                </div>
-              </div>
-              <button
-                disabled={confirmingId === order.id}
-                onClick={() => handleConfirm(order.id)}
-                className="rounded-full bg-matcha px-4 py-2 text-sm font-bold text-cream disabled:opacity-60"
-              >
-                {confirmingId === order.id ? "Confirming…" : "Confirm payment"}
-              </button>
-            </div>
-          ))}
-        </div>
+                <AdmButton
+                  variant="primary"
+                  className="w-full shrink-0 sm:w-auto"
+                  disabled={confirmingId === order.id}
+                  onClick={() => handleConfirm(order.id)}
+                >
+                  {confirmingId === order.id ? "Confirming…" : "Confirm payment"}
+                </AdmButton>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
   );

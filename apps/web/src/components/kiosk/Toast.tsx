@@ -23,8 +23,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
+      {/* inset-x-4 + mx-auto + w-fit: centered, shrink-wrapped to the message, but never
+          wider than the screen minus 16px gutters. (left-1/2 alone left the toast only
+          half the screen to lay text out in, so longer messages became a tall sliver.)
+          bottom-24 on phones keeps it above the sticky "View cart" bar. */}
       <div
-        className={`fixed bottom-7 left-1/2 z-60 -translate-x-1/2 rounded-full bg-matcha-deep px-6 py-3.5 text-sm font-semibold text-cream shadow-2xl transition-all duration-250 ${
+        role="status"
+        className={`fixed inset-x-4 bottom-24 z-60 mx-auto w-fit max-w-md rounded-3xl bg-matcha-deep px-5 py-3 text-center text-base font-semibold text-cream shadow-2xl transition-all duration-250 sm:bottom-7 sm:px-6 sm:py-3.5 sm:text-sm ${
           message ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-5 opacity-0"
         }`}
       >

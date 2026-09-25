@@ -16,10 +16,10 @@ export function NutritionGrid({ nutrition }: { nutrition: Nutrition }) {
       {cells.map((c, i) => (
         <div
           key={c.label}
-          className={`bg-white px-2 py-3 text-center ${i < cells.length - 1 ? "border-r border-line" : ""}`}
+          className={`min-w-0 bg-white px-1 py-3 text-center sm:px-2 ${i < cells.length - 1 ? "border-r border-line" : ""}`}
         >
-          <div className="font-display text-[17px] font-bold text-matcha-deep">{c.value}</div>
-          <div className="mt-0.5 text-[10.5px] text-ink-soft">{c.label}</div>
+          <div className="font-display text-base font-bold break-words text-matcha-deep sm:text-[17px]">{c.value}</div>
+          <div className="mt-0.5 text-xs text-ink-soft">{c.label}</div>
         </div>
       ))}
     </div>

@@ -4,7 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getStoredUser } from "@/lib/auth";
-import { PageHeader, Card, AdmButton, StatusPill } from "@/components/admin/ui";
+import {
+  PageHeader,
+  Card,
+  AdmButton,
+  StatusPill,
+  admInputClass,
+  admLabelClass,
+  admModalActionsClass,
+  admModalBackdropClass,
+  admModalPanelClass,
+} from "@/components/admin/ui";
 import type { UserAccountDTO } from "@zaks/shared-types";
 
 // User Account Administration — Admin-only per the manuscript ("Grants the admin the
@@ -82,9 +92,9 @@ export default function UsersPage() {
         }
       />
 
-      {message && <div className="text-sm text-adm-bad">{message}</div>}
+      {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
-      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
         <RoleCard n="Administrator" count={`${admins} ACCOUNT${admins !== 1 ? "S" : ""}`} d="Full inventory and product control, adjustments, analytics, imports, and user administration." />
         <RoleCard n="Staff" count={`${staff} ACCOUNT${staff !== 1 ? "S" : ""}`} d="Order management, counter payment confirmation, product/inventory updates. No user administration." />
       </div>
@@ -93,7 +103,39 @@ export default function UsersPage() {
         <div className="text-adm-ink-3">Loading…</div>
       ) : (
         <Card title="Accounts">
-          <div className="overflow-x-auto">
+          <ul className="divide-y divide-adm-line-soft md:hidden">
+            {users.map((u) => (
+              <li key={u.id} className="flex flex-col gap-3 px-4 py-3.5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-adm-line bg-adm-surface-2 text-xs font-semibold text-adm-ink-2">
+                      {u.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-base font-medium break-words">{u.name}</div>
+                      <div className="font-adm-mono text-sm break-all text-adm-ink-3">{u.email}</div>
+                    </div>
+                  </div>
+                  <StatusPill tone={u.isActive ? "ok" : "bad"}>{u.isActive ? "ACTIVE" : "SUSPENDED"}</StatusPill>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={u.role}
+                    onChange={(e) => changeRole(u, e.target.value as "admin" | "staff")}
+                    aria-label={`Role for ${u.name}`}
+                    className={admInputClass}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                  </select>
+                  <AdmButton variant="secondary" onClick={() => toggleActive(u)}>
+                    {u.isActive ? "Suspend" : "Reactivate"}
+                  </AdmButton>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
@@ -159,11 +201,11 @@ export default function UsersPage() {
 function RoleCard({ n, count, d }: { n: string; count: string; d: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-[6px] border border-adm-line bg-adm-surface p-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-[13.5px] font-semibold">{n}</div>
-        <span className="font-adm-mono text-[10.5px] text-adm-ink-3">{count}</span>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-base font-semibold md:text-[13.5px]">{n}</div>
+        <span className="font-adm-mono text-xs text-adm-ink-3 md:text-[10.5px]">{count}</span>
       </div>
-      <p className="text-[11.5px] leading-relaxed text-adm-ink-2">{d}</p>
+      <p className="text-base leading-relaxed text-adm-ink-2 md:text-[11.5px]">{d}</p>
     </div>
   );
 }
@@ -195,41 +237,41 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
   }
 
   return (
-    <div className="font-adm-sans fixed inset-0 z-50 flex items-center justify-center bg-[#141310]/45 p-5">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-[8px] bg-adm-surface p-6.5 shadow-2xl">
+    <div className={admModalBackdropClass}>
+      <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-sm`}>
         <h2 className="mb-5 text-lg font-semibold tracking-tight">Invite a new user</h2>
 
         <label className="mb-3 block">
-          <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Name</span>
-          <input required value={name} onChange={(e) => setName(e.target.value)} className={inputCls} />
+          <span className={admLabelClass}>Name</span>
+          <input required value={name} onChange={(e) => setName(e.target.value)} className={admInputClass} />
         </label>
         <label className="mb-3 block">
-          <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Email</span>
-          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+          <span className={admLabelClass}>Email</span>
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={admInputClass} />
         </label>
         <label className="mb-3 block">
-          <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Temporary password</span>
+          <span className={admLabelClass}>Temporary password</span>
           <input
             required
             type="text"
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={`font-adm-mono ${inputCls}`}
+            className={`font-adm-mono ${admInputClass}`}
             placeholder="At least 8 characters"
           />
         </label>
         <label className="mb-4 block">
-          <span className="mb-1.5 block text-[11.5px] font-medium text-adm-ink-2">Role</span>
-          <select value={role} onChange={(e) => setRole(e.target.value as "admin" | "staff")} className={inputCls}>
+          <span className={admLabelClass}>Role</span>
+          <select value={role} onChange={(e) => setRole(e.target.value as "admin" | "staff")} className={admInputClass}>
             <option value="staff">Staff</option>
             <option value="admin">Admin</option>
           </select>
         </label>
 
-        {error && <p className="mb-3 text-sm text-adm-bad">{error}</p>}
+        {error && <p className="mb-3 text-base text-adm-bad md:text-sm">{error}</p>}
 
-        <div className="flex justify-end gap-2.5">
+        <div className={admModalActionsClass}>
           <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>
@@ -241,5 +283,3 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     </div>
   );
 }
-
-const inputCls = "w-full rounded-[5px] border border-adm-line bg-adm-bg px-2.75 py-2.25 text-[13px] outline-none focus:border-adm-accent";

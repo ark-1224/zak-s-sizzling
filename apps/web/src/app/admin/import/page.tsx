@@ -56,7 +56,7 @@ export default function BulkImportPage() {
         <div className="flex flex-col gap-4.5">
           <Card>
             <div
-              className="flex flex-wrap items-center gap-4 border-2 border-dashed border-adm-line p-5.5"
+              className="flex flex-wrap items-center gap-4 border-2 border-dashed border-adm-line p-4 md:p-5.5"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -64,11 +64,11 @@ export default function BulkImportPage() {
               }}
             >
               <div className="flex h-10.5 w-10.5 flex-shrink-0 items-center justify-center rounded-[5px] border border-adm-accent text-adm-accent">
-                <span className="font-adm-mono text-[10px]">CSV</span>
+                <span className="font-adm-mono text-xs md:text-[10px]">CSV</span>
               </div>
-              <div className="min-w-45 flex-1">
-                <div className="text-[13.5px] font-medium">{fileName ?? "No file selected"}</div>
-                <div className="font-adm-mono mt-1 text-[11px] text-adm-ink-3">
+              <div className="min-w-0 flex-1 basis-40">
+                <div className="text-base font-medium break-all md:text-[13.5px]">{fileName ?? "No file selected"}</div>
+                <div className="font-adm-mono mt-1 text-sm text-adm-ink-3 md:text-[11px]">
                   {csvText ? `${(csvText.length / 1024).toFixed(0)} KB · ${rowCount} rows` : "Drop a CSV here, or browse"}
                 </div>
               </div>
@@ -79,7 +79,7 @@ export default function BulkImportPage() {
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
               />
-              <AdmButton variant="secondary" onClick={() => fileInputRef.current?.click()}>
+              <AdmButton variant="secondary" className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()}>
                 Browse file
               </AdmButton>
             </div>
@@ -93,23 +93,24 @@ export default function BulkImportPage() {
                 setFileName(null);
                 setSummary(null);
               }}
+              aria-label="CSV contents"
               placeholder={"name,barcode,category,price,cost,stockQty,minStockThreshold,description"}
-              className="font-adm-mono h-40 w-full resize-none bg-adm-bg p-4 text-[12px] outline-none"
+              className="font-adm-mono h-40 w-full resize-none bg-adm-bg p-4 text-base outline-none md:text-[12px]"
             />
           </Card>
 
-          {error && <div className="text-sm text-adm-bad">{error}</div>}
+          {error && <div className="text-base text-adm-bad md:text-sm">{error}</div>}
 
           {summary && (
             <Card title={`Import result — ${summary.total} row${summary.total !== 1 ? "s" : ""} processed`}>
-              <div className="flex gap-4 border-b border-adm-line p-4">
+              <div className="flex flex-wrap gap-2 border-b border-adm-line p-4 md:gap-4">
                 <StatusPill tone="ok">{summary.created} CREATED</StatusPill>
                 <StatusPill tone="warn">{summary.updated} UPDATED</StatusPill>
                 <StatusPill tone="bad">{summary.errors} ERRORS</StatusPill>
               </div>
               {summary.results.filter((r) => r.status === "error").length > 0 && (
-                <div className="max-h-64 overflow-y-auto">
-                  <table className="w-full text-sm">
+                <div className="max-h-64 overflow-auto">
+                  <table className="w-full text-base md:text-sm">
                     <thead>
                       <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
                         <th className="px-4.5 py-2 font-medium">Row</th>
@@ -138,25 +139,25 @@ export default function BulkImportPage() {
         <div className="flex flex-col gap-4.5">
           <Card title="Template">
             <div className="p-4">
-              <p className="mb-3 text-[11.5px] leading-relaxed text-adm-ink-3">
+              <p className="mb-3 text-base leading-relaxed text-adm-ink-3 md:text-[11.5px]">
                 Required columns: <strong>name</strong>, <strong>category</strong> (must match an existing category
                 name), <strong>price</strong>. Optional: barcode, cost, stockQty, minStockThreshold, description.
               </p>
               <button
                 onClick={() => downloadAuthenticated("/api/products/import-template", "product_import_template.csv")}
-                className="font-adm-mono text-[12px] font-medium text-adm-accent"
+                className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent md:min-h-0 md:text-[12px]"
               >
                 product_import_template.csv ↓
               </button>
             </div>
           </Card>
           <Card title="How matching works">
-            <p className="p-4 text-[11.5px] leading-relaxed text-adm-ink-3">
+            <p className="p-4 text-base leading-relaxed text-adm-ink-3 md:text-[11.5px]">
               A row with a barcode that matches an existing product updates it. A row with no barcode, or a barcode
               that doesn&apos;t match anything, creates a new product.
             </p>
           </Card>
-          <AdmButton variant="primary" disabled={!csvText.trim() || importing} onClick={handleImport} className="py-2.75">
+          <AdmButton variant="primary" size="large" disabled={!csvText.trim() || importing} onClick={handleImport}>
             {importing ? "Importing…" : `Import ${rowCount || ""} row${rowCount !== 1 ? "s" : ""}`}
           </AdmButton>
         </div>

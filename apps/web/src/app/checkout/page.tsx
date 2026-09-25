@@ -100,7 +100,7 @@ export default function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <>
-        <div className="flex h-screen flex-col items-center justify-center gap-4 bg-cream text-center">
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-4 text-center">
           <div className="font-display text-2xl text-matcha-deep">Your cart is empty</div>
           <Link href="/" className="rounded-full bg-matcha px-6 py-3 font-bold text-cream shadow-card">
             Back to menu
@@ -113,24 +113,24 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="mx-auto min-h-screen max-w-lg bg-cream px-6 py-8">
-        <Link href="/" className="mb-6 inline-block text-sm text-ink-soft">
+      <div className="mx-auto min-h-dvh w-full max-w-lg bg-cream px-4 py-4 sm:px-6 sm:py-8">
+        <Link href="/" className="mb-2 inline-flex min-h-11 items-center text-base text-ink-soft sm:mb-4">
           ← Back to menu
         </Link>
-        <h1 className="font-display mb-6 text-2xl font-semibold text-matcha-deep">Checkout</h1>
+        <h1 className="font-display mb-4 text-2xl font-semibold text-matcha-deep sm:mb-6">Checkout</h1>
 
-        <div className="mb-6 rounded-xl border border-line bg-white p-5">
+        <div className="mb-6 rounded-xl border border-line bg-white p-4 sm:p-5">
           {lines.map((l) => (
-            <div key={l.cartId} className="flex justify-between py-1.5 text-sm">
-              <span>
+            <div key={l.cartId} className="flex justify-between gap-3 py-1.5 text-base">
+              <span className="min-w-0 break-words">
                 {l.qty} × {l.name}
               </span>
-              <span className="font-semibold">₱{(l.price * l.qty).toFixed(2)}</span>
+              <span className="font-semibold whitespace-nowrap">₱{(l.price * l.qty).toFixed(2)}</span>
             </div>
           ))}
           <div className="mt-3 flex justify-between border-t border-line pt-3 text-lg font-bold">
             <span>Total</span>
-            <span className="text-honey">₱{total.toFixed(2)}</span>
+            <span className="text-price-accent">₱{total.toFixed(2)}</span>
           </div>
         </div>
 
@@ -143,10 +143,12 @@ export default function CheckoutPage() {
                 method === m.id ? "border-matcha bg-available/8" : "border-line bg-white"
               }`}
             >
-              <span className="text-2xl">{m.icon}</span>
-              <span>
+              <span className="text-2xl" aria-hidden="true">
+                {m.icon}
+              </span>
+              <span className="min-w-0">
                 <span className="block font-semibold text-ink">{m.label}</span>
-                <span className="block text-xs text-ink-soft">{m.blurb}</span>
+                <span className="block text-sm text-ink-soft">{m.blurb}</span>
               </span>
             </button>
           ))}

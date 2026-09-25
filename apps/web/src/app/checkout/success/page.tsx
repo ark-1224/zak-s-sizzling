@@ -58,7 +58,7 @@ function CheckoutSuccessContent() {
   if (!orderId || error) {
     return (
       <>
-        <div className="flex h-screen flex-col items-center justify-center gap-4 bg-cream text-center">
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-4 text-center">
           <div className="font-display text-2xl text-matcha-deep">{error ?? "No order to show"}</div>
           <Link href="/" className="rounded-full bg-matcha px-6 py-3 font-bold text-cream shadow-card">
             Back to menu
@@ -72,7 +72,7 @@ function CheckoutSuccessContent() {
   if (!order) {
     return (
       <>
-        <div className="flex h-screen items-center justify-center text-ink-soft">Confirming your payment…</div>
+        <div className="flex min-h-dvh items-center justify-center px-4 text-ink-soft">Confirming your payment…</div>
         <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
       </>
     );
@@ -88,7 +88,7 @@ function CheckoutSuccessContent() {
 
 export default function CheckoutSuccessPage() {
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center text-ink-soft">Loading…</div>}>
+    <Suspense fallback={<div className="flex min-h-dvh items-center justify-center text-ink-soft">Loading…</div>}>
       <CheckoutSuccessContent />
     </Suspense>
   );

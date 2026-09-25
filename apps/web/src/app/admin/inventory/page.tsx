@@ -102,14 +102,14 @@ export default function AdminInventoryPage() {
     <div className="flex flex-col gap-4.5">
       <PageHeader eyebrow="Stock adjustments" title="Inventory" />
 
-      {message && <div className="text-sm text-adm-bad">{message}</div>}
+      {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
       {lowStock.length > 0 && (
         <div className="rounded-[6px] border border-adm-warn bg-adm-warn-soft p-4">
           <div className="mb-1 font-medium text-adm-ink">
             {lowStock.length} product{lowStock.length !== 1 ? "s" : ""} at or below minimum stock
           </div>
-          <div className="text-sm text-adm-ink-2">{lowStock.map((p) => p.name).join(", ")}</div>
+          <div className="text-base break-words text-adm-ink-2 md:text-sm">{lowStock.map((p) => p.name).join(", ")}</div>
         </div>
       )}
 
@@ -117,7 +117,28 @@ export default function AdminInventoryPage() {
         <div className="text-adm-ink-3">Loading…</div>
       ) : (
         <Card>
-          <div className="overflow-x-auto">
+          <ul className="divide-y divide-adm-line-soft md:hidden">
+            {products.map((p) => {
+              const low = lowStock.some((l) => l.id === p.id);
+              return (
+                <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="text-base font-medium break-words">
+                      {p.icon} {p.name}
+                    </div>
+                    <div className="font-adm-mono text-sm text-adm-ink-3">
+                      <span className={`font-bold ${low ? "text-adm-bad" : "text-adm-ink"}`}>{p.stockQty ?? 0}</span> in stock · min{" "}
+                      {p.minStockThreshold ?? "—"}
+                    </div>
+                  </div>
+                  <AdmButton variant="secondary" className="shrink-0" onClick={() => setAdjustingProduct(p)}>
+                    Adjust
+                  </AdmButton>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
@@ -140,11 +161,7 @@ export default function AdminInventoryPage() {
                       </td>
                       <td className="font-adm-mono px-3 py-3 text-right text-adm-ink-3">{p.minStockThreshold ?? "—"}</td>
                       <td className="px-4.5 py-3 text-right">
-                        <AdmButton
-                          variant="secondary"
-                          className="px-2.75 py-1.5 text-[11.5px]"
-                          onClick={() => setAdjustingProduct(p)}
-                        >
+                        <AdmButton variant="secondary" size="compact" onClick={() => setAdjustingProduct(p)}>
                           Adjust
                         </AdmButton>
                       </td>
@@ -163,7 +180,8 @@ export default function AdminInventoryPage() {
           <select
             value={logProductId}
             onChange={(e) => setLogProductId(e.target.value)}
-            className="rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-[11.5px]"
+            aria-label="Filter adjustments by product"
+            className="min-h-11 w-full min-w-0 rounded-[4px] border border-adm-line bg-adm-surface px-2 text-base md:min-h-0 md:w-auto md:py-1 md:text-[11.5px]"
           >
             <option value="all">All products</option>
             {products.map((p) => (
@@ -175,10 +193,10 @@ export default function AdminInventoryPage() {
         }
       >
         {adjustments.length === 0 ? (
-          <div className="p-4 text-sm text-adm-ink-3">No manual stock adjustments recorded yet.</div>
+          <div className="p-4 text-base text-adm-ink-3 md:text-sm">No manual stock adjustments recorded yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-base md:text-sm">
               <thead>
                 <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
                   <th className="px-4.5 py-2.75 font-medium">When</th>
