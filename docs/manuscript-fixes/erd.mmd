@@ -1,0 +1,129 @@
+%% Entity Relationship Diagram, generated from apps/api/prisma/schema.prisma.
+%% Table and column names are the PostgreSQL names (@@map / @map), which is what the database stores.
+%% Enum types: user_role (admin, staff, customer); order_status (pending, confirmed, preparing, ready,
+%% completed, cancelled); payment_method (gcash, maya, counter); payment_status (pending, paid, failed,
+%% refunded); kitchen_status (pending, in_progress, completed); adjustment_reason (restock, return,
+%% damaged, spoilage, correction, other).
+%% Lengths: users.name 120, users.email 160, categories.name 80, categories.icon 8, products.name 150,
+%% products.barcode 64, products.icon 8, stock_adjustments.note 200, orders.order_number 20,
+%% orders.customer_name 120, orders.kiosk_session_id 64, orders.source 20,
+%% order_items.special_instructions 140, payments.reference 100.
+
+erDiagram
+    roles ||--o{ users : "is assigned to"
+    users ||--o{ stock_adjustments : "records"
+    categories ||--o{ products : "groups"
+    products ||--o| inventory : "has stock level in"
+    products ||--o{ stock_adjustments : "is adjusted by"
+    products ||--o{ order_items : "is ordered as"
+    orders ||--o{ order_items : "contains"
+    orders ||--o| payments : "is paid by"
+    order_items ||--o| kitchen_tasks : "is prepared as"
+
+    roles {
+        int id PK
+        user_role name UK
+    }
+
+    users {
+        uuid id PK
+        varchar name
+        varchar email UK
+        text password_hash
+        int role_id FK "references roles.id"
+        boolean is_active "default true"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    categories {
+        int id PK
+        varchar name UK
+        varchar icon "nullable"
+        int sort_order "default 0"
+        boolean is_new "default false"
+    }
+
+    products {
+        uuid id PK
+        varchar name
+        decimal price "10,2"
+        varchar barcode UK "nullable"
+        int category_id FK "references categories.id"
+        text description "nullable"
+        varchar icon "nullable"
+        decimal cost "10,2, nullable"
+        text_array ingredients "default empty"
+        text_array allergens "default empty"
+        int calories "nullable"
+        decimal protein_g "6,2, nullable"
+        decimal carbs_g "6,2, nullable"
+        decimal sugar_g "6,2, nullable"
+        boolean is_available "default true"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    inventory {
+        int id PK
+        uuid product_id FK,UK "references products.id, cascade delete"
+        int stock_qty "default 0"
+        int min_stock_threshold "default 5"
+        timestamp updated_at
+    }
+
+    stock_adjustments {
+        uuid id PK
+        uuid product_id FK "references products.id, cascade delete"
+        int delta
+        int previous_qty
+        int new_qty
+        adjustment_reason reason
+        varchar note "nullable"
+        uuid adjusted_by_id FK "references users.id"
+        timestamp created_at
+    }
+
+    orders {
+        uuid id PK
+        varchar order_number UK
+        varchar customer_name "nullable"
+        varchar kiosk_session_id "nullable"
+        varchar source "default kiosk"
+        order_status status "default pending"
+        decimal total_amount "10,2, default 0"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    order_items {
+        uuid id PK
+        uuid order_id FK "references orders.id, cascade delete"
+        uuid product_id FK "references products.id"
+        int qty
+        decimal unit_price "10,2"
+        decimal subtotal "10,2"
+        varchar special_instructions "nullable"
+        timestamp created_at
+    }
+
+    payments {
+        uuid id PK
+        uuid order_id FK,UK "references orders.id, cascade delete"
+        payment_method method
+        payment_status status "default pending"
+        decimal amount "10,2"
+        varchar reference UK "nullable"
+        jsonb gateway_payload "nullable"
+        timestamp paid_at "nullable"
+        timestamp created_at
+    }
+
+    kitchen_tasks {
+        uuid id PK
+        uuid order_item_id FK,UK "references order_items.id, cascade delete"
+        kitchen_status status "default pending"
+        timestamp started_at "nullable"
+        timestamp completed_at "nullable"
+        timestamp created_at
+    }

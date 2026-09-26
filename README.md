@@ -4,8 +4,8 @@ Web-based self-service kiosk with integrated real-time stock inventory and trans
 management, built for Zak's Sizzling Hub (STI College Bacoor capstone project).
 
 All 5 sprints from the original plan are built and verified — see "Status" below for
-what's been confirmed live versus what's still a known gap (PWA/offline sync, hardware
-receipt printing, Railway deployment).
+what's been confirmed live versus what's still a known gap (hardware receipt printing,
+Railway deployment). Offline/PWA support was removed from scope after adviser review.
 
 ## Structure
 
@@ -75,8 +75,8 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   storage (needed once this runs on Railway, whose filesystem is ephemeral) isn't
   implemented, since no object storage credentials are configured in this environment.
 
-All 5 sprints from the original plan are now built. Remaining known gaps: PWA/offline
-sync and hardware receipt-printer integration.
+All 5 sprints from the original plan are now built. Remaining known gap: hardware
+receipt-printer integration. Offline/PWA support was removed from scope.
 
 - **Railway deployment prep** — while setting up the actual Railway project (4
   services: `api`, `web`, `worker`, and a managed Postgres), found two things that

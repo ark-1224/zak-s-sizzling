@@ -52,7 +52,7 @@ authRouter.post("/logout", (req, res) => {
   res.status(204).end();
 });
 
-// Anonymous kiosk session — used for cart/idle-timeout/offline-queue correlation
+// Anonymous kiosk session — used for cart/idle-timeout correlation
 authRouter.post("/kiosk-session", (req, res) => {
   const result = createKioskSession();
   res.json(result);
