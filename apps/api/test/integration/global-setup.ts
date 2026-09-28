@@ -4,13 +4,16 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { CATEGORY, PASSWORD, PRODUCTS, USERS } from "./fixtures";
 
-const apiDir = fileURLToPath(new URL("..", import.meta.url));
+const apiDir = fileURLToPath(new URL("../..", import.meta.url));
 
 // Runs once before all test files. vitest.config.ts has already pointed DATABASE_URL
 // at the *_test database (and refuses any other name). `migrate deploy` brings that
 // database's schema up to date without dropping anything; the tables are then emptied
 // so each run starts from the same seeded state.
 export default async function setup() {
+  if (!process.env.DATABASE_URL?.match(/_test(\?|$)/)) {
+    throw new Error("Integration tests need DATABASE_URL in apps/api/.env or TEST_DATABASE_URL (a *_test database)");
+  }
   execSync("npx prisma migrate deploy", {
     cwd: apiDir,
     env: process.env,
