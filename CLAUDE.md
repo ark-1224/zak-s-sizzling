@@ -20,7 +20,7 @@ Run everything from the repo root.
 | Build | `npm run build -w apps/api` · `npm run build -w apps/web` · `npm run build -w apps/worker` |
 | Lint | `npm run lint -w apps/web` (only web has a lint script; api and worker have none) |
 | Typecheck | No script. Use `npx tsc --noEmit -p apps/api/tsconfig.json`, and the same with `apps/worker` or `apps/web` |
-| Test | None. There is no test runner and there are no test files yet, so never claim tests pass |
+| Test | `npm test` (API only: Vitest + Supertest in `apps/api/test/`). It runs against a separate `<dev db name>_test` database, or `TEST_DATABASE_URL`, and empties that database's tables on every run; it refuses any database whose name doesn't end in `_test`. Needs local Postgres running. `it.fails` marks tests for known bugs. The web app and worker have no tests yet |
 | Worker jobs, once | `npm run low-stock:now` · `npm run backup:now` (needs `PG_DUMP_PATH`) |
 
 ## Prisma
