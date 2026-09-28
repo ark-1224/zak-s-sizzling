@@ -31,14 +31,14 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Operations",
     items: [
       { href: "/admin", label: "Dashboard", icon: "dashboard" },
-      { href: "/admin/products", label: "Products", icon: "products" },
+      { href: "/admin/products", label: "Products", icon: "products", adminOnly: true },
       { href: "/admin/inventory", label: "Inventory", icon: "inventory" },
-      { href: "/admin/import", label: "Bulk import", icon: "import" },
+      { href: "/admin/import", label: "Bulk import", icon: "import", adminOnly: true },
     ],
   },
   {
     label: "Sales",
-    items: [{ href: "/admin/analytics", label: "Analytics", icon: "analytics" }],
+    items: [{ href: "/admin/analytics", label: "Analytics", icon: "analytics", adminOnly: true }],
   },
   {
     label: "Front of house",

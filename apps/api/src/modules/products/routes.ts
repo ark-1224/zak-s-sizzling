@@ -50,7 +50,7 @@ productsRouter.get("/:id", async (req, res, next) => {
 });
 
 // Reference sheet with required headers, used by /admin/import's "Download template" link.
-productsRouter.get("/import-template", authenticate, authorize("admin", "staff"), (req, res) => {
+productsRouter.get("/import-template", authenticate, authorize("admin"), (req, res) => {
   const sample = {
     name: "Sample Iced Tea",
     barcode: "",
@@ -67,7 +67,7 @@ productsRouter.get("/import-template", authenticate, authorize("admin", "staff")
   res.send(csv);
 });
 
-productsRouter.post("/bulk-import", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+productsRouter.post("/bulk-import", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     const csvText = req.body?.csvText;
     if (typeof csvText !== "string" || !csvText.trim()) throw new HttpError(400, "csvText is required");
@@ -84,7 +84,7 @@ productsRouter.post("/bulk-import", authenticate, authorize("admin", "staff"), a
   }
 });
 
-productsRouter.post("/", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+productsRouter.post("/", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     const body = createProductSchema.parse(req.body);
     const product = await createProduct(body);
@@ -94,7 +94,7 @@ productsRouter.post("/", authenticate, authorize("admin", "staff"), async (req, 
   }
 });
 
-productsRouter.put("/:id", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+productsRouter.put("/:id", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     const body = updateProductSchema.parse(req.body);
     const product = await updateProduct(req.params.id, body);
@@ -104,7 +104,7 @@ productsRouter.put("/:id", authenticate, authorize("admin", "staff"), async (req
   }
 });
 
-productsRouter.delete("/:id", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+productsRouter.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     await deleteProduct(req.params.id);
     res.status(204).send();

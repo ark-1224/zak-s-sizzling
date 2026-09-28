@@ -84,8 +84,9 @@ describe("GET /api/products/import-template", () => {
   // Known bug: the "/:id" route is registered before "/import-template" in
   // src/modules/products/routes.ts, so "import-template" is treated as a product id and
   // the request fails with 500. Same `it.fails` convention as above.
-  it.fails("downloads the CSV template for staff (known bug: currently 500)", async () => {
-    const res = await request(app).get("/api/products/import-template").set("Authorization", `Bearer ${staffToken}`);
+  it.fails("downloads the CSV template for an admin (known bug: currently 500)", async () => {
+    const adminToken = await loginAs("admin");
+    const res = await request(app).get("/api/products/import-template").set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toMatch(/text\/csv/);

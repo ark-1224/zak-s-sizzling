@@ -23,7 +23,7 @@ function parseLimit(value: unknown, fallback: number): number {
   return Math.min(n, 1000);
 }
 
-reportsRouter.get("/sales", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+reportsRouter.get("/sales", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     res.json(await getSalesReport(parseRange(req.query.range)));
   } catch (err) {
@@ -31,7 +31,7 @@ reportsRouter.get("/sales", authenticate, authorize("admin", "staff"), async (re
   }
 });
 
-reportsRouter.get("/top-products", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+reportsRouter.get("/top-products", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     res.json(await getTopProducts(parseLimit(req.query.limit, 10)));
   } catch (err) {
@@ -39,7 +39,7 @@ reportsRouter.get("/top-products", authenticate, authorize("admin", "staff"), as
   }
 });
 
-reportsRouter.get("/inventory-movement", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+reportsRouter.get("/inventory-movement", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     res.json(await getInventoryMovement());
   } catch (err) {
@@ -47,7 +47,7 @@ reportsRouter.get("/inventory-movement", authenticate, authorize("admin", "staff
   }
 });
 
-reportsRouter.get("/profitability", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+reportsRouter.get("/profitability", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     res.json(await getProfitability());
   } catch (err) {
@@ -58,7 +58,7 @@ reportsRouter.get("/profitability", authenticate, authorize("admin", "staff"), a
 // CSV is fully implemented; PDF/XLSX are not (would need pdfkit/exceljs — flagging
 // rather than half-building them). Returns 501 for those so the frontend can show a
 // clear message instead of failing silently.
-reportsRouter.get("/export", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+reportsRouter.get("/export", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     const format = req.query.format ?? "csv";
     if (format !== "csv") {

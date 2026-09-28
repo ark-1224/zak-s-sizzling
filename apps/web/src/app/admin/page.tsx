@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
+import { getStoredUser } from "@/lib/auth";
 import { PageHeader, Card, KpiTile, StatusPill } from "@/components/admin/ui";
 import type { Product } from "@zaks/shared-types";
 
@@ -21,6 +22,8 @@ export default function AdminDashboardPage() {
   const [lowStock, setLowStock] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+  // Cost figures are admin-only, like the reports they come from.
+  const [isAdmin] = useState(() => getStoredUser()?.role === "admin");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,9 +73,11 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className={`grid grid-cols-1 gap-3.5 sm:grid-cols-2 ${isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         <KpiTile label="Active SKUs" value={String(products.length)} sub={`${categoryCount} categories`} />
-        <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="At cost" />
+        {isAdmin && (
+          <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="At cost" />
+        )}
         <KpiTile label="Below minimum" value={String(lowStock.filter((p) => (p.stockQty ?? 0) > 0).length)} sub="Reorder soon" color="var(--adm-warn)" />
         <KpiTile label="Out of stock" value={String(outOfStock)} sub="Hidden from kiosk" color="var(--adm-bad)" />
       </div>
