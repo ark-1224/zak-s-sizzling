@@ -73,4 +73,26 @@ export const PRODUCTS = {
     tracking: "unit",
     recipe: [],
   },
+  // Used only by orders.test.ts, so its stock changes don't affect other files.
+  water: {
+    id: "55555555-5555-4555-8555-555555555555",
+    name: "Test Bottled Water",
+    price: "25.00",
+    barcode: null,
+    stockQty: 50,
+    isAvailable: true,
+    tracking: "unit",
+    recipe: [],
+  },
+  // Used only by online-payment.test.ts.
+  soda: {
+    id: "66666666-6666-4666-8666-666666666666",
+    name: "Test Soda",
+    price: "40.00",
+    barcode: null,
+    stockQty: 10,
+    isAvailable: true,
+    tracking: "unit",
+    recipe: [],
+  },
 } as const satisfies Record<string, Fixture>;

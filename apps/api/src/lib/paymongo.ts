@@ -98,7 +98,9 @@ export function verifyWebhookSignature(rawBody: Buffer, signatureHeader: string 
     })
   );
   const timestamp = parts.t;
-  const candidateSignature = parts.li ?? parts.te;
+  // Live events fill `li` and test (sandbox) events fill `te`; the other field is sent
+  // but empty ("li="), so fall back on an empty string too, not just a missing field.
+  const candidateSignature = parts.li || parts.te;
   if (!timestamp || !candidateSignature) return false;
 
   // A valid signature never expires on its own — without this, a payload+signature
