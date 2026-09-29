@@ -18,7 +18,7 @@ export default function AdminProductsPage() {
     setLoading(true);
     try {
       const [prods, cats] = await Promise.all([
-        apiFetch<Product[]>("/api/products"),
+        apiFetch<Product[]>("/api/products", { auth: "staff" }), // the admin token unlocks cost
         apiFetch<Category[]>("/api/categories"),
       ]);
       setProducts(prods);
@@ -82,7 +82,7 @@ export default function AdminProductsPage() {
                   <dt className="text-sm text-adm-ink-3">Price</dt>
                   <dd className="font-adm-mono">₱{p.price.toFixed(2)}</dd>
                   <dt className="text-sm text-adm-ink-3">Cost</dt>
-                  <dd className="font-adm-mono text-adm-ink-2">{p.cost !== null ? `₱${p.cost.toFixed(2)}` : "—"}</dd>
+                  <dd className="font-adm-mono text-adm-ink-2">{p.cost != null ? `₱${p.cost.toFixed(2)}` : "—"}</dd>
                   <dt className="text-sm text-adm-ink-3">Stock</dt>
                   <dd className="font-adm-mono">{p.stockQty ?? "—"}</dd>
                   <dt className="text-sm text-adm-ink-3">Barcode</dt>
@@ -125,7 +125,7 @@ export default function AdminProductsPage() {
                     <td className="px-3 py-3 text-adm-ink-2 whitespace-nowrap">{p.category?.name}</td>
                     <td className="font-adm-mono px-3 py-3 text-right">₱{p.price.toFixed(2)}</td>
                     <td className="font-adm-mono px-3 py-3 text-right text-adm-ink-2">
-                      {p.cost !== null ? `₱${p.cost.toFixed(2)}` : "—"}
+                      {p.cost != null ? `₱${p.cost.toFixed(2)}` : "—"}
                     </td>
                     <td className="font-adm-mono px-3 py-3 text-right">{p.stockQty ?? "—"}</td>
                     <td className="px-3 py-3">

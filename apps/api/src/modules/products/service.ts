@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import type { Product } from "@zaks/shared-types";
+import type { Product, UserRole } from "@zaks/shared-types";
 import { Prisma } from "@prisma/client";
 import { applyStockChange } from "../inventory/service";
 
@@ -34,6 +34,14 @@ export function toProductDTO(p: ProductWithRelations): Product {
     stockQty: p.inventory?.stockQty,
     minStockThreshold: p.inventory?.minStockThreshold,
   };
+}
+
+/** Cost is used for margins and inventory value, which only admins see. Everyone else
+ *  (kiosk customers, anonymous visitors, staff) gets the product without it. */
+export function withCostForRole<T extends Product | Product[]>(products: T, role: UserRole | undefined): T {
+  if (role === "admin") return products;
+  const strip = ({ cost: _cost, ...rest }: Product): Product => rest;
+  return (Array.isArray(products) ? products.map(strip) : strip(products)) as T;
 }
 
 export async function listProducts(): Promise<Product[]> {

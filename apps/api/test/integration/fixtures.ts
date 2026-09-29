@@ -20,6 +20,7 @@ type Fixture = {
   id: string;
   name: string;
   price: string;
+  cost?: string;
   barcode: string | null;
   stockQty: number;
   isAvailable: boolean;
@@ -32,6 +33,7 @@ export const PRODUCTS = {
     id: "11111111-1111-4111-8111-111111111111",
     name: "Sizzling Sisig",
     price: "185.00",
+    cost: "95.00",
     barcode: "4800000000011",
     stockQty: 20,
     isAvailable: true,

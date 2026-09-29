@@ -1,7 +1,7 @@
 import request from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 import { PRODUCTS } from "./fixtures";
-import { app, loginAs } from "./helpers";
+import { app, kioskToken, loginAs } from "./helpers";
 
 // Role split: product management (including prices and bulk import) and reports are
 // Administrator-only; Staff keep inventory, orders, payments, and the kitchen display.
@@ -83,5 +83,40 @@ describe("staff keep their day-to-day functions", () => {
     const res = await request(app).get(`/api/products/barcode/${PRODUCTS.sisig.barcode}`).set(as(staff));
 
     expect(res.status).toBe(200);
+  });
+});
+
+describe("product cost is admin-only", () => {
+  const sisig = `/api/products/${PRODUCTS.sisig.id}`;
+  const barcode = `/api/products/barcode/${PRODUCTS.sisig.barcode}`;
+
+  it.each([
+    ["an anonymous visitor", "/api/products", undefined],
+    ["an anonymous visitor", sisig, undefined],
+    ["a kiosk customer", "/api/products", "kiosk"],
+    ["staff", "/api/products", "staff"],
+    ["staff", sisig, "staff"],
+    ["staff", barcode, "staff"],
+    ["staff", "/api/inventory/low-stock", "staff"],
+  ] as const)("hides it from %s on %s", async (_who, path, role) => {
+    const token = role === "kiosk" ? await kioskToken() : role ? await loginAs(role) : undefined;
+
+    const res = await (token ? request(app).get(path).set(as(token)) : request(app).get(path));
+
+    expect(res.status).toBe(200);
+    for (const product of [res.body].flat()) expect(product).not.toHaveProperty("cost");
+  });
+
+  it.each(["/api/products", sisig, barcode])("shows it to an admin on %s", async (path) => {
+    const res = await request(app).get(path).set(as(admin));
+
+    const product = [res.body].flat().find((p: { id: string }) => p.id === PRODUCTS.sisig.id);
+    expect(product.cost).toBe(95);
+  });
+
+  it("still lists every product for the kiosk, prices included", async () => {
+    const res = await request(app).get("/api/products");
+
+    expect(res.body.find((p: { id: string }) => p.id === PRODUCTS.sisig.id)).toMatchObject({ price: 185 });
   });
 });

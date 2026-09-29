@@ -29,7 +29,7 @@ export default function AdminDashboardPage() {
     setLoading(true);
     try {
       const [prods, low] = await Promise.all([
-        apiFetch<Product[]>("/api/products"),
+        apiFetch<Product[]>("/api/products", { auth: "staff" }), // cost comes back for admins only
         apiFetch<Product[]>("/api/inventory/low-stock", { auth: "staff" }),
       ]);
       setProducts(prods);

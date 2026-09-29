@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { Prisma } from "@prisma/client";
-import { authenticate } from "../../middleware/authenticate";
+import { authenticate, optionalAuthenticate, type AuthenticatedRequest } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { fromCSV, toCSV } from "../../lib/csv";
@@ -13,15 +13,17 @@ import {
   getProductById,
   listProducts,
   updateProduct,
+  withCostForRole,
 } from "./service";
 
 export const productsRouter = Router();
 
-// GET /api/products?category=&search= — Sprint 1 read-only catalog
-productsRouter.get("/", async (req, res, next) => {
+// GET /api/products?category=&search= — Sprint 1 read-only catalog. Public for the
+// kiosk; an admin token additionally unlocks each product's cost.
+productsRouter.get("/", optionalAuthenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
     const products = await listProducts();
-    res.json(products);
+    res.json(withCostForRole(products, req.user?.role));
   } catch (err) {
     next(err);
   }
@@ -29,21 +31,21 @@ productsRouter.get("/", async (req, res, next) => {
 
 // Barcode lookup for the admin scanner (Sprint 4) — before /:id so "barcode" isn't
 // swallowed as a product id.
-productsRouter.get("/barcode/:code", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+productsRouter.get("/barcode/:code", authenticate, authorize("admin", "staff"), async (req: AuthenticatedRequest, res, next) => {
   try {
     const product = await getProductByBarcode(req.params.code);
     if (!product) throw new HttpError(404, "No product with that barcode");
-    res.json(product);
+    res.json(withCostForRole(product, req.user?.role));
   } catch (err) {
     next(err);
   }
 });
 
-productsRouter.get("/:id", async (req, res, next) => {
+productsRouter.get("/:id", optionalAuthenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
     const product = await getProductById(req.params.id);
     if (!product) throw new HttpError(404, "Product not found");
-    res.json(product);
+    res.json(withCostForRole(product, req.user?.role));
   } catch (err) {
     next(err);
   }

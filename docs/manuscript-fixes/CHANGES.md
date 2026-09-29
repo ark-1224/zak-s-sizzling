@@ -127,7 +127,7 @@ The code defines exactly three roles, in the same form in every place:
 | `packages/shared-types/src/entities.ts`, `type UserRole` | `admin`, `staff`, `customer` |
 | `apps/api/src/middleware/authorize.ts` and every `authorize(...)` call in `apps/api/src/modules/*/routes.ts` | `admin`, `staff` |
 | `apps/api/src/middleware/authenticate.ts` (kiosk session token) | `customer` |
-| `apps/web/src/components/StaffGuard.tsx`, `apps/web/src/components/admin/AdminShell.tsx` | `admin`, `staff` (Users & roles shown to `admin` only) |
+| `apps/web/src/components/StaffGuard.tsx`, `apps/web/src/components/admin/AdminShell.tsx`, `apps/web/src/components/admin/AdminRouteGuard.tsx` | `admin`, `staff` (Products, Bulk import, Analytics, and Users & roles shown to `admin` only; staff who open those pages are sent back to the dashboard) |
 
 There is no "Super Administrator", "Kitchen Staff", "Front Desk", or "Consumer" role in the code. Kitchen and front-desk personnel both use Staff accounts.
 
@@ -140,8 +140,8 @@ Paste this block, word for word, in each of the three places listed in 2.3. If t
 >
 > | Role | Who | What the role can do |
 > |---|---|---|
-> | Administrator | The owner of Zak's Sizzling Hub, who signs in with an administrator account. | Performs every Staff function. In addition, manages user accounts: creates administrator and staff accounts, changes their roles, resets passwords, and deactivates or reactivates accounts. |
-> | Staff | Front-desk and kitchen personnel of Zak's Sizzling Hub, who sign in with staff accounts. | Confirms counter payments; updates the preparation status of ordered items on the kitchen display; views and adjusts stock levels and the low-stock list; adds, edits, and removes products and prices; imports products in bulk; views analytics and exports reports; views and edits orders. |
+> | Administrator | The owner of Zak's Sizzling Hub, who signs in with an administrator account. | Performs every Staff function. In addition, adds, edits, and removes products and prices, imports products in bulk, and sees product costs; views analytics and exports reports; and manages user accounts: creates administrator and staff accounts, changes their roles, resets passwords, and deactivates or reactivates accounts. |
+> | Staff | Front-desk and kitchen personnel of Zak's Sizzling Hub, who sign in with staff accounts. | Confirms counter payments; updates the preparation status of ordered items on the kitchen display; views and adjusts stock levels and the low-stock list; looks up products by barcode; views and edits orders. |
 > | Customer | Any person ordering at the kiosk. Customers do not have accounts; the kiosk starts an anonymous session that expires after two hours. | Browses the menu, places orders, views their own order and receipt, and chooses to pay at the counter or online through GCash or Maya. |
 
 **Evidence for each permission**
@@ -152,8 +152,10 @@ Paste this block, word for word, in each of the three places listed in 2.3. If t
 | Staff confirms counter payments | `POST /api/payments/counter/:orderId/confirm`, `authorize("admin", "staff")` |
 | Staff updates kitchen preparation status | `PATCH /api/kitchen/tasks/:id`, `authorize("admin", "staff")`; statuses `pending`, `in_progress`, `completed` (`enum KitchenStatus`) |
 | Staff views and adjusts stock and the low-stock list | `apps/api/src/modules/inventory/routes.ts`: `/low-stock`, `/adjustments`, `PATCH /:productId`, `authorize("admin", "staff")` |
-| Staff adds, edits, removes products; bulk import | `apps/api/src/modules/products/routes.ts`: `POST /`, `PUT /:id`, `DELETE /:id`, `POST /bulk-import`, `authorize("admin", "staff")` |
-| Staff views analytics and exports reports | `apps/api/src/modules/reports/routes.ts`: all routes `authorize("admin", "staff")` |
+| Staff looks up products by barcode | `GET /api/products/barcode/:code`, `authorize("admin", "staff")` |
+| Administrator adds, edits, removes products and prices; bulk import | `apps/api/src/modules/products/routes.ts`: `POST /`, `PUT /:id`, `DELETE /:id`, `POST /bulk-import`, `GET /import-template`, `authorize("admin")` |
+| Only the Administrator sees product costs | `withCostForRole` in `apps/api/src/modules/products/service.ts`: product lists and details sent to staff, customers, or visitors leave out `cost` |
+| Administrator views analytics and exports reports | `apps/api/src/modules/reports/routes.ts`: all routes `authorize("admin")` |
 | Staff views and edits orders | `apps/api/src/modules/orders/routes.ts`: `GET /`, `PATCH` and `DELETE /:id/items/:itemId`, `authorize("admin", "staff")` |
 | Customer has no account; anonymous two-hour session | `POST /api/auth/kiosk-session`; `apps/api/src/lib/jwt.ts` `signKioskSessionToken` with `expiresIn: "2h"`; `users/schema.ts` accepts only `admin` and `staff` |
 | Customer places orders and sees only their own order and receipt | `POST /api/orders`, `GET /api/orders/:id` and `/:id/receipt` (ownership check in `orders/routes.ts`) |
@@ -179,7 +181,7 @@ OLD
 NEW
 > *(Insert the canonical role block from 2.2 here.)*
 >
-> Role-based access control ensures that sensitive operations, such as stock adjustments, financial reporting, and user account management, are restricted to signed-in Administrator and Staff accounts, and that only Administrator accounts can manage user accounts.
+> Role-based access control ensures that sensitive operations are restricted to signed-in accounts. Staff accounts handle daily operations such as payments, kitchen updates, and stock adjustments, while only Administrator accounts can change products and prices, see product costs, view financial reports, and manage user accounts.
 
 **(c) Figure 2.0 User Level Diagram and its description, pp. 56–57 [PDF 59–60]**
 
@@ -208,7 +210,7 @@ OLD
 > The target users of the system are customers who need a fast and reliable ordering experience, kitchen staff who require accurate and immediate order updates, and administrators who manage products, payments, and stock levels through a secure dashboard.
 
 NEW
-> The target users of the system are customers who need a fast and reliable ordering experience, staff who require accurate and immediate order updates, and administrators who manage the system and its user accounts through a secure dashboard.
+> The target users of the system are customers who need a fast and reliable ordering experience, staff who require accurate and immediate order updates, and administrators who manage products, prices, reports, and user accounts through a secure dashboard.
 
 **(e) Requirements Analysis, "Who", p. 50 [PDF 53]**
 
@@ -216,7 +218,7 @@ OLD
 > The people involved in the system include the customers, the kitchen staff, the administrators, and the system itself. Customers browse the digital menu, customize meals, place orders, and pay securely through the kiosk or mobile interface. Kitchen staff receive realtime order details on a dedicated display, enabling efficient preparation and reducing miscommunication. Administrators oversee operations by managing products, monitoring inventory, adjusting stock levels, handling payments, and generating reports.
 
 NEW
-> The people involved in the system are the customers, the staff, the administrators, and the system itself. Customers browse the digital menu, customize meals, place orders, and pay through the kiosk. Staff receive real-time order details on the kitchen display, update the preparation status of each item, confirm counter payments, and manage products, stock levels, and reports. Administrators perform all staff functions and also manage user accounts.
+> The people involved in the system are the customers, the staff, the administrators, and the system itself. Customers browse the digital menu, customize meals, place orders, and pay through the kiosk. Staff receive real-time order details on the kitchen display, update the preparation status of each item, confirm counter payments, and keep stock levels up to date. Administrators perform all staff functions and also manage products and prices, view reports, and manage user accounts.
 
 **(f) Requirement Documentation, pp. 54–55 [PDF 57–58]**
 
@@ -234,11 +236,11 @@ NEW
 > - Order and Payment Management – Staff view incoming orders, edit order items, and confirm counter payments.
 > - Kitchen Display – Staff view orders on the kitchen display and update the preparation status of each item (Pending, In Progress, Completed).
 > - Inventory and Stock Management – Staff view current stock levels and the low-stock list, and record stock adjustments with a reason (restock, return, damaged, spoilage, correction, or other).
-> - Product and Price Management – Staff add, edit, and remove products and prices, and import products in bulk from a CSV file.
-> - Sales Reports – Staff view sales, top-selling product, inventory movement, and profitability reports, and export them as CSV files.
 >
 > **Administrator**
 > - All Staff Functions – The administrator can perform every staff function listed above.
+> - Product and Price Management – The administrator adds, edits, and removes products and prices, records product costs, and imports products in bulk from a CSV file.
+> - Sales Reports – The administrator views sales, top-selling product, inventory movement, and profitability reports, and exports them as CSV files.
 > - User Account Administration – The administrator creates administrator and staff accounts, changes their roles, resets passwords, and deactivates or reactivates accounts.
 
 Two old items are removed because the code has no function for them: "Customer Assistance" (Front Desk) and "System Maintenance Supervision" (Admin). See Needs decision item 12.
@@ -253,7 +255,6 @@ In the Login box, change "Role-based authentication (Admin, Staff, Super Admin)"
 |---|---|
 | "...how users interact with the platform across different roles customer, staff, and administrator." | "...how users interact with the platform across the Administrator, Staff, and Customer roles." |
 | "This interface enables Zak's kitchen staff to efficiently track and prepare orders..." | "This interface enables staff in the kitchen to track and prepare orders..." |
-| "The Add Product Modal allows administrators to input new menu items..." | "The Add Product Modal allows administrators and staff to input new menu items..." |
 | "...and Users & Roles, which allows administrators to manage user accounts and assign permissions." | "...and Users & Roles, which allows administrators to manage user accounts and assign the Administrator or Staff role." |
 
 **(i) Sprint 1, p. 67 [PDF 70]**
@@ -598,7 +599,7 @@ The manuscript claims each item below, but the code does not support it (or supp
 9. **Deduction of raw materials** (Objective 3, p. 6). Stock is deducted per product unit (`inventory.stock_qty`). No ingredient or raw-material table exists.
 10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Low-stock products are listed on the admin dashboard and inventory page, and the hourly worker check writes to the server log. No notification is sent to a person.
 11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). The repository has no automated tests.
-12. **Staff and Administrator permissions.** Earlier drafts gave product, price, and report functions to the administrator only. In the code, Staff can do all of these, and only user management is limited to the Administrator. The new role table describes the code as it is. Decide whether the code should later restrict Staff; that would be a separate change to the permission checks. The removed "Customer Assistance" and "System Maintenance Supervision" items (2.4(f)) have no matching function in the code.
+12. **Staff and Administrator permissions.** Resolved: the code now matches the earlier drafts. Product, price, bulk import, and report functions, and product costs, are limited to the Administrator; Staff keep payments, the kitchen display, stock, barcode lookup, and orders. The role table in 2.2 describes this split. The removed "Customer Assistance" and "System Maintenance Supervision" items (2.4(f)) have no matching function in the code.
 13. **Product images** (Scope, Product Catalog and Display, p. 7; Product Catalog Management, p. 10). The products table has no image field; the kiosk shows an icon.
 14. **Online payment through GCash and Maya** (FR2, the role table, and several sections). The code integrates PayMongo, but it has not been tested with real or test keys. The client's approval is pending.
 15. **Filtering by price** (Figure 2.2 description, p. 60). The kiosk filters by category and search only.

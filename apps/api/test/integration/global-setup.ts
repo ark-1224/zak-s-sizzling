@@ -58,6 +58,7 @@ export default async function setup() {
           id: product.id,
           name: product.name,
           price: product.price,
+          cost: "cost" in product ? product.cost : null,
           barcode: product.barcode,
           isAvailable: product.isAvailable,
           tracking: product.tracking,

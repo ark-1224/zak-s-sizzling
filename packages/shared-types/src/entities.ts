@@ -19,7 +19,8 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  cost: number | null;
+  /** Sent to admins only; null means no cost recorded yet. */
+  cost?: number | null;
   barcode: string | null;
   categoryId: number;
   category?: Category;

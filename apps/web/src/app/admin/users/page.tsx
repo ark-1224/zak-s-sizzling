@@ -95,8 +95,8 @@ export default function UsersPage() {
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-        <RoleCard n="Administrator" count={`${admins} ACCOUNT${admins !== 1 ? "S" : ""}`} d="Full inventory and product control, adjustments, analytics, imports, and user administration." />
-        <RoleCard n="Staff" count={`${staff} ACCOUNT${staff !== 1 ? "S" : ""}`} d="Order management, counter payment confirmation, product/inventory updates. No user administration." />
+        <RoleCard n="Administrator" count={`${admins} ACCOUNT${admins !== 1 ? "S" : ""}`} d="Everything staff can do, plus products, prices and costs, bulk import, analytics and reports, and user administration." />
+        <RoleCard n="Staff" count={`${staff} ACCOUNT${staff !== 1 ? "S" : ""}`} d="Orders, counter payment confirmation, kitchen display, and stock adjustments. No product, price, report, or user administration." />
       </div>
 
       {loading ? (
