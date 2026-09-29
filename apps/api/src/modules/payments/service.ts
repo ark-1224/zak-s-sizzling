@@ -4,7 +4,7 @@ import { createCheckoutSession, parseWebhookEvent, verifyWebhookSignature } from
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
-import { deductStockForOrder } from "../inventory/service";
+import { deductStockForOrder, refreshAvailability, StockShortageError } from "../inventory/fulfillment";
 import { createKitchenTasksForOrder } from "../kitchen/service";
 
 async function loadPayableOrder(orderId: string) {
@@ -59,15 +59,17 @@ export async function createGatewayPaymentIntent(orderId: string, method: "gcash
  * the payment table's unique `orderId` constraint, so a concurrent duplicate create
  * loses to Postgres itself rather than a JS-level check that could itself race.
  * Returns false if another call already handled it — the caller should then treat
- * this as a no-op, not an error.
+ * this as a no-op, not an error. Pass the transaction client to make marking paid
+ * part of a larger all-or-nothing change.
  */
 async function markPaymentPaidIfNotAlready(
+  db: Prisma.TransactionClient,
   order: { id: string; totalAmount: Prisma.Decimal; payment: { status: string } | null },
   updateData: Omit<Prisma.PaymentUpdateManyMutationInput, "status">,
   createData: Omit<Prisma.PaymentUncheckedCreateInput, "orderId" | "status" | "amount">
 ): Promise<boolean> {
   if (order.payment) {
-    const result = await prisma.payment.updateMany({
+    const result = await db.payment.updateMany({
       where: { orderId: order.id, status: { not: "paid" } },
       data: { status: "paid", ...updateData },
     });
@@ -75,7 +77,7 @@ async function markPaymentPaidIfNotAlready(
   }
 
   try {
-    await prisma.payment.create({
+    await db.payment.create({
       data: { orderId: order.id, status: "paid", amount: order.totalAmount, ...createData },
     });
     return true;
@@ -85,18 +87,31 @@ async function markPaymentPaidIfNotAlready(
   }
 }
 
+/**
+ * Staff confirm a counter order before collecting payment. Marking it paid, deducting
+ * every unit and raw material it needs, and confirming the order happen in one
+ * transaction: if anything is short, StockShortageError (409) rolls it all back, so
+ * nothing is deducted, the order stays unpaid, and staff can change it with the
+ * customer before any money changes hands.
+ */
 export async function confirmCounterPayment(orderId: string) {
   const order = await loadPayableOrder(orderId);
 
-  const applied = await markPaymentPaidIfNotAlready(
-    order,
-    { method: "counter", paidAt: new Date() },
-    { method: "counter", paidAt: new Date() }
-  );
-  if (!applied) throw new HttpError(409, "Order is already paid");
+  const touched = await prisma.$transaction(async (tx) => {
+    const applied = await markPaymentPaidIfNotAlready(
+      tx,
+      order,
+      { method: "counter", paidAt: new Date() },
+      { method: "counter", paidAt: new Date() }
+    );
+    if (!applied) throw new HttpError(409, "Order is already paid");
 
-  await prisma.order.update({ where: { id: order.id }, data: { status: "confirmed" } });
-  await deductStockForOrder(order.id); // also emits inventory:updated per line item
+    const touched = await deductStockForOrder(tx, order.id);
+    await tx.order.update({ where: { id: order.id }, data: { status: "confirmed", stockIssue: false, stockIssueNote: null } });
+    return touched;
+  });
+
+  await refreshAvailability(touched); // emits inventory:updated for affected products
   await createKitchenTasksForOrder(order.id); // also emits order:created
   emitPaymentConfirmed(order);
   return getOrderById(order.id);
@@ -127,15 +142,35 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
 
   // Deliberately doesn't touch `method` on update — the existing row already has the
   // correct gcash/maya value from checkout-intent time.
-  const applied = await markPaymentPaidIfNotAlready(
-    order,
-    { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")) },
-    { method: order.payment.method, paidAt: new Date() }
-  );
-  if (!applied) return; // already processed (gateway retry / duplicate delivery) — nothing more to do
+  const paymentUpdate = { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")) };
+  const paymentCreate = { method: order.payment.method, paidAt: new Date() };
 
-  await prisma.order.update({ where: { id: order.id }, data: { status: "confirmed" } });
-  await deductStockForOrder(order.id);
-  await createKitchenTasksForOrder(order.id);
-  emitPaymentConfirmed(order);
+  try {
+    const touched = await prisma.$transaction(async (tx) => {
+      const applied = await markPaymentPaidIfNotAlready(tx, order, paymentUpdate, paymentCreate);
+      if (!applied) return null; // already processed (gateway retry / duplicate delivery)
+
+      const touched = await deductStockForOrder(tx, order.id);
+      await tx.order.update({ where: { id: order.id }, data: { status: "confirmed", stockIssue: false, stockIssueNote: null } });
+      return touched;
+    });
+    if (!touched) return;
+
+    await refreshAvailability(touched);
+    await createKitchenTasksForOrder(order.id);
+    emitPaymentConfirmed(order);
+  } catch (err) {
+    if (!(err instanceof StockShortageError)) throw err;
+
+    // The customer already paid on PayMongo's page, so this can't be refused like a
+    // counter order. Record the payment, deduct nothing (stock never goes negative),
+    // create no kitchen tasks, and flag the order so staff substitute or refund.
+    const applied = await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate);
+    if (!applied) return;
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { stockIssue: true, stockIssueNote: err.message.slice(0, 300) },
+    });
+    console.warn(`[payments] order ${order.orderNumber} paid online but stock is short: ${err.message}`);
+  }
 }

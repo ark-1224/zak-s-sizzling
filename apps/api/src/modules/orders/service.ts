@@ -2,6 +2,7 @@ import { randomInt } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
+import { assertStockForNewOrder, PRODUCT_STOCK_INCLUDE } from "../inventory/fulfillment";
 import type { OrderDTO } from "@zaks/shared-types";
 
 type OrderWithRelations = Prisma.OrderGetPayload<{
@@ -14,6 +15,8 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
     orderNumber: order.orderNumber,
     status: order.status,
     totalAmount: Number(order.totalAmount),
+    stockIssue: order.stockIssue,
+    stockIssueNote: order.stockIssueNote,
     createdAt: order.createdAt.toISOString(),
     items: order.items.map((item) => ({
       id: item.id,
@@ -56,7 +59,7 @@ export async function createOrder(input: CreateOrderInput) {
   const productIds = input.items.map((i) => i.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
-    include: { inventory: true },
+    include: PRODUCT_STOCK_INCLUDE,
   });
 
   const productById = new Map(products.map((p) => [p.id, p]));
@@ -64,15 +67,13 @@ export async function createOrder(input: CreateOrderInput) {
     const product = productById.get(item.productId);
     if (!product) throw new HttpError(404, `Product ${item.productId} not found`);
     if (!product.isAvailable) throw new HttpError(409, `${product.name} is currently unavailable`);
-    // isAvailable only means "more than zero in stock" — it doesn't guarantee enough
-    // units for THIS order. The actual deduction at payment time (applyStockChange)
-    // is what atomically enforces this against true concurrent orders; this check is
-    // the up-front rejection so a customer doesn't get through checkout for something
-    // that was never going to be fulfillable.
-    if (product.inventory && product.inventory.stockQty < item.qty) {
-      throw new HttpError(409, `Only ${product.inventory.stockQty} of ${product.name} left in stock`);
-    }
   }
+  // isAvailable only means "at least one in stock" — it doesn't guarantee enough for
+  // THIS order, and dishes sharing a raw material compete for it. This is the up-front
+  // rejection, so a customer doesn't check out something that can't be made; the
+  // deduction at payment confirmation (fulfillment.ts) is what enforces it atomically
+  // against concurrent orders.
+  assertStockForNewOrder(input.items.map((item) => ({ qty: item.qty, product: productById.get(item.productId)! })));
 
   const lines = input.items.map((item) => {
     const product = productById.get(item.productId)!;
@@ -139,8 +140,9 @@ export async function getOrderOwnerSessionId(id: string): Promise<string | null 
 /** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */
 export async function listOrders(filter: { unpaidCounterOnly?: boolean } = {}): Promise<OrderDTO[]> {
   const orders = await prisma.order.findMany({
+    // Also lists paid orders flagged with a stock issue: staff still have to act on them.
     where: filter.unpaidCounterOnly
-      ? { OR: [{ payment: null }, { payment: { status: { not: "paid" } } }] }
+      ? { OR: [{ payment: null }, { payment: { status: { not: "paid" } } }, { stockIssue: true }] }
       : undefined,
     include: { items: { include: { product: true } }, payment: true },
     orderBy: { createdAt: "desc" },

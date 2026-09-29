@@ -79,6 +79,9 @@ export interface OrderDTO {
   orderNumber: string;
   status: OrderStatus;
   totalAmount: number;
+  /** Paid online but stock ran short: nothing was deducted and staff must substitute or refund. */
+  stockIssue: boolean;
+  stockIssueNote: string | null;
   createdAt: string;
   items: OrderItemDTO[];
   payment: PaymentDTO | null;

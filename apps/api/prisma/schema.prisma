@@ -62,6 +62,32 @@ enum AdjustmentReason {
   @@map("adjustment_reason")
 }
 
+// How a product's stock is tracked (docs/design/raw-material-stock.md): `unit` counts
+// the product itself in `inventory`; `recipe` deducts its raw materials per serving.
+enum StockTracking {
+  unit
+  recipe
+
+  @@map("stock_tracking")
+}
+
+// Raw materials are stored in base units only; screens may display kg or L.
+enum MaterialUnit {
+  g
+  ml
+  pc
+
+  @@map("material_unit")
+}
+
+enum MovementType {
+  sale
+  adjustment
+  restock
+
+  @@map("movement_type")
+}
+
 model Role {
   id    Int      @id @default(autoincrement())
   name  UserRole @unique
@@ -71,16 +97,17 @@ model Role {
 }
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String   @db.VarChar(120)
-  email        String   @unique @db.VarChar(160)
-  passwordHash String   @map("password_hash")
-  roleId       Int      @map("role_id")
-  role         Role     @relation(fields: [roleId], references: [id])
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  stockAdjustments StockAdjustment[]
+  id                   String                @id @default(uuid()) @db.Uuid
+  name                 String                @db.VarChar(120)
+  email                String                @unique @db.VarChar(160)
+  passwordHash         String                @map("password_hash")
+  roleId               Int                   @map("role_id")
+  role                 Role                  @relation(fields: [roleId], references: [id])
+  isActive             Boolean               @default(true) @map("is_active")
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  stockAdjustments     StockAdjustment[]
+  rawMaterialMovements RawMaterialMovement[]
 
   @@index([roleId])
   @@map("users")
@@ -98,27 +125,29 @@ model Category {
 }
 
 model Product {
-  id          String      @id @default(uuid()) @db.Uuid
-  name        String      @db.VarChar(150)
-  price       Decimal     @db.Decimal(10, 2)
-  barcode     String?     @db.VarChar(64)
-  categoryId  Int         @map("category_id")
-  category    Category    @relation(fields: [categoryId], references: [id])
-  description String?
-  icon        String?     @db.VarChar(8)
-  cost        Decimal?    @db.Decimal(10, 2)
-  ingredients String[]    @default([])
-  allergens   String[]    @default([])
-  calories    Int?
-  proteinG    Decimal?    @map("protein_g") @db.Decimal(6, 2)
-  carbsG      Decimal?    @map("carbs_g") @db.Decimal(6, 2)
-  sugarG      Decimal?    @map("sugar_g") @db.Decimal(6, 2)
-  isAvailable Boolean     @default(true) @map("is_available")
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime    @updatedAt @map("updated_at")
-  inventory   Inventory?
-  orderItems  OrderItem[]
+  id               String            @id @default(uuid()) @db.Uuid
+  name             String            @db.VarChar(150)
+  price            Decimal           @db.Decimal(10, 2)
+  barcode          String?           @db.VarChar(64)
+  categoryId       Int               @map("category_id")
+  category         Category          @relation(fields: [categoryId], references: [id])
+  description      String?
+  icon             String?           @db.VarChar(8)
+  cost             Decimal?          @db.Decimal(10, 2)
+  ingredients      String[]          @default([])
+  allergens        String[]          @default([])
+  calories         Int?
+  proteinG         Decimal?          @map("protein_g") @db.Decimal(6, 2)
+  carbsG           Decimal?          @map("carbs_g") @db.Decimal(6, 2)
+  sugarG           Decimal?          @map("sugar_g") @db.Decimal(6, 2)
+  isAvailable      Boolean           @default(true) @map("is_available")
+  tracking         StockTracking     @default(unit)
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  inventory        Inventory?
+  orderItems       OrderItem[]
   stockAdjustments StockAdjustment[]
+  recipeItems      RecipeItem[]
 
   @@unique([barcode])
   @@index([categoryId])
@@ -160,17 +189,22 @@ model StockAdjustment {
 }
 
 model Order {
-  id             String      @id @default(uuid()) @db.Uuid
-  orderNumber    String      @unique @map("order_number") @db.VarChar(20)
-  customerName   String?     @map("customer_name") @db.VarChar(120)
-  kioskSessionId String?     @map("kiosk_session_id") @db.VarChar(64)
-  source         String      @default("kiosk") @db.VarChar(20)
-  status         OrderStatus @default(pending)
-  totalAmount    Decimal     @default(0) @map("total_amount") @db.Decimal(10, 2)
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
-  items          OrderItem[]
-  payment        Payment?
+  id                   String                @id @default(uuid()) @db.Uuid
+  orderNumber          String                @unique @map("order_number") @db.VarChar(20)
+  customerName         String?               @map("customer_name") @db.VarChar(120)
+  kioskSessionId       String?               @map("kiosk_session_id") @db.VarChar(64)
+  source               String                @default("kiosk") @db.VarChar(20)
+  status               OrderStatus           @default(pending)
+  totalAmount          Decimal               @default(0) @map("total_amount") @db.Decimal(10, 2)
+  // Set when an online payment arrived but stock ran short, so nothing was deducted
+  // and staff must substitute or refund (design section 3.3).
+  stockIssue           Boolean               @default(false) @map("stock_issue")
+  stockIssueNote       String?               @map("stock_issue_note") @db.VarChar(300)
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  items                OrderItem[]
+  payment              Payment?
+  rawMaterialMovements RawMaterialMovement[]
 
   @@index([status])
   @@index([createdAt])
@@ -178,17 +212,17 @@ model Order {
 }
 
 model OrderItem {
-  id                   String        @id @default(uuid()) @db.Uuid
-  orderId              String        @map("order_id") @db.Uuid
-  order                Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId            String        @map("product_id") @db.Uuid
-  product              Product       @relation(fields: [productId], references: [id])
-  qty                  Int
-  unitPrice            Decimal       @map("unit_price") @db.Decimal(10, 2)
-  subtotal             Decimal       @db.Decimal(10, 2)
-  specialInstructions  String?       @map("special_instructions") @db.VarChar(140)
-  createdAt            DateTime      @default(now()) @map("created_at")
-  kitchenTask          KitchenTask?
+  id                  String       @id @default(uuid()) @db.Uuid
+  orderId             String       @map("order_id") @db.Uuid
+  order               Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId           String       @map("product_id") @db.Uuid
+  product             Product      @relation(fields: [productId], references: [id])
+  qty                 Int
+  unitPrice           Decimal      @map("unit_price") @db.Decimal(10, 2)
+  subtotal            Decimal      @db.Decimal(10, 2)
+  specialInstructions String?      @map("special_instructions") @db.VarChar(140)
+  createdAt           DateTime     @default(now()) @map("created_at")
+  kitchenTask         KitchenTask?
 
   @@index([orderId])
   @@index([productId])
@@ -222,4 +256,60 @@ model KitchenTask {
 
   @@index([status])
   @@map("kitchen_tasks")
+}
+
+// Ingredients bought and consumed in base units (grams, millilitres, pieces).
+// stock_qty can never go below zero: a CHECK constraint in the migration enforces it.
+model RawMaterial {
+  id                String                @id @default(uuid()) @db.Uuid
+  name              String                @unique @db.VarChar(120)
+  unit              MaterialUnit
+  stockQty          Decimal               @default(0) @map("stock_qty") @db.Decimal(12, 3)
+  minStockThreshold Decimal               @default(0) @map("min_stock_threshold") @db.Decimal(12, 3)
+  costPerUnit       Decimal?              @map("cost_per_unit") @db.Decimal(10, 4)
+  isActive          Boolean               @default(true) @map("is_active")
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+  recipeItems       RecipeItem[]
+  movements         RawMaterialMovement[]
+
+  @@map("raw_materials")
+}
+
+// How much of one raw material a single serving of a recipe-tracked product uses.
+model RecipeItem {
+  productId     String      @map("product_id") @db.Uuid
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rawMaterialId String      @map("raw_material_id") @db.Uuid
+  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id], onDelete: Restrict)
+  qtyPerServing Decimal     @map("qty_per_serving") @db.Decimal(10, 3)
+
+  @@id([productId, rawMaterialId])
+  @@index([rawMaterialId])
+  @@map("recipe_items")
+}
+
+// Ledger of every raw-material stock change: sales (linked to the order), manual
+// adjustments, and restocks. Reports read this, so past usage stays correct even
+// after a recipe is edited.
+model RawMaterialMovement {
+  id            String            @id @default(uuid()) @db.Uuid
+  rawMaterialId String            @map("raw_material_id") @db.Uuid
+  rawMaterial   RawMaterial       @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+  delta         Decimal           @db.Decimal(12, 3)
+  previousQty   Decimal           @map("previous_qty") @db.Decimal(12, 3)
+  newQty        Decimal           @map("new_qty") @db.Decimal(12, 3)
+  type          MovementType
+  reason        AdjustmentReason?
+  orderId       String?           @map("order_id") @db.Uuid
+  order         Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  adjustedById  String?           @map("adjusted_by_id") @db.Uuid
+  adjustedBy    User?             @relation(fields: [adjustedById], references: [id])
+  note          String?           @db.VarChar(200)
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  @@index([rawMaterialId])
+  @@index([createdAt])
+  @@index([orderId])
+  @@map("raw_material_movements")
 }

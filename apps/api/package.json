@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:raw-materials": "tsx prisma/seed-raw-materials.ts",
     "db:studio": "prisma studio",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",

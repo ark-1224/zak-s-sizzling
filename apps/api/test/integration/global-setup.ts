@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { CATEGORY, PASSWORD, PRODUCTS, USERS } from "./fixtures";
+import { CATEGORY, PASSWORD, PRODUCTS, RAW_MATERIALS, USERS } from "./fixtures";
 
 const apiDir = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -45,6 +45,12 @@ export default async function setup() {
       });
     }
 
+    const materialIds = new Map<string, string>();
+    for (const [key, material] of Object.entries(RAW_MATERIALS)) {
+      const row = await prisma.rawMaterial.create({ data: material });
+      materialIds.set(key, row.id);
+    }
+
     const category = await prisma.category.create({ data: CATEGORY });
     for (const product of Object.values(PRODUCTS)) {
       await prisma.product.create({
@@ -54,8 +60,12 @@ export default async function setup() {
           price: product.price,
           barcode: product.barcode,
           isAvailable: product.isAvailable,
+          tracking: product.tracking,
           categoryId: category.id,
           inventory: { create: { stockQty: product.stockQty, minStockThreshold: 5 } },
+          recipeItems: {
+            create: product.recipe.map(([material, qtyPerServing]) => ({ rawMaterialId: materialIds.get(material)!, qtyPerServing })),
+          },
         },
       });
     }

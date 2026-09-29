@@ -11,6 +11,22 @@ export const USERS = {
 
 export const CATEGORY = { name: "Sizzling Plates", icon: "🔥", sortOrder: 1 };
 
+export const RAW_MATERIALS = {
+  pork: { name: "Test Pork", unit: "g", stockQty: 1000 },
+  rice: { name: "Test Rice", unit: "g", stockQty: 500 },
+} as const;
+
+type Fixture = {
+  id: string;
+  name: string;
+  price: string;
+  barcode: string | null;
+  stockQty: number;
+  isAvailable: boolean;
+  tracking: "unit" | "recipe";
+  recipe: readonly (readonly [keyof typeof RAW_MATERIALS, number])[];
+};
+
 export const PRODUCTS = {
   sisig: {
     id: "11111111-1111-4111-8111-111111111111",
@@ -19,6 +35,8 @@ export const PRODUCTS = {
     barcode: "4800000000011",
     stockQty: 20,
     isAvailable: true,
+    tracking: "unit",
+    recipe: [],
   },
   calamares: {
     id: "22222222-2222-4222-8222-222222222222",
@@ -27,5 +45,32 @@ export const PRODUCTS = {
     barcode: null,
     stockQty: 0,
     isAvailable: false,
+    tracking: "unit",
+    recipe: [],
   },
-} as const;
+  // Recipe-tracked: one serving uses 150 g pork and 200 g rice, so the seeded stock
+  // (1000 g pork, 500 g rice) makes 2 servings; rice runs out first.
+  riceBowl: {
+    id: "33333333-3333-4333-8333-333333333333",
+    name: "Test Sisig Rice Bowl",
+    price: "150.00",
+    barcode: null,
+    stockQty: 0,
+    isAvailable: true,
+    tracking: "recipe",
+    recipe: [
+      ["pork", 150],
+      ["rice", 200],
+    ],
+  },
+  icedTea: {
+    id: "44444444-4444-4444-8444-444444444444",
+    name: "Test Iced Tea",
+    price: "45.00",
+    barcode: "4800000000044",
+    stockQty: 5,
+    isAvailable: true,
+    tracking: "unit",
+    recipe: [],
+  },
+} as const satisfies Record<string, Fixture>;

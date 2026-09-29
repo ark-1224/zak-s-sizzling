@@ -51,7 +51,10 @@ export async function applyStockChange(
     }
 
     const updatedInventory = await tx.inventory.findUniqueOrThrow({ where: { productId } });
-    const isAvailable = updatedInventory.stockQty > 0;
+    // A recipe product's availability comes from its raw materials (see
+    // fulfillment.ts refreshAvailability), not from its own inventory count.
+    const current = await tx.product.findUniqueOrThrow({ where: { id: productId }, select: { tracking: true, isAvailable: true } });
+    const isAvailable = current.tracking === "recipe" ? current.isAvailable : updatedInventory.stockQty > 0;
     return tx.product.update({
       where: { id: productId },
       data: { isAvailable },
@@ -63,19 +66,6 @@ export async function applyStockChange(
   const dto = toProductDTO(product);
   getIO()?.emit("inventory:updated", { productId, isAvailable: product.isAvailable, stockQty: newQty });
   return { product: dto, previousQty, newQty };
-}
-
-/**
- * Deducts stock for every line in a paid order — called once payment is confirmed.
- * This is sales-driven movement, not an "authorized user" adjustment, so it's not
- * written to the stock_adjustments audit log (that's scoped to manual corrections —
- * see adjustStock below); it's already tracked via orders/order_items instead.
- */
-export async function deductStockForOrder(orderId: string): Promise<void> {
-  const items = await prisma.orderItem.findMany({ where: { orderId } });
-  for (const item of items) {
-    await applyStockChange(item.productId, { delta: -item.qty });
-  }
 }
 
 /** Manual, authorized stock adjustment — always logged with who/why for the audit trail. */
