@@ -13,7 +13,7 @@ import {
   getProductById,
   listProducts,
   updateProduct,
-  withCostForRole,
+  withAdminFieldsForRole,
 } from "./service";
 
 export const productsRouter = Router();
@@ -23,7 +23,7 @@ export const productsRouter = Router();
 productsRouter.get("/", optionalAuthenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
     const products = await listProducts();
-    res.json(withCostForRole(products, req.user?.role));
+    res.json(withAdminFieldsForRole(products, req.user?.role));
   } catch (err) {
     next(err);
   }
@@ -35,7 +35,7 @@ productsRouter.get("/barcode/:code", authenticate, authorize("admin", "staff"), 
   try {
     const product = await getProductByBarcode(req.params.code);
     if (!product) throw new HttpError(404, "No product with that barcode");
-    res.json(withCostForRole(product, req.user?.role));
+    res.json(withAdminFieldsForRole(product, req.user?.role));
   } catch (err) {
     next(err);
   }
@@ -45,7 +45,7 @@ productsRouter.get("/:id", optionalAuthenticate, async (req: AuthenticatedReques
   try {
     const product = await getProductById(req.params.id);
     if (!product) throw new HttpError(404, "Product not found");
-    res.json(withCostForRole(product, req.user?.role));
+    res.json(withAdminFieldsForRole(product, req.user?.role));
   } catch (err) {
     next(err);
   }

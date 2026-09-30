@@ -15,6 +15,16 @@ export interface Nutrition {
   sugar: number | null;
 }
 
+/** `unit`: the product has its own stock count. `recipe`: stock comes from its raw materials. */
+export type StockTracking = "unit" | "recipe";
+
+export interface RecipeItem {
+  rawMaterialId: string;
+  rawMaterialName: string;
+  unit: MaterialUnit;
+  qtyPerServing: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -30,8 +40,12 @@ export interface Product {
   allergens: string[];
   nutrition: Nutrition;
   isAvailable: boolean;
+  tracking: StockTracking;
+  /** Unit products: units on hand. Recipe products: servings the raw materials can still make. */
   stockQty?: number;
   minStockThreshold?: number;
+  /** Recipe products only; sent to admins only, like cost. */
+  recipe?: RecipeItem[];
 }
 
 export interface AuthUser {
@@ -197,4 +211,39 @@ export interface AdjustStockInput {
   minStockThreshold?: number;
   reason?: AdjustmentReason;
   note?: string;
+}
+
+/** Raw materials are stored in base units only; the admin screens show kg or L for large amounts. */
+export type MaterialUnit = "g" | "ml" | "pc";
+
+export interface RawMaterialDTO {
+  id: string;
+  name: string;
+  unit: MaterialUnit;
+  stockQty: number;
+  minStockThreshold: number;
+  /** Sent to admins only. */
+  costPerUnit?: number | null;
+  isActive: boolean;
+  isLow: boolean;
+  /** Dishes whose recipe uses this raw material. */
+  usedBy: { productId: string; productName: string; qtyPerServing: number }[];
+}
+
+export type RawMaterialMovementType = "sale" | "adjustment" | "restock";
+
+export interface RawMaterialMovementDTO {
+  id: string;
+  rawMaterialId: string;
+  rawMaterialName: string;
+  unit: MaterialUnit;
+  delta: number;
+  previousQty: number;
+  newQty: number;
+  type: RawMaterialMovementType;
+  reason: AdjustmentReason | null;
+  note: string | null;
+  orderNumber: string | null;
+  adjustedByName: string | null;
+  createdAt: string;
 }

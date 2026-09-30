@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
-import { toProductDTO } from "../products/service";
+import { PRODUCT_DTO_INCLUDE, toProductDTO } from "../products/service";
 import type { AdjustmentReason, Product, StockAdjustmentDTO } from "@zaks/shared-types";
 
 type StockChange = { setQty?: number; delta?: number; minStockThreshold?: number };
@@ -22,8 +22,12 @@ export async function applyStockChange(
   productId: string,
   change: StockChange
 ): Promise<{ product: Product; previousQty: number; newQty: number }> {
-  const inventory = await prisma.inventory.findUnique({ where: { productId } });
+  const inventory = await prisma.inventory.findUnique({ where: { productId }, include: { product: { select: { tracking: true } } } });
   if (!inventory) throw new HttpError(404, "No inventory record for this product");
+  // A recipe product's stock is its raw materials (fulfillment.ts); it has no count of its own.
+  if (inventory.product.tracking === "recipe") {
+    throw new HttpError(409, "This dish uses a recipe, so its stock comes from its raw materials. Adjust those on the Raw materials page.");
+  }
   const previousQty = inventory.stockQty;
 
   const product = await prisma.$transaction(async (tx) => {
@@ -51,14 +55,10 @@ export async function applyStockChange(
     }
 
     const updatedInventory = await tx.inventory.findUniqueOrThrow({ where: { productId } });
-    // A recipe product's availability comes from its raw materials (see
-    // fulfillment.ts refreshAvailability), not from its own inventory count.
-    const current = await tx.product.findUniqueOrThrow({ where: { id: productId }, select: { tracking: true, isAvailable: true } });
-    const isAvailable = current.tracking === "recipe" ? current.isAvailable : updatedInventory.stockQty > 0;
     return tx.product.update({
       where: { id: productId },
-      data: { isAvailable },
-      include: { category: true, inventory: true },
+      data: { isAvailable: updatedInventory.stockQty > 0 },
+      include: PRODUCT_DTO_INCLUDE,
     });
   });
 
@@ -101,8 +101,9 @@ export async function listLowStock(): Promise<Product[]> {
   // enough (dozens, not millions, of products) that filtering in JS after one fetch
   // is simpler and safer than dropping into raw SQL for it.
   const rows = await prisma.product.findMany({
-    include: { category: true, inventory: true },
-    where: { inventory: { isNot: null } },
+    include: PRODUCT_DTO_INCLUDE,
+    // Recipe products are low when a raw material is; those appear on the Raw materials page.
+    where: { tracking: "unit", inventory: { isNot: null } },
     orderBy: { name: "asc" },
   });
   const lowStock = rows.filter((p) => p.inventory && p.inventory.stockQty <= p.inventory.minStockThreshold);

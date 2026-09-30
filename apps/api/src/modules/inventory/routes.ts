@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate, type AuthenticatedRequest } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
-import { withCostForRole } from "../products/service";
+import { withAdminFieldsForRole } from "../products/service";
 import { adjustStockSchema } from "./schema";
 import { adjustStock, listLowStock, listStockAdjustments } from "./service";
 
@@ -9,7 +9,7 @@ export const inventoryRouter = Router();
 
 inventoryRouter.get("/low-stock", authenticate, authorize("admin", "staff"), async (req: AuthenticatedRequest, res, next) => {
   try {
-    res.json(withCostForRole(await listLowStock(), req.user?.role));
+    res.json(withAdminFieldsForRole(await listLowStock(), req.user?.role));
   } catch (err) {
     next(err);
   }
@@ -29,7 +29,7 @@ inventoryRouter.patch("/:productId", authenticate, authorize("admin", "staff"), 
   try {
     const body = adjustStockSchema.parse(req.body);
     const product = await adjustStock(req.params.productId, body, req.user!.id);
-    res.json(withCostForRole(product, req.user?.role));
+    res.json(withAdminFieldsForRole(product, req.user?.role));
   } catch (err) {
     next(err);
   }

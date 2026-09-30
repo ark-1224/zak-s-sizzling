@@ -5,6 +5,7 @@ export type IconName =
   | "dashboard"
   | "products"
   | "inventory"
+  | "materials"
   | "import"
   | "analytics"
   | "kitchen"
@@ -38,6 +39,12 @@ const SHAPES: Record<IconName, React.ReactNode> = {
       <path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z" />
       <path d="M3.5 7.5 12 12l8.5-4.5" />
       <path d="M12 12v9" />
+    </>
+  ),
+  materials: (
+    <>
+      <path d="M8 3.5h8M9.5 3.5v3L5.5 11v8a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-8l-4-4.5v-3" />
+      <path d="M5.5 13.5h13" />
     </>
   ),
   import: (

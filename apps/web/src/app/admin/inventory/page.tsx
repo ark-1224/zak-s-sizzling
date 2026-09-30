@@ -1,11 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
-import { PageHeader, Card, AdmButton } from "@/components/admin/ui";
+import { PageHeader, Card, AdmButton, admButtonClass } from "@/components/admin/ui";
 import { AdjustStockModal, REASON_LABELS } from "@/components/admin/AdjustStockModal";
 import type { Product, StockAdjustmentDTO } from "@zaks/shared-types";
+
+// A recipe dish has no count of its own: its stock is the servings its raw materials
+// can make, and it's restocked on the Raw materials page.
+function RecipeStockLink({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link href="/admin/raw-materials" className={`${admButtonClass({ variant: "secondary", size: compact ? "compact" : "default" })} shrink-0`}>
+      Raw materials
+    </Link>
+  );
+}
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleString("en-PH", {
@@ -127,13 +138,25 @@ export default function AdminInventoryPage() {
                       {p.icon} {p.name}
                     </div>
                     <div className="font-adm-mono text-sm text-adm-ink-3">
-                      <span className={`font-bold ${low ? "text-adm-bad" : "text-adm-ink"}`}>{p.stockQty ?? 0}</span> in stock · min{" "}
-                      {p.minStockThreshold ?? "—"}
+                      {p.tracking === "recipe" ? (
+                        <>
+                          <span className={`font-bold ${p.stockQty ? "text-adm-ink" : "text-adm-bad"}`}>{p.stockQty ?? 0}</span> servings left (recipe)
+                        </>
+                      ) : (
+                        <>
+                          <span className={`font-bold ${low ? "text-adm-bad" : "text-adm-ink"}`}>{p.stockQty ?? 0}</span> in stock · min{" "}
+                          {p.minStockThreshold ?? "—"}
+                        </>
+                      )}
                     </div>
                   </div>
-                  <AdmButton variant="secondary" className="shrink-0" onClick={() => setAdjustingProduct(p)}>
-                    Adjust
-                  </AdmButton>
+                  {p.tracking === "recipe" ? (
+                    <RecipeStockLink />
+                  ) : (
+                    <AdmButton variant="secondary" className="shrink-0" onClick={() => setAdjustingProduct(p)}>
+                      Adjust
+                    </AdmButton>
+                  )}
                 </li>
               );
             })}
@@ -156,15 +179,27 @@ export default function AdminInventoryPage() {
                       <td className="px-4.5 py-3 font-medium">
                         {p.icon} {p.name}
                       </td>
-                      <td className={`font-adm-mono px-3 py-3 text-right font-bold ${low ? "text-adm-bad" : ""}`}>
-                        {p.stockQty ?? 0}
-                      </td>
-                      <td className="font-adm-mono px-3 py-3 text-right text-adm-ink-3">{p.minStockThreshold ?? "—"}</td>
-                      <td className="px-4.5 py-3 text-right">
-                        <AdmButton variant="secondary" size="compact" onClick={() => setAdjustingProduct(p)}>
-                          Adjust
-                        </AdmButton>
-                      </td>
+                      {p.tracking === "recipe" ? (
+                        <>
+                          <td className={`font-adm-mono px-3 py-3 text-right font-bold whitespace-nowrap ${p.stockQty ? "" : "text-adm-bad"}`}>
+                            {p.stockQty ?? 0} <span className="font-normal text-adm-ink-3">servings</span>
+                          </td>
+                          <td className="px-3 py-3 text-right text-xs text-adm-ink-3">recipe</td>
+                          <td className="px-4.5 py-3 text-right">
+                            <RecipeStockLink compact />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className={`font-adm-mono px-3 py-3 text-right font-bold ${low ? "text-adm-bad" : ""}`}>{p.stockQty ?? 0}</td>
+                          <td className="font-adm-mono px-3 py-3 text-right text-adm-ink-3">{p.minStockThreshold ?? "—"}</td>
+                          <td className="px-4.5 py-3 text-right">
+                            <AdmButton variant="secondary" size="compact" onClick={() => setAdjustingProduct(p)}>
+                              Adjust
+                            </AdmButton>
+                          </td>
+                        </>
+                      )}
                     </tr>
                   );
                 })}
