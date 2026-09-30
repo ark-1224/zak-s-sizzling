@@ -50,7 +50,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Administration",
-    items: [{ href: "/admin/users", label: "Users & roles", icon: "users", adminOnly: true }],
+    items: [
+      { href: "/admin/users", label: "Users & roles", icon: "users", adminOnly: true },
+      { href: "/admin/kiosk-qr", label: "Kiosk QR code", icon: "qr", adminOnly: true },
+    ],
   },
 ];
 

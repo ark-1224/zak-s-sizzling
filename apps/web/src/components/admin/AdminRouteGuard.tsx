@@ -9,7 +9,7 @@ import { getStoredUser } from "@/lib/auth";
 // the API would reject. Real enforcement is the API's authorize("admin") on the same
 // features — this only keeps staff out of screens they can't use. Keep this list in
 // sync with the adminOnly items in AdminShell's NAV_GROUPS.
-const ADMIN_ONLY_PATHS = ["/admin/products", "/admin/import", "/admin/analytics", "/admin/users"];
+const ADMIN_ONLY_PATHS = ["/admin/products", "/admin/import", "/admin/analytics", "/admin/users", "/admin/kiosk-qr"];
 
 const isAdminOnly = (pathname: string) => ADMIN_ONLY_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 

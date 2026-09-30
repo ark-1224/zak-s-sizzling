@@ -11,6 +11,7 @@ export type IconName =
   | "kitchen"
   | "orders"
   | "users"
+  | "qr"
   | "logout"
   | "menu"
   | "close"
@@ -77,6 +78,14 @@ const SHAPES: Record<IconName, React.ReactNode> = {
       <path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" />
       <path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4" />
       <path d="M17.5 14.8c2 .6 3.5 2.4 3.5 5.2" />
+    </>
+  ),
+  qr: (
+    <>
+      <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1" />
+      <rect x="14" y="3.5" width="6.5" height="6.5" rx="1" />
+      <rect x="3.5" y="14" width="6.5" height="6.5" rx="1" />
+      <path d="M14 14h2.5v2.5H14zM18 14h2.5M14 18v2.5M17.5 18h3v2.5h-3z" />
     </>
   ),
   logout: (
