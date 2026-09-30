@@ -14,7 +14,9 @@ describe("GET /api/products", () => {
     const res = await request(app).get("/api/products");
 
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(Object.keys(PRODUCTS).length);
+    // Every seeded product is listed (other test files may add products of their own).
+    const ids = res.body.map((p: { id: string }) => p.id);
+    expect(ids).toEqual(expect.arrayContaining(Object.values(PRODUCTS).map((p) => p.id)));
     const sisig = res.body.find((p: { id: string }) => p.id === PRODUCTS.sisig.id);
     expect(sisig).toMatchObject({
       name: PRODUCTS.sisig.name,
