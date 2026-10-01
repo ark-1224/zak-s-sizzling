@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { servingsAvailable } from "../inventory/fulfillment";
 import type { InventoryMovementPoint, ProfitabilityPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
 
 // "Confirmed+" = payment succeeded and the order is real (excludes abandoned carts
@@ -70,19 +71,34 @@ export async function getTopProducts(limit = 10): Promise<TopProductPoint[]> {
     .slice(0, limit);
 }
 
-/** "Movement" = units sold in the window, paired with current stock. There's no
- *  dedicated stock-ledger table in this schema (Sprint 4 tracks current stock only,
- *  not a history of every adjustment) — this derives movement from confirmed order
- *  items instead, which covers the sales-driven side of movement, not manual
- *  adjustments/corrections. A real audit-log table would be the next step if this
- *  needs to capture stock corrections too. */
+/** "Movement" = units sold, paired with current stock (servings left for recipe
+ *  dishes). It's derived from confirmed order items, so it covers the sales side of
+ *  movement; manual adjustments are in their own logs (stock_adjustments for products,
+ *  raw_material_movements for raw materials), shown on the Inventory and Raw
+ *  materials pages. */
 export async function getInventoryMovement(): Promise<InventoryMovementPoint[]> {
   const [topProducts, products] = await Promise.all([
     getTopProducts(1000),
-    prisma.product.findMany({ select: { id: true, name: true, inventory: { select: { stockQty: true } } } }),
+    prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        tracking: true,
+        inventory: { select: { stockQty: true } },
+        recipeItems: { select: { qtyPerServing: true, rawMaterial: { select: { stockQty: true } } } },
+      },
+    }),
   ]);
 
-  const stockByProduct = new Map(products.map((p) => [p.id, p.inventory?.stockQty ?? null]));
+  // A recipe dish's current stock is the servings its raw materials can still make.
+  const stockByProduct = new Map(
+    products.map((p) => [
+      p.id,
+      p.tracking === "recipe"
+        ? servingsAvailable(p.recipeItems.map((r) => ({ qtyPerServing: r.qtyPerServing, stockQty: r.rawMaterial.stockQty })))
+        : (p.inventory?.stockQty ?? null),
+    ])
+  );
   const sold = new Map(topProducts.map((p) => [p.productId, p.qtySold]));
 
   return products

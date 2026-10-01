@@ -6,9 +6,8 @@ import { PrismaClient, type MaterialUnit } from "@prisma/client";
 // replaced. It switches only the listed products to recipe tracking; everything else
 // keeps unit tracking. Existing raw-material stock levels are left as they are.
 //
-// Run: npm run db:seed:raw-materials -w apps/api
-
-const prisma = new PrismaClient();
+// Runs as the last step of `npm run db:seed`, so a fresh database gets the sample
+// recipes too. To apply it alone: npm run db:seed:raw-materials -w apps/api
 
 const MATERIALS: { name: string; unit: MaterialUnit; stockQty: number; minStockThreshold: number; costPerUnit: number }[] = [
   { name: "Pork (sisig cut)", unit: "g", stockQty: 5000, minStockThreshold: 1000, costPerUnit: 0.32 },
@@ -28,7 +27,7 @@ const RECIPES: Record<string, [material: string, qtyPerServing: number][]> = {
   "Plain Rice": [["Rice (uncooked)", 100]],
 };
 
-async function main() {
+export async function seedRawMaterials(prisma: PrismaClient) {
   const idByName = new Map<string, string>();
   for (const m of MATERIALS) {
     const row = await prisma.rawMaterial.upsert({
@@ -57,9 +56,12 @@ async function main() {
   console.log(`${MATERIALS.length} raw materials ready`);
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => prisma.$disconnect());
+if (require.main === module) {
+  const prisma = new PrismaClient();
+  seedRawMaterials(prisma)
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => prisma.$disconnect());
+}

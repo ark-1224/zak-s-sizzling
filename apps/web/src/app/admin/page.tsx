@@ -2,15 +2,20 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
+import Link from "next/link";
 import { getStoredUser } from "@/lib/auth";
+import { formatMaterialQty } from "@/lib/units";
 import { PageHeader, Card, KpiTile, StatusPill } from "@/components/admin/ui";
-import type { Product } from "@zaks/shared-types";
+import type { Product, RawMaterialDTO } from "@zaks/shared-types";
 
 // Live stock dashboard — the admin landing page, ported from the Stock Inventory
 // System UI mockup's screen 02. Replaces the old bare nav-link list now that
 // AdminShell's sidebar carries navigation.
 function stockLevel(p: Product): { pct: number; tone: "ok" | "warn" | "bad"; label: string } {
   const on = p.stockQty ?? 0;
+  // A recipe dish's stock is the servings its raw materials can make; it runs low when
+  // one of those raw materials does, which the banner above the table reports.
+  if (p.tracking === "recipe") return on === 0 ? { pct: 2, tone: "bad", label: "OUT" } : { pct: 100, tone: "ok", label: "OK" };
   const min = p.minStockThreshold ?? 5;
   if (on === 0) return { pct: 2, tone: "bad", label: "OUT" };
   if (on <= min) return { pct: Math.max(8, Math.min(100, (on / (min * 2)) * 100)), tone: "warn", label: "LOW" };
@@ -20,6 +25,7 @@ function stockLevel(p: Product): { pct: number; tone: "ok" | "warn" | "bad"; lab
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [lowStock, setLowStock] = useState<Product[]>([]);
+  const [materials, setMaterials] = useState<RawMaterialDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   // Cost figures are admin-only, like the reports they come from.
@@ -28,12 +34,14 @@ export default function AdminDashboardPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [prods, low] = await Promise.all([
+      const [prods, low, mats] = await Promise.all([
         apiFetch<Product[]>("/api/products", { auth: "staff" }), // cost comes back for admins only
         apiFetch<Product[]>("/api/inventory/low-stock", { auth: "staff" }),
+        apiFetch<RawMaterialDTO[]>("/api/raw-materials", { auth: "staff" }),
       ]);
       setProducts(prods);
       setLowStock(low);
+      setMaterials(mats);
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Could not load the dashboard.");
     } finally {
@@ -47,7 +55,13 @@ export default function AdminDashboardPage() {
 
   const categoryCount = new Set(products.map((p) => p.categoryId)).size;
   const outOfStock = products.filter((p) => (p.stockQty ?? 0) === 0).length;
-  const inventoryValueAtCost = products.reduce((sum, p) => sum + (p.cost ?? 0) * (p.stockQty ?? 0), 0);
+  // Recipe dishes hold no stock of their own: their value is in their raw materials.
+  const inventoryValueAtCost =
+    products.filter((p) => p.tracking === "unit").reduce((sum, p) => sum + (p.cost ?? 0) * (p.stockQty ?? 0), 0) +
+    materials.reduce((sum, m) => sum + (m.costPerUnit ?? 0) * m.stockQty, 0);
+  const lowMaterials = materials.filter((m) => m.isActive && m.isLow);
+  const lowCount = lowStock.length + lowMaterials.length;
+  const belowMinimum = lowStock.filter((p) => (p.stockQty ?? 0) > 0).length + lowMaterials.filter((m) => m.stockQty > 0).length;
 
   if (loading) return <div className="text-adm-ink-3">Loading…</div>;
 
@@ -57,18 +71,34 @@ export default function AdminDashboardPage() {
 
       {message && <div className="text-sm text-adm-bad">{message}</div>}
 
-      {lowStock.length > 0 && (
+      {lowCount > 0 && (
         <div className="flex flex-wrap items-center gap-3.5 rounded-[6px] border border-adm-warn bg-adm-warn-soft px-4 py-3.5">
           <span className="h-1.75 w-1.75 flex-shrink-0 rounded-full bg-adm-warn" />
           <div className="min-w-0 flex-1 text-base font-medium md:text-[13px]">
-            {lowStock.length} product{lowStock.length !== 1 ? "s" : ""} at or below minimum stock level.
+            {lowCount} item{lowCount !== 1 ? "s" : ""} at or below minimum stock level
+            {lowMaterials.length > 0 && (
+              <>
+                {" "}
+                ({lowMaterials.length} raw material{lowMaterials.length !== 1 ? "s" : ""},{" "}
+                <Link href="/admin/raw-materials" className="underline underline-offset-2">
+                  restock
+                </Link>
+                )
+              </>
+            )}
+            .
           </div>
           <div className="flex w-full flex-wrap gap-1.5 md:ml-auto md:w-auto">
-            {lowStock.slice(0, 4).map((p) => (
-              <span key={p.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-xs break-words text-adm-ink-2 md:text-[11px]">
-                {p.name.toUpperCase()} · {p.stockQty}
-              </span>
-            ))}
+            {[
+              ...lowStock.map((p) => ({ id: p.id, label: `${p.name.toUpperCase()} · ${p.stockQty}` })),
+              ...lowMaterials.map((m) => ({ id: m.id, label: `${m.name.toUpperCase()} · ${formatMaterialQty(m.stockQty, m.unit)}` })),
+            ]
+              .slice(0, 4)
+              .map((chip) => (
+                <span key={chip.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-xs break-words text-adm-ink-2 md:text-[11px]">
+                  {chip.label}
+                </span>
+              ))}
           </div>
         </div>
       )}
@@ -78,7 +108,7 @@ export default function AdminDashboardPage() {
         {isAdmin && (
           <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="At cost" />
         )}
-        <KpiTile label="Below minimum" value={String(lowStock.filter((p) => (p.stockQty ?? 0) > 0).length)} sub="Reorder soon" color="var(--adm-warn)" />
+        <KpiTile label="Below minimum" value={String(belowMinimum)} sub="Products and raw materials" color="var(--adm-warn)" />
         <KpiTile label="Out of stock" value={String(outOfStock)} sub="Hidden from kiosk" color="var(--adm-bad)" />
       </div>
 
@@ -94,7 +124,9 @@ export default function AdminDashboardPage() {
                     <div className="text-base font-medium break-words">{p.name}</div>
                     <div className="text-sm text-adm-ink-2">{p.category?.name}</div>
                   </div>
-                  <div className="font-adm-mono shrink-0 text-base">{p.stockQty ?? 0} on hand</div>
+                  <div className="font-adm-mono shrink-0 text-base">
+                    {p.stockQty ?? 0} {p.tracking === "recipe" ? "servings" : "on hand"}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-adm-surface-2">
@@ -127,7 +159,10 @@ export default function AdminDashboardPage() {
                       {p.barcode && <div className="font-adm-mono mt-0.5 text-[10.5px] text-adm-ink-3">{p.barcode}</div>}
                     </td>
                     <td className="px-3 py-3 text-adm-ink-2 whitespace-nowrap">{p.category?.name}</td>
-                    <td className="font-adm-mono px-3 py-3 text-right">{p.stockQty ?? 0}</td>
+                    <td className="font-adm-mono px-3 py-3 text-right whitespace-nowrap">
+                      {p.stockQty ?? 0}
+                      {p.tracking === "recipe" && <span className="ml-1 text-adm-ink-3">servings</span>}
+                    </td>
                     <td className="px-4.5 py-3">
                       <div className="flex items-center gap-2.5">
                         <div className="h-1.25 min-w-15 flex-1 overflow-hidden rounded-full bg-adm-surface-2">

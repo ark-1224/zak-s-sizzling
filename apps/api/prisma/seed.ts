@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { seedRawMaterials } from "./seed-raw-materials";
 
 const prisma = new PrismaClient();
 
@@ -285,6 +286,10 @@ async function main() {
       create: { productId: product.id, stockQty: p.inStock ? 25 : 0, minStockThreshold: 5 },
     });
   }
+
+  // Sample raw materials and recipes, so recipe-tracked dishes work on a fresh database.
+  console.log("Seeding raw materials and recipes...");
+  await seedRawMaterials(prisma);
 
   console.log(`Seed complete. Admin login: ${adminEmail} / ${adminPassword}`);
 }
