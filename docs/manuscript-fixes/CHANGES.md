@@ -12,6 +12,8 @@ This file lists every change needed to align the manuscript with the system as b
 4. The ERD matches the current database schema.
 5. The limitation that contradicts the diagrams is rewritten (approved).
 
+Section 7 (QR code access) records a feature completed after the review, so the manuscript's QR text can be checked against it.
+
 Items the code does not support, and which were not covered by these decisions, are listed at the end under **Needs decision**. They are not rewritten here.
 
 ---
@@ -576,11 +578,51 @@ Replaced by "Dependence on Internet Connectivity". See 1.1.
 | Figure | Page | What must change |
 |---|---|---|
 | Figure 1.1 End-User (Owner/Admin) Process Flow | p. 44 [PDF 47] | Login box: "(Admin, Staff, Super Admin)" → "(Administrator, Staff)". The figure shows no offline sync. |
-| Figure 1.2 End-User (Customer/Kiosk) Process Flow | p. 46 [PDF 49] | No offline sync and no removed role. Optional: change "Receipt generation" to "Receipt generation and printing" to match 4.1. The "Access kiosk via QR code" bullet depends on Needs decision item 3. |
+| Figure 1.2 End-User (Customer/Kiosk) Process Flow | p. 46 [PDF 49] | No offline sync and no removed role. Optional: change "Receipt generation" to "Receipt generation and printing" to match 4.1. The "Access kiosk via QR code" bullet stays (section 7). |
 | Figure 2.0 User Level Diagram | p. 56 [PDF 59] | Relabel the three levels as shown in 2.3(c). |
 | Figure 2.1 Admin Dashboard Wireframe | p. 58 [PDF 61] | No offline sync or removed role in the image. Its description is corrected in 2.4(h). |
-| Figure 2.2 User/Kiosk Dashboard Wireframe | p. 59 [PDF 62] | No offline sync or removed role. It shows a barcode scanner, a POS-light keypad, QR-code payments, and price filtering; see Needs decision items 3, 4, and 15. |
+| Figure 2.2 User/Kiosk Dashboard Wireframe | p. 59 [PDF 62] | No offline sync or removed role. It shows a barcode scanner, a POS-light keypad, QR-code payments (see 7.3), and price filtering; see Needs decision items 4 and 15. |
 | Figure 3.0 Entity Relationship Diagram | p. 61 [PDF 64] | Replace with `erd.png` (section 3). |
+
+## 7. QR code access
+
+The system now provides QR code access (QR code generation, sessions 1/2 and 2/2). The Administrator opens **Kiosk QR code** in the administration dashboard, which generates a QR code for the kiosk's web address and prints it as a one-page "Scan to order" poster (or downloads it as an image). Scanning it opens the kiosk in the customer's phone browser.
+
+**Evidence:** `apps/web/src/app/admin/kiosk-qr/page.tsx` (Administrator only: `AdminRouteGuard.tsx`, `AdminShell.tsx`). The code is generated in the browser with the `qrcode` library; the address comes from `NEXT_PUBLIC_KIOSK_URL` or the site itself, and the page warns when the address is `localhost`, which phones cannot open.
+
+**Still to verify before the defense:** scan the printed poster with a phone against the deployed site. This was not done in session 2/2 because the Railway database and web services were stopped at the time.
+
+### 7.1 Scope of the System: "QR Code Access", p. 7 [PDF 10]
+
+The paragraph already matches the system. This edit only states where the QR code comes from and what happens after scanning.
+
+OLD
+> The system supports QR code-based access, enabling customers to open the kiosk interface using any internet-enabled device such as smartphones, or tablets. Upon scanning the QR code, users are redirected to the web-based kiosk application. This approach eliminates the dependency on dedicated hardware while improving accessibility, scalability, and ease of deployment.
+
+NEW
+> The system supports QR code-based access, enabling customers to open the kiosk interface using any internet-enabled device, such as a smartphone or tablet. The Administrator generates the QR code from the administration dashboard and prints it as a "Scan to order" poster. Upon scanning the QR code, the web-based kiosk application opens in the customer's browser, where they order and pay as they would on the in-store kiosk. This approach eliminates the dependency on dedicated hardware while improving accessibility, scalability, and ease of deployment.
+
+### 7.2 Mentions that stay unchanged
+
+These describe QR access correctly and need no edit:
+
+- Product Backlog example "QR code-based kiosk access", p. 37 [PDF 40]
+- Frontend Technologies, HTML, p. 40 [PDF 43]
+- Deployment Platform, p. 43 [PDF 46]
+- System Architecture description, p. 47 [PDF 50]
+- Requirements Analysis, "Where" and "How", p. 51 [PDF 54]
+- Sprint execution, Frontend, p. 65 [PDF 68]
+- Figure 1.2, "Access kiosk via QR code" bullet
+
+### 7.3 Figure 2.2 description: "QR code-based payments", p. 60 [PDF 63]
+
+This is a different feature from QR code access. GCash and Maya payments go through PayMongo's checkout page; the system itself does not generate payment QR codes.
+
+OLD
+> The Payment Module for Kiosk provides multiple payment options, including counter payments, online transactions, and QR code-based payments.
+
+NEW
+> The Payment Module for Kiosk provides multiple payment options, including payment at the counter and online payment through GCash and Maya.
 
 ---
 
@@ -590,15 +632,15 @@ The manuscript claims each item below, but the code does not support it (or supp
 
 1. **Receipt printing is not implemented yet.** Only the on-screen receipt exists. The manuscript now describes printing as part of the system (decision 2), so it must be built and shown working on the Raspberry Pi 5 before the defense. If it is not ready by then, the scope text in section 4 would describe a feature the panel cannot see.
 2. **Estimated preparation or wait time** (Scope, Payment Transaction, p. 8; Sprint 3, p. 67). No code computes or shows an estimated time.
-3. **QR code access** (Scope, p. 7; Requirements Analysis, "Where" and "How", p. 51; Figure 1.2). The kiosk works in a phone browser, but the system does not generate or display a QR code.
+3. **QR code access** (Scope, p. 7; Requirements Analysis, "Where" and "How", p. 51; Figure 1.2). Resolved: the Administrator generates and prints a "Scan to order" QR code that opens the kiosk on a phone (section 7). A phone scan on the deployed site is still to be done.
 4. **Barcode scanning** (Scope, p. 9; Sprint 4, p. 67; Figure 2.2). Products have a barcode field and the API has `GET /api/products/barcode/:code`, but no screen uses the lookup, and there is no scanner input.
 5. **Rate limiting** (Scope, Security Measures, p. 9). No rate limiting exists in `apps/api`.
 6. **PDF and Excel export** (Scope, Data Export, p. 11). Only CSV export works. PDF and Excel requests return "not implemented" (`apps/api/src/modules/reports/routes.ts`).
 7. **Excel bulk import** (Scope, Product Management, p. 10). Only CSV import exists (`apps/web/src/app/admin/import/page.tsx`).
 8. **Local and cloud backups** (Scope, Database Backup, p. 11; Deployment, p. 43). The backup job in `apps/worker` is scheduled only in development and writes to local disk. No cloud copy is made.
-9. **Deduction of raw materials** (Objective 3, p. 6). Stock is deducted per product unit (`inventory.stock_qty`). No ingredient or raw-material table exists.
+9. **Deduction of raw materials** (Objective 3, p. 6). Resolved: dishes can use a recipe of raw materials, which are deducted when payment is confirmed (`raw_materials`, `recipe_items`, `raw_material_movements`; design in `docs/design/raw-material-stock.md`). Items sold as they are, such as bottled drinks, still count units. The ERD and data dictionary in section 3 do not show the three new tables yet.
 10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Low-stock products are listed on the admin dashboard and inventory page, and the hourly worker check writes to the server log. No notification is sent to a person.
-11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). The repository has no automated tests.
+11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). Resolved: 249 automated unit, integration, and security tests (`apps/api/test/`), documented session by session in `Automated-Testing-Results.docx`.
 12. **Staff and Administrator permissions.** Resolved: the code now matches the earlier drafts. Product, price, bulk import, and report functions, and product costs, are limited to the Administrator; Staff keep payments, the kitchen display, stock, barcode lookup, and orders. The role table in 2.2 describes this split. The removed "Customer Assistance" and "System Maintenance Supervision" items (2.4(f)) have no matching function in the code.
 13. **Product images** (Scope, Product Catalog and Display, p. 7; Product Catalog Management, p. 10). The products table has no image field; the kiosk shows an icon.
 14. **Online payment through GCash and Maya** (FR2, the role table, and several sections). The code integrates PayMongo, but it has not been tested with real or test keys. The client's approval is pending.
