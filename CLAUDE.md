@@ -20,7 +20,7 @@ Run everything from the repo root.
 | Build | `npm run build -w apps/api` · `npm run build -w apps/web` · `npm run build -w apps/worker` |
 | Lint | `npm run lint -w apps/web` (only web has a lint script; api and worker have none) |
 | Typecheck | No script. Use `npx tsc --noEmit -p apps/api/tsconfig.json`, and the same with `apps/worker` or `apps/web` |
-| Test | `npm test` runs both API projects (Vitest). `npm run test:unit -w apps/api` runs `apps/api/test/unit/` alone (no database; the database layer is mocked). `npm run test:integration -w apps/api` runs `apps/api/test/integration/` (Supertest against a separate `<dev db name>_test` database, or `TEST_DATABASE_URL`, whose tables it empties on every run; it refuses any name not ending in `_test`, and needs local Postgres). `it.fails` marks tests for known bugs. The web app and worker have no tests yet |
+| Test | `npm test` runs both API projects (Vitest). `npm run test:unit -w apps/api` runs `apps/api/test/unit/` alone (no database; the database layer is mocked). `npm run test:integration -w apps/api` runs `apps/api/test/integration/` (Supertest against a separate `<dev db name>_test` database, or `TEST_DATABASE_URL`, whose tables it empties on every run; it refuses any name not ending in `_test`, and needs local Postgres). `it.fails` marks tests for known bugs. Every new API endpoint needs a row in `apps/api/test/integration/access-matrix.test.ts` (who may call it); the suite fails until it has one. The worker's low-stock job is tested from the api integration suite (`low-stock.test.ts`); the web app has no tests yet |
 | Worker jobs, once | `npm run low-stock:now` · `npm run backup:now` (needs `PG_DUMP_PATH`) |
 
 ## Prisma

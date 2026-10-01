@@ -104,3 +104,15 @@ describe("GET /api/categories", () => {
     expect(res.body).toEqual([expect.objectContaining({ name: CATEGORY.name, sortOrder: CATEGORY.sortOrder })]);
   });
 });
+
+describe("DELETE /api/products/:id", () => {
+  // Defect D-04 (found by access-matrix.test.ts): Prisma's "record not found" error
+  // isn't mapped, so deleting a product that doesn't exist reaches the generic 500.
+  it.fails("returns 404 for a product that does not exist (known bug D-04: currently 500)", async () => {
+    const adminToken = await loginAs("admin");
+
+    const res = await request(app).delete("/api/products/99999999-9999-4999-8999-999999999999").set("Authorization", `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(404);
+  });
+});
