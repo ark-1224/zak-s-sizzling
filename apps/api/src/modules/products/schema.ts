@@ -34,3 +34,5 @@ export const createProductSchema = z.object({
 export const updateProductSchema = createProductSchema.partial().extend({
   isAvailable: z.boolean().optional(),
 });
+
+export const productIdSchema = z.string().uuid();

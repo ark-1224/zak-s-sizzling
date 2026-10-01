@@ -50,14 +50,23 @@ describe("GET /api/products/:id", () => {
     expect(res.body.error).toBe("Product not found");
   });
 
-  // Known bug: a malformed id reaches Prisma, which throws on the invalid UUID, so the
-  // API answers 500 instead of 404. `it.fails` keeps the suite green while the bug
-  // exists and will start failing once it's fixed, as a reminder to make this a
-  // normal test.
-  it.fails("returns 404 for a malformed id (known bug: currently 500)", async () => {
+  // Regression test for defect D-01: a malformed id used to reach Prisma, which threw
+  // on the invalid UUID, so the API answered 500 instead of 404.
+  it("returns 404 for a malformed id", async () => {
     const res = await request(app).get("/api/products/not-a-uuid");
 
     expect(res.status).toBe(404);
+    expect(res.body.error).toBe("Product not found");
+  });
+
+  it("returns 404 for a malformed id when editing or deleting, too", async () => {
+    const adminToken = await loginAs("admin");
+
+    const edit = await request(app).put("/api/products/not-a-uuid").set("Authorization", `Bearer ${adminToken}`).send({ price: 10 });
+    const remove = await request(app).delete("/api/products/not-a-uuid").set("Authorization", `Bearer ${adminToken}`);
+
+    expect(edit.status).toBe(404);
+    expect(remove.status).toBe(404);
   });
 });
 
@@ -83,16 +92,23 @@ describe("GET /api/products/barcode/:code", () => {
 });
 
 describe("GET /api/products/import-template", () => {
-  // Known bug: the "/:id" route is registered before "/import-template" in
-  // src/modules/products/routes.ts, so "import-template" is treated as a product id and
-  // the request fails with 500. Same `it.fails` convention as above.
-  it.fails("downloads the CSV template for an admin (known bug: currently 500)", async () => {
+  // Regression test for defect D-02: "/:id" used to be registered before
+  // "/import-template", so "import-template" was treated as a product id and failed with 500.
+  it("downloads the CSV template for an admin", async () => {
     const adminToken = await loginAs("admin");
     const res = await request(app).get("/api/products/import-template").set("Authorization", `Bearer ${adminToken}`);
 
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toMatch(/text\/csv/);
     expect(res.text.split("\n")[0]).toContain("name");
+  });
+
+  it("keeps the template from staff and visitors who are not signed in", async () => {
+    const staff = await request(app).get("/api/products/import-template").set("Authorization", `Bearer ${staffToken}`);
+    const visitor = await request(app).get("/api/products/import-template");
+
+    expect(staff.status).toBe(403);
+    expect(visitor.status).toBe(401);
   });
 });
 
@@ -106,9 +122,9 @@ describe("GET /api/categories", () => {
 });
 
 describe("DELETE /api/products/:id", () => {
-  // Defect D-04 (found by access-matrix.test.ts): Prisma's "record not found" error
-  // isn't mapped, so deleting a product that doesn't exist reaches the generic 500.
-  it.fails("returns 404 for a product that does not exist (known bug D-04: currently 500)", async () => {
+  // Regression test for defect D-04 (found by access-matrix.test.ts): Prisma's "record
+  // not found" error wasn't mapped, so this used to reach the generic 500.
+  it("returns 404 for a product that does not exist", async () => {
     const adminToken = await loginAs("admin");
 
     const res = await request(app).delete("/api/products/99999999-9999-4999-8999-999999999999").set("Authorization", `Bearer ${adminToken}`);

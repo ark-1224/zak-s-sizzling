@@ -4,7 +4,7 @@ import { authenticate, optionalAuthenticate, type AuthenticatedRequest } from ".
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { fromCSV, toCSV } from "../../lib/csv";
-import { createProductSchema, updateProductSchema } from "./schema";
+import { createProductSchema, productIdSchema, updateProductSchema } from "./schema";
 import { bulkImportProducts } from "./bulkImport";
 import {
   createProduct,
@@ -17,6 +17,12 @@ import {
 } from "./service";
 
 export const productsRouter = Router();
+
+/** A malformed id is simply a product that doesn't exist, not a server error (defect D-01). */
+function parseProductId(id: string): string {
+  if (!productIdSchema.safeParse(id).success) throw new HttpError(404, "Product not found");
+  return id;
+}
 
 // GET /api/products?category=&search= — Sprint 1 read-only catalog. Public for the
 // kiosk; an admin token additionally unlocks each product's cost.
@@ -41,17 +47,9 @@ productsRouter.get("/barcode/:code", authenticate, authorize("admin", "staff"), 
   }
 });
 
-productsRouter.get("/:id", optionalAuthenticate, async (req: AuthenticatedRequest, res, next) => {
-  try {
-    const product = await getProductById(req.params.id);
-    if (!product) throw new HttpError(404, "Product not found");
-    res.json(withAdminFieldsForRole(product, req.user?.role));
-  } catch (err) {
-    next(err);
-  }
-});
-
 // Reference sheet with required headers, used by /admin/import's "Download template" link.
+// Registered before GET /:id, which is public: otherwise "import-template" is taken as a
+// product id and this admin-only route is never reached (defect D-02).
 productsRouter.get("/import-template", authenticate, authorize("admin"), (req, res) => {
   const sample = {
     name: "Sample Iced Tea",
@@ -67,6 +65,16 @@ productsRouter.get("/import-template", authenticate, authorize("admin"), (req, r
   res.setHeader("Content-Type", "text/csv");
   res.setHeader("Content-Disposition", 'attachment; filename="product_import_template.csv"');
   res.send(csv);
+});
+
+productsRouter.get("/:id", optionalAuthenticate, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const product = await getProductById(parseProductId(req.params.id));
+    if (!product) throw new HttpError(404, "Product not found");
+    res.json(withAdminFieldsForRole(product, req.user?.role));
+  } catch (err) {
+    next(err);
+  }
 });
 
 productsRouter.post("/bulk-import", authenticate, authorize("admin"), async (req, res, next) => {
@@ -98,8 +106,9 @@ productsRouter.post("/", authenticate, authorize("admin"), async (req, res, next
 
 productsRouter.put("/:id", authenticate, authorize("admin"), async (req, res, next) => {
   try {
+    const id = parseProductId(req.params.id);
     const body = updateProductSchema.parse(req.body);
-    const product = await updateProduct(req.params.id, body);
+    const product = await updateProduct(id, body);
     res.json(product);
   } catch (err) {
     next(err);
@@ -108,9 +117,13 @@ productsRouter.put("/:id", authenticate, authorize("admin"), async (req, res, ne
 
 productsRouter.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
   try {
-    await deleteProduct(req.params.id);
+    await deleteProduct(parseProductId(req.params.id));
     res.status(204).send();
   } catch (err) {
+    // Prisma reports a missing record as P2025 (defect D-04: this used to reach the 500 handler).
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      return next(new HttpError(404, "Product not found"));
+    }
     // Products referenced by past orders are protected by a FK RESTRICT constraint —
     // deleting would corrupt order history, so point the admin at the safer
     // alternative. This specific violation surfaces as PrismaClientUnknownRequestError

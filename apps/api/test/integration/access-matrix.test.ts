@@ -66,14 +66,7 @@ const MATRIX: Entry[] = [
   { method: "put", route: "/api/products/:id", path: `/api/products/${MISSING}`, body: { price: -1 }, expected: ADMIN },
   { method: "delete", route: "/api/products/:id", path: `/api/products/${MISSING}`, expected: ADMIN },
   { method: "post", route: "/api/products/bulk-import", path: "/api/products/bulk-import", body: {}, expected: ADMIN },
-  {
-    method: "get",
-    route: "/api/products/import-template",
-    path: "/api/products/import-template",
-    expected: ADMIN,
-    // GET /:id is registered first and is public, so every caller lands there instead.
-    knownBug: "D-02",
-  },
+  { method: "get", route: "/api/products/import-template", path: "/api/products/import-template", expected: ADMIN },
   { method: "post", route: "/api/raw-materials/", path: "/api/raw-materials", body: {}, expected: ADMIN },
   { method: "put", route: "/api/raw-materials/:id", path: `/api/raw-materials/${MISSING}`, body: {}, expected: ADMIN },
   { method: "get", route: "/api/reports/sales", path: "/api/reports/sales?range=weekly", expected: ADMIN },
