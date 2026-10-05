@@ -60,8 +60,9 @@ export default function AdminDashboardPage() {
     products.filter((p) => p.tracking === "unit").reduce((sum, p) => sum + (p.cost ?? 0) * (p.stockQty ?? 0), 0) +
     materials.reduce((sum, m) => sum + (m.costPerUnit ?? 0) * m.stockQty, 0);
   const lowMaterials = materials.filter((m) => m.isActive && m.isLow);
+  // Everything at or below its minimum, sold-out items included (UI review #9: leaving
+  // them out made the tile disagree with the banner and hid the most urgent items).
   const lowCount = lowStock.length + lowMaterials.length;
-  const belowMinimum = lowStock.filter((p) => (p.stockQty ?? 0) > 0).length + lowMaterials.filter((m) => m.stockQty > 0).length;
 
   if (loading) return <div className="text-adm-ink-3">Loading…</div>;
 
@@ -108,8 +109,9 @@ export default function AdminDashboardPage() {
         {isAdmin && (
           <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="At cost" />
         )}
-        <KpiTile label="Below minimum" value={String(belowMinimum)} sub="Products and raw materials" color="var(--adm-warn)" />
-        <KpiTile label="Out of stock" value={String(outOfStock)} sub="Hidden from kiosk" color="var(--adm-bad)" />
+        <KpiTile label="Needs restock" value={String(lowCount)} sub="At or below minimum, incl. sold out" color="var(--adm-warn)" />
+        {/* The kiosk keeps sold-out items on the menu, marked "Sold out" (kiosk/ProductRow.tsx). */}
+        <KpiTile label="Out of stock" value={String(outOfStock)} sub="Shown as sold out" color="var(--adm-bad)" />
       </div>
 
       <Card title="Current inventory levels">
