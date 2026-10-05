@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { ProductForm } from "@/components/admin/ProductForm";
-import { PageHeader, Card, AdmButton, StatusPill, admButtonClass } from "@/components/admin/ui";
+import { PageHeader, Card, AdmButton, StatusPill, admButtonClass, admInputClass } from "@/components/admin/ui";
 import type { Category, Product } from "@zaks/shared-types";
 
 export default function AdminProductsPage() {
@@ -13,6 +13,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState<Product | null | "new">(null);
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +45,12 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Search by name, barcode or category, ignoring case (UI review #16).
+  const search = query.trim().toLowerCase();
+  const shown = search
+    ? products.filter((p) => [p.name, p.barcode ?? "", p.category?.name ?? ""].some((field) => field.toLowerCase().includes(search)))
+    : products;
+
   return (
     <div className="flex flex-col gap-4.5">
       <PageHeader
@@ -63,12 +70,35 @@ export default function AdminProductsPage() {
 
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
+      {!loading && products.length > 0 && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search name, barcode or category"
+            aria-label="Search products by name, barcode or category"
+            className={`sm:max-w-96 ${admInputClass}`}
+          />
+          <span className="text-sm text-adm-ink-3" aria-live="polite">
+            {search ? `${shown.length} of ${products.length} products` : `${products.length} products`}
+          </span>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-adm-ink-3">Loading…</div>
+      ) : search && shown.length === 0 ? (
+        <div className="flex flex-wrap items-center gap-3 text-adm-ink-3">
+          No products match &ldquo;{query.trim()}&rdquo;.
+          <AdmButton variant="secondary" size="compact" onClick={() => setQuery("")}>
+            Clear search
+          </AdmButton>
+        </div>
       ) : (
         <Card>
           <ul className="divide-y divide-adm-line-soft md:hidden">
-            {products.map((p) => (
+            {shown.map((p) => (
               <li key={p.id} className="flex flex-col gap-2.5 px-4 py-3.5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 text-base font-medium break-words">
@@ -114,7 +144,7 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
+                {shown.map((p) => (
                   <tr key={p.id} className="border-t border-adm-line-soft">
                     <td className="px-4.5 py-3 font-medium">
                       {p.icon} {p.name}
