@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { PageHeader, Card, AdmButton, StatusPill, admInputClass } from "@/components/admin/ui";
+import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { formatDateTime, timeAgo } from "@/lib/time";
 import type { OrderDTO } from "@zaks/shared-types";
 
@@ -16,7 +17,11 @@ import type { OrderDTO } from "@zaks/shared-types";
 // number (the customer reads it off their receipt screen).
 export default function StaffOrdersPage() {
   const [orders, setOrders] = useState<OrderDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  // `loaded` turns true after the first successful load and stays true, so a later
+  // refresh never blanks the list; a failed load sets `loadError` instead of looking empty.
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [query, setQuery] = useState("");
@@ -29,16 +34,21 @@ export default function StaffOrdersPage() {
   }, []);
 
   const load = useCallback(async () => {
-    setLoading(true);
     try {
       const result = await apiFetch<OrderDTO[]>("/api/orders?unpaid=1", { auth: "staff" });
       setOrders(result);
+      setLoaded(true);
+      setLoadError(null);
     } catch (err) {
-      setMessage({ text: err instanceof ApiError ? err.message : "Could not load orders.", error: true });
-    } finally {
-      setLoading(false);
+      setLoadError(err instanceof ApiError ? err.message : "The server didn't respond. Check the connection, then try again.");
     }
   }, []);
+
+  async function retry() {
+    setRetrying(true);
+    await load();
+    setRetrying(false);
+  }
 
   useEffect(() => {
     load();
@@ -81,9 +91,12 @@ export default function StaffOrdersPage() {
         </div>
       )}
 
-      {loading ? (
-        <div className="text-adm-ink-3">Loading…</div>
+      {loadError && <LoadErrorAlert what="the orders" detail={loadError} onRetry={retry} retrying={retrying} stale={loaded} />}
+
+      {!loaded ? (
+        !loadError && <div className="text-adm-ink-3">Loading…</div>
       ) : orders.length === 0 ? (
+        !loadError && 
         <div className="text-adm-ink-3">Nothing awaiting payment right now.</div>
       ) : (
         <>

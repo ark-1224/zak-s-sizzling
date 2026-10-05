@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
+import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
 
 // Kitchen Display System — real-time order queue per the manuscript's Kitchen Display
@@ -14,19 +15,29 @@ const NEXT_STATUS = { pending: "in_progress", in_progress: "completed" } as cons
 
 export default function KitchenPage() {
   const [tasks, setTasks] = useState<KitchenTaskDTO[]>([]);
-  const [loading, setLoading] = useState(true);
+  // A failed load must never read as "the kitchen is caught up" (UI review #1): the empty
+  // state shows only after a successful load, and a failure shows an alert with Retry.
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
       const result = await apiFetch<KitchenTaskDTO[]>("/api/kitchen/tasks", { auth: "staff" });
       setTasks(result);
+      setLoaded(true);
+      setLoadError(null);
     } catch (err) {
-      setMessage(err instanceof ApiError ? err.message : "Could not load the kitchen queue.");
-    } finally {
-      setLoading(false);
+      setLoadError(err instanceof ApiError ? err.message : "The server didn't respond. Check the connection, then try again.");
     }
   }, []);
+
+  async function retry() {
+    setRetrying(true);
+    await load();
+    setRetrying(false);
+  }
 
   useEffect(() => {
     load();
@@ -75,15 +86,20 @@ export default function KitchenPage() {
     <div className="rounded-[6px] bg-ink p-4 text-cream md:p-6">
       <h1 className="font-display mb-1 text-2xl font-semibold">Kitchen Display</h1>
       <p className="mb-4 text-base text-cream/70 md:mb-6 md:text-sm">
-        {orders.length} active order{orders.length !== 1 ? "s" : ""}
+        {loaded ? `${orders.length} active order${orders.length !== 1 ? "s" : ""}` : "\u00a0"}
       </p>
 
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorAlert what="the kitchen queue" detail={loadError} onRetry={retry} retrying={retrying} stale={loaded} tone="dark" />
+        </div>
+      )}
       {message && <div className="mb-4 text-base text-berry md:text-sm">{message}</div>}
 
-      {loading ? (
-        <div className="text-cream/70">Loading…</div>
+      {!loaded ? (
+        !loadError && <div className="text-cream/70">Loading…</div>
       ) : orders.length === 0 ? (
-        <div className="text-cream/70">No active orders — the kitchen is caught up.</div>
+        !loadError && <div className="text-cream/70">No active orders — the kitchen is caught up.</div>
       ) : (
         // min(100%, 17rem): a card is never wider than the container itself, so this
         // can't overflow however narrow the space beside the sidebar gets; the number
