@@ -4,8 +4,9 @@ import { authenticate, type AuthenticatedRequest } from "../../middleware/authen
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { prisma } from "../../lib/prisma";
+import { parseId } from "../../lib/ids";
 import { createOrderSchema } from "./schema";
-import { createOrder, getOrderById, getOrderOwnerSessionId, listOrders } from "./service";
+import { cancelOrder, createOrder, getOrderById, getOrderOwnerSessionId, listOrders } from "./service";
 
 export const ordersRouter = Router();
 
@@ -45,9 +46,12 @@ async function assertOrderAccess(req: AuthenticatedRequest, orderId: string) {
   if (ownerSessionId !== req.kioskSessionId) throw new HttpError(404, "Order not found");
 }
 
+const ORDER_NOT_FOUND = "Order not found";
+const ITEM_NOT_FOUND = "Order item not found";
+
 ordersRouter.get("/:id", authenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
-    const order = await getOrderById(req.params.id);
+    const order = await getOrderById(parseId(req.params.id, ORDER_NOT_FOUND));
     if (!order) throw new HttpError(404, "Order not found");
     await assertOrderAccess(req, req.params.id);
     res.json(order);
@@ -59,7 +63,7 @@ ordersRouter.get("/:id", authenticate, async (req: AuthenticatedRequest, res, ne
 // Alias of GET /:id, named per the receipt use case (order confirmation screen).
 ordersRouter.get("/:id/receipt", authenticate, async (req: AuthenticatedRequest, res, next) => {
   try {
-    const order = await getOrderById(req.params.id);
+    const order = await getOrderById(parseId(req.params.id, ORDER_NOT_FOUND));
     if (!order) throw new HttpError(404, "Order not found");
     await assertOrderAccess(req, req.params.id);
     res.json(order);
@@ -73,9 +77,9 @@ ordersRouter.get("/:id/receipt", authenticate, async (req: AuthenticatedRequest,
 // calls POST / at checkout, so these aren't used by the customer-facing flow.
 ordersRouter.patch("/:id/items/:itemId", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    await assertOrderIsPending(req.params.id);
+    await assertOrderIsPending(parseId(req.params.id, ORDER_NOT_FOUND));
     const qty = parseQty(req.body?.qty);
-    const item = await prisma.orderItem.findUnique({ where: { id: req.params.itemId } });
+    const item = await prisma.orderItem.findUnique({ where: { id: parseId(req.params.itemId, ITEM_NOT_FOUND) } });
     if (!item || item.orderId !== req.params.id) throw new HttpError(404, "Order item not found");
 
     const subtotal = item.unitPrice.mul(qty);
@@ -92,13 +96,22 @@ ordersRouter.patch("/:id/items/:itemId", authenticate, authorize("admin", "staff
 
 ordersRouter.delete("/:id/items/:itemId", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    await assertOrderIsPending(req.params.id);
-    const item = await prisma.orderItem.findUnique({ where: { id: req.params.itemId } });
+    await assertOrderIsPending(parseId(req.params.id, ORDER_NOT_FOUND));
+    const item = await prisma.orderItem.findUnique({ where: { id: parseId(req.params.itemId, ITEM_NOT_FOUND) } });
     if (!item || item.orderId !== req.params.id) throw new HttpError(404, "Order item not found");
 
     await prisma.orderItem.delete({ where: { id: item.id } });
     await recomputeOrderTotal(req.params.id);
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Staff remove an abandoned unpaid order from the payment queue (UI review #15).
+ordersRouter.post("/:id/cancel", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+  try {
+    res.json(await cancelOrder(parseId(req.params.id, ORDER_NOT_FOUND)));
   } catch (err) {
     next(err);
   }

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate, type AuthenticatedRequest } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
+import { parseId } from "../../lib/ids";
 import { createUserSchema, updateUserSchema } from "./schema";
 import { createStaffUser, listStaffUsers, updateStaffUser } from "./service";
 
@@ -32,7 +33,7 @@ usersRouter.post("/", authenticate, authorize("admin"), async (req, res, next) =
 usersRouter.patch("/:id", authenticate, authorize("admin"), async (req: AuthenticatedRequest, res, next) => {
   try {
     const body = updateUserSchema.parse(req.body);
-    res.json(await updateStaffUser(req.params.id, body, req.user!.id));
+    res.json(await updateStaffUser(parseId(req.params.id, "User not found"), body, req.user!.id));
   } catch (err) {
     next(err);
   }

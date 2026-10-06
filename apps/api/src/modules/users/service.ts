@@ -72,6 +72,12 @@ export async function updateStaffUser(
   }
   if (input.password) data.passwordHash = await bcrypt.hash(input.password, 10);
 
-  const user = await prisma.user.update({ where: { id }, data, include: { role: true } });
-  return toUserDTO(user);
+  try {
+    const user = await prisma.user.update({ where: { id }, data, include: { role: true } });
+    return toUserDTO(user);
+  } catch (err) {
+    // A well-formed id that matches no user (D-05).
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") throw new HttpError(404, "User not found");
+    throw err;
+  }
 }

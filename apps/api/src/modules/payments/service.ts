@@ -14,7 +14,25 @@ async function loadPayableOrder(orderId: string) {
   });
   if (!order) throw new HttpError(404, "Order not found");
   if (order.payment?.status === "paid") throw new HttpError(409, "Order is already paid");
+  if (order.status === "cancelled") throw new HttpError(409, cancelledMessage(order.orderNumber));
   return order;
+}
+
+const cancelledMessage = (orderNumber: string) => `${orderNumber} was cancelled, so it can't be paid`;
+
+/** Thrown inside a payment transaction when the order was cancelled meanwhile, to roll it back. */
+class OrderCancelledError extends Error {}
+
+/**
+ * Confirms the order only if it is still pending. Cancelling is one conditional update
+ * too (orders/service.ts), so whichever commits first wins and the other is refused.
+ */
+async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string) {
+  const result = await tx.order.updateMany({
+    where: { id: orderId, status: "pending" },
+    data: { status: "confirmed", stockIssue: false, stockIssueNote: null },
+  });
+  if (result.count === 0) throw new OrderCancelledError();
 }
 
 function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSessionId: string | null }) {
@@ -97,19 +115,24 @@ async function markPaymentPaidIfNotAlready(
 export async function confirmCounterPayment(orderId: string) {
   const order = await loadPayableOrder(orderId);
 
-  const touched = await prisma.$transaction(async (tx) => {
-    const applied = await markPaymentPaidIfNotAlready(
-      tx,
-      order,
-      { method: "counter", paidAt: new Date() },
-      { method: "counter", paidAt: new Date() }
-    );
-    if (!applied) throw new HttpError(409, "Order is already paid");
+  const touched = await prisma
+    .$transaction(async (tx) => {
+      const applied = await markPaymentPaidIfNotAlready(
+        tx,
+        order,
+        { method: "counter", paidAt: new Date() },
+        { method: "counter", paidAt: new Date() }
+      );
+      if (!applied) throw new HttpError(409, "Order is already paid");
 
-    const touched = await deductStockForOrder(tx, order.id);
-    await tx.order.update({ where: { id: order.id }, data: { status: "confirmed", stockIssue: false, stockIssueNote: null } });
-    return touched;
-  });
+      const touched = await deductStockForOrder(tx, order.id);
+      await confirmPendingOrder(tx, order.id);
+      return touched;
+    })
+    .catch((err) => {
+      if (err instanceof OrderCancelledError) throw new HttpError(409, cancelledMessage(order.orderNumber));
+      throw err;
+    });
 
   await refreshAvailability(touched); // emits inventory:updated for affected products
   await createKitchenTasksForOrder(order.id); // also emits order:created
@@ -151,7 +174,7 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
       if (!applied) return null; // already processed (gateway retry / duplicate delivery)
 
       const touched = await deductStockForOrder(tx, order.id);
-      await tx.order.update({ where: { id: order.id }, data: { status: "confirmed", stockIssue: false, stockIssueNote: null } });
+      await confirmPendingOrder(tx, order.id);
       return touched;
     });
     if (!touched) return;
@@ -160,6 +183,19 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     await createKitchenTasksForOrder(order.id);
     emitPaymentConfirmed(order);
   } catch (err) {
+    if (err instanceof OrderCancelledError) {
+      // Staff cancelled the order while the customer was still on PayMongo's page. The
+      // money was taken, so record it, deduct nothing, and flag the order so staff refund
+      // the customer (it shows in the payment queue with a stock-issue badge).
+      const applied = await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate);
+      if (!applied) return;
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { stockIssue: true, stockIssueNote: "Paid online after this order was cancelled. Refund the customer, or place the order again." },
+      });
+      console.warn(`[payments] order ${order.orderNumber} was paid online after it was cancelled`);
+      return;
+    }
     if (!(err instanceof StockShortageError)) throw err;
 
     // The customer already paid on PayMongo's page, so this can't be refused like a

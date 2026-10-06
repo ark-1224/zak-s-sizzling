@@ -258,3 +258,86 @@ describe("confirming a counter payment", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("cancelling an unpaid order (UI review #15)", () => {
+  let orderId: string;
+  const cancel = (id: string, token = staff) => request(app).post(`/api/orders/${id}/cancel`).set(auth(token));
+  const unpaidIds = async () => (await request(app).get("/api/orders?unpaid=1").set(auth(staff))).body.map((o: { id: string }) => o.id);
+
+  beforeAll(async () => {
+    orderId = (await placeOrder({ items: [{ productId: water.id, qty: 1 }], paymentMethod: "counter" })).body.id;
+  });
+
+  it("does not let a kiosk customer cancel an order", async () => {
+    const res = await cancel(orderId, customer);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("cancels the order, returns no stock (none was taken), and drops it from the payment queue", async () => {
+    const before = await waterStock();
+    expect(await unpaidIds()).toContain(orderId);
+
+    const res = await cancel(orderId);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe("cancelled");
+    expect(await waterStock()).toBe(before);
+    expect(await unpaidIds()).not.toContain(orderId);
+  });
+
+  it("keeps the cancelled order on record", async () => {
+    const res = await request(app).get(`/api/orders/${orderId}`).set(auth(staff));
+
+    expect(res.body).toMatchObject({ id: orderId, status: "cancelled" });
+  });
+
+  it("refuses to cancel it a second time", async () => {
+    const res = await cancel(orderId);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/is already cancelled$/);
+  });
+
+  it("refuses to take payment for it, deducting nothing and sending nothing to the kitchen", async () => {
+    const before = await waterStock();
+
+    const res = await request(app).post(`/api/payments/counter/${orderId}/confirm`).set(auth(staff));
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/was cancelled, so it can't be paid$/);
+    expect(await waterStock()).toBe(before);
+    expect(await prisma.kitchenTask.count({ where: { orderItem: { orderId } } })).toBe(0);
+    expect((await prisma.payment.findUniqueOrThrow({ where: { orderId } })).status).toBe("pending");
+  });
+
+  it("refuses to start an online payment for it", async () => {
+    const res = await request(app).post("/api/payments/intent").set(auth(customer)).send({ orderId, method: "gcash" });
+
+    expect(res.status).toBe(409);
+  });
+
+  it("locks its items", async () => {
+    const order = await request(app).get(`/api/orders/${orderId}`).set(auth(staff));
+
+    const res = await request(app).patch(`/api/orders/${orderId}/items/${order.body.items[0].id}`).set(auth(staff)).send({ qty: 2 });
+
+    expect(res.status).toBe(409);
+  });
+
+  it("refuses to cancel an order that is already paid", async () => {
+    const paidId = (await placeOrder({ items: [{ productId: water.id, qty: 1 }], paymentMethod: "counter" })).body.id;
+    await request(app).post(`/api/payments/counter/${paidId}/confirm`).set(auth(staff));
+
+    const res = await cancel(paidId);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/is already paid, so it can't be cancelled$/);
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: paidId } })).status).toBe("confirmed");
+  });
+
+  it("returns 404 for an order that does not exist, including a malformed id", async () => {
+    expect((await cancel("99999999-9999-4999-8999-999999999999")).status).toBe(404);
+    expect((await cancel("not-an-id")).status).toBe(404);
+  });
+});

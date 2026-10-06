@@ -140,13 +140,40 @@ export async function getOrderOwnerSessionId(id: string): Promise<string | null 
 /** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */
 export async function listOrders(filter: { unpaidCounterOnly?: boolean } = {}): Promise<OrderDTO[]> {
   const orders = await prisma.order.findMany({
-    // Also lists paid orders flagged with a stock issue: staff still have to act on them.
+    // Unpaid orders that weren't cancelled, plus paid orders flagged with a stock issue:
+    // staff still have to act on those.
     where: filter.unpaidCounterOnly
-      ? { OR: [{ payment: null }, { payment: { status: { not: "paid" } } }, { stockIssue: true }] }
+      ? {
+          OR: [
+            { status: { not: "cancelled" }, OR: [{ payment: null }, { payment: { status: { not: "paid" } } }] },
+            { stockIssue: true },
+          ],
+        }
       : undefined,
     include: { items: { include: { product: true } }, payment: true },
     orderBy: { createdAt: "desc" },
     take: 50,
   });
   return orders.map(toOrderDTO);
+}
+
+/**
+ * Cancels an order nobody paid for, e.g. a kiosk customer who never came to the counter
+ * or left the online payment page (UI review #15). An unpaid order has deducted no stock
+ * and sent nothing to the kitchen, so there is nothing to give back. It is one
+ * conditional update, so an order that gets paid at the same moment is never cancelled;
+ * payment confirmation in turn refuses a cancelled order (payments/service.ts).
+ */
+export async function cancelOrder(id: string): Promise<OrderDTO> {
+  const result = await prisma.order.updateMany({
+    where: { id, status: "pending", OR: [{ payment: null }, { payment: { status: { not: "paid" } } }] },
+    data: { status: "cancelled" },
+  });
+  if (result.count === 0) {
+    const order = await prisma.order.findUnique({ where: { id }, select: { orderNumber: true, status: true } });
+    if (!order) throw new HttpError(404, "Order not found");
+    if (order.status === "cancelled") throw new HttpError(409, `${order.orderNumber} is already cancelled`);
+    throw new HttpError(409, `${order.orderNumber} is already paid, so it can't be cancelled`);
+  }
+  return (await getOrderById(id))!;
 }

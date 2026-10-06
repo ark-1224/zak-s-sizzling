@@ -185,3 +185,34 @@ describe("an online order paid after stock ran out", () => {
     expect(listed).toMatchObject({ stockIssue: true, stockIssueNote: expect.stringContaining(soda.name) });
   });
 });
+
+describe("an online order cancelled before the payment arrived", () => {
+  let order: { id: string };
+
+  beforeAll(async () => {
+    await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 5 } });
+    order = await placeGcashOrder(1);
+    // Staff cancel it while the customer is still on PayMongo's page.
+    await request(app).post(`/api/orders/${order.id}/cancel`).set("Authorization", `Bearer ${staff}`);
+  });
+
+  it("records the payment, deducts nothing, and flags the order so staff refund the customer", async () => {
+    const body = paidEvent(order.id);
+
+    const res = await postWebhook(body, sign(body));
+
+    expect(res.status).toBe(200);
+    const saved = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(saved).toMatchObject({ status: "cancelled", stockIssue: true });
+    expect(saved.stockIssueNote).toMatch(/Paid online after this order was cancelled/);
+    expect(saved.payment?.status).toBe("paid");
+    expect(await sodaStock()).toBe(5);
+    expect(await prisma.kitchenTask.count({ where: { orderItem: { orderId: order.id } } })).toBe(0);
+  });
+
+  it("lists it in the payment queue for staff to sort out", async () => {
+    const res = await request(app).get("/api/orders?unpaid=1").set("Authorization", `Bearer ${staff}`);
+
+    expect(res.body.find((o: { id: string }) => o.id === order.id)).toMatchObject({ status: "cancelled", stockIssue: true });
+  });
+});

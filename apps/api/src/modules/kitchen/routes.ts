@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
+import { parseId } from "../../lib/ids";
 import { updateTaskStatusSchema } from "./schema";
 import { listActiveTasks, updateTaskStatus } from "./service";
 
@@ -17,7 +18,7 @@ kitchenRouter.get("/tasks", authenticate, authorize("admin", "staff"), async (re
 kitchenRouter.patch("/tasks/:id", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
     const { status } = updateTaskStatusSchema.parse(req.body);
-    res.json(await updateTaskStatus(req.params.id, status));
+    res.json(await updateTaskStatus(parseId(req.params.id, "Kitchen task not found"), status));
   } catch (err) {
     next(err);
   }

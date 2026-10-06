@@ -2,6 +2,7 @@ import { Router, type Request } from "express";
 import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
+import { parseId } from "../../lib/ids";
 import { PaymongoNotConfiguredError } from "../../lib/paymongo";
 import { createPaymentIntentSchema } from "./schema";
 import { confirmCounterPayment, createGatewayPaymentIntent, handleWebhook } from "./service";
@@ -26,7 +27,7 @@ paymentsRouter.post("/intent", authenticate, async (req, res, next) => {
 
 paymentsRouter.post("/counter/:orderId/confirm", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    const order = await confirmCounterPayment(req.params.orderId);
+    const order = await confirmCounterPayment(parseId(req.params.orderId, "Order not found"));
     res.json(order);
   } catch (err) {
     next(err);
