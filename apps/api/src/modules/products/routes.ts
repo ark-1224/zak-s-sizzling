@@ -88,7 +88,8 @@ productsRouter.post("/bulk-import", authenticate, authorize("admin"), async (req
     const missingHeaders = REQUIRED_HEADERS.filter((h) => !(h in rows[0]));
     if (missingHeaders.length > 0) throw new HttpError(400, `Missing required column(s): ${missingHeaders.join(", ")}`);
 
-    res.json(await bulkImportProducts(rows));
+    // dryRun: check every row and report what would happen, without saving anything.
+    res.json(await bulkImportProducts(rows, { dryRun: req.body?.dryRun === true }));
   } catch (err) {
     next(err);
   }

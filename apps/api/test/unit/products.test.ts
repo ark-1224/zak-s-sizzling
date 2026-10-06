@@ -59,7 +59,7 @@ describe("bulkImportProducts row checks", () => {
       { name: "B", category: "Drinks", price: "45", stockQty: "many" },
     ]);
 
-    expect(summary.results.map((r) => r.message)).toEqual(["Cost must be a number if provided", "Stock quantities must be numbers if provided"]);
+    expect(summary.results.map((r) => r.message)).toEqual(["Cost must be a number of 0 or more if provided", "Stock quantities must be numbers if provided"]);
   });
 
   it("matches the category name regardless of letter case and creates a new product", async () => {
@@ -88,6 +88,61 @@ describe("bulkImportProducts row checks", () => {
 
     expect(summary.results[0]).toMatchObject({ status: "error", message: "Barcode already in use" });
     expect(summary.results[1].status).toBe("created");
+  });
+});
+
+describe("bulkImportProducts preview (dry run)", () => {
+  it("checks every row and saves nothing", async () => {
+    mocked(prisma.product.findUnique).mockImplementation((async ({ where }: { where: { barcode: string } }) =>
+      where.barcode === "480001" ? { id: "p-1" } : null) as never);
+
+    const summary = await bulkImportProducts(
+      [
+        { name: "New Tea", category: "Drinks", price: "45" },
+        { name: "Old Tea", category: "Drinks", price: "50", barcode: "480001" },
+        { name: "Bad Tea", category: "Drinks", price: "abc" },
+      ],
+      { dryRun: true },
+    );
+
+    expect(summary).toMatchObject({ dryRun: true, total: 3, created: 1, updated: 1, errors: 1 });
+    expect(summary.results.map((r) => r.status)).toEqual(["created", "updated", "error"]);
+    expect(createProduct).not.toHaveBeenCalled();
+    expect(updateProduct).not.toHaveBeenCalled();
+  });
+
+  it("reports a repeated barcode in the same file as an update of the row before it", async () => {
+    const summary = await bulkImportProducts(
+      [
+        { name: "Iced Tea", category: "Drinks", price: "45", barcode: "480099" },
+        { name: "Iced Tea (large)", category: "Drinks", price: "55", barcode: "480099" },
+      ],
+      { dryRun: true },
+    );
+
+    expect(summary.results.map((r) => r.status)).toEqual(["created", "updated"]);
+  });
+
+  it("marks a real import as not a dry run", async () => {
+    const summary = await bulkImportProducts([{ name: "Iced Tea", category: "Drinks", price: "45" }]);
+
+    expect(summary.dryRun).toBe(false);
+    expect(createProduct).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("bulkImportProducts limits shared with the product form", () => {
+  it.each([
+    ["a negative stock quantity", { stockQty: "-5" }, "Stock quantities must be whole numbers of 0 or more"],
+    ["a fractional stock quantity", { stockQty: "2.5" }, "Stock quantities must be whole numbers of 0 or more"],
+    ["a negative minimum level", { minStockThreshold: "-1" }, "Stock quantities must be whole numbers of 0 or more"],
+    ["a negative cost", { cost: "-10" }, "Cost must be a number of 0 or more if provided"],
+    ["a name over 150 characters", { name: "x".repeat(151) }, "Product name is longer than 150 characters"],
+    ["a barcode over 64 characters", { barcode: "4".repeat(65) }, "Barcode is longer than 64 characters"],
+  ])("rejects %s", async (_label, change, message) => {
+    const summary = await bulkImportProducts([{ name: "Iced Tea", category: "Drinks", price: "45", ...change }], { dryRun: true });
+
+    expect(summary.results[0]).toMatchObject({ status: "error", message });
   });
 });
 

@@ -186,6 +186,8 @@ export interface BulkImportSummary {
   created: number;
   updated: number;
   errors: number;
+  /** True for a preview: rows were checked and nothing was saved. */
+  dryRun: boolean;
   results: BulkImportRowResult[];
 }
 

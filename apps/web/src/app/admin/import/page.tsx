@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { downloadAuthenticated } from "@/lib/download";
 import { PageHeader, Card, AdmButton, StatusPill } from "@/components/admin/ui";
@@ -12,13 +12,50 @@ import type { BulkImportSummary } from "@zaks/shared-types";
 // existing product updates it, otherwise a new product is created — there's no
 // spreadsheet column-mapping UI here (that's a much bigger feature); the fixed
 // header set is documented via the downloadable template.
+//
+// Before anything is saved, the server checks every row (a dry run of the same import)
+// and the page shows what each row will do, with the reason for any error. Import stays
+// disabled until the file has no errors (UI review #21).
 export default function BulkImportPage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [csvText, setCsvText] = useState("");
   const [importing, setImporting] = useState(false);
   const [summary, setSummary] = useState<BulkImportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Each preview remembers the text it was made for, so an edit never shows a stale one.
+  const [preview, setPreview] = useState<{ text: string; summary: BulkImportSummary } | null>(null);
+  const [previewError, setPreviewError] = useState<{ text: string; message: string } | null>(null);
+  const [importedText, setImportedText] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const text = csvText.trim();
+  const currentPreview = preview && preview.text === text ? preview.summary : null;
+  const currentPreviewError = previewError && previewError.text === text ? previewError.message : null;
+  const checking = Boolean(text) && !currentPreview && !currentPreviewError;
+  const alreadyImported = importedText === text;
+
+  // Check the rows shortly after the CSV is loaded or edited (a dry run: nothing is saved).
+  useEffect(() => {
+    if (!text) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      apiFetch<BulkImportSummary>("/api/products/bulk-import", {
+        method: "POST",
+        auth: "staff",
+        body: JSON.stringify({ csvText: text, dryRun: true }),
+      })
+        .then((summary) => {
+          if (!cancelled) setPreview({ text, summary });
+        })
+        .catch((err) => {
+          if (!cancelled) setPreviewError({ text, message: err instanceof ApiError ? err.message : "Couldn't check the file." });
+        });
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [text]);
 
   function handleFile(file: File) {
     setFileName(file.name);
@@ -36,9 +73,10 @@ export default function BulkImportPage() {
       const result = await apiFetch<BulkImportSummary>("/api/products/bulk-import", {
         method: "POST",
         auth: "staff",
-        body: JSON.stringify({ csvText }),
+        body: JSON.stringify({ csvText: text }),
       });
       setSummary(result);
+      setImportedText(text);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Import failed.");
     } finally {
@@ -46,7 +84,8 @@ export default function BulkImportPage() {
     }
   }
 
-  const rowCount = csvText.trim() ? csvText.trim().split("\n").length - 1 : 0;
+  const rowCount = currentPreview?.total ?? (text ? text.split("\n").length - 1 : 0);
+  const canImport = Boolean(currentPreview) && currentPreview!.errors === 0 && !importing && !alreadyImported;
 
   return (
     <div className="flex flex-col gap-4.5">
@@ -100,6 +139,61 @@ export default function BulkImportPage() {
           </Card>
 
           {error && <div className="text-base text-adm-bad md:text-sm">{error}</div>}
+
+          {text && !alreadyImported && (
+            <Card title="Preview — nothing is saved until you press Import">
+              {checking ? (
+                <div className="p-4 text-base text-adm-ink-3 md:text-sm">Checking rows…</div>
+              ) : currentPreviewError ? (
+                <div className="p-4 text-base text-adm-bad md:text-sm">{currentPreviewError}</div>
+              ) : (
+                currentPreview && (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2 border-b border-adm-line p-4 md:gap-4">
+                      <StatusPill tone="ok">{currentPreview.created} NEW</StatusPill>
+                      <StatusPill tone="warn">{currentPreview.updated} UPDATE</StatusPill>
+                      <StatusPill tone="bad">{currentPreview.errors} ERROR{currentPreview.errors !== 1 ? "S" : ""}</StatusPill>
+                      <span className="text-base text-adm-ink-2 md:text-sm">
+                        {currentPreview.errors > 0
+                          ? `Fix the ${currentPreview.errors} row${currentPreview.errors !== 1 ? "s" : ""} marked ERROR in your file, then load it again.`
+                          : "All rows are ready to import."}
+                      </span>
+                    </div>
+                    <div className="max-h-80 overflow-auto">
+                      <table className="w-full text-base md:text-sm">
+                        <thead>
+                          <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                            <th className="px-4.5 py-2 font-medium">Row</th>
+                            <th className="px-3 py-2 font-medium">Name</th>
+                            <th className="px-3 py-2 font-medium">Will</th>
+                            <th className="px-4.5 py-2 font-medium">Problem</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentPreview.results.map((r) => (
+                            <tr key={r.row} className={`border-t border-adm-line-soft ${r.status === "error" ? "bg-adm-bad-soft" : ""}`}>
+                              <td className="font-adm-mono px-4.5 py-2">{r.row}</td>
+                              <td className="px-3 py-2 break-words">{r.name ?? "—"}</td>
+                              <td className="px-3 py-2">
+                                {r.status === "error" ? (
+                                  <StatusPill tone="bad">ERROR</StatusPill>
+                                ) : r.status === "updated" ? (
+                                  <StatusPill tone="warn">UPDATE</StatusPill>
+                                ) : (
+                                  <StatusPill tone="ok">NEW</StatusPill>
+                                )}
+                              </td>
+                              <td className="px-4.5 py-2 text-adm-bad">{r.message ?? ""}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )
+              )}
+            </Card>
+          )}
 
           {summary && (
             <Card title={`Import result — ${summary.total} row${summary.total !== 1 ? "s" : ""} processed`}>
@@ -157,9 +251,18 @@ export default function BulkImportPage() {
               that doesn&apos;t match anything, creates a new product.
             </p>
           </Card>
-          <AdmButton variant="primary" size="large" disabled={!csvText.trim() || importing} onClick={handleImport}>
-            {importing ? "Importing…" : `Import ${rowCount || ""} row${rowCount !== 1 ? "s" : ""}`}
+          <AdmButton variant="primary" size="large" disabled={!canImport} onClick={handleImport}>
+            {importing
+              ? "Importing…"
+              : alreadyImported
+                ? "Imported"
+                : checking
+                  ? "Checking rows…"
+                  : `Import ${rowCount || ""} row${rowCount !== 1 ? "s" : ""}`}
           </AdmButton>
+          {currentPreview && currentPreview.errors > 0 && !alreadyImported && (
+            <p className="-mt-2 text-base text-adm-ink-3 md:text-[11.5px]">Import turns on once no row has an error.</p>
+          )}
         </div>
       </div>
     </div>
