@@ -23,10 +23,34 @@ export const REASON_LABELS: Record<AdjustmentReason, string> = {
 
 const REASONS = Object.entries(REASON_LABELS) as [AdjustmentReason, string][];
 
+// Damaged goods and spoilage only ever take stock away (UI review #5). The API refuses
+// an increase with these reasons too (DECREASE_ONLY_REASONS in inventory/schema.ts).
+export const DECREASE_ONLY_REASONS: readonly AdjustmentReason[] = ["damaged", "spoilage"];
+export const DECREASE_ONLY_MESSAGE = "Damaged goods and spoilage can only lower the stock.";
+export const isDecreaseOnly = (reason: AdjustmentReason | "") => reason !== "" && DECREASE_ONLY_REASONS.includes(reason);
+
+/** The reason dropdown's options, starting with an empty "Choose a reason" so nothing is picked by default. */
+export function ReasonOptions({ disableDecreaseOnly = false }: { disableDecreaseOnly?: boolean }) {
+  return (
+    <>
+      <option value="" disabled>
+        Choose a reason…
+      </option>
+      {REASONS.map(([value, label]) => (
+        <option key={value} value={value} disabled={disableDecreaseOnly && DECREASE_ONLY_REASONS.includes(value)}>
+          {DECREASE_ONLY_REASONS.includes(value) ? `${label} (lowers stock only)` : label}
+        </option>
+      ))}
+    </>
+  );
+}
+
 // Every stock change made from this screen is logged — see the manuscript's Stock
 // Adjustments feature ("Authorized users can increase or decrease stock quantities
 // while maintaining a log of adjustments"). A reason is required so the audit trail
 // (GET /api/inventory/adjustments) is actually explainable later, not just a number.
+// The form starts empty (no amount, no reason) so nothing is saved by accident with a
+// default the person never chose (UI review #5).
 export function AdjustStockModal({
   product,
   onClose,
@@ -38,18 +62,26 @@ export function AdjustStockModal({
 }) {
   const currentQty = product.stockQty ?? 0;
   const [mode, setMode] = useState<"delta" | "set">("delta");
-  const [deltaText, setDeltaText] = useState("1");
-  const [setText, setSetText] = useState(String(currentQty));
-  const [reason, setReason] = useState<AdjustmentReason>("correction");
+  const [deltaText, setDeltaText] = useState("");
+  const [setText, setSetText] = useState("");
+  const [reason, setReason] = useState<AdjustmentReason | "">("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const delta = Number(deltaText) || 0;
   const setQty = Number(setText);
+  const hasAmount = (mode === "delta" ? deltaText : setText).trim() !== "";
   const newQty =
-    mode === "delta" ? Math.max(0, currentQty + delta) : Number.isFinite(setQty) ? Math.max(0, setQty) : currentQty;
+    mode === "delta"
+      ? Math.max(0, currentQty + delta)
+      : hasAmount && Number.isFinite(setQty)
+        ? Math.max(0, setQty)
+        : currentQty;
   const effectiveDelta = newQty - currentQty;
+  const decreaseOnly = isDecreaseOnly(reason);
+  const wrongDirection = decreaseOnly && hasAmount && effectiveDelta >= 0;
+  const canSave = hasAmount && effectiveDelta !== 0 && reason !== "" && !wrongDirection && !saving;
 
   function bump(amount: number) {
     setDeltaText(String((Number(deltaText) || 0) + amount));
@@ -59,6 +91,14 @@ export function AdjustStockModal({
     e.preventDefault();
     if (effectiveDelta === 0) {
       setError("That wouldn't change the stock count — nothing to save.");
+      return;
+    }
+    if (reason === "") {
+      setError("Choose a reason for this change.");
+      return;
+    }
+    if (wrongDirection) {
+      setError(DECREASE_ONLY_MESSAGE);
       return;
     }
     setSaving(true);
@@ -126,14 +166,16 @@ export function AdjustStockModal({
                 type="number"
                 value={deltaText}
                 onChange={(e) => setDeltaText(e.target.value)}
+                placeholder={decreaseOnly ? "e.g. -2" : "e.g. 5 or -2"}
                 aria-label="Change by"
                 className={`font-adm-mono text-center ${admInputClass}`}
               />
               <button
                 type="button"
                 onClick={() => bump(1)}
+                disabled={decreaseOnly}
                 aria-label="Increase by 1"
-                className="h-11 w-11 flex-shrink-0 rounded-[5px] border border-adm-line text-lg font-bold text-adm-accent md:h-9 md:w-9 md:text-base"
+                className="h-11 w-11 flex-shrink-0 rounded-[5px] border border-adm-line text-lg font-bold text-adm-accent md:h-9 md:w-9 md:text-base disabled:opacity-35"
               >
                 +
               </button>
@@ -144,7 +186,8 @@ export function AdjustStockModal({
                   key={n}
                   type="button"
                   onClick={() => bump(n)}
-                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-0 md:px-2 md:py-0.5 md:text-[11px]"
+                  disabled={decreaseOnly && n > 0}
+                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-0 md:px-2 md:py-0.5 md:text-[11px] disabled:opacity-35"
                 >
                   {n > 0 ? `+${n}` : n}
                 </button>
@@ -159,6 +202,7 @@ export function AdjustStockModal({
               min="0"
               value={setText}
               onChange={(e) => setSetText(e.target.value)}
+              placeholder={`Now ${currentQty}`}
               className={`font-adm-mono ${admInputClass}`}
             />
           </label>
@@ -186,15 +230,17 @@ export function AdjustStockModal({
           <span className={admLabelClass}>Reason</span>
           <select
             value={reason}
+            required
             onChange={(e) => setReason(e.target.value as AdjustmentReason)}
             className={admInputClass}
           >
-            {REASONS.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
+            <ReasonOptions />
           </select>
+          {wrongDirection && (
+            <span role="alert" className="mt-1.5 block text-base text-adm-bad md:text-[12px]">
+              {DECREASE_ONLY_MESSAGE} Enter a negative change or a lower count.
+            </span>
+          )}
         </label>
 
         <label className="mb-4 block">
@@ -215,7 +261,7 @@ export function AdjustStockModal({
           <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>
-          <AdmButton type="submit" variant="primary" disabled={saving || effectiveDelta === 0}>
+          <AdmButton type="submit" variant="primary" disabled={!canSave}>
             {saving ? "Saving…" : "Save adjustment"}
           </AdmButton>
         </div>

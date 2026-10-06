@@ -3,6 +3,7 @@ import type { AdjustmentReason, RawMaterialDTO, RawMaterialMovementDTO, UserRole
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
 import { refreshAvailability } from "../inventory/fulfillment";
+import { DECREASE_ONLY_MESSAGE, DECREASE_ONLY_REASONS } from "../inventory/schema";
 
 // Raw-material stock for recipe-tracked dishes (docs/design/raw-material-stock.md 3.5
 // and 3.6). Deduction for sales lives in inventory/fulfillment.ts; this module covers
@@ -137,6 +138,10 @@ export async function adjustRawMaterialStock(id: string, change: AdjustRawMateri
   await prisma.$transaction(async (tx) => {
     const current = await tx.rawMaterial.findUnique({ where: { id } });
     if (!current) throw new HttpError(404, "Raw material not found");
+    if (DECREASE_ONLY_REASONS.includes(change.reason)) {
+      const lowers = change.setQty !== undefined ? current.stockQty.gt(change.setQty) : change.delta! < 0;
+      if (!lowers) throw new HttpError(400, DECREASE_ONLY_MESSAGE);
+    }
 
     let newQty: Prisma.Decimal;
     if (change.setQty !== undefined) {

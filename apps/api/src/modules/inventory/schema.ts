@@ -6,6 +6,11 @@ import { z } from "zod";
 // actually changes, so every entry in the stock_adjustments log is explainable.
 export const adjustmentReasonSchema = z.enum(["restock", "return", "damaged", "spoilage", "correction", "other"]);
 
+// Damaged goods and spoilage only ever take stock away, so these reasons must lower the
+// count (UI review #5). The web forms apply the same rule; this keeps the log honest.
+export const DECREASE_ONLY_REASONS: readonly z.infer<typeof adjustmentReasonSchema>[] = ["damaged", "spoilage"];
+export const DECREASE_ONLY_MESSAGE = "Damaged goods and spoilage can only lower the stock";
+
 export const adjustStockSchema = z
   .object({
     setQty: z.number().int().nonnegative().optional(),

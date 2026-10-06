@@ -2,9 +2,11 @@ import { prisma } from "../../lib/prisma";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { PRODUCT_DTO_INCLUDE, toProductDTO } from "../products/service";
+import { DECREASE_ONLY_MESSAGE, DECREASE_ONLY_REASONS } from "./schema";
 import type { AdjustmentReason, Product, StockAdjustmentDTO } from "@zaks/shared-types";
 
 type StockChange = { setQty?: number; delta?: number; minStockThreshold?: number };
+type StockChangeOptions = { decreaseOnly?: boolean };
 
 /**
  * The single place stock ever changes — manual admin adjustments, product-edit stock
@@ -20,7 +22,8 @@ type StockChange = { setQty?: number; delta?: number; minStockThreshold?: number
  */
 export async function applyStockChange(
   productId: string,
-  change: StockChange
+  change: StockChange,
+  { decreaseOnly = false }: StockChangeOptions = {}
 ): Promise<{ product: Product; previousQty: number; newQty: number }> {
   const inventory = await prisma.inventory.findUnique({ where: { productId }, include: { product: { select: { tracking: true } } } });
   if (!inventory) throw new HttpError(404, "No inventory record for this product");
@@ -29,6 +32,10 @@ export async function applyStockChange(
     throw new HttpError(409, "This dish uses a recipe, so its stock comes from its raw materials. Adjust those on the Raw materials page.");
   }
   const previousQty = inventory.stockQty;
+  if (decreaseOnly) {
+    const lowers = change.setQty !== undefined ? change.setQty < previousQty : change.delta !== undefined && change.delta < 0;
+    if (!lowers) throw new HttpError(400, DECREASE_ONLY_MESSAGE);
+  }
 
   const product = await prisma.$transaction(async (tx) => {
     if (change.setQty !== undefined) {
@@ -74,18 +81,21 @@ export async function adjustStock(
   change: StockChange & { reason?: AdjustmentReason; note?: string },
   adjustedById: string
 ): Promise<Product> {
-  const { product, previousQty, newQty } = await applyStockChange(productId, change);
-
+  const reason = change.reason;
   const qtyChanged = change.setQty !== undefined || change.delta !== undefined;
-  if (qtyChanged) {
-    if (!change.reason) throw new HttpError(400, "A reason is required when adjusting stock quantity");
+  // Checked before anything is saved, so a refused change leaves the stock untouched.
+  if (qtyChanged && !reason) throw new HttpError(400, "A reason is required when adjusting stock quantity");
+  const decreaseOnly = reason !== undefined && qtyChanged && DECREASE_ONLY_REASONS.includes(reason);
+  const { product, previousQty, newQty } = await applyStockChange(productId, change, { decreaseOnly });
+
+  if (qtyChanged && reason) {
     await prisma.stockAdjustment.create({
       data: {
         productId,
         delta: newQty - previousQty,
         previousQty,
         newQty,
-        reason: change.reason,
+        reason,
         note: change.note || null,
         adjustedById,
       },

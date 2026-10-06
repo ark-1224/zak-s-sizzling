@@ -173,6 +173,22 @@ describe("restocking and adjusting (Staff)", () => {
     expect(res.status).toBe(400);
   });
 
+  it.each([
+    ["an increase for spoilage", { delta: 10, reason: "spoilage" }],
+    ["an increase for damaged goods", { delta: 10, reason: "damaged" }],
+    ["a higher counted amount for spoilage", { setQty: 800, reason: "spoilage" }],
+    ["the same counted amount for damaged goods", { setQty: 700, reason: "damaged" }],
+  ])("refuses %s, changing and logging nothing", async (_label, body) => {
+    const logBefore = (await request(app).get(`/api/raw-materials/movements?rawMaterialId=${sauce.id}`).set(as(staff))).body.length;
+
+    const res = await adjust(sauce.id, body);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Damaged goods and spoilage can only lower the stock");
+    expect(await stockOf(sauce.id)).toBe(700);
+    expect((await request(app).get(`/api/raw-materials/movements?rawMaterialId=${sauce.id}`).set(as(staff))).body).toHaveLength(logBefore);
+  });
+
   it("returns 404 when adjusting a raw material that does not exist", async () => {
     const res = await adjust(MISSING_ID, { delta: 1, reason: "restock" });
 

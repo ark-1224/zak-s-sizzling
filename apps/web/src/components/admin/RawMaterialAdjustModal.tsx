@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { formatMaterialQty } from "@/lib/units";
-import { REASON_LABELS } from "@/components/admin/AdjustStockModal";
+import { DECREASE_ONLY_MESSAGE, isDecreaseOnly, ReasonOptions } from "@/components/admin/AdjustStockModal";
 import {
   AdmButton,
   admInputClass,
@@ -14,11 +14,11 @@ import {
 } from "@/components/admin/ui";
 import type { AdjustmentReason, RawMaterialDTO } from "@zaks/shared-types";
 
-const REASONS = Object.entries(REASON_LABELS) as [AdjustmentReason, string][];
-
 // Restock or correct a raw material. Same rules as product stock (AdjustStockModal):
 // a reason is always required, so the movement log explains every change. Amounts are
 // in the material's base unit (g, ml or pc), since that's what recipes are written in.
+// The form starts with no amount and no reason, and damaged goods and spoilage can only
+// lower the stock (UI review #5).
 export function RawMaterialAdjustModal({
   material,
   onClose,
@@ -31,7 +31,7 @@ export function RawMaterialAdjustModal({
   const current = material.stockQty;
   const [mode, setMode] = useState<"add" | "remove" | "set">("add");
   const [amountText, setAmountText] = useState("");
-  const [reason, setReason] = useState<AdjustmentReason>("restock");
+  const [reason, setReason] = useState<AdjustmentReason | "">("");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,10 +40,13 @@ export function RawMaterialAdjustModal({
   const valid = amountText.trim() !== "" && Number.isFinite(amount) && amount >= 0;
   const newQty = !valid ? current : mode === "add" ? current + amount : mode === "remove" ? current - amount : amount;
   const change = newQty - current;
+  const wrongDirection = isDecreaseOnly(reason) && valid && change >= 0;
+  const canSave = valid && change !== 0 && newQty >= 0 && reason !== "" && !wrongDirection && !saving;
 
+  // Adding stock can't be spoilage or damage, so switching to Add clears those reasons.
   function chooseMode(next: typeof mode) {
     setMode(next);
-    setReason(next === "add" ? "restock" : next === "remove" ? "spoilage" : "correction");
+    if (next === "add" && isDecreaseOnly(reason)) setReason("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,6 +57,14 @@ export function RawMaterialAdjustModal({
     }
     if (newQty < 0) {
       setError(`Only ${formatMaterialQty(current, material.unit)} is in stock.`);
+      return;
+    }
+    if (reason === "") {
+      setError("Choose a reason for this change.");
+      return;
+    }
+    if (wrongDirection) {
+      setError(DECREASE_ONLY_MESSAGE);
       return;
     }
     setSaving(true);
@@ -134,13 +145,14 @@ export function RawMaterialAdjustModal({
 
         <label className="mb-3 block">
           <span className={admLabelClass}>Reason</span>
-          <select value={reason} onChange={(e) => setReason(e.target.value as AdjustmentReason)} className={admInputClass}>
-            {REASONS.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
+          <select value={reason} required onChange={(e) => setReason(e.target.value as AdjustmentReason)} className={admInputClass}>
+            <ReasonOptions disableDecreaseOnly={mode === "add"} />
           </select>
+          {wrongDirection && (
+            <span role="alert" className="mt-1.5 block text-base text-adm-bad md:text-[12px]">
+              {DECREASE_ONLY_MESSAGE} Enter a lower amount.
+            </span>
+          )}
         </label>
 
         <label className="mb-4 block">
@@ -161,7 +173,7 @@ export function RawMaterialAdjustModal({
           <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>
-          <AdmButton type="submit" variant="primary" disabled={saving}>
+          <AdmButton type="submit" variant="primary" disabled={!canSave}>
             {saving ? "Saving…" : "Save change"}
           </AdmButton>
         </div>
