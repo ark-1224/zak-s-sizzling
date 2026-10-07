@@ -193,13 +193,15 @@ export default function AdminProductsPage() {
                         {p.isAvailable ? "IN STOCK" : "SOLD OUT"}
                       </StatusPill>
                     </td>
-                    <td className="px-4.5 py-3 text-right whitespace-nowrap">
-                      <button onClick={() => setEditing(p)} className="mr-3 text-[12px] font-medium text-adm-accent">
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(p)} className="text-[12px] font-medium text-adm-ink-3">
-                        Delete
-                      </button>
+                    <td className="px-4.5 py-2 text-right whitespace-nowrap">
+                      <div className="flex justify-end gap-2">
+                        <AdmButton variant="secondary" size="row" onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
+                          Edit
+                        </AdmButton>
+                        <AdmButton variant="danger" size="row" onClick={() => handleDelete(p)} aria-label={`Delete ${p.name}`}>
+                          Delete
+                        </AdmButton>
+                      </div>
                     </td>
                   </tr>
                 ))}

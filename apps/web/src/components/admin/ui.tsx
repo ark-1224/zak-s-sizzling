@@ -58,17 +58,20 @@ export function KpiTile({ label, value, sub, color }: { label: string; value: st
 }
 
 const BUTTON_BASE =
-  "inline-flex min-h-11 items-center justify-center rounded-[5px] px-4 text-base font-medium disabled:opacity-50 md:min-h-0";
+  "inline-flex min-h-11 items-center justify-center rounded-[5px] px-4 text-base font-medium disabled:opacity-50";
 const BUTTON_VARIANTS = {
   primary: "bg-adm-accent text-adm-accent-ink",
   secondary: "border border-adm-line bg-adm-surface text-adm-ink-2",
-  danger: "border border-adm-bad text-adm-bad",
+  danger: "border border-adm-bad bg-adm-surface text-adm-bad hover:bg-adm-bad-soft",
 };
 // Every size is 44px / 16px on mobile; they only differ in their desktop density.
+// `row` is for actions inside table rows: at least 32px tall, so Edit, Delete, Suspend
+// and Adjust are real targets rather than bare text links (UI review #17).
 const BUTTON_SIZES = {
-  compact: "md:px-2.5 md:py-1 md:text-[11.5px]",
-  default: "md:px-3.5 md:py-2 md:text-[12.5px]",
-  large: "md:px-3.5 md:py-2.75 md:text-[12.5px]",
+  compact: "md:min-h-0 md:px-2.5 md:py-1 md:text-[11.5px]",
+  row: "md:min-h-8 md:px-3 md:py-1 md:text-[12px]",
+  default: "md:min-h-0 md:px-3.5 md:py-2 md:text-[12.5px]",
+  large: "md:min-h-0 md:px-3.5 md:py-2.75 md:text-[12.5px]",
 };
 
 type ButtonStyle = { variant?: keyof typeof BUTTON_VARIANTS; size?: keyof typeof BUTTON_SIZES };

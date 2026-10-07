@@ -163,7 +163,8 @@ export default function UsersPage() {
                       <select
                         value={u.role}
                         onChange={(e) => changeRole(u, e.target.value as "admin" | "staff")}
-                        className="rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-[12px]"
+                        aria-label={`Role for ${u.name}`}
+                        className="min-h-8 rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-[12px]"
                       >
                         <option value="admin">Admin</option>
                         <option value="staff">Staff</option>
@@ -172,10 +173,15 @@ export default function UsersPage() {
                     <td className="px-3 py-3">
                       <StatusPill tone={u.isActive ? "ok" : "bad"}>{u.isActive ? "ACTIVE" : "SUSPENDED"}</StatusPill>
                     </td>
-                    <td className="px-4.5 py-3 text-right">
-                      <button onClick={() => toggleActive(u)} className="text-[12px] font-medium text-adm-accent">
+                    <td className="px-4.5 py-2 text-right">
+                      <AdmButton
+                        variant="secondary"
+                        size="row"
+                        onClick={() => toggleActive(u)}
+                        aria-label={`${u.isActive ? "Suspend" : "Reactivate"} ${u.name}`}
+                      >
                         {u.isActive ? "Suspend" : "Reactivate"}
-                      </button>
+                      </AdmButton>
                     </td>
                   </tr>
                 ))}

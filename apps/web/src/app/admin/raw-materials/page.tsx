@@ -199,12 +199,12 @@ export default function AdminRawMaterialsPage() {
                         )}
                       </td>
                       <td className="px-4.5 py-3 text-right whitespace-nowrap">
-                        <div className="inline-flex gap-1.5">
-                          <AdmButton variant="secondary" size="compact" onClick={() => setAdjusting(m)}>
+                        <div className="inline-flex gap-2">
+                          <AdmButton variant="secondary" size="row" onClick={() => setAdjusting(m)}>
                             Adjust
                           </AdmButton>
                           {isAdmin && (
-                            <AdmButton variant="secondary" size="compact" onClick={() => setEditing(m)}>
+                            <AdmButton variant="secondary" size="row" onClick={() => setEditing(m)}>
                               Edit
                             </AdmButton>
                           )}

@@ -12,7 +12,7 @@ import type { Product, StockAdjustmentDTO } from "@zaks/shared-types";
 // can make, and it's restocked on the Raw materials page.
 function RecipeStockLink({ compact = false }: { compact?: boolean }) {
   return (
-    <Link href="/admin/raw-materials" className={`${admButtonClass({ variant: "secondary", size: compact ? "compact" : "default" })} shrink-0`}>
+    <Link href="/admin/raw-materials" className={`${admButtonClass({ variant: "secondary", size: compact ? "row" : "default" })} shrink-0`}>
       Raw materials
     </Link>
   );
@@ -194,7 +194,7 @@ export default function AdminInventoryPage() {
                           <td className={`font-adm-mono px-3 py-3 text-right font-bold ${low ? "text-adm-bad" : ""}`}>{p.stockQty ?? 0}</td>
                           <td className="font-adm-mono px-3 py-3 text-right text-adm-ink-3">{p.minStockThreshold ?? "—"}</td>
                           <td className="px-4.5 py-3 text-right">
-                            <AdmButton variant="secondary" size="compact" onClick={() => setAdjustingProduct(p)}>
+                            <AdmButton variant="secondary" size="row" onClick={() => setAdjustingProduct(p)} aria-label={`Adjust stock of ${p.name}`}>
                               Adjust
                             </AdmButton>
                           </td>
