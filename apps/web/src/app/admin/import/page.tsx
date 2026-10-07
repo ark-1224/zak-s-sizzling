@@ -18,6 +18,8 @@ import type { BulkImportSummary } from "@zaks/shared-types";
 // disabled until the file has no errors (UI review #21).
 export default function BulkImportPage() {
   const [fileName, setFileName] = useState<string | null>(null);
+  // True once a loaded file's text is changed in the box below, so the card says so.
+  const [fileEdited, setFileEdited] = useState(false);
   const [csvText, setCsvText] = useState("");
   const [importing, setImporting] = useState(false);
   const [summary, setSummary] = useState<BulkImportSummary | null>(null);
@@ -61,6 +63,7 @@ export default function BulkImportPage() {
 
   function handleFile(file: File) {
     setFileName(file.name);
+    setFileEdited(false);
     setSummary(null);
     const reader = new FileReader();
     reader.onload = () => setCsvText(String(reader.result ?? ""));
@@ -102,6 +105,20 @@ export default function BulkImportPage() {
   const rowCount = currentPreview?.total ?? (text ? text.split("\n").length - 1 : 0);
   const canImport = Boolean(currentPreview) && currentPreview!.errors === 0 && !importing && !alreadyImported;
 
+  // The file card describes whatever is in the box, whether it came from a file or was
+  // pasted, so pasted CSV no longer shows "No file selected · 0 KB" (UI review #21).
+  const sourceLabel = fileName ? (fileEdited ? `${fileName} (edited)` : fileName) : text ? "Pasted CSV" : "No file selected";
+  const bytes = new TextEncoder().encode(csvText).length;
+  const sizeLabel = bytes < 1024 ? `${bytes} byte${bytes !== 1 ? "s" : ""}` : `${(bytes / 1024).toFixed(1)} KB`;
+
+  function clearCsv() {
+    setCsvText("");
+    setFileName(null);
+    setFileEdited(false);
+    setSummary(null);
+    setError(null);
+  }
+
   return (
     <div className="flex flex-col gap-4.5">
       <PageHeader eyebrow="Bulk product import" title="Import from CSV" />
@@ -121,9 +138,9 @@ export default function BulkImportPage() {
                 <span className="font-adm-mono text-xs md:text-[10px]">CSV</span>
               </div>
               <div className="min-w-0 flex-1 basis-40">
-                <div className="text-base font-medium break-all md:text-[13.5px]">{fileName ?? "No file selected"}</div>
+                <div className="text-base font-medium break-all md:text-[13.5px]">{sourceLabel}</div>
                 <div className="font-adm-mono mt-1 text-sm text-adm-ink-3 md:text-[11px]">
-                  {csvText ? `${(csvText.length / 1024).toFixed(0)} KB · ${rowCount} rows` : "Drop a CSV here, or browse"}
+                  {text ? `${sizeLabel} · ${rowCount} row${rowCount !== 1 ? "s" : ""}` : "Drop a CSV here, browse, or paste below"}
                 </div>
               </div>
               <input
@@ -131,8 +148,16 @@ export default function BulkImportPage() {
                 type="file"
                 accept=".csv,text/csv"
                 className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFile(e.target.files[0]);
+                  e.target.value = ""; // so choosing the same file again still loads it
+                }}
               />
+              {text && (
+                <AdmButton variant="secondary" className="w-full sm:w-auto" onClick={clearCsv}>
+                  Clear
+                </AdmButton>
+              )}
               <AdmButton variant="secondary" className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()}>
                 Browse file
               </AdmButton>
@@ -144,7 +169,7 @@ export default function BulkImportPage() {
               value={csvText}
               onChange={(e) => {
                 setCsvText(e.target.value);
-                setFileName(null);
+                if (fileName) setFileEdited(true);
                 setSummary(null);
               }}
               aria-label="CSV contents"
@@ -170,7 +195,7 @@ export default function BulkImportPage() {
                       <StatusPill tone="bad">{currentPreview.errors} ERROR{currentPreview.errors !== 1 ? "S" : ""}</StatusPill>
                       <span className="text-base text-adm-ink-2 md:text-sm">
                         {currentPreview.errors > 0
-                          ? `Fix the ${currentPreview.errors} row${currentPreview.errors !== 1 ? "s" : ""} marked ERROR in your file, then load it again.`
+                          ? `Fix the ${currentPreview.errors} row${currentPreview.errors !== 1 ? "s" : ""} marked ERROR, in the box above or in your file, and the preview updates.`
                           : "All rows are ready to import."}
                       </span>
                     </div>
