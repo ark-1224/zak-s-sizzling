@@ -81,6 +81,12 @@ export interface OrderItemDTO {
   specialInstructions: string | null;
 }
 
+/** Which payment methods the kiosk can offer right now (GET /api/payments/options). */
+export interface PaymentOptions {
+  /** False until PayMongo is configured on the server: GCash and Maya can't be used yet. */
+  online: boolean;
+}
+
 export interface PaymentDTO {
   method: PaymentMethod;
   status: PaymentStatus;

@@ -28,8 +28,25 @@ afterAll(() => {
 
 const soda = PRODUCTS.soda;
 const sodaStock = async () => (await prisma.inventory.findUniqueOrThrow({ where: { productId: soda.id } })).stockQty;
-const placeGcashOrder = async (qty: number) =>
-  (await request(app).post("/api/orders").set("Authorization", `Bearer ${customer}`).send({ items: [{ productId: soda.id, qty }], paymentMethod: "gcash" })).body;
+
+// The API only checks that a PayMongo key is present before offering GCash and Maya;
+// PayMongo itself is never called with it.
+const FAKE_SECRET_KEY = "sk_test_not_a_real_key";
+async function withPaymongoKey<T>(fn: () => Promise<T>): Promise<T> {
+  const before = process.env.PAYMONGO_SECRET_KEY;
+  process.env.PAYMONGO_SECRET_KEY = before ?? FAKE_SECRET_KEY;
+  try {
+    return await fn();
+  } finally {
+    if (before === undefined) delete process.env.PAYMONGO_SECRET_KEY;
+    else process.env.PAYMONGO_SECRET_KEY = before;
+  }
+}
+
+const postOrder = (qty: number) =>
+  request(app).post("/api/orders").set("Authorization", `Bearer ${customer}`).send({ items: [{ productId: soda.id, qty }], paymentMethod: "gcash" });
+/** A customer chose GCash while online payment was set up. */
+const placeGcashOrder = async (qty: number) => (await withPaymongoKey(() => postOrder(qty))).body;
 
 function paidEvent(orderId: string, type = "checkout_session.payment.paid") {
   return JSON.stringify({ data: { attributes: { type, data: { attributes: { reference_number: orderId } } } } });
@@ -56,6 +73,15 @@ describe("starting an online payment", () => {
 
     expect(res.status).toBe(501);
     expect(res.body.error).toMatch(/Online payment isn't configured yet/);
+  });
+
+  it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("turns that order into a counter order, still unpaid, so staff see it as one", async () => {
+    const order = await placeGcashOrder(1);
+    expect(order.payment.method).toBe("gcash");
+
+    await request(app).post("/api/payments/intent").set("Authorization", `Bearer ${customer}`).send({ orderId: order.id, method: "gcash" });
+
+    expect(await prisma.payment.findUniqueOrThrow({ where: { orderId: order.id } })).toMatchObject({ method: "counter", status: "pending" });
   });
 
   it("rejects an unsupported payment method", async () => {
@@ -214,5 +240,24 @@ describe("an online order cancelled before the payment arrived", () => {
     const res = await request(app).get("/api/orders?unpaid=1").set("Authorization", `Bearer ${staff}`);
 
     expect(res.body.find((o: { id: string }) => o.id === order.id)).toMatchObject({ status: "cancelled", stockIssue: true });
+  });
+});
+
+describe("which payment methods the kiosk offers (UI review #2)", () => {
+  const options = async () => (await request(app).get("/api/payments/options")).body;
+
+  it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("reports online payment as unavailable while PayMongo has no key", async () => {
+    expect(await options()).toEqual({ online: false });
+  });
+
+  it("reports online payment as available once PayMongo has a key", async () => {
+    expect(await withPaymongoKey(options)).toEqual({ online: true });
+  });
+
+  it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("records a GCash order as a counter order while online payment isn't set up", async () => {
+    const res = await postOrder(1);
+
+    expect(res.status).toBe(201);
+    expect(res.body.payment).toMatchObject({ method: "counter", status: "pending" });
   });
 });

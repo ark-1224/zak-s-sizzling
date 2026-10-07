@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
-import { createCheckoutSession, parseWebhookEvent, verifyWebhookSignature } from "../../lib/paymongo";
+import { createCheckoutSession, isPaymongoConfigured, parseWebhookEvent, PaymongoNotConfiguredError, verifyWebhookSignature } from "../../lib/paymongo";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
@@ -45,6 +45,16 @@ function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSes
 
 export async function createGatewayPaymentIntent(orderId: string, method: "gcash" | "maya", webOrigin: string) {
   const order = await loadPayableOrder(orderId);
+  if (!isPaymongoConfigured()) {
+    // The kiosk falls back to "Pay at counter" on this error, so record the order as a
+    // counter order too, and staff see it labelled that way (UI review #2).
+    await prisma.payment.upsert({
+      where: { orderId: order.id },
+      update: { method: "counter" },
+      create: { orderId: order.id, method: "counter", status: "pending", amount: order.totalAmount },
+    });
+    throw new PaymongoNotConfiguredError();
+  }
 
   const session = await createCheckoutSession({
     orderId: order.id,

@@ -16,6 +16,31 @@ import type { OrderDTO } from "@zaks/shared-types";
 // Each order shows how long ago it was placed, and the list can be searched by order
 // number (the customer reads it off their receipt screen). An abandoned unpaid order
 // can be cancelled, after a second click to make sure (UI review #15).
+const ONLINE_LABEL: Record<string, string> = { gcash: "GCash", maya: "Maya" };
+
+/**
+ * The customer pays at the counter unless an online payment was started: a GCash or
+ * Maya order with no PayMongo reference never reached the payment page (for example,
+ * online payment wasn't set up), so it's labelled a counter order (UI review #2).
+ */
+function paymentLabel(order: OrderDTO): { method: string; note?: string } {
+  const payment = order.payment;
+  if (!payment || payment.method === "counter") return { method: "Counter" };
+  const online = ONLINE_LABEL[payment.method] ?? payment.method;
+  if (payment.status !== "paid" && !payment.reference) return { method: "Counter", note: `chose ${online}, but online payment didn't start` };
+  return { method: online };
+}
+
+function PaymentMethodText({ order }: { order: OrderDTO }) {
+  const { method, note } = paymentLabel(order);
+  return (
+    <>
+      {method}
+      {note && <span className="italic"> ({note})</span>}
+    </>
+  );
+}
+
 export default function StaffOrdersPage() {
   const [orders, setOrders] = useState<OrderDTO[]>([]);
   // `loaded` turns true after the first successful load and stays true, so a later
@@ -158,7 +183,7 @@ export default function StaffOrdersPage() {
                         {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
                       </div>
                       <div className="mt-1 text-sm text-adm-ink-3">
-                        <span className="capitalize">{order.payment?.method ?? "counter"}</span> · ₱{order.totalAmount.toFixed(2)}
+                        <PaymentMethodText order={order} /> · ₱{order.totalAmount.toFixed(2)}
                         {order.payment?.status === "paid" && " · paid"} ·{" "}
                         <time dateTime={order.createdAt} title={formatDateTime(order.createdAt)}>
                           placed {timeAgo(order.createdAt, now)}

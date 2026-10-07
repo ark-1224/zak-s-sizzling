@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/useCart";
@@ -12,7 +12,7 @@ import { categoryBgColor } from "@/lib/categoryColors";
 import { Icon } from "@/components/Icon";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
-import type { OrderDTO, PaymentMethod } from "@zaks/shared-types";
+import type { OrderDTO, PaymentMethod, PaymentOptions } from "@zaks/shared-types";
 
 const METHODS: { id: PaymentMethod; label: string; icon: string; blurb: string }[] = [
   { id: "counter", label: "Pay at counter", icon: "💵", blurb: "Cash or card with staff" },
@@ -27,6 +27,10 @@ const METHODS: { id: PaymentMethod; label: string; icon: string; blurb: string }
 // columns: the order summary on the left, payment on the right in a sticky panel so
 // "Place order" never scrolls out of view. Below lg it's one column with the total and
 // "Place order" in a sticky bottom bar.
+//
+// GCash and Maya stay greyed out until the server confirms online payment is set up
+// (GET /api/payments/options), so a customer can't pick a method that can't work
+// (UI review #2).
 export default function CheckoutPage() {
   const { lines, total, clearCart } = useCart();
   const { showToast } = useToast();
@@ -34,6 +38,18 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("counter");
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<OrderDTO | null>(null);
+  // null while checking; if the check fails, online payment is treated as unavailable.
+  const [onlineAvailable, setOnlineAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<PaymentOptions>("/api/payments/options")
+      .then((options) => !cancelled && setOnlineAvailable(options.online))
+      .catch(() => !cancelled && setOnlineAvailable(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // The idle-timeout only ran on the kiosk home page — a customer who walked away
   // mid-checkout (stuck on payment selection, or the receipt screen after ordering)
@@ -47,6 +63,7 @@ export default function CheckoutPage() {
   });
 
   async function handlePlaceOrder() {
+    const payWith: PaymentMethod = method !== "counter" && onlineAvailable !== true ? "counter" : method;
     setPlacing(true);
     try {
       await ensureKioskSession();
@@ -59,11 +76,11 @@ export default function CheckoutPage() {
             qty: l.qty,
             specialInstructions: l.instructions || undefined,
           })),
-          paymentMethod: method,
+          paymentMethod: payWith,
         }),
       });
 
-      if (method === "counter") {
+      if (payWith === "counter") {
         clearCart();
         setPlacedOrder(order);
         return;
@@ -73,16 +90,17 @@ export default function CheckoutPage() {
         const { checkoutUrl } = await apiFetch<{ checkoutUrl: string }>("/api/payments/intent", {
           method: "POST",
           auth: "kiosk",
-          body: JSON.stringify({ orderId: order.id, method }),
+          body: JSON.stringify({ orderId: order.id, method: payWith }),
         });
         clearCart();
         window.location.href = checkoutUrl; // hands off to PayMongo's hosted checkout
       } catch (err) {
         if (err instanceof ApiError && err.status === 501) {
-          // PayMongo isn't configured yet — the order still exists, just unpaid.
-          // Treat it like a counter order so the kiosk flow doesn't dead-end.
+          // PayMongo isn't configured yet — the order still exists, just unpaid, and the
+          // server has recorded it as a counter order. Show it as one so the kiosk flow
+          // doesn't dead-end.
           clearCart();
-          setPlacedOrder(order);
+          setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
           showToast("Online payment isn't set up yet — please pay at the counter.");
         } else {
           throw err;
@@ -196,15 +214,17 @@ export default function CheckoutPage() {
             </h2>
             <div role="radiogroup" aria-labelledby="payment-heading" className="mt-3 space-y-2.5">
               {METHODS.map((m) => {
-                const selected = method === m.id;
+                const unavailable = m.id !== "counter" && onlineAvailable !== true;
+                const selected = method === m.id && !unavailable;
                 return (
                   <button
                     key={m.id}
                     role="radio"
                     aria-checked={selected}
+                    disabled={unavailable}
                     onClick={() => setMethod(m.id)}
-                    className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 bg-white px-4 py-3 text-left transition-colors ${
-                      selected ? "border-matcha" : "border-line"
+                    className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors disabled:cursor-not-allowed ${
+                      unavailable ? "border-line bg-line/40 opacity-60" : selected ? "border-matcha bg-white" : "border-line bg-white"
                     }`}
                   >
                     <span className="text-2xl" aria-hidden="true">
@@ -212,7 +232,9 @@ export default function CheckoutPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-base font-semibold text-ink lg:text-lg">{m.label}</span>
-                      <span className="block text-sm text-ink-soft">{m.blurb}</span>
+                      <span className="block text-sm text-ink-soft">
+                        {!unavailable ? m.blurb : onlineAvailable === null ? "Checking…" : "Not available yet — please pay at the counter"}
+                      </span>
                     </span>
                     <span
                       aria-hidden="true"

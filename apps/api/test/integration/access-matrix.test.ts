@@ -38,6 +38,7 @@ const MATRIX: Entry[] = [
   { method: "get", route: "/api/products/", path: "/api/products", expected: PUBLIC },
   { method: "get", route: "/api/products/:id", path: `/api/products/${PRODUCTS.sisig.id}`, expected: PUBLIC },
   { method: "post", route: "/api/auth/kiosk-session", path: "/api/auth/kiosk-session", expected: PUBLIC },
+  { method: "get", route: "/api/payments/options", path: "/api/payments/options", expected: PUBLIC },
 
   // Any signed-in caller, including an anonymous kiosk session
   { method: "post", route: "/api/orders/", path: "/api/orders", body: {}, expected: SIGNED_IN },

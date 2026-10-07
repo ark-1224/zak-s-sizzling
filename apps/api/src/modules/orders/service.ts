@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
+import { isPaymongoConfigured } from "../../lib/paymongo";
 import { HttpError } from "../../middleware/errorHandler";
 import { assertStockForNewOrder, PRODUCT_STOCK_INCLUDE } from "../inventory/fulfillment";
 import type { OrderDTO } from "@zaks/shared-types";
@@ -89,6 +90,9 @@ export async function createOrder(input: CreateOrderInput) {
   });
 
   const totalAmount = lines.reduce((sum, l) => sum.add(l.subtotal), new Prisma.Decimal(0));
+  // Without PayMongo, GCash and Maya can't be paid, so such an order is a counter order
+  // from the start and the payment queue labels it that way (UI review #2).
+  const paymentMethod = input.paymentMethod && input.paymentMethod !== "counter" && !isPaymongoConfigured() ? "counter" : input.paymentMethod;
 
   // Order numbers are short and random — retry a few times on the rare collision
   // rather than serializing order creation behind a counter.
@@ -104,9 +108,7 @@ export async function createOrder(input: CreateOrderInput) {
           // Recording the intended method as a `pending` payment as soon as the order
           // exists (rather than only once it's paid) means the receipt screen and the
           // staff orders queue always have a payment record to read from — never null.
-          payment: input.paymentMethod
-            ? { create: { method: input.paymentMethod, status: "pending", amount: totalAmount } }
-            : undefined,
+          payment: paymentMethod ? { create: { method: paymentMethod, status: "pending", amount: totalAmount } } : undefined,
         },
         include: { items: { include: { product: true } }, payment: true },
       });

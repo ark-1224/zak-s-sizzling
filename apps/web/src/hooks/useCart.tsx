@@ -29,6 +29,9 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
+
+/** Instructions compared loosely, so "No onions" and " no onions " count as the same request. */
+const sameInstructions = (a: string, b: string) => a.trim().replace(/\s+/g, " ").toLowerCase() === b.trim().replace(/\s+/g, " ").toLowerCase();
 const STORAGE_KEY = "zaks.kiosk.cart";
 let cartIdSeq = 1;
 
@@ -58,20 +61,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
   }, [lines, hydrated]);
 
+  // The same dish with the same instructions goes on one line ("2 × Sisig") instead
+  // of two identical lines; different instructions keep their own line (UI review #3).
   function addToCart(product: Product, qty: number, instructions: string) {
-    setLines((prev) => [
-      ...prev,
-      {
-        cartId: `c${cartIdSeq++}`,
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        icon: product.icon,
-        categoryName: product.category?.name,
-        qty,
-        instructions,
-      },
-    ]);
+    setLines((prev) => {
+      const match = prev.find((l) => l.productId === product.id && sameInstructions(l.instructions, instructions));
+      if (match) return prev.map((l) => (l === match ? { ...l, qty: l.qty + qty } : l));
+      return [
+        ...prev,
+        {
+          cartId: `c${cartIdSeq++}`,
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          icon: product.icon,
+          categoryName: product.category?.name,
+          qty,
+          instructions: instructions.trim(),
+        },
+      ];
+    });
   }
 
   function changeQty(cartId: string, delta: number) {

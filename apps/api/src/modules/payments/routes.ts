@@ -3,13 +3,20 @@ import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { parseId } from "../../lib/ids";
-import { PaymongoNotConfiguredError } from "../../lib/paymongo";
+import { isPaymongoConfigured, PaymongoNotConfiguredError } from "../../lib/paymongo";
 import { createPaymentIntentSchema } from "./schema";
 import { confirmCounterPayment, createGatewayPaymentIntent, handleWebhook } from "./service";
+import type { PaymentOptions } from "@zaks/shared-types";
 
 export const paymentsRouter = Router();
 
 const WEB_ORIGIN = () => process.env.WEB_ORIGIN ?? "http://localhost:3000";
+
+// Public, so the kiosk can grey out GCash and Maya before anyone picks them (UI review #2).
+paymentsRouter.get("/options", (_req, res) => {
+  const options: PaymentOptions = { online: isPaymongoConfigured() };
+  res.json(options);
+});
 
 // GCash/Maya via PayMongo — see apps/api/src/lib/paymongo.ts. Returns 501 with a clear
 // message until PAYMONGO_SECRET_KEY is configured, so the kiosk can fall back to

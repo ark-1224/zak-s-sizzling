@@ -8,6 +8,11 @@ export class PaymongoNotConfiguredError extends Error {
   }
 }
 
+/** GCash and Maya work only once the server has a PayMongo secret key. */
+export function isPaymongoConfigured(): boolean {
+  return Boolean(process.env.PAYMONGO_SECRET_KEY);
+}
+
 function authHeader(): string {
   const secret = process.env.PAYMONGO_SECRET_KEY;
   if (!secret) throw new PaymongoNotConfiguredError();
