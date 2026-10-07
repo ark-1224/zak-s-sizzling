@@ -26,6 +26,8 @@ export default function BulkImportPage() {
   const [preview, setPreview] = useState<{ text: string; summary: BulkImportSummary } | null>(null);
   const [previewError, setPreviewError] = useState<{ text: string; message: string } | null>(null);
   const [importedText, setImportedText] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const text = csvText.trim();
@@ -63,6 +65,19 @@ export default function BulkImportPage() {
     const reader = new FileReader();
     reader.onload = () => setCsvText(String(reader.result ?? ""));
     reader.readAsText(file);
+  }
+
+  // A failed download used to do nothing visible; now it says why (UI review #12).
+  async function handleDownloadTemplate() {
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      await downloadAuthenticated("/api/products/import-template", "product_import_template.csv");
+    } catch (err) {
+      setDownloadError(err instanceof Error ? err.message : "The download failed. Try again.");
+    } finally {
+      setDownloading(false);
+    }
   }
 
   async function handleImport() {
@@ -238,11 +253,17 @@ export default function BulkImportPage() {
                 name), <strong>price</strong>. Optional: barcode, cost, stockQty, minStockThreshold, description.
               </p>
               <button
-                onClick={() => downloadAuthenticated("/api/products/import-template", "product_import_template.csv")}
-                className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent md:min-h-0 md:text-[12px]"
+                onClick={handleDownloadTemplate}
+                disabled={downloading}
+                className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent disabled:opacity-60 md:min-h-0 md:text-[12px]"
               >
-                product_import_template.csv ↓
+                {downloading ? "Downloading…" : "product_import_template.csv ↓"}
               </button>
+              {downloadError && (
+                <p role="alert" className="mt-2 text-base text-adm-bad md:text-[12px]">
+                  {downloadError}
+                </p>
+              )}
             </div>
           </Card>
           <Card title="How matching works">

@@ -14,7 +14,8 @@ export class ApiError extends Error {
 // requests in parallel) — sharing one in-flight refresh instead of racing several
 // keeps a single valid refresh token in play and avoids piling up redundant calls.
 let refreshInFlight: Promise<string> | null = null;
-function ensureFreshToken(): Promise<string> {
+/** Also used by downloadAuthenticated (lib/download.ts), which can't go through apiFetch. */
+export function ensureFreshToken(): Promise<string> {
   if (!refreshInFlight) {
     refreshInFlight = refreshAccessToken().finally(() => {
       refreshInFlight = null;
