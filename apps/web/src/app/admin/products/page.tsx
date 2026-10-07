@@ -14,6 +14,7 @@ export default function AdminProductsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState<Product | null | "new">(null);
   const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<number | "all">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,11 +46,27 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Search by name, barcode or category, ignoring case (UI review #16).
+  // Search by name, barcode or category, ignoring case, narrowed by the category
+  // dropdown; the two work together (UI review #16).
   const search = query.trim().toLowerCase();
-  const shown = search
-    ? products.filter((p) => [p.name, p.barcode ?? "", p.category?.name ?? ""].some((field) => field.toLowerCase().includes(search)))
-    : products;
+  const filtering = Boolean(search) || categoryFilter !== "all";
+  const shown = products.filter(
+    (p) =>
+      (categoryFilter === "all" || p.categoryId === categoryFilter) &&
+      (!search || [p.name, p.barcode ?? "", p.category?.name ?? ""].some((field) => field.toLowerCase().includes(search)))
+  );
+  const countIn = (categoryId: number) => products.filter((p) => p.categoryId === categoryId).length;
+  const filterLabel = [
+    search && `match “${query.trim()}”`,
+    categoryFilter !== "all" && `in ${categories.find((c) => c.id === categoryFilter)?.name ?? "this category"}`,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  function clearFilters() {
+    setQuery("");
+    setCategoryFilter("all");
+  }
 
   return (
     <div className="flex flex-col gap-4.5">
@@ -80,19 +97,32 @@ export default function AdminProductsPage() {
             aria-label="Search products by name, barcode or category"
             className={`sm:max-w-96 ${admInputClass}`}
           />
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+            aria-label="Filter products by category"
+            className={`sm:max-w-60 ${admInputClass}`}
+          >
+            <option value="all">All categories</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} ({countIn(c.id)})
+              </option>
+            ))}
+          </select>
           <span className="text-sm text-adm-ink-3" aria-live="polite">
-            {search ? `${shown.length} of ${products.length} products` : `${products.length} products`}
+            {filtering ? `${shown.length} of ${products.length} products` : `${products.length} products`}
           </span>
         </div>
       )}
 
       {loading ? (
         <div className="text-adm-ink-3">Loading…</div>
-      ) : search && shown.length === 0 ? (
+      ) : filtering && shown.length === 0 ? (
         <div className="flex flex-wrap items-center gap-3 text-adm-ink-3">
-          No products match &ldquo;{query.trim()}&rdquo;.
-          <AdmButton variant="secondary" size="compact" onClick={() => setQuery("")}>
-            Clear search
+          No products {filterLabel}.
+          <AdmButton variant="secondary" size="compact" onClick={clearFilters}>
+            {search && categoryFilter !== "all" ? "Clear search and filter" : search ? "Clear search" : "Show all categories"}
           </AdmButton>
         </div>
       ) : (
