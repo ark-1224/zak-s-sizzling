@@ -58,7 +58,8 @@ export function AdjustStockModal({
 }: {
   product: Product;
   onClose: () => void;
-  onSaved: () => void;
+  /** Called with the product as saved, including its new stock count. */
+  onSaved: (updated: Product) => void;
 }) {
   const currentQty = product.stockQty ?? 0;
   const [mode, setMode] = useState<"delta" | "set">("delta");
@@ -104,7 +105,7 @@ export function AdjustStockModal({
     setSaving(true);
     setError(null);
     try {
-      await apiFetch(`/api/inventory/${product.id}`, {
+      const updated = await apiFetch<Product>(`/api/inventory/${product.id}`, {
         method: "PATCH",
         auth: "staff",
         body: JSON.stringify({
@@ -113,7 +114,7 @@ export function AdjustStockModal({
           note: note.trim() || undefined,
         }),
       });
-      onSaved();
+      onSaved(updated);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save the adjustment.");
     } finally {

@@ -22,7 +22,8 @@ export function RawMaterialForm({
 }: {
   material: RawMaterialDTO | null; // null = create mode
   onClose: () => void;
-  onSaved: () => void;
+  /** Called with the saved raw material; `created` is true for a new one. */
+  onSaved: (saved: RawMaterialDTO, created: boolean) => void;
 }) {
   const [name, setName] = useState(material?.name ?? "");
   const [unit, setUnit] = useState<MaterialUnit>(material?.unit ?? "g");
@@ -39,7 +40,7 @@ export function RawMaterialForm({
     setError(null);
     try {
       if (material) {
-        await apiFetch(`/api/raw-materials/${material.id}`, {
+        const saved = await apiFetch<RawMaterialDTO>(`/api/raw-materials/${material.id}`, {
           method: "PUT",
           auth: "staff",
           body: JSON.stringify({
@@ -49,8 +50,9 @@ export function RawMaterialForm({
             isActive,
           }),
         });
+        onSaved(saved, false);
       } else {
-        await apiFetch("/api/raw-materials", {
+        const saved = await apiFetch<RawMaterialDTO>("/api/raw-materials", {
           method: "POST",
           auth: "staff",
           body: JSON.stringify({
@@ -61,8 +63,8 @@ export function RawMaterialForm({
             costPerUnit: costPerUnit === "" ? undefined : Number(costPerUnit),
           }),
         });
+        onSaved(saved, true);
       }
-      onSaved();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save the raw material.");
     } finally {

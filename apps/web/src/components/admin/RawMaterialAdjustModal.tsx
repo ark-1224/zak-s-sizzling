@@ -26,7 +26,8 @@ export function RawMaterialAdjustModal({
 }: {
   material: RawMaterialDTO;
   onClose: () => void;
-  onSaved: () => void;
+  /** Called with the raw material as saved, including its new amount. */
+  onSaved: (updated: RawMaterialDTO) => void;
 }) {
   const current = material.stockQty;
   const [mode, setMode] = useState<"add" | "remove" | "set">("add");
@@ -70,7 +71,7 @@ export function RawMaterialAdjustModal({
     setSaving(true);
     setError(null);
     try {
-      await apiFetch(`/api/raw-materials/${material.id}/stock`, {
+      const updated = await apiFetch<RawMaterialDTO>(`/api/raw-materials/${material.id}/stock`, {
         method: "PATCH",
         auth: "staff",
         body: JSON.stringify({
@@ -79,7 +80,7 @@ export function RawMaterialAdjustModal({
           note: note.trim() || undefined,
         }),
       });
-      onSaved();
+      onSaved(updated);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save the change.");
     } finally {

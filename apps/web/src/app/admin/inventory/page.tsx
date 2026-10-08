@@ -6,6 +6,7 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
 import { PageHeader, Card, AdmButton, admButtonClass } from "@/components/admin/ui";
 import { AdjustStockModal, REASON_LABELS } from "@/components/admin/AdjustStockModal";
+import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import type { Product, StockAdjustmentDTO } from "@zaks/shared-types";
 
 // A recipe dish has no count of its own: its stock is the servings its raw materials
@@ -41,6 +42,7 @@ export default function AdminInventoryPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [adjustingProduct, setAdjustingProduct] = useState<Product | null>(null);
+  const success = useSuccessMessage();
 
   // loadLog is triggered from several independent places (dropdown change, the
   // inventory:updated socket handler, initial mount, post-save refresh) with no
@@ -104,7 +106,8 @@ export default function AdminInventoryPage() {
     };
   }, [logProductId, loadLog]);
 
-  async function handleSaved() {
+  async function handleSaved(updated: Product) {
+    success.show(`${updated.name} stock: ${adjustingProduct?.stockQty ?? 0} → ${updated.stockQty ?? 0}`);
     setAdjustingProduct(null);
     await Promise.all([load(), loadLog(logProductId)]);
   }
@@ -112,6 +115,7 @@ export default function AdminInventoryPage() {
   return (
     <div className="flex flex-col gap-4.5">
       <PageHeader eyebrow="Stock adjustments" title="Inventory" />
+      <SuccessMessage text={success.text} onDismiss={success.clear} />
 
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 

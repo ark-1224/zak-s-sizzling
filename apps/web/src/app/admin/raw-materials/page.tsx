@@ -6,6 +6,7 @@ import { getStoredUser } from "@/lib/auth";
 import { getSocket } from "@/lib/websocket";
 import { formatMaterialQty } from "@/lib/units";
 import { PageHeader, Card, AdmButton, StatusPill } from "@/components/admin/ui";
+import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import { REASON_LABELS } from "@/components/admin/AdjustStockModal";
 import { RawMaterialAdjustModal } from "@/components/admin/RawMaterialAdjustModal";
 import { RawMaterialForm } from "@/components/admin/RawMaterialForm";
@@ -37,6 +38,7 @@ export default function AdminRawMaterialsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [adjusting, setAdjusting] = useState<RawMaterialDTO | null>(null);
   const [editing, setEditing] = useState<RawMaterialDTO | "new" | null>(null);
+  const success = useSuccessMessage();
   const [isAdmin] = useState(() => getStoredUser()?.role === "admin");
 
   // Bumped to refetch after a save or a live update. Each effect ignores the response
@@ -87,8 +89,14 @@ export default function AdminRawMaterialsPage() {
     };
   }, []);
 
-  function handleSaved() {
+  function handleAdjusted(updated: RawMaterialDTO) {
+    success.show(`${updated.name}: ${formatMaterialQty(adjusting?.stockQty ?? 0, updated.unit)} → ${formatMaterialQty(updated.stockQty, updated.unit)}`);
     setAdjusting(null);
+    refresh();
+  }
+
+  function handleSaved(saved: RawMaterialDTO, created: boolean) {
+    success.show(created ? `${saved.name} added` : `${saved.name} saved`);
     setEditing(null);
     refresh();
   }
@@ -109,6 +117,7 @@ export default function AdminRawMaterialsPage() {
         }
       />
 
+      <SuccessMessage text={success.text} onDismiss={success.clear} />
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
       {low.length > 0 && (
@@ -279,7 +288,7 @@ export default function AdminRawMaterialsPage() {
         )}
       </Card>
 
-      {adjusting && <RawMaterialAdjustModal material={adjusting} onClose={() => setAdjusting(null)} onSaved={handleSaved} />}
+      {adjusting && <RawMaterialAdjustModal material={adjusting} onClose={() => setAdjusting(null)} onSaved={handleAdjusted} />}
       {editing && <RawMaterialForm material={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
     </div>
   );

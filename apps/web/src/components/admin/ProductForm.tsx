@@ -21,7 +21,8 @@ interface ProductFormProps {
   product: Product | null; // null = create mode
   categories: Category[];
   onClose: () => void;
-  onSaved: () => void;
+  /** Called with the saved product; `created` is true for a new one. */
+  onSaved: (saved: Product, created: boolean) => void;
 }
 
 export function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps) {
@@ -89,11 +90,10 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
           : { recipe: recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) }),
       };
       if (product) {
-        await apiFetch(`/api/products/${product.id}`, { method: "PUT", auth: "staff", body: JSON.stringify(body) });
+        onSaved(await apiFetch<Product>(`/api/products/${product.id}`, { method: "PUT", auth: "staff", body: JSON.stringify(body) }), false);
       } else {
-        await apiFetch("/api/products", { method: "POST", auth: "staff", body: JSON.stringify(body) });
+        onSaved(await apiFetch<Product>("/api/products", { method: "POST", auth: "staff", body: JSON.stringify(body) }), true);
       }
-      onSaved();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not save the product.");
     } finally {

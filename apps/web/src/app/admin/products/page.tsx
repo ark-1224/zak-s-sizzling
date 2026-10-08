@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import { PageHeader, Card, AdmButton, StatusPill, admButtonClass, admInputClass } from "@/components/admin/ui";
 import type { Category, Product } from "@zaks/shared-types";
 
@@ -14,6 +15,7 @@ export default function AdminProductsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState<Product | null | "new">(null);
   const [query, setQuery] = useState("");
+  const success = useSuccessMessage();
   const [categoryFilter, setCategoryFilter] = useState<number | "all">("all");
 
   const load = useCallback(async () => {
@@ -40,6 +42,7 @@ export default function AdminProductsPage() {
     if (!confirm(`Delete "${product.name}"? This can't be undone.`)) return;
     try {
       await apiFetch(`/api/products/${product.id}`, { method: "DELETE", auth: "staff" });
+      success.show(`${product.name} deleted`);
       await load();
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Could not delete the product.");
@@ -85,6 +88,7 @@ export default function AdminProductsPage() {
         }
       />
 
+      <SuccessMessage text={success.text} onDismiss={success.clear} />
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
       {!loading && products.length > 0 && (
@@ -216,8 +220,9 @@ export default function AdminProductsPage() {
           product={editing === "new" ? null : editing}
           categories={categories}
           onClose={() => setEditing(null)}
-          onSaved={() => {
+          onSaved={(saved, created) => {
             setEditing(null);
+            success.show(created ? `${saved.name} added` : `${saved.name} saved`);
             load();
           }}
         />

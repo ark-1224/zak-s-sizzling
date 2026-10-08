@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getStoredUser } from "@/lib/auth";
+import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import {
   PageHeader,
   Card,
@@ -35,6 +36,7 @@ export default function UsersPage() {
   const [creating, setCreating] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingChange | null>(null);
+  const success = useSuccessMessage();
 
   useEffect(() => {
     const me = getStoredUser();
@@ -65,6 +67,13 @@ export default function UsersPage() {
     setMessage(null);
     try {
       await apiFetch(`/api/users/${user.id}`, { method: "PATCH", auth: "staff", body: JSON.stringify(change) });
+      success.show(
+        change.role
+          ? `${user.name} is now ${change.role === "admin" ? "an Administrator" : "Staff"}`
+          : change.isActive
+            ? `${user.name} reactivated`
+            : `${user.name} suspended`
+      );
       await load();
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Could not update the account.");
@@ -104,6 +113,7 @@ export default function UsersPage() {
         }
       />
 
+      <SuccessMessage text={success.text} onDismiss={success.clear} />
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
@@ -218,8 +228,9 @@ export default function UsersPage() {
       {creating && (
         <CreateUserModal
           onClose={() => setCreating(false)}
-          onCreated={() => {
+          onCreated={(created) => {
             setCreating(false);
+            success.show(`Account created for ${created.name} (${created.role === "admin" ? "Administrator" : "Staff"})`);
             load();
           }}
         />
@@ -289,7 +300,7 @@ function RoleCard({ n, count, d }: { n: string; count: string; d: string }) {
   );
 }
 
-function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: (created: UserAccountDTO) => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -302,12 +313,12 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
     setSaving(true);
     setError(null);
     try {
-      await apiFetch("/api/users", {
+      const created = await apiFetch<UserAccountDTO>("/api/users", {
         method: "POST",
         auth: "staff",
         body: JSON.stringify({ name, email, password, role }),
       });
-      onCreated();
+      onCreated(created);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create the account.");
     } finally {
