@@ -5,9 +5,19 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { downloadAuthenticated } from "@/lib/download";
 import { PageHeader, Card, KpiTile, AdmButton } from "@/components/admin/ui";
-import type { InventoryMovementPoint, ProfitabilityPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
+import type { InventoryMovementPoint, Product, ProfitabilityPoint, RawMaterialDTO, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
 
 type Range = "daily" | "weekly" | "monthly";
+
+// What each range covers, matching the API's windows (reports/service.ts
+// rangeWindowDays). Every tile and card says which period it shows, because they
+// differ: revenue and orders follow the range, the product rankings are all-time
+// sales, and restock is right now (UI review #11).
+const RANGES: { id: Range; label: string; period: string; buckets: string }[] = [
+  { id: "daily", label: "Daily", period: "Last 14 days", buckets: "by day" },
+  { id: "weekly", label: "Weekly", period: "Last 8 weeks", buckets: "by week" },
+  { id: "monthly", label: "Monthly", period: "Last 6 months", buckets: "by month" },
+];
 
 export default function AnalyticsPage() {
   const [range, setRange] = useState<Range>("daily");
@@ -15,6 +25,9 @@ export default function AnalyticsPage() {
   const [topProducts, setTopProducts] = useState<TopProductPoint[]>([]);
   const [movement, setMovement] = useState<InventoryMovementPoint[]>([]);
   const [profitability, setProfitability] = useState<ProfitabilityPoint[]>([]);
+  // The same count as the dashboard's "Needs restock" tile: products at or below their
+  // own minimum (including sold out) plus low raw materials.
+  const [restockCount, setRestockCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -29,13 +42,16 @@ export default function AnalyticsPage() {
     async function load() {
       setLoading(true);
       try {
-        const [s, t, m, p] = await Promise.all([
+        const [s, t, m, p, low, materials] = await Promise.all([
           apiFetch<SalesReportPoint[]>(`/api/reports/sales?range=${range}`, { auth: "staff" }),
           apiFetch<TopProductPoint[]>("/api/reports/top-products?limit=8", { auth: "staff" }),
           apiFetch<InventoryMovementPoint[]>("/api/reports/inventory-movement", { auth: "staff" }),
           apiFetch<ProfitabilityPoint[]>("/api/reports/profitability", { auth: "staff" }),
+          apiFetch<Product[]>("/api/inventory/low-stock", { auth: "staff" }),
+          apiFetch<RawMaterialDTO[]>("/api/raw-materials", { auth: "staff" }),
         ]);
         if (cancelled) return;
+        setRestockCount(low.length + materials.filter((mat) => mat.isActive && mat.isLow).length);
         setSales(s);
         setTopProducts(t);
         setMovement(m);
@@ -60,6 +76,8 @@ export default function AnalyticsPage() {
 
   const totalRevenue = sales.reduce((s, p) => s + p.revenue, 0);
   const totalOrders = sales.reduce((s, p) => s + p.orderCount, 0);
+  const current = RANGES.find((r) => r.id === range)!;
+  const top = topProducts[0];
 
   async function handleExport(type: "sales" | "top-products" | "inventory-movement" | "profitability") {
     try {
@@ -78,37 +96,45 @@ export default function AnalyticsPage() {
 
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <span id="period-label" className="text-sm font-medium text-adm-ink-2">
+          Sales period
+        </span>
+        <div role="group" aria-labelledby="period-label" className="flex gap-1 rounded-[6px] border border-adm-line bg-adm-surface p-1">
+          {RANGES.map((r) => (
+            <button
+              key={r.id}
+              onClick={() => setRange(r.id)}
+              aria-pressed={range === r.id}
+              className={`min-h-11 flex-1 rounded-[4px] px-3 text-base font-medium transition-colors sm:flex-none md:min-h-8 md:text-[12.5px] ${
+                range === r.id ? "bg-adm-accent text-adm-accent-ink" : "text-adm-ink-2"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+        <span className="text-sm text-adm-ink-3">{current.period}, {current.buckets}</span>
+      </div>
+
       <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiTile label="Revenue" value={`₱${totalRevenue.toFixed(2)}`} />
-        <KpiTile label="Orders" value={String(totalOrders)} />
-        <KpiTile label="Top product" value={topProducts[0]?.productName ?? "—"} />
+        <KpiTile label="Revenue" value={`₱${totalRevenue.toFixed(2)}`} sub={current.period} />
+        <KpiTile label="Orders" value={String(totalOrders)} sub={`Paid orders · ${current.period.toLowerCase()}`} />
+        <KpiTile label="Top product" value={top?.productName ?? "—"} sub={top ? `All time · ${top.qtySold} sold` : "All time"} />
         <KpiTile
-          label="Low stock"
-          value={String(movement.filter((m) => (m.currentStock ?? 0) <= 5).length)}
+          label="Needs restock"
+          value={restockCount === null ? "—" : String(restockCount)}
+          sub="Right now · at or below minimum"
           color="var(--adm-warn)"
         />
       </div>
 
       <Card
-        title="Sales"
+        title={`Sales · ${current.period.toLowerCase()}, ${current.buckets}`}
         actions={
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            {(["daily", "weekly", "monthly"] as Range[]).map((r) => (
-              <button
-                key={r}
-                onClick={() => setRange(r)}
-                aria-pressed={range === r}
-                className={`min-h-11 rounded-[4px] border px-3 text-base font-medium md:min-h-0 md:px-2.5 md:py-1 md:text-[11.5px] ${
-                  range === r ? "border-adm-accent text-adm-accent" : "border-transparent text-adm-ink-2"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-            <AdmButton variant="secondary" size="compact" onClick={() => handleExport("sales")}>
-              Export CSV
-            </AdmButton>
-          </div>
+          <AdmButton variant="secondary" size="compact" onClick={() => handleExport("sales")}>
+            Export CSV
+          </AdmButton>
         }
       >
         <div className="p-4">
@@ -130,7 +156,7 @@ export default function AnalyticsPage() {
 
       <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-2">
         <Card
-          title="Top-selling products"
+          title="Top-selling products · all time"
           actions={
             <AdmButton variant="secondary" size="compact" onClick={() => handleExport("top-products")}>
               Export CSV
@@ -151,7 +177,7 @@ export default function AnalyticsPage() {
         </Card>
 
         <Card
-          title="Profitability per item"
+          title="Profitability per item · all-time sales"
           actions={
             <AdmButton variant="secondary" size="compact" onClick={() => handleExport("profitability")}>
               Export CSV
@@ -197,7 +223,7 @@ export default function AnalyticsPage() {
       </div>
 
       <Card
-        title="Inventory movement"
+        title="Inventory movement · sold all time, stock now"
         actions={
           <AdmButton variant="secondary" size="compact" onClick={() => handleExport("inventory-movement")}>
             Export CSV
