@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import { PageHeader, Card, AdmButton, StatusPill, admButtonClass, admInputClass } from "@/components/admin/ui";
 import type { Category, Product } from "@zaks/shared-types";
@@ -15,6 +16,7 @@ export default function AdminProductsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [editing, setEditing] = useState<Product | null | "new">(null);
   const [query, setQuery] = useState("");
+  const [deleting, setDeleting] = useState<Product | null>(null);
   const success = useSuccessMessage();
   const [categoryFilter, setCategoryFilter] = useState<number | "all">("all");
 
@@ -38,8 +40,9 @@ export default function AdminProductsPage() {
     load();
   }, [load]);
 
+  // Asked in the page's own dialog rather than the browser's confirm() box (UI review #17).
   async function handleDelete(product: Product) {
-    if (!confirm(`Delete "${product.name}"? This can't be undone.`)) return;
+    setMessage(null);
     try {
       await apiFetch(`/api/products/${product.id}`, { method: "DELETE", auth: "staff" });
       success.show(`${product.name} deleted`);
@@ -153,10 +156,10 @@ export default function AdminProductsPage() {
                   <dd className="font-adm-mono min-w-0 break-all text-adm-ink-2">{p.barcode ?? "—"}</dd>
                 </dl>
                 <div className="grid grid-cols-2 gap-2">
-                  <AdmButton variant="secondary" onClick={() => setEditing(p)}>
+                  <AdmButton variant="secondary" onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
                     Edit
                   </AdmButton>
-                  <AdmButton variant="danger" onClick={() => handleDelete(p)}>
+                  <AdmButton variant="danger" onClick={() => setDeleting(p)} aria-label={`Delete ${p.name}`}>
                     Delete
                   </AdmButton>
                 </div>
@@ -202,7 +205,7 @@ export default function AdminProductsPage() {
                         <AdmButton variant="secondary" size="row" onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
                           Edit
                         </AdmButton>
-                        <AdmButton variant="danger" size="row" onClick={() => handleDelete(p)} aria-label={`Delete ${p.name}`}>
+                        <AdmButton variant="danger" size="row" onClick={() => setDeleting(p)} aria-label={`Delete ${p.name}`}>
                           Delete
                         </AdmButton>
                       </div>
@@ -213,6 +216,20 @@ export default function AdminProductsPage() {
             </table>
           </div>
         </Card>
+      )}
+
+      {deleting && (
+        <ConfirmDialog
+          title={`Delete ${deleting.name}?`}
+          detail="It disappears from the menu and the kiosk, and this can't be undone. A product that has already been ordered can't be deleted; mark it unavailable instead."
+          confirmLabel="Yes, delete"
+          danger
+          onCancel={() => setDeleting(null)}
+          onConfirm={async () => {
+            await handleDelete(deleting);
+            setDeleting(null);
+          }}
+        />
       )}
 
       {editing && (

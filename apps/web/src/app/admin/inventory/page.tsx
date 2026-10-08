@@ -157,7 +157,7 @@ export default function AdminInventoryPage() {
                   {p.tracking === "recipe" ? (
                     <RecipeStockLink />
                   ) : (
-                    <AdmButton variant="secondary" className="shrink-0" onClick={() => setAdjustingProduct(p)}>
+                    <AdmButton variant="secondary" className="shrink-0" onClick={() => setAdjustingProduct(p)} aria-label={`Adjust stock of ${p.name}`}>
                       Adjust
                     </AdmButton>
                   )}

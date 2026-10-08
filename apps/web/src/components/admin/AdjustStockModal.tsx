@@ -181,14 +181,16 @@ export function AdjustStockModal({
                 +
               </button>
             </div>
-            <div className="mt-2 grid grid-cols-4 gap-1.5 md:flex md:justify-center">
+            {/* At least 32px tall on desktop (44px on touch), with room between (UI review #17). */}
+            <div className="mt-2 grid grid-cols-4 gap-2 md:flex md:justify-center">
               {[-5, -1, 1, 5].map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => bump(n)}
                   disabled={decreaseOnly && n > 0}
-                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-0 md:px-2 md:py-0.5 md:text-[11px] disabled:opacity-35"
+                  aria-label={n > 0 ? `Add ${n}` : `Remove ${-n}`}
+                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-8 md:min-w-12 md:px-3 md:text-[12.5px] disabled:opacity-35"
                 >
                   {n > 0 ? `+${n}` : n}
                 </button>

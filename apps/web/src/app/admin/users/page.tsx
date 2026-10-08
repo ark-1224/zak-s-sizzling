@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getStoredUser } from "@/lib/auth";
 import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
   PageHeader,
   Card,
@@ -153,7 +154,12 @@ export default function UsersPage() {
                     <option value="admin">Admin</option>
                     <option value="staff">Staff</option>
                   </select>
-                  <AdmButton variant="secondary" onClick={() => toggleActive(u)} disabled={u.id === meId}>
+                  <AdmButton
+                    variant="secondary"
+                    onClick={() => toggleActive(u)}
+                    disabled={u.id === meId}
+                    aria-label={`${u.isActive ? "Suspend" : "Reactivate"} ${u.name}`}
+                  >
                     {u.isActive ? "Suspend" : "Reactivate"}
                   </AdmButton>
                 </div>
@@ -250,41 +256,23 @@ function YouTag() {
 }
 
 function ConfirmChangeModal({ change, onCancel, onConfirm }: { change: PendingChange; onCancel: () => void; onConfirm: () => Promise<void> }) {
-  const [saving, setSaving] = useState(false);
   const name = change.user.name;
   const toAdmin = change.kind === "role" && change.role === "admin";
-  const title =
-    change.kind === "suspend" ? `Suspend ${name}?` : toAdmin ? `Make ${name} an Administrator?` : `Change ${name} to Staff?`;
-  const detail =
-    change.kind === "suspend"
-      ? "They won't be able to sign in, and they'll be signed out within 15 minutes. You can reactivate the account at any time."
-      : toAdmin
-        ? "They'll be able to change products, prices and costs, run bulk imports, see analytics and reports, and manage user accounts."
-        : "They'll keep orders, payments, the kitchen display and stock adjustments, but lose product, price, report and user administration.";
-  const confirmLabel = change.kind === "suspend" ? "Yes, suspend" : toAdmin ? "Yes, make Administrator" : "Yes, change to Staff";
-
-  async function handleConfirm() {
-    setSaving(true);
-    await onConfirm();
-  }
-
   return (
-    <div className={admModalBackdropClass}>
-      <div role="alertdialog" aria-modal="true" aria-labelledby="confirm-change-title" className={`${admModalPanelClass} max-w-md`}>
-        <h2 id="confirm-change-title" className="mb-2 text-lg font-semibold tracking-tight break-words">
-          {title}
-        </h2>
-        <p className="mb-5 text-base leading-relaxed text-adm-ink-2 md:text-sm">{detail}</p>
-        <div className={admModalActionsClass}>
-          <AdmButton type="button" variant="secondary" onClick={onCancel} disabled={saving}>
-            Cancel
-          </AdmButton>
-          <AdmButton type="button" variant={change.kind === "suspend" ? "danger" : "primary"} onClick={handleConfirm} disabled={saving}>
-            {saving ? "Saving…" : confirmLabel}
-          </AdmButton>
-        </div>
-      </div>
-    </div>
+    <ConfirmDialog
+      title={change.kind === "suspend" ? `Suspend ${name}?` : toAdmin ? `Make ${name} an Administrator?` : `Change ${name} to Staff?`}
+      detail={
+        change.kind === "suspend"
+          ? "They won't be able to sign in, and they'll be signed out within 15 minutes. You can reactivate the account at any time."
+          : toAdmin
+            ? "They'll be able to change products, prices and costs, run bulk imports, see analytics and reports, and manage user accounts."
+            : "They'll keep orders, payments, the kitchen display and stock adjustments, but lose product, price, report and user administration."
+      }
+      confirmLabel={change.kind === "suspend" ? "Yes, suspend" : toAdmin ? "Yes, make Administrator" : "Yes, change to Staff"}
+      danger={change.kind === "suspend"}
+      onCancel={onCancel}
+      onConfirm={onConfirm}
+    />
   );
 }
 

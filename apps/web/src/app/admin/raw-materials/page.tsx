@@ -157,11 +157,11 @@ export default function AdminRawMaterialsPage() {
                     {m.usedBy.length > 0 && <div className="text-sm break-words text-adm-ink-3">Used in {m.usedBy.map((u) => u.productName).join(", ")}</div>}
                   </div>
                   <div className="flex shrink-0 flex-col gap-1.5">
-                    <AdmButton variant="secondary" onClick={() => setAdjusting(m)}>
+                    <AdmButton variant="secondary" onClick={() => setAdjusting(m)} aria-label={`Adjust ${m.name}`}>
                       Adjust
                     </AdmButton>
                     {isAdmin && (
-                      <AdmButton variant="secondary" onClick={() => setEditing(m)}>
+                      <AdmButton variant="secondary" onClick={() => setEditing(m)} aria-label={`Edit ${m.name}`}>
                         Edit
                       </AdmButton>
                     )}
@@ -209,11 +209,11 @@ export default function AdminRawMaterialsPage() {
                       </td>
                       <td className="px-4.5 py-3 text-right whitespace-nowrap">
                         <div className="inline-flex gap-2">
-                          <AdmButton variant="secondary" size="row" onClick={() => setAdjusting(m)}>
+                          <AdmButton variant="secondary" size="row" onClick={() => setAdjusting(m)} aria-label={`Adjust ${m.name}`}>
                             Adjust
                           </AdmButton>
                           {isAdmin && (
-                            <AdmButton variant="secondary" size="row" onClick={() => setEditing(m)}>
+                            <AdmButton variant="secondary" size="row" onClick={() => setEditing(m)} aria-label={`Edit ${m.name}`}>
                               Edit
                             </AdmButton>
                           )}
