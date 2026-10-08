@@ -21,6 +21,11 @@ import type { UserAccountDTO } from "@zaks/shared-types";
 // ability to create, manage, assign roles, and revoke user accounts for both admin
 // and front desk staff"). StaffGuard (in the layout) already keeps customers/logged-
 // out visitors out; this adds the narrower admin-only check on top.
+//
+// The signed-in admin's own row can't be suspended or have its role changed (the API
+// refuses it too), and changing a role or suspending someone asks first (UI review #14).
+type PendingChange = { user: UserAccountDTO; kind: "role"; role: "admin" | "staff" } | { user: UserAccountDTO; kind: "suspend" };
+
 export default function UsersPage() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
@@ -28,6 +33,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [meId, setMeId] = useState<string | null>(null);
+  const [pending, setPending] = useState<PendingChange | null>(null);
 
   useEffect(() => {
     const me = getStoredUser();
@@ -35,6 +42,7 @@ export default function UsersPage() {
       router.replace("/admin");
       return;
     }
+    setMeId(me.id);
     setChecked(true);
   }, [router]);
 
@@ -53,26 +61,30 @@ export default function UsersPage() {
     if (checked) load();
   }, [checked, load]);
 
-  async function toggleActive(user: UserAccountDTO) {
+  async function saveChange(user: UserAccountDTO, change: { isActive?: boolean; role?: "admin" | "staff" }) {
+    setMessage(null);
     try {
-      await apiFetch(`/api/users/${user.id}`, {
-        method: "PATCH",
-        auth: "staff",
-        body: JSON.stringify({ isActive: !user.isActive }),
-      });
+      await apiFetch(`/api/users/${user.id}`, { method: "PATCH", auth: "staff", body: JSON.stringify(change) });
       await load();
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Could not update the account.");
     }
   }
 
-  async function changeRole(user: UserAccountDTO, role: "admin" | "staff") {
-    try {
-      await apiFetch(`/api/users/${user.id}`, { method: "PATCH", auth: "staff", body: JSON.stringify({ role }) });
-      await load();
-    } catch (err) {
-      setMessage(err instanceof ApiError ? err.message : "Could not change role.");
-    }
+  // Suspending asks first; reactivating restores access, so it happens straight away.
+  function toggleActive(user: UserAccountDTO) {
+    if (user.isActive) setPending({ user, kind: "suspend" });
+    else saveChange(user, { isActive: true });
+  }
+
+  function changeRole(user: UserAccountDTO, role: "admin" | "staff") {
+    if (role !== user.role) setPending({ user, kind: "role", role });
+  }
+
+  async function confirmPending() {
+    if (!pending) return;
+    await saveChange(pending.user, pending.kind === "role" ? { role: pending.role } : { isActive: false });
+    setPending(null);
   }
 
   if (!checked) return null;
@@ -112,7 +124,9 @@ export default function UsersPage() {
                       {u.name.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-base font-medium break-words">{u.name}</div>
+                      <div className="text-base font-medium break-words">
+                        {u.name} {u.id === meId && <YouTag />}
+                      </div>
                       <div className="font-adm-mono text-sm break-all text-adm-ink-3">{u.email}</div>
                     </div>
                   </div>
@@ -122,16 +136,18 @@ export default function UsersPage() {
                   <select
                     value={u.role}
                     onChange={(e) => changeRole(u, e.target.value as "admin" | "staff")}
+                    disabled={u.id === meId}
                     aria-label={`Role for ${u.name}`}
-                    className={admInputClass}
+                    className={`${admInputClass} disabled:opacity-60`}
                   >
                     <option value="admin">Admin</option>
                     <option value="staff">Staff</option>
                   </select>
-                  <AdmButton variant="secondary" onClick={() => toggleActive(u)}>
+                  <AdmButton variant="secondary" onClick={() => toggleActive(u)} disabled={u.id === meId}>
                     {u.isActive ? "Suspend" : "Reactivate"}
                   </AdmButton>
                 </div>
+                {u.id === meId && <p className="text-sm text-adm-ink-3">{SELF_NOTE}</p>}
               </li>
             ))}
           </ul>
@@ -154,7 +170,9 @@ export default function UsersPage() {
                           {u.name.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium">{u.name}</div>
+                          <div className="font-medium">
+                            {u.name} {u.id === meId && <YouTag />}
+                          </div>
                           <div className="font-adm-mono text-[10.5px] text-adm-ink-3">{u.email}</div>
                         </div>
                       </div>
@@ -163,8 +181,10 @@ export default function UsersPage() {
                       <select
                         value={u.role}
                         onChange={(e) => changeRole(u, e.target.value as "admin" | "staff")}
+                        disabled={u.id === meId}
+                        title={u.id === meId ? SELF_NOTE : undefined}
                         aria-label={`Role for ${u.name}`}
-                        className="min-h-8 rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-[12px]"
+                        className="min-h-8 rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-[12px] disabled:opacity-60"
                       >
                         <option value="admin">Admin</option>
                         <option value="staff">Staff</option>
@@ -178,6 +198,8 @@ export default function UsersPage() {
                         variant="secondary"
                         size="row"
                         onClick={() => toggleActive(u)}
+                        disabled={u.id === meId}
+                        title={u.id === meId ? SELF_NOTE : undefined}
                         aria-label={`${u.isActive ? "Suspend" : "Reactivate"} ${u.name}`}
                       >
                         {u.isActive ? "Suspend" : "Reactivate"}
@@ -191,6 +213,8 @@ export default function UsersPage() {
         </Card>
       )}
 
+      {pending && <ConfirmChangeModal change={pending} onCancel={() => setPending(null)} onConfirm={confirmPending} />}
+
       {creating && (
         <CreateUserModal
           onClose={() => setCreating(false)}
@@ -200,6 +224,55 @@ export default function UsersPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+const SELF_NOTE = "You can't suspend your own account or change its role. Another admin can.";
+
+function YouTag() {
+  return (
+    <span className="font-adm-mono ml-1 rounded-[3px] border border-adm-line px-1.5 py-0.5 align-middle text-[10px] font-normal text-adm-ink-3">
+      YOU
+    </span>
+  );
+}
+
+function ConfirmChangeModal({ change, onCancel, onConfirm }: { change: PendingChange; onCancel: () => void; onConfirm: () => Promise<void> }) {
+  const [saving, setSaving] = useState(false);
+  const name = change.user.name;
+  const toAdmin = change.kind === "role" && change.role === "admin";
+  const title =
+    change.kind === "suspend" ? `Suspend ${name}?` : toAdmin ? `Make ${name} an Administrator?` : `Change ${name} to Staff?`;
+  const detail =
+    change.kind === "suspend"
+      ? "They won't be able to sign in, and they'll be signed out within 15 minutes. You can reactivate the account at any time."
+      : toAdmin
+        ? "They'll be able to change products, prices and costs, run bulk imports, see analytics and reports, and manage user accounts."
+        : "They'll keep orders, payments, the kitchen display and stock adjustments, but lose product, price, report and user administration.";
+  const confirmLabel = change.kind === "suspend" ? "Yes, suspend" : toAdmin ? "Yes, make Administrator" : "Yes, change to Staff";
+
+  async function handleConfirm() {
+    setSaving(true);
+    await onConfirm();
+  }
+
+  return (
+    <div className={admModalBackdropClass}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="confirm-change-title" className={`${admModalPanelClass} max-w-md`}>
+        <h2 id="confirm-change-title" className="mb-2 text-lg font-semibold tracking-tight break-words">
+          {title}
+        </h2>
+        <p className="mb-5 text-base leading-relaxed text-adm-ink-2 md:text-sm">{detail}</p>
+        <div className={admModalActionsClass}>
+          <AdmButton type="button" variant="secondary" onClick={onCancel} disabled={saving}>
+            Cancel
+          </AdmButton>
+          <AdmButton type="button" variant={change.kind === "suspend" ? "danger" : "primary"} onClick={handleConfirm} disabled={saving}>
+            {saving ? "Saving…" : confirmLabel}
+          </AdmButton>
+        </div>
+      </div>
     </div>
   );
 }

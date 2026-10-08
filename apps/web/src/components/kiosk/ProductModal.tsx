@@ -20,6 +20,14 @@ import { NutritionGrid } from "./NutritionGrid";
 const INSTRUCTIONS_MAX = 140; // matches the API/database limit for special instructions
 const FOOD_CHIPS = ["Extra spicy", "Not spicy", "No onions", "Well done", "Sauce on the side"];
 const DRINK_CHIPS = ["Less ice", "No ice", "Less sugar"];
+// Chips that contradict each other: picking one turns the other off, so the kitchen
+// never gets "Extra spicy, Not spicy" (UI review #4).
+const OPPOSITE_CHIP: Record<string, string> = {
+  "Extra spicy": "Not spicy",
+  "Not spicy": "Extra spicy",
+  "Less ice": "No ice",
+  "No ice": "Less ice",
+};
 const SEPARATOR = ", ";
 
 interface ProductModalProps {
@@ -53,12 +61,17 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
   // A chip that would push the combined text past the limit is disabled rather than
   // silently cutting the customer's note short.
+  // Picking a chip whose opposite is on frees the opposite's text, so it counts here.
   function chipFits(chip: string) {
-    return instructions.length + (instructions ? SEPARATOR.length : 0) + chip.length <= INSTRUCTIONS_MAX;
+    const opposite = OPPOSITE_CHIP[chip];
+    const freed = opposite && chips.includes(opposite) ? opposite.length + SEPARATOR.length : 0;
+    return instructions.length - freed + (instructions ? SEPARATOR.length : 0) + chip.length <= INSTRUCTIONS_MAX;
   }
 
   function toggleChip(chip: string) {
-    setChips((prev) => (prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip]));
+    setChips((prev) =>
+      prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev.filter((c) => c !== OPPOSITE_CHIP[chip]), chip]
+    );
   }
 
   // The kiosk's on-screen keyboard covers the bottom ~40% of the 600px screen, and on
