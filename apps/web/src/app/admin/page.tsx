@@ -59,6 +59,13 @@ export default function AdminDashboardPage() {
   const inventoryValueAtCost =
     products.filter((p) => p.tracking === "unit").reduce((sum, p) => sum + (p.cost ?? 0) * (p.stockQty ?? 0), 0) +
     materials.reduce((sum, m) => sum + (m.costPerUnit ?? 0) * m.stockQty, 0);
+  // The value only counts items with a cost recorded, so say how many that is
+  // (UI review #10): "At cost · 2 of 23 items have a cost".
+  const unitProducts = products.filter((p) => p.tracking === "unit");
+  const costedItems = unitProducts.filter((p) => p.cost != null).length + materials.filter((m) => m.costPerUnit != null).length;
+  const valuedItems = unitProducts.length + materials.length;
+  const inventoryValueSub =
+    costedItems === valuedItems ? "At cost" : `At cost · ${costedItems} of ${valuedItems} item${valuedItems !== 1 ? "s" : ""} have a cost`;
   const lowMaterials = materials.filter((m) => m.isActive && m.isLow);
   // Everything at or below its minimum, sold-out items included (UI review #9: leaving
   // them out made the tile disagree with the banner and hid the most urgent items).
@@ -107,7 +114,7 @@ export default function AdminDashboardPage() {
       <div className={`grid grid-cols-1 gap-3.5 sm:grid-cols-2 ${isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         <KpiTile label="Active SKUs" value={String(products.length)} sub={`${categoryCount} categories`} />
         {isAdmin && (
-          <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub="At cost" />
+          <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub={inventoryValueSub} />
         )}
         <KpiTile label="Needs restock" value={String(lowCount)} sub="At or below minimum, incl. sold out" color="var(--adm-warn)" />
         {/* The kiosk keeps sold-out items on the menu, marked "Sold out" (kiosk/ProductRow.tsx). */}

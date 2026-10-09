@@ -174,7 +174,7 @@ export default function BulkImportPage() {
               }}
               aria-label="CSV contents"
               placeholder={"name,barcode,category,price,cost,stockQty,minStockThreshold,description"}
-              className="font-adm-mono h-40 w-full resize-none bg-adm-bg p-4 text-base outline-none md:text-[12px]"
+              className="font-adm-mono h-40 w-full resize-none bg-adm-bg p-4 text-base md:text-[12px]"
             />
           </Card>
 

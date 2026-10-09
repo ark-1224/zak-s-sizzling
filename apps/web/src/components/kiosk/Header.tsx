@@ -79,7 +79,7 @@ function SearchField({
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         aria-label="Search menu"
-        className="min-h-12 w-full min-w-0 bg-transparent text-base text-cream outline-none placeholder:text-cream/70 sm:text-lg"
+        className="min-h-12 w-full min-w-0 bg-transparent text-base text-cream placeholder:text-cream/70 focus-visible:outline-honey-soft sm:text-lg"
       />
     </label>
   );

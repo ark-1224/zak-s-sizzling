@@ -179,7 +179,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     onFocus={handleNoteFocus}
-                    className="w-full scroll-mt-16 resize-none rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink outline-none focus:border-matcha"
+                    className="w-full scroll-mt-16 resize-none rounded-xl border border-line bg-white px-3.5 py-3 text-base text-ink focus:border-matcha"
                   />
                 </label>
                 <p className="mt-1 text-sm text-ink-soft">

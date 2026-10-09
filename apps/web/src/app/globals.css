@@ -8,9 +8,13 @@
   --paper: #efe0c4;
   --ink: #2a2018;
   --ink-soft: #6e5d4b;
-  --matcha: #d8592b; /* ember - primary brand accent */
+  /* ember - primary brand accent. Darkened from #d8592b so cream button text on it
+     reaches WCAG AA 4.5:1 (it was 3.4:1) (UI review #6). */
+  --matcha: #b84a20;
   --matcha-deep: #7a2a14; /* deep char-ember - header/active states */
-  --honey: #cc8a2e; /* mustard - price/cta accent */
+  /* mustard - cta accent. Lightened from #cc8a2e so the dark --matcha-deep text on
+     "Place order" and the basket buttons reaches 4.5:1 (it was 3.3:1) (UI review #6). */
+  --honey: #e0a85a;
   --honey-soft: #f1dbaa;
   --berry: #9c2e1c; /* chili - allergen accent */
   --available: #5f7a3d; /* olive green - in-stock signal only */
@@ -36,7 +40,8 @@
   --adm-line-soft: #eceae4;
   --adm-ink: #1c1b18;
   --adm-ink-2: #57534a;
-  --adm-ink-3: #8d887d;
+  /* Hints and labels: darkened from #8d887d (3.5:1 on white) to 5.7:1 (UI review #7). */
+  --adm-ink-3: #6b665c;
   --adm-accent: #b5502a;
   --adm-accent-ink: #ffffff;
   --adm-accent-soft: #f8ebe5;
@@ -125,4 +130,14 @@
 body {
   background: var(--cream);
   color: var(--ink);
+}
+
+/* A visible focus ring for keyboard users on every button, link and field
+   (UI review #26). In the base layer so a utility can recolour it where the
+   background is dark, e.g. the kiosk header's search box. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--matcha-deep);
+    outline-offset: 2px;
+  }
 }

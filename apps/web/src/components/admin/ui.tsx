@@ -105,7 +105,7 @@ export function StatusPill({ tone, children }: { tone: "ok" | "warn" | "bad"; ch
 
 /** Shared form-control styling: 16px on mobile (stops iOS Safari zooming in on focus), 44px tall. */
 export const admInputClass =
-  "w-full min-h-11 rounded-[5px] border border-adm-line bg-adm-bg px-3 text-base outline-none focus:border-adm-accent md:min-h-0 md:px-2.75 md:py-2.25 md:text-[13px]";
+  "w-full min-h-11 rounded-[5px] border border-adm-line bg-adm-bg px-3 text-base focus:border-adm-accent md:min-h-0 md:px-2.75 md:py-2.25 md:text-[13px]";
 
 export const admLabelClass = "mb-1.5 block text-sm font-medium text-adm-ink-2 md:text-[11.5px]";
 
