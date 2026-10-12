@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { HttpError } from "../../middleware/errorHandler";
+import { loginAddressLimit, loginAttemptLimit } from "../../middleware/rateLimit";
 import { loginSchema } from "./schema";
 import { createKioskSession, loginWithPassword, refreshAccessToken } from "./service";
 
@@ -20,11 +21,13 @@ function setRefreshCookie(res: Response, token: string) {
   });
 }
 
-// Staff/Admin login — Sprint 1
-authRouter.post("/login", async (req, res, next) => {
+// Staff/Admin login — Sprint 1. Failed attempts are rate limited (middleware/rateLimit.ts);
+// a successful sign-in clears that email's count from this address.
+authRouter.post("/login", loginAddressLimit, loginAttemptLimit, async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
     const { accessToken, refreshToken, user } = await loginWithPassword(email, password);
+    loginAttemptLimit.reset(req);
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken, user });
   } catch (err) {

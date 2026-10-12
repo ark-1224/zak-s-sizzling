@@ -18,6 +18,11 @@ import { usersRouter } from "./modules/users/routes";
 
 export function createApp() {
   const app = express();
+  // On Railway every request arrives through one proxy, which puts the visitor's
+  // address in X-Forwarded-For; trust that one hop so req.ip (used by the login rate
+  // limit) is the visitor, not the proxy. Not set locally, where nothing sits in
+  // front of the API and the header could be made up by the client.
+  if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
 
   app.use(helmet());
   app.use(compression());

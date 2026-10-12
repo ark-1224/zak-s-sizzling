@@ -2,6 +2,7 @@ import { Router } from "express";
 import { Prisma } from "@prisma/client";
 import { authenticate, type AuthenticatedRequest } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
+import { orderPlacementLimit } from "../../middleware/rateLimit";
 import { HttpError } from "../../middleware/errorHandler";
 import { prisma } from "../../lib/prisma";
 import { parseId } from "../../lib/ids";
@@ -12,7 +13,7 @@ export const ordersRouter = Router();
 
 // Kiosk checkout stub — creates a `pending` order + items in one shot.
 // Payment processing (and the resulting status transition) is wired up in Sprint 3.
-ordersRouter.post("/", authenticate, async (req: AuthenticatedRequest, res, next) => {
+ordersRouter.post("/", authenticate, orderPlacementLimit, async (req: AuthenticatedRequest, res, next) => {
   try {
     const body = createOrderSchema.parse(req.body);
     const order = await createOrder({ ...body, kioskSessionId: req.kioskSessionId });
