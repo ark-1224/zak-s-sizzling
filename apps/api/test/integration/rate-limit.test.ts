@@ -3,16 +3,19 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PASSWORD, PRODUCTS, USERS } from "./fixtures";
 import { app, kioskToken } from "./helpers";
 
-// Rate limits on signing in and placing orders (middleware/rateLimit.ts). The limits
-// are lowered here through their environment variables, which the API reads on every
-// request, and put back afterwards. Each test file loads its own copy of the API, so
-// the counts here never reach other files. The address-wide limit runs last, since it
-// stops every sign-in from this address for the rest of the file.
+// Rate limits on signing in, placing orders and starting kiosk sessions
+// (middleware/rateLimit.ts). The limits are lowered here through their environment
+// variables, which the API reads on every request, and put back afterwards. Each test
+// file loads its own copy of the API, so the counts here never reach other files.
+// The address-wide limits run last, since they stop every request of that kind from
+// this address for the rest of the file.
 
 const LIMITS = {
   RATE_LIMIT_LOGIN_FAILURES: "3",
-  RATE_LIMIT_LOGIN_FAILURES_PER_ADDRESS: "9",
+  RATE_LIMIT_LOGIN_FAILURES_PER_ADDRESS: "20",
   RATE_LIMIT_ORDERS_PER_MINUTE: "3",
+  RATE_LIMIT_ORDERS_PER_MINUTE_PER_ADDRESS: "8",
+  RATE_LIMIT_KIOSK_SESSIONS_PER_MINUTE: "15",
 };
 const previous: Record<string, string | undefined> = {};
 
@@ -31,6 +34,11 @@ afterAll(() => {
 });
 
 const login = (email: string, password: string) => request(app).post("/api/auth/login").send({ email, password });
+const order = (token: string) =>
+  request(app)
+    .post("/api/orders")
+    .set("Authorization", `Bearer ${token}`)
+    .send({ items: [{ productId: PRODUCTS.water.id, qty: 1 }], paymentMethod: "counter" });
 
 describe("signing in", () => {
   it("refuses a 4th wrong password for the same account with 429 and a Retry-After header", async () => {
@@ -48,6 +56,14 @@ describe("signing in", () => {
     const res = await login(USERS.admin.email, PASSWORD);
 
     expect(res.status).toBe(429);
+  });
+
+  it("lets no more than the limit through when many wrong passwords arrive at once", async () => {
+    const results = await Promise.all(Array.from({ length: 8 }, () => login("burst@test.local", "wrong-password")));
+    const statuses = results.map((r) => r.status);
+
+    expect(statuses.filter((s) => s === 401)).toHaveLength(3);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(5);
   });
 
   it("never limits correct sign-ins", async () => {
@@ -71,12 +87,6 @@ describe("signing in", () => {
 });
 
 describe("placing orders", () => {
-  const order = (token: string) =>
-    request(app)
-      .post("/api/orders")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ items: [{ productId: PRODUCTS.water.id, qty: 1 }], paymentMethod: "counter" });
-
   it("refuses a 4th order within a minute from the same kiosk session, with Retry-After", async () => {
     const session = await kioskToken();
     for (let i = 0; i < 3; i++) expect((await order(session)).status).toBe(201);
@@ -93,18 +103,40 @@ describe("placing orders", () => {
 
     expect((await order(other)).status).toBe(201);
   });
+
+  it("can't be dodged by starting a new kiosk session for every order", async () => {
+    // A fresh session per order never meets the per-session limit; the address limit stops it.
+    let last = 0;
+    let message = "";
+    for (let i = 0; i < 12 && last !== 429; i++) {
+      const res = await order(await kioskToken());
+      last = res.status;
+      message = res.body.error ?? "";
+    }
+
+    expect(last).toBe(429);
+    expect(message).toMatch(/^Too many orders from this network\./);
+  });
 });
 
-describe("signing in from one address with many different emails", () => {
-  it("refuses further attempts once the address reaches its limit", async () => {
-    // 8 failed sign-ins from this address so far (3 for the admin, 2 + 3 for staff; the
-    // 429s don't count). This 9th still gets the usual 401; then the address is at its limit.
-    const res1 = await login("nobody-1@test.local", "wrong-password");
-    expect(res1.status).toBe(401);
+describe("limits for a whole address", () => {
+  it("refuses sign-ins once the address reaches its limit, whatever the email", async () => {
+    let last = 0;
+    let message = "";
+    for (let i = 0; i < 25 && last !== 429; i++) {
+      const res = await login(`nobody-${i}@test.local`, "wrong-password");
+      last = res.status;
+      message = res.body.error ?? "";
+    }
 
-    const res = await login("nobody-2@test.local", "wrong-password");
+    expect(last).toBe(429);
+    expect(message).toMatch(/from this network/);
+  });
 
-    expect(res.status).toBe(429);
-    expect(res.body.error).toMatch(/from this network/);
+  it("refuses new kiosk sessions once the address reaches its limit", async () => {
+    let last = 0;
+    for (let i = 0; i < 20 && last !== 429; i++) last = (await request(app).post("/api/auth/kiosk-session")).status;
+
+    expect(last).toBe(429);
   });
 });

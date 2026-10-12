@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { HttpError } from "../../middleware/errorHandler";
-import { loginAddressLimit, loginAttemptLimit } from "../../middleware/rateLimit";
+import { kioskSessionLimit, loginAddressLimit, loginAttemptLimit } from "../../middleware/rateLimit";
 import { loginSchema } from "./schema";
 import { createKioskSession, loginWithPassword, refreshAccessToken } from "./service";
 
@@ -56,7 +56,7 @@ authRouter.post("/logout", (req, res) => {
 });
 
 // Anonymous kiosk session — used for cart/idle-timeout correlation
-authRouter.post("/kiosk-session", (req, res) => {
+authRouter.post("/kiosk-session", kioskSessionLimit, (req, res) => {
   const result = createKioskSession();
   res.json(result);
 });

@@ -9,9 +9,15 @@ import { HttpError } from "./errorHandler";
  *
  * Each limiter counts requests per key (an IP and email, a kiosk session...) inside
  * a window. Once a key reaches `max`, further requests get 429 with a Retry-After
- * header until the window ends. With `countWhen`, only matching responses count:
- * the login limit counts failed sign-ins only, so staff who type their password
- * correctly are never slowed down.
+ * header until the window ends.
+ *
+ * A request takes its slot as soon as it arrives, before the route runs, so many
+ * requests sent at once can't all slip past the same count. With `countWhen`, the
+ * slot is given back afterwards if the response doesn't match: the login limit keeps
+ * only failed sign-ins, so staff who type their password correctly are never slowed.
+ * The price: requests still in progress hold their slot, so more than `max` sign-ins
+ * to one account from one address at the very same moment would be refused, which a
+ * real person never does.
  */
 export interface RateLimitOptions {
   windowMs: number;
@@ -19,7 +25,7 @@ export interface RateLimitOptions {
   max: () => number;
   /** null skips the limit for this request. */
   key: (req: Request) => string | null;
-  /** Count a request only when its response matches (default: every request counts). */
+  /** Keep a request's slot only when its response matches (default: every request counts). */
   countWhen?: (res: Response) => boolean;
   message: (retryAfterSeconds: number) => string;
 }
@@ -35,22 +41,43 @@ export interface RateLimiter {
   reset: (req: Request) => void;
 }
 
+/** Upper bound on keys held per limiter, so a flood of distinct keys can't exhaust memory. */
+const MAX_KEYS = 50_000;
+
 export function rateLimit(options: RateLimitOptions): RateLimiter {
   const entries = new Map<string, Entry>();
 
-  // Drop finished windows now and then, so the map can't grow without limit.
-  const sweep = setInterval(() => {
-    const now = Date.now();
+  function sweepExpired(now: number) {
     for (const [key, entry] of entries) if (entry.resetAt <= now) entries.delete(key);
-  }, options.windowMs);
+  }
+
+  // Drop finished windows now and then, so the map doesn't keep stale keys.
+  const sweep = setInterval(() => sweepExpired(Date.now()), options.windowMs);
   sweep.unref();
 
-  function current(key: string, now: number): Entry {
+  /** The live entry for a key, or undefined. Reading never stores anything. */
+  function live(key: string, now: number): Entry | undefined {
     const entry = entries.get(key);
-    if (entry && entry.resetAt > now) return entry;
-    const fresh = { count: 0, resetAt: now + options.windowMs };
-    entries.set(key, fresh);
-    return fresh;
+    return entry && entry.resetAt > now ? entry : undefined;
+  }
+
+  /** Takes a slot for a key, creating its entry only now that something is counted. */
+  function take(key: string, now: number): Entry {
+    let entry = live(key, now);
+    if (!entry) {
+      if (entries.size >= MAX_KEYS) {
+        sweepExpired(now);
+        // Still full: drop the oldest keys (a Map keeps insertion order).
+        for (const oldest of entries.keys()) {
+          if (entries.size < MAX_KEYS) break;
+          entries.delete(oldest);
+        }
+      }
+      entry = { count: 0, resetAt: now + options.windowMs };
+      entries.set(key, entry);
+    }
+    entry.count++;
+    return entry;
   }
 
   const limiter = ((req: Request, res: Response, next: NextFunction) => {
@@ -58,19 +85,20 @@ export function rateLimit(options: RateLimitOptions): RateLimiter {
     if (key === null) return next();
 
     const now = Date.now();
-    const entry = current(key, now);
-    if (entry.count >= options.max()) {
-      const retryAfter = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+    const existing = live(key, now);
+    if (existing && existing.count >= options.max()) {
+      const retryAfter = Math.max(1, Math.ceil((existing.resetAt - now) / 1000));
       res.setHeader("Retry-After", String(retryAfter));
       return next(new HttpError(429, options.message(retryAfter)));
     }
 
+    const entry = take(key, now);
     if (options.countWhen) {
       res.on("finish", () => {
-        if (options.countWhen!(res)) current(key, Date.now()).count++;
+        // Give the slot back when the response shouldn't count (e.g. a successful
+        // sign-in), unless the window has already moved on.
+        if (!options.countWhen!(res) && entries.get(key) === entry && entry.count > 0) entry.count--;
       });
-    } else {
-      entry.count++;
     }
     next();
   }) as RateLimiter;
@@ -91,8 +119,12 @@ const minutes = (n: number) => `${n} minute${n !== 1 ? "s" : ""}`;
 const waitText = (seconds: number) =>
   seconds <= 60 ? `${seconds} second${seconds !== 1 ? "s" : ""}` : minutes(Math.ceil(seconds / 60));
 
-const loginEmail = (req: Request) => (typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "");
+/** At most 254 characters (the longest valid email), so keys stay small. */
+const loginEmail = (req: Request) =>
+  typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase().slice(0, 254) : "";
 const failedLogin = (res: Response) => res.statusCode === 401;
+/** Any refused sign-in except a 429 (that attempt never reached the password check). */
+const rejectedRequest = (res: Response) => res.statusCode >= 400 && res.statusCode < 500 && res.statusCode !== 429;
 
 /** 10 failed sign-ins per email from one address in 15 minutes. */
 export const loginAttemptLimit = rateLimit({
@@ -103,12 +135,15 @@ export const loginAttemptLimit = rateLimit({
   message: (s) => `Too many failed sign-in attempts. Try again in ${waitText(s)}.`,
 });
 
-/** 50 failed sign-ins from one address in 15 minutes, whatever the email (guessing many accounts). */
+/**
+ * 50 rejected sign-ins from one address in 15 minutes, whatever the email (guessing
+ * many accounts). Counts every rejected attempt, malformed ones included.
+ */
 export const loginAddressLimit = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: envNumber("RATE_LIMIT_LOGIN_FAILURES_PER_ADDRESS", 50),
   key: (req) => req.ip ?? null,
-  countWhen: failedLogin,
+  countWhen: rejectedRequest,
   message: (s) => `Too many failed sign-in attempts from this network. Try again in ${waitText(s)}.`,
 });
 
@@ -125,4 +160,24 @@ export const orderPlacementLimit = rateLimit({
     return signedIn.kioskSessionId ?? signedIn.user?.id ?? req.ip ?? null;
   },
   message: (s) => `Too many orders in a short time. Please wait ${waitText(s)} and try again.`,
+});
+
+/**
+ * 120 orders a minute from one address, across all sessions: kiosk sessions are free
+ * to create, so the per-session limit alone could be dodged with a new session per
+ * order. Set high because the shop's kiosk and counter share one address.
+ */
+export const orderAddressLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: envNumber("RATE_LIMIT_ORDERS_PER_MINUTE_PER_ADDRESS", 120),
+  key: (req) => req.ip ?? null,
+  message: (s) => `Too many orders from this network. Please wait ${waitText(s)} and try again.`,
+});
+
+/** 60 new kiosk sessions a minute from one address (a kiosk normally keeps one for hours). */
+export const kioskSessionLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: envNumber("RATE_LIMIT_KIOSK_SESSIONS_PER_MINUTE", 60),
+  key: (req) => req.ip ?? null,
+  message: (s) => `Too many new kiosk sessions from this network. Please wait ${waitText(s)} and try again.`,
 });
