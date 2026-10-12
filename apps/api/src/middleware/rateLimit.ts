@@ -152,13 +152,16 @@ export const loginAddressLimit = rateLimit({
  * address: every order from the shop's kiosk comes from the same address, and one
  * kiosk session serves many customers.
  */
+/** The kiosk session, else the signed-in user, else the address. */
+const sessionKey = (req: Request) => {
+  const signedIn = req as AuthenticatedRequest;
+  return signedIn.kioskSessionId ?? signedIn.user?.id ?? req.ip ?? null;
+};
+
 export const orderPlacementLimit = rateLimit({
   windowMs: 60 * 1000,
   max: envNumber("RATE_LIMIT_ORDERS_PER_MINUTE", 30),
-  key: (req) => {
-    const signedIn = req as AuthenticatedRequest;
-    return signedIn.kioskSessionId ?? signedIn.user?.id ?? req.ip ?? null;
-  },
+  key: sessionKey,
   message: (s) => `Too many orders in a short time. Please wait ${waitText(s)} and try again.`,
 });
 
@@ -180,4 +183,34 @@ export const kioskSessionLimit = rateLimit({
   max: envNumber("RATE_LIMIT_KIOSK_SESSIONS_PER_MINUTE", 60),
   key: (req) => req.ip ?? null,
   message: (s) => `Too many new kiosk sessions from this network. Please wait ${waitText(s)} and try again.`,
+});
+
+/**
+ * Starting an online payment creates a PayMongo checkout session each time, so it is
+ * limited too: 10 starts per kiosk session in 10 minutes (a customer who backs out
+ * and tries again a few times stays well under it), and 60 per address.
+ */
+export const paymentStartLimit = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: envNumber("RATE_LIMIT_PAYMENT_STARTS_PER_SESSION", 10),
+  key: sessionKey,
+  message: (s) => `Too many payment attempts. Please wait ${waitText(s)}, or pay at the counter.`,
+});
+
+export const paymentStartAddressLimit = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: envNumber("RATE_LIMIT_PAYMENT_STARTS_PER_ADDRESS", 60),
+  key: (req) => req.ip ?? null,
+  message: (s) => `Too many payment attempts from this network. Please wait ${waitText(s)}, or pay at the counter.`,
+});
+
+/**
+ * 60 session renewals a minute from one address. Each signed-in screen renews about
+ * every 15 minutes, so even a shop full of staff devices stays far below it.
+ */
+export const sessionRefreshLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: envNumber("RATE_LIMIT_REFRESH_PER_MINUTE", 60),
+  key: (req) => req.ip ?? null,
+  message: (s) => `Too many sign-in renewals from this network. Please wait ${waitText(s)}.`,
 });

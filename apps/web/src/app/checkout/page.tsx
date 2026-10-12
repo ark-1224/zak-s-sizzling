@@ -102,6 +102,13 @@ export default function CheckoutPage() {
           clearCart();
           setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
           showToast("Online payment isn't set up yet — please pay at the counter.");
+        } else if (err instanceof ApiError && err.status === 429) {
+          // Too many payment attempts from this kiosk for now. The order exists, unpaid,
+          // and staff see it as a counter order (its online payment never started), so
+          // finish the same way rather than inviting a second order.
+          clearCart();
+          setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
+          showToast(err.message);
         } else {
           throw err;
         }

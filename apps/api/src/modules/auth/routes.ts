@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { HttpError } from "../../middleware/errorHandler";
-import { kioskSessionLimit, loginAddressLimit, loginAttemptLimit } from "../../middleware/rateLimit";
+import { kioskSessionLimit, loginAddressLimit, loginAttemptLimit, sessionRefreshLimit } from "../../middleware/rateLimit";
 import { loginSchema } from "./schema";
 import { createKioskSession, loginWithPassword, refreshAccessToken } from "./service";
 
@@ -38,7 +38,7 @@ authRouter.post("/login", loginAddressLimit, loginAttemptLimit, async (req, res,
 // Silently renews the 15-minute access token using the httpOnly refresh cookie — the
 // frontend calls this in the background (apps/web/src/lib/auth.ts) so a staff/admin
 // session survives longer than 15 minutes without another password prompt.
-authRouter.post("/refresh", async (req: Request, res, next) => {
+authRouter.post("/refresh", sessionRefreshLimit, async (req: Request, res, next) => {
   try {
     const token = req.cookies?.[REFRESH_COOKIE];
     if (!token) throw new HttpError(401, "No refresh token");

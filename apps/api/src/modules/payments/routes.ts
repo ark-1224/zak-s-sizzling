@@ -3,6 +3,7 @@ import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { parseId } from "../../lib/ids";
+import { paymentStartAddressLimit, paymentStartLimit } from "../../middleware/rateLimit";
 import { isPaymongoConfigured, PaymongoNotConfiguredError } from "../../lib/paymongo";
 import { createPaymentIntentSchema } from "./schema";
 import { confirmCounterPayment, createGatewayPaymentIntent, handleWebhook } from "./service";
@@ -21,7 +22,7 @@ paymentsRouter.get("/options", (_req, res) => {
 // GCash/Maya via PayMongo — see apps/api/src/lib/paymongo.ts. Returns 501 with a clear
 // message until PAYMONGO_SECRET_KEY is configured, so the kiosk can fall back to
 // "Pay at counter" instead of the checkout flow silently breaking.
-paymentsRouter.post("/intent", authenticate, async (req, res, next) => {
+paymentsRouter.post("/intent", authenticate, paymentStartAddressLimit, paymentStartLimit, async (req, res, next) => {
   try {
     const { orderId, method } = createPaymentIntentSchema.parse(req.body);
     const result = await createGatewayPaymentIntent(orderId, method, WEB_ORIGIN());

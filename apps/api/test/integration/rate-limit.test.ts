@@ -16,6 +16,8 @@ const LIMITS = {
   RATE_LIMIT_ORDERS_PER_MINUTE: "3",
   RATE_LIMIT_ORDERS_PER_MINUTE_PER_ADDRESS: "8",
   RATE_LIMIT_KIOSK_SESSIONS_PER_MINUTE: "15",
+  RATE_LIMIT_PAYMENT_STARTS_PER_SESSION: "2",
+  RATE_LIMIT_REFRESH_PER_MINUTE: "3",
 };
 const previous: Record<string, string | undefined> = {};
 
@@ -119,6 +121,25 @@ describe("placing orders", () => {
   });
 });
 
+describe("starting an online payment", () => {
+  it("refuses a 3rd payment start from the same kiosk session, suggesting the counter", async () => {
+    const session = await kioskToken();
+    const start = () =>
+      request(app)
+        .post("/api/payments/intent")
+        .set("Authorization", `Bearer ${session}`)
+        .send({ orderId: "99999999-9999-4999-8999-999999999999", method: "gcash" });
+    // Any answer counts toward the limit: these find no such order.
+    for (let i = 0; i < 2; i++) expect((await start()).status).toBe(404);
+
+    const res = await start();
+
+    expect(res.status).toBe(429);
+    expect(res.body.error).toMatch(/^Too many payment attempts\. Please wait \d+ minutes?, or pay at the counter\.$/);
+    expect(Number(res.headers["retry-after"])).toBeLessThanOrEqual(10 * 60);
+  });
+});
+
 describe("limits for a whole address", () => {
   it("refuses sign-ins once the address reaches its limit, whatever the email", async () => {
     let last = 0;
@@ -138,5 +159,15 @@ describe("limits for a whole address", () => {
     for (let i = 0; i < 20 && last !== 429; i++) last = (await request(app).post("/api/auth/kiosk-session")).status;
 
     expect(last).toBe(429);
+  });
+
+  it("refuses sign-in renewals once the address reaches its limit", async () => {
+    // Without a refresh cookie each renewal is refused (401), but every one counts.
+    for (let i = 0; i < 3; i++) expect((await request(app).post("/api/auth/refresh")).status).toBe(401);
+
+    const res = await request(app).post("/api/auth/refresh");
+
+    expect(res.status).toBe(429);
+    expect(res.body.error).toMatch(/^Too many sign-in renewals from this network\./);
   });
 });
