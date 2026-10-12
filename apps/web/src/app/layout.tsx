@@ -33,8 +33,11 @@ const spaceMono = Space_Mono({
   weight: ["400", "700"],
 });
 
+// Each page has its own browser-tab title (UI review #27). Pages are client
+// components, which can't export metadata, so each route has a small layout.tsx that
+// sets just its title; this template adds the name.
 export const metadata: Metadata = {
-  title: "Zak's Sizzling Hub — Order Kiosk",
+  title: { default: "Menu · Zak's Sizzling Hub", template: "%s · Zak's Sizzling Hub" },
   description: "Self-service ordering kiosk for Zak's Sizzling Hub",
 };
 
