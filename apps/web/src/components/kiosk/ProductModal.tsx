@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@zaks/shared-types";
 import { categoryBgColor } from "@/lib/categoryColors";
+import { instructionChipsFor, OPPOSITE_CHIP } from "@/lib/instructionChips";
 import { useCart } from "@/hooks/useCart";
 import { Icon } from "@/components/Icon";
 import { useToast } from "./Toast";
@@ -18,16 +19,6 @@ import { NutritionGrid } from "./NutritionGrid";
 // into the same single specialInstructions string the order has always sent, so nothing
 // changes for the cart, the API or the kitchen display.
 const INSTRUCTIONS_MAX = 140; // matches the API/database limit for special instructions
-const FOOD_CHIPS = ["Extra spicy", "Not spicy", "No onions", "Well done", "Sauce on the side"];
-const DRINK_CHIPS = ["Less ice", "No ice", "Less sugar"];
-// Chips that contradict each other: picking one turns the other off, so the kitchen
-// never gets "Extra spicy, Not spicy" (UI review #4).
-const OPPOSITE_CHIP: Record<string, string> = {
-  "Extra spicy": "Not spicy",
-  "Not spicy": "Extra spicy",
-  "Less ice": "No ice",
-  "No ice": "Less ice",
-};
 const SEPARATOR = ", ";
 
 interface ProductModalProps {
@@ -53,7 +44,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  const chipOptions = product.category?.name === "Drinks" ? DRINK_CHIPS : FOOD_CHIPS;
+  // Chips fit the dish's category (lib/instructionChips.ts); desserts offer none.
+  const chipOptions = instructionChipsFor(product.category?.name);
   // Keep chips in their on-screen order regardless of the order they were tapped.
   const chipText = chipOptions.filter((c) => chips.includes(c)).join(SEPARATOR);
   const instructions = [chipText, note.trim()].filter(Boolean).join(SEPARATOR);
@@ -150,6 +142,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             {!out && (
               <div className="mt-5">
                 <h3 className="text-base font-bold text-matcha-deep">Special instructions</h3>
+                {chipOptions.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {chipOptions.map((chip) => {
                     const selected = chips.includes(chip);
@@ -169,6 +162,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                     );
                   })}
                 </div>
+                )}
                 <label className="mt-3 block">
                   <span className="sr-only">Anything else for the kitchen?</span>
                   <textarea

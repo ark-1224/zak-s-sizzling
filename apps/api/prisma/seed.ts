@@ -12,6 +12,9 @@ const CATEGORIES = [
   { name: "Sides", icon: "🥟", sortOrder: 4, isNew: false },
   { name: "Drinks", icon: "🥤", sortOrder: 5, isNew: false },
   { name: "Specials", icon: "🌶️", sortOrder: 6, isNew: true },
+  // Its own category so desserts get no "Extra spicy" / "Well done" chips at the kiosk
+  // (UI review #23; chip sets in apps/web/src/lib/instructionChips.ts).
+  { name: "Desserts", icon: "🍮", sortOrder: 7, isNew: false },
 ];
 
 // Ported from kiosk.html's PRODUCTS mock array (Downloads/kiosk.html, lines 432-518)

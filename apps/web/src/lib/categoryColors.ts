@@ -6,6 +6,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   Sides: "linear-gradient(135deg,#E3E0C4,#C9C494)",
   Drinks: "linear-gradient(135deg,#CFE0DB,#9DC4BB)",
   Specials: "linear-gradient(135deg,#8C2E12,#D8592B)",
+  Desserts: "linear-gradient(135deg,#F6E3C6,#E8B87D)",
 };
 
 export function categoryBgColor(categoryName: string | undefined): string {
