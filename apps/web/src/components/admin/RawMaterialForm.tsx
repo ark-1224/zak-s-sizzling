@@ -75,7 +75,7 @@ export function RawMaterialForm({
   return (
     <div className={admModalBackdropClass}>
       <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-md`}>
-        <div className="font-adm-mono mb-1 text-xs tracking-[.14em] text-adm-ink-3 uppercase md:text-[10px]">
+        <div className="font-adm-mono mb-1 text-xs tracking-[.14em] text-adm-ink-3 uppercase">
           {material ? "Edit raw material" : "New raw material"}
         </div>
         <h2 className="mb-5 text-lg font-semibold tracking-tight break-words">{material ? material.name : "Add a raw material"}</h2>

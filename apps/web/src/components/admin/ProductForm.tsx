@@ -104,7 +104,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   return (
     <div className={admModalBackdropClass}>
       <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-lg`}>
-        <div className="font-adm-mono mb-1 text-xs tracking-[.14em] text-adm-ink-3 uppercase md:text-[10px]">
+        <div className="font-adm-mono mb-1 text-xs tracking-[.14em] text-adm-ink-3 uppercase">
           {product ? "Edit product" : "New product"}
         </div>
         <h2 className="mb-5 text-lg font-semibold tracking-tight break-words">{product ? product.name : "Add a product"}</h2>
@@ -171,7 +171,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
                 type="button"
                 onClick={() => setTracking(value)}
                 aria-pressed={tracking === value}
-                className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-[12.5px] ${
+                className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-sm ${
                   tracking === value ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
                 }`}
               >
@@ -206,7 +206,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
           </div>
         ) : (
           <div className="mb-3 rounded-[6px] border border-adm-line-soft bg-adm-bg p-3">
-            <p className="mb-2 text-base text-adm-ink-2 md:text-[12.5px]">
+            <p className="mb-2 text-base text-adm-ink-2 md:text-sm">
               Raw materials used by <strong>one serving</strong>. Paying for an order deducts these, and the dish shows as sold out
               when they can&apos;t make another serving.
             </p>

@@ -82,7 +82,7 @@ export default function AdminDashboardPage() {
       {lowCount > 0 && (
         <div className="flex flex-wrap items-center gap-3.5 rounded-[6px] border border-adm-warn bg-adm-warn-soft px-4 py-3.5">
           <span className="h-1.75 w-1.75 flex-shrink-0 rounded-full bg-adm-warn" />
-          <div className="min-w-0 flex-1 text-base font-medium md:text-[13px]">
+          <div className="min-w-0 flex-1 text-base font-medium md:text-sm">
             {lowCount} item{lowCount !== 1 ? "s" : ""} at or below minimum stock level
             {lowMaterials.length > 0 && (
               <>
@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
             ]
               .slice(0, 4)
               .map((chip) => (
-                <span key={chip.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-xs break-words text-adm-ink-2 md:text-[11px]">
+                <span key={chip.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-xs break-words text-adm-ink-2">
                   {chip.label}
                 </span>
               ))}
@@ -150,7 +150,7 @@ export default function AdminDashboardPage() {
         <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+              <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                 <th className="px-4.5 py-2.75 font-medium">Product</th>
                 <th className="px-3 py-2.75 font-medium">Category</th>
                 <th className="px-3 py-2.75 text-right font-medium">On hand</th>
@@ -165,7 +165,7 @@ export default function AdminDashboardPage() {
                   <tr key={p.id} className="border-t border-adm-line-soft">
                     <td className="px-4.5 py-3">
                       <div className="font-medium">{p.name}</div>
-                      {p.barcode && <div className="font-adm-mono mt-0.5 text-[10.5px] text-adm-ink-3">{p.barcode}</div>}
+                      {p.barcode && <div className="font-adm-mono mt-0.5 text-xs text-adm-ink-3">{p.barcode}</div>}
                     </td>
                     <td className="px-3 py-3 text-adm-ink-2 whitespace-nowrap">{p.category?.name}</td>
                     <td className="font-adm-mono px-3 py-3 text-right whitespace-nowrap">

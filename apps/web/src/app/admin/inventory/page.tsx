@@ -168,7 +168,7 @@ export default function AdminInventoryPage() {
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                   <th className="px-4.5 py-2.75 font-medium">Product</th>
                   <th className="px-3 py-2.75 text-right font-medium">Stock</th>
                   <th className="px-3 py-2.75 text-right font-medium">Min</th>
@@ -220,7 +220,7 @@ export default function AdminInventoryPage() {
             value={logProductId}
             onChange={(e) => setLogProductId(e.target.value)}
             aria-label="Filter adjustments by product"
-            className="min-h-11 w-full min-w-0 rounded-[4px] border border-adm-line bg-adm-surface px-2 text-base md:min-h-0 md:w-auto md:py-1 md:text-[11.5px]"
+            className="min-h-11 w-full min-w-0 rounded-[4px] border border-adm-line bg-adm-surface px-2 text-base md:min-h-0 md:w-auto md:py-1 md:text-sm"
           >
             <option value="all">All products</option>
             {products.map((p) => (
@@ -237,7 +237,7 @@ export default function AdminInventoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-base md:text-sm">
               <thead>
-                <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                   <th className="px-4.5 py-2.75 font-medium">When</th>
                   <th className="px-3 py-2.75 font-medium">Product</th>
                   <th className="px-3 py-2.75 text-right font-medium">Change</th>

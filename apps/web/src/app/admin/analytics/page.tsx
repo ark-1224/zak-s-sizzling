@@ -106,7 +106,7 @@ export default function AnalyticsPage() {
               key={r.id}
               onClick={() => setRange(r.id)}
               aria-pressed={range === r.id}
-              className={`min-h-11 flex-1 rounded-[4px] px-3 text-base font-medium transition-colors sm:flex-none md:min-h-8 md:text-[12.5px] ${
+              className={`min-h-11 flex-1 rounded-[4px] px-3 text-base font-medium transition-colors sm:flex-none md:min-h-8 md:text-sm ${
                 range === r.id ? "bg-adm-accent text-adm-accent-ink" : "text-adm-ink-2"
               }`}
             >
@@ -144,8 +144,8 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={sales}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
-                <XAxis dataKey="bucket" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
+                <XAxis dataKey="bucket" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(v) => `₱${Number(v).toFixed(2)}`} />
                 <Bar dataKey="revenue" fill="var(--adm-accent)" radius={[3, 3, 0, 0]} />
               </BarChart>
@@ -167,8 +167,8 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={topProducts} layout="vertical" margin={{ left: 0, right: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="productName" width={104} tick={{ fontSize: 11 }} />
+                <XAxis type="number" tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="productName" width={104} tick={{ fontSize: 12 }} />
                 <Tooltip />
                 <Bar dataKey="qtySold" fill="var(--adm-warn)" radius={[0, 3, 3, 0]} />
               </BarChart>
@@ -192,7 +192,7 @@ export default function AnalyticsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-base md:text-sm">
                 <thead>
-                  <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                  <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                     <th className="px-4.5 py-2.75 font-medium">Item</th>
                     <th className="px-3 py-2.75 text-right font-medium">Cost</th>
                     <th className="px-3 py-2.75 text-right font-medium">Price</th>
@@ -233,7 +233,7 @@ export default function AnalyticsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-base md:text-sm">
             <thead>
-              <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+              <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                 <th className="px-4.5 py-2.75 font-medium">Product</th>
                 <th className="px-3 py-2.75 text-right font-medium">Units sold</th>
                 <th className="px-4.5 py-2.75 text-right font-medium">Current stock</th>

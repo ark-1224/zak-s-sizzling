@@ -161,7 +161,7 @@ function SidebarContent({
         <img src="/logo.jpg" alt="Zak's Sizzling Hub" className="h-8 w-8 rounded-md object-cover" />
         <div className={`min-w-0 flex-1 ${m.text}`}>
           <div className="truncate text-sm leading-tight font-semibold tracking-tight">Zak&apos;s Sizzling Hub</div>
-          <div className="font-adm-mono mt-0.5 text-xs text-adm-ink-3 md:text-[10px]">STOCK INVENTORY</div>
+          <div className="font-adm-mono mt-0.5 text-xs text-adm-ink-3">STOCK INVENTORY</div>
         </div>
         {onClose && (
           <button
@@ -193,7 +193,7 @@ function SidebarContent({
           if (items.length === 0) return null;
           return (
             <div key={group.label}>
-              <div className={`font-adm-mono px-3 pb-1.5 text-xs tracking-[.16em] text-adm-ink-3 uppercase md:text-[9.5px] ${m.text}`}>
+              <div className={`font-adm-mono px-3 pb-1.5 text-xs tracking-[.16em] text-adm-ink-3 uppercase ${m.text}`}>
                 {group.label}
               </div>
               <div className="flex flex-col gap-1">
@@ -223,7 +223,7 @@ function SidebarContent({
       </nav>
 
       <div className={`flex flex-col gap-2 ${m.userBox}`}>
-        <div className={`font-adm-mono text-xs tracking-[.14em] text-adm-ink-3 uppercase md:text-[9.5px] ${m.text}`}>
+        <div className={`font-adm-mono text-xs tracking-[.14em] text-adm-ink-3 uppercase ${m.text}`}>
           Signed in as
         </div>
         <div className="flex items-center gap-2" title={user?.name}>

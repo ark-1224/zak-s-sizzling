@@ -135,11 +135,11 @@ export default function BulkImportPage() {
               }}
             >
               <div className="flex h-10.5 w-10.5 flex-shrink-0 items-center justify-center rounded-[5px] border border-adm-accent text-adm-accent">
-                <span className="font-adm-mono text-xs md:text-[10px]">CSV</span>
+                <span className="font-adm-mono text-xs">CSV</span>
               </div>
               <div className="min-w-0 flex-1 basis-40">
-                <div className="text-base font-medium break-all md:text-[13.5px]">{sourceLabel}</div>
-                <div className="font-adm-mono mt-1 text-sm text-adm-ink-3 md:text-[11px]">
+                <div className="text-base font-medium break-all md:text-sm">{sourceLabel}</div>
+                <div className="font-adm-mono mt-1 text-sm text-adm-ink-3">
                   {text ? `${sizeLabel} · ${rowCount} row${rowCount !== 1 ? "s" : ""}` : "Drop a CSV here, browse, or paste below"}
                 </div>
               </div>
@@ -174,7 +174,7 @@ export default function BulkImportPage() {
               }}
               aria-label="CSV contents"
               placeholder={"name,barcode,category,price,cost,stockQty,minStockThreshold,description"}
-              className="font-adm-mono h-40 w-full resize-none bg-adm-bg p-4 text-base md:text-[12px]"
+              className="font-adm-mono h-40 w-full resize-none bg-adm-bg p-4 text-base md:text-sm"
             />
           </Card>
 
@@ -202,7 +202,7 @@ export default function BulkImportPage() {
                     <div className="max-h-80 overflow-auto">
                       <table className="w-full text-base md:text-sm">
                         <thead>
-                          <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                          <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                             <th className="px-4.5 py-2 font-medium">Row</th>
                             <th className="px-3 py-2 font-medium">Name</th>
                             <th className="px-3 py-2 font-medium">Will</th>
@@ -246,7 +246,7 @@ export default function BulkImportPage() {
                 <div className="max-h-64 overflow-auto">
                   <table className="w-full text-base md:text-sm">
                     <thead>
-                      <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                      <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                         <th className="px-4.5 py-2 font-medium">Row</th>
                         <th className="px-3 py-2 font-medium">Name</th>
                         <th className="px-4.5 py-2 font-medium">Problem</th>
@@ -273,26 +273,26 @@ export default function BulkImportPage() {
         <div className="flex flex-col gap-4.5">
           <Card title="Template">
             <div className="p-4">
-              <p className="mb-3 text-base leading-relaxed text-adm-ink-3 md:text-[11.5px]">
+              <p className="mb-3 text-base leading-relaxed text-adm-ink-3 md:text-sm">
                 Required columns: <strong>name</strong>, <strong>category</strong> (must match an existing category
                 name), <strong>price</strong>. Optional: barcode, cost, stockQty, minStockThreshold, description.
               </p>
               <button
                 onClick={handleDownloadTemplate}
                 disabled={downloading}
-                className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent disabled:opacity-60 md:min-h-0 md:text-[12px]"
+                className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent disabled:opacity-60 md:min-h-0 md:text-sm"
               >
                 {downloading ? "Downloading…" : "product_import_template.csv ↓"}
               </button>
               {downloadError && (
-                <p role="alert" className="mt-2 text-base text-adm-bad md:text-[12px]">
+                <p role="alert" className="mt-2 text-base text-adm-bad md:text-sm">
                   {downloadError}
                 </p>
               )}
             </div>
           </Card>
           <Card title="How matching works">
-            <p className="p-4 text-base leading-relaxed text-adm-ink-3 md:text-[11.5px]">
+            <p className="p-4 text-base leading-relaxed text-adm-ink-3 md:text-sm">
               A row with a barcode that matches an existing product updates it. A row with no barcode, or a barcode
               that doesn&apos;t match anything, creates a new product.
             </p>
@@ -307,7 +307,7 @@ export default function BulkImportPage() {
                   : `Import ${rowCount || ""} row${rowCount !== 1 ? "s" : ""}`}
           </AdmButton>
           {currentPreview && currentPreview.errors > 0 && !alreadyImported && (
-            <p className="-mt-2 text-base text-adm-ink-3 md:text-[11.5px]">Import turns on once no row has an error.</p>
+            <p className="-mt-2 text-base text-adm-ink-3 md:text-sm">Import turns on once no row has an error.</p>
           )}
         </div>
       </div>

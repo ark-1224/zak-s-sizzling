@@ -170,7 +170,7 @@ export default function UsersPage() {
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                   <th className="px-4.5 py-2.75 font-medium">User</th>
                   <th className="px-3 py-2.75 font-medium">Role</th>
                   <th className="px-3 py-2.75 font-medium">Status</th>
@@ -182,14 +182,14 @@ export default function UsersPage() {
                   <tr key={u.id} className="border-t border-adm-line-soft">
                     <td className="px-4.5 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-adm-line bg-adm-surface-2 text-[10px] font-semibold text-adm-ink-2">
+                        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-adm-line bg-adm-surface-2 text-xs font-semibold text-adm-ink-2">
                           {u.name.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <div className="font-medium">
                             {u.name} {u.id === meId && <YouTag />}
                           </div>
-                          <div className="font-adm-mono text-[10.5px] text-adm-ink-3">{u.email}</div>
+                          <div className="font-adm-mono text-xs text-adm-ink-3">{u.email}</div>
                         </div>
                       </div>
                     </td>
@@ -200,7 +200,7 @@ export default function UsersPage() {
                         disabled={u.id === meId}
                         title={u.id === meId ? SELF_NOTE : undefined}
                         aria-label={`Role for ${u.name}`}
-                        className="min-h-8 rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-[12px] disabled:opacity-60"
+                        className="min-h-8 rounded-[4px] border border-adm-line bg-adm-surface px-2 py-1 text-sm disabled:opacity-60"
                       >
                         <option value="admin">Admin</option>
                         <option value="staff">Staff</option>
@@ -249,7 +249,7 @@ const SELF_NOTE = "You can't suspend your own account or change its role. Anothe
 
 function YouTag() {
   return (
-    <span className="font-adm-mono ml-1 rounded-[3px] border border-adm-line px-1.5 py-0.5 align-middle text-[10px] font-normal text-adm-ink-3">
+    <span className="font-adm-mono ml-1 rounded-[3px] border border-adm-line px-1.5 py-0.5 align-middle text-xs font-normal text-adm-ink-3">
       YOU
     </span>
   );
@@ -280,10 +280,10 @@ function RoleCard({ n, count, d }: { n: string; count: string; d: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-[6px] border border-adm-line bg-adm-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="text-base font-semibold md:text-[13.5px]">{n}</div>
-        <span className="font-adm-mono text-xs text-adm-ink-3 md:text-[10.5px]">{count}</span>
+        <div className="text-base font-semibold md:text-sm">{n}</div>
+        <span className="font-adm-mono text-xs text-adm-ink-3">{count}</span>
       </div>
-      <p className="text-base leading-relaxed text-adm-ink-2 md:text-[11.5px]">{d}</p>
+      <p className="text-base leading-relaxed text-adm-ink-2 md:text-sm">{d}</p>
     </div>
   );
 }

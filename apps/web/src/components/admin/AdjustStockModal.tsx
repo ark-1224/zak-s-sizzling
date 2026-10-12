@@ -125,7 +125,7 @@ export function AdjustStockModal({
   return (
     <div className={admModalBackdropClass}>
       <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-md`}>
-        <div className="mb-1 text-xs tracking-[.13em] text-adm-ink-3 uppercase md:text-[10.5px]">Adjust stock</div>
+        <div className="mb-1 text-xs tracking-[.13em] text-adm-ink-3 uppercase">Adjust stock</div>
         <h2 className="mb-5 flex items-center gap-2 text-lg font-semibold tracking-tight">
           <span>{product.icon}</span> <span className="min-w-0 break-words">{product.name}</span>
         </h2>
@@ -134,7 +134,7 @@ export function AdjustStockModal({
           <button
             type="button"
             onClick={() => setMode("delta")}
-            className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-[12.5px] ${
+            className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-sm ${
               mode === "delta" ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
             }`}
           >
@@ -143,7 +143,7 @@ export function AdjustStockModal({
           <button
             type="button"
             onClick={() => setMode("set")}
-            className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-[12.5px] ${
+            className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-sm ${
               mode === "set" ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
             }`}
           >
@@ -190,7 +190,7 @@ export function AdjustStockModal({
                   onClick={() => bump(n)}
                   disabled={decreaseOnly && n > 0}
                   aria-label={n > 0 ? `Add ${n}` : `Remove ${-n}`}
-                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-8 md:min-w-12 md:px-3 md:text-[12.5px] disabled:opacity-35"
+                  className="font-adm-mono min-h-11 rounded-[4px] border border-adm-line text-base text-adm-ink-2 md:min-h-8 md:min-w-12 md:px-3 md:text-sm disabled:opacity-35"
                 >
                   {n > 0 ? `+${n}` : n}
                 </button>
@@ -222,7 +222,7 @@ export function AdjustStockModal({
             {newQty}
           </span>
           {effectiveDelta !== 0 && (
-            <span className={`font-adm-mono text-[12px] ${effectiveDelta > 0 ? "text-adm-ok" : "text-adm-bad"}`}>
+            <span className={`font-adm-mono text-sm ${effectiveDelta > 0 ? "text-adm-ok" : "text-adm-bad"}`}>
               ({effectiveDelta > 0 ? "+" : ""}
               {effectiveDelta})
             </span>
@@ -240,7 +240,7 @@ export function AdjustStockModal({
             <ReasonOptions />
           </select>
           {wrongDirection && (
-            <span role="alert" className="mt-1.5 block text-base text-adm-bad md:text-[12px]">
+            <span role="alert" className="mt-1.5 block text-base text-adm-bad md:text-sm">
               {DECREASE_ONLY_MESSAGE} Enter a negative change or a lower count.
             </span>
           )}

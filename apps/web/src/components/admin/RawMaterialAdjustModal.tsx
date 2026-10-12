@@ -97,7 +97,7 @@ export function RawMaterialAdjustModal({
   return (
     <div className={admModalBackdropClass}>
       <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-md`}>
-        <div className="mb-1 text-xs tracking-[.13em] text-adm-ink-3 uppercase md:text-[10.5px]">Adjust raw material</div>
+        <div className="mb-1 text-xs tracking-[.13em] text-adm-ink-3 uppercase">Adjust raw material</div>
         <h2 className="mb-5 text-lg font-semibold tracking-tight break-words">{material.name}</h2>
 
         <div className="mb-4 flex gap-1 rounded-[6px] border border-adm-line bg-adm-bg p-1">
@@ -106,7 +106,7 @@ export function RawMaterialAdjustModal({
               key={value}
               type="button"
               onClick={() => chooseMode(value)}
-              className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-[12.5px] ${
+              className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-sm ${
                 mode === value ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
               }`}
             >
@@ -150,7 +150,7 @@ export function RawMaterialAdjustModal({
             <ReasonOptions disableDecreaseOnly={mode === "add"} />
           </select>
           {wrongDirection && (
-            <span role="alert" className="mt-1.5 block text-base text-adm-bad md:text-[12px]">
+            <span role="alert" className="mt-1.5 block text-base text-adm-bad md:text-sm">
               {DECREASE_ONLY_MESSAGE} Enter a lower amount.
             </span>
           )}

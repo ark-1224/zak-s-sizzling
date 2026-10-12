@@ -169,7 +169,7 @@ export default function AdminProductsPage() {
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10.5px] tracking-[.07em] text-adm-ink-3 uppercase">
+                <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                   <th className="px-4.5 py-2.75 font-medium">Product</th>
                   <th className="px-3 py-2.75 font-medium">Barcode</th>
                   <th className="px-3 py-2.75 font-medium">Category</th>
@@ -186,7 +186,7 @@ export default function AdminProductsPage() {
                     <td className="px-4.5 py-3 font-medium">
                       {p.icon} {p.name}
                     </td>
-                    <td className="font-adm-mono px-3 py-3 text-[12px] text-adm-ink-2 whitespace-nowrap">
+                    <td className="font-adm-mono px-3 py-3 text-sm text-adm-ink-2 whitespace-nowrap">
                       {p.barcode ?? "—"}
                     </td>
                     <td className="px-3 py-3 text-adm-ink-2 whitespace-nowrap">{p.category?.name}</td>
