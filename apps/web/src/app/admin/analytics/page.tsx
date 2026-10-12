@@ -9,6 +9,8 @@ import type { InventoryMovementPoint, Product, ProfitabilityPoint, RawMaterialDT
 
 type Range = "daily" | "weekly" | "monthly";
 
+const marginColor = (pct: number) => (pct >= 40 ? "var(--adm-ok)" : pct >= 25 ? "var(--adm-ink-2)" : "var(--adm-warn)");
+
 // What each range covers, matching the API's windows (reports/service.ts
 // rangeWindowDays). Every tile and card says which period it shows, because they
 // differ: revenue and orders follow the range, the product rankings are all-time
@@ -189,7 +191,24 @@ export default function AnalyticsPage() {
               No products have a cost recorded yet — add one in Products to see margins here.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            // Stacked cards when the card itself is narrow (a phone, or the half-width
+            // column at 1024px), so Margin and Gross are never cut off; the table from
+            // 28rem of card width up (UI review #20).
+            <div className="@container">
+              <ul className="divide-y divide-adm-line-soft @md:hidden">
+                {profitability.map((p) => (
+                  <li key={p.productId} className="px-4 py-3">
+                    <div className="text-base font-medium break-words">{p.productName}</div>
+                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                      <ProfitFigure label="Cost" value={`₱${p.cost!.toFixed(2)}`} />
+                      <ProfitFigure label="Price" value={`₱${p.price.toFixed(2)}`} />
+                      <ProfitFigure label="Margin" value={`${p.marginPct!.toFixed(1)}%`} color={marginColor(p.marginPct ?? 0)} />
+                      <ProfitFigure label="Gross" value={`₱${(p.grossProfit ?? 0).toFixed(0)}`} />
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            <div className="hidden overflow-x-auto @md:block">
               <table className="w-full text-base md:text-sm">
                 <thead>
                   <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
@@ -208,7 +227,7 @@ export default function AnalyticsPage() {
                       <td className="font-adm-mono px-3 py-2.75 text-right">₱{p.price.toFixed(2)}</td>
                       <td
                         className="font-adm-mono px-3 py-2.75 text-right"
-                        style={{ color: (p.marginPct ?? 0) >= 40 ? "var(--adm-ok)" : (p.marginPct ?? 0) >= 25 ? "var(--adm-ink-2)" : "var(--adm-warn)" }}
+                        style={{ color: marginColor(p.marginPct ?? 0) }}
                       >
                         {p.marginPct!.toFixed(1)}%
                       </td>
@@ -217,6 +236,7 @@ export default function AnalyticsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
             </div>
           )}
         </Card>
@@ -230,7 +250,20 @@ export default function AnalyticsPage() {
           </AdmButton>
         }
       >
-        <div className="overflow-x-auto">
+        {/* Same narrow-card pattern as Profitability above, so "Current stock" isn't cut off on phones. */}
+        <div className="@container">
+          <ul className="divide-y divide-adm-line-soft @md:hidden">
+            {movement.map((m) => (
+              <li key={m.productId} className="px-4 py-3">
+                <div className="text-base font-medium break-words">{m.productName}</div>
+                <dl className="mt-2 grid grid-cols-2 gap-x-4 text-sm">
+                  <ProfitFigure label="Sold" value={String(m.qtySold)} />
+                  <ProfitFigure label="Stock now" value={m.currentStock == null ? "—" : String(m.currentStock)} />
+                </dl>
+              </li>
+            ))}
+          </ul>
+        <div className="hidden overflow-x-auto @md:block">
           <table className="w-full text-base md:text-sm">
             <thead>
               <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
@@ -250,7 +283,20 @@ export default function AnalyticsPage() {
             </tbody>
           </table>
         </div>
+        </div>
       </Card>
+    </div>
+  );
+}
+
+/** One labelled figure in a narrow-card row (Profitability and Inventory movement). */
+function ProfitFigure({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-xs tracking-[.07em] text-adm-ink-3 uppercase">{label}</dt>
+      <dd className="font-adm-mono" style={color ? { color } : undefined}>
+        {value}
+      </dd>
     </div>
   );
 }
