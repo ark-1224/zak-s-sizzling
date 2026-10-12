@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
-import { toCSV } from "../../lib/csv";
+import { buildReportTable, EXPORT_CONTENT_TYPE, renderCsv, renderPdf, renderXlsx, type ExportFormat, type ReportType } from "./export";
 import { getInventoryMovement, getProfitability, getSalesReport, getTopProducts } from "./service";
 
 export const reportsRouter = Router();
@@ -55,52 +55,24 @@ reportsRouter.get("/profitability", authenticate, authorize("admin"), async (req
   }
 });
 
-// CSV is fully implemented; PDF/XLSX are not (would need pdfkit/exceljs — flagging
-// rather than half-building them). Returns 501 for those so the frontend can show a
-// clear message instead of failing silently.
+// Export any report as CSV, Excel (.xlsx) or PDF (reports/export.ts). The three formats
+// come from the same table, so they always carry the same columns and figures.
+const REPORT_TYPES: ReportType[] = ["sales", "top-products", "profitability", "inventory-movement"];
+const FORMATS: ExportFormat[] = ["csv", "xlsx", "pdf"];
+
 reportsRouter.get("/export", authenticate, authorize("admin"), async (req, res, next) => {
   try {
-    const format = req.query.format ?? "csv";
-    if (format !== "csv") {
-      throw new HttpError(501, `Export format "${format}" isn't implemented yet — only CSV is available.`);
-    }
+    const format = (req.query.format ?? "csv") as ExportFormat;
+    if (!FORMATS.includes(format)) throw new HttpError(400, `Unknown export format "${String(req.query.format)}" — use csv, xlsx or pdf.`);
+    const type = (req.query.type ?? "sales") as ReportType;
+    if (!REPORT_TYPES.includes(type)) throw new HttpError(400, `Unknown report "${String(req.query.type)}".`);
 
-    const type = req.query.type;
-    let csv: string;
-    let filename: string;
+    const table = await buildReportTable(type, parseRange(req.query.range));
+    const body = format === "csv" ? renderCsv(table) : format === "xlsx" ? await renderXlsx(table) : await renderPdf(table);
 
-    if (type === "top-products") {
-      const rows = await getTopProducts(1000);
-      csv = toCSV(rows.map((r) => ({ Product: r.productName, "Qty Sold": r.qtySold, "Revenue (PHP)": r.revenue })));
-      filename = "top-products.csv";
-    } else if (type === "profitability") {
-      const rows = await getProfitability();
-      csv = toCSV(
-        rows.map((r) => ({
-          Product: r.productName,
-          "Cost (PHP)": r.cost ?? "",
-          "Price (PHP)": r.price,
-          "Margin %": r.marginPct !== null ? r.marginPct.toFixed(1) : "",
-          "Qty Sold": r.qtySold,
-          "Gross Profit (PHP)": r.grossProfit !== null ? r.grossProfit.toFixed(2) : "",
-        }))
-      );
-      filename = "profitability.csv";
-    } else if (type === "inventory-movement") {
-      const rows = await getInventoryMovement();
-      csv = toCSV(
-        rows.map((r) => ({ Product: r.productName, "Qty Sold": r.qtySold, "Current Stock": r.currentStock ?? "" }))
-      );
-      filename = "inventory-movement.csv";
-    } else {
-      const rows = await getSalesReport(parseRange(req.query.range));
-      csv = toCSV(rows.map((r) => ({ Period: r.bucket, Orders: r.orderCount, "Revenue (PHP)": r.revenue })));
-      filename = "sales-report.csv";
-    }
-
-    res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.send(csv);
+    res.setHeader("Content-Type", EXPORT_CONTENT_TYPE[format]);
+    res.setHeader("Content-Disposition", `attachment; filename="${table.name}.${format}"`);
+    res.send(body);
   } catch (err) {
     next(err);
   }

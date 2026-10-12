@@ -242,7 +242,7 @@ NEW
 > **Administrator**
 > - All Staff Functions – The administrator can perform every staff function listed above.
 > - Product and Price Management – The administrator adds, edits, and removes products and prices, records product costs, and imports products in bulk from a CSV file.
-> - Sales Reports – The administrator views sales, top-selling product, inventory movement, and profitability reports, and exports them as CSV files.
+> - Sales Reports – The administrator views sales, top-selling product, inventory movement, and profitability reports, and exports them as CSV, Excel, or PDF files.
 > - User Account Administration – The administrator creates administrator and staff accounts, changes their roles, resets passwords, and deactivates or reactivates accounts.
 
 Two old items are removed because the code has no function for them: "Customer Assistance" (Front Desk) and "System Maintenance Supervision" (Admin). See Needs decision item 12.
@@ -634,8 +634,8 @@ The manuscript claims each item below, but the code does not support it (or supp
 2. **Estimated preparation or wait time** (Scope, Payment Transaction, p. 8; Sprint 3, p. 67). No code computes or shows an estimated time.
 3. **QR code access** (Scope, p. 7; Requirements Analysis, "Where" and "How", p. 51; Figure 1.2). Resolved: the Administrator generates and prints a "Scan to order" QR code that opens the kiosk on a phone (section 7). A phone scan on the deployed site is still to be done.
 4. **Barcode scanning** (Scope, p. 9; Sprint 4, p. 67; Figure 2.2). Products have a barcode field and the API has `GET /api/products/barcode/:code`, but no screen uses the lookup, and there is no scanner input.
-5. **Rate limiting** (Scope, Security Measures, p. 9). No rate limiting exists in `apps/api`.
-6. **PDF and Excel export** (Scope, Data Export, p. 11). Only CSV export works. PDF and Excel requests return "not implemented" (`apps/api/src/modules/reports/routes.ts`).
+5. **Rate limiting** (Scope, Security Measures, p. 9). Resolved: failed sign-ins are limited per account and per address, order placement per kiosk session and per address, and new kiosk sessions per address; over the limit the API answers "Too many requests" with how long to wait (`apps/api/src/middleware/rateLimit.ts`).
+6. **PDF and Excel export** (Scope, Data Export, p. 11). Resolved: every report (sales, top-selling products, profitability, inventory movement) downloads as CSV, Excel (.xlsx), or PDF from the Analytics page (`apps/api/src/modules/reports/export.ts`, using `pdfkit` and `exceljs`).
 7. **Excel bulk import** (Scope, Product Management, p. 10). Only CSV import exists (`apps/web/src/app/admin/import/page.tsx`).
 8. **Local and cloud backups** (Scope, Database Backup, p. 11; Deployment, p. 43). The backup job in `apps/worker` is scheduled only in development and writes to local disk. No cloud copy is made.
 9. **Deduction of raw materials** (Objective 3, p. 6). Resolved: dishes can use a recipe of raw materials, which are deducted when payment is confirmed (`raw_materials`, `recipe_items`, `raw_material_movements`; design in `docs/design/raw-material-stock.md`). Items sold as they are, such as bottled drinks, still count units. The ERD and data dictionary in section 3 do not show the three new tables yet.

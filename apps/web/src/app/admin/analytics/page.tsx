@@ -8,6 +8,15 @@ import { PageHeader, Card, KpiTile, AdmButton } from "@/components/admin/ui";
 import type { InventoryMovementPoint, Product, ProfitabilityPoint, RawMaterialDTO, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
 
 type Range = "daily" | "weekly" | "monthly";
+type ReportType = "sales" | "top-products" | "inventory-movement" | "profitability";
+type ExportFormat = "csv" | "xlsx" | "pdf";
+
+// Every report downloads as CSV, Excel or PDF (GET /api/reports/export).
+const EXPORT_FORMATS: { id: ExportFormat; label: string }[] = [
+  { id: "csv", label: "CSV" },
+  { id: "xlsx", label: "Excel" },
+  { id: "pdf", label: "PDF" },
+];
 
 const marginColor = (pct: number) => (pct >= 40 ? "var(--adm-ok)" : pct >= 25 ? "var(--adm-ink-2)" : "var(--adm-warn)");
 
@@ -81,16 +90,38 @@ export default function AnalyticsPage() {
   const current = RANGES.find((r) => r.id === range)!;
   const top = topProducts[0];
 
-  async function handleExport(type: "sales" | "top-products" | "inventory-movement" | "profitability") {
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  async function handleExport(type: ReportType, format: ExportFormat) {
+    const name = type === "sales" ? `sales-report-${range}` : type;
+    setExporting(`${type}.${format}`);
+    setMessage(null);
     try {
-      await downloadAuthenticated(
-        `/api/reports/export?type=${type}&format=csv${type === "sales" ? `&range=${range}` : ""}`,
-        `${type}.csv`
-      );
+      await downloadAuthenticated(`/api/reports/export?type=${type}&format=${format}${type === "sales" ? `&range=${range}` : ""}`, `${name}.${format}`);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Export failed.");
+    } finally {
+      setExporting(null);
     }
   }
+
+  const exportButtons = (type: ReportType) => (
+    <div role="group" aria-label="Download this report" className="flex flex-wrap items-center gap-1.5">
+      <span className="text-sm text-adm-ink-3">Export</span>
+      {EXPORT_FORMATS.map((f) => (
+        <AdmButton
+          key={f.id}
+          variant="secondary"
+          size="compact"
+          disabled={exporting !== null}
+          onClick={() => handleExport(type, f.id)}
+          aria-label={`Download as ${f.label}`}
+        >
+          {exporting === `${type}.${f.id}` ? "…" : f.label}
+        </AdmButton>
+      ))}
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-4.5">
@@ -134,9 +165,7 @@ export default function AnalyticsPage() {
       <Card
         title={`Sales · ${current.period.toLowerCase()}, ${current.buckets}`}
         actions={
-          <AdmButton variant="secondary" size="compact" onClick={() => handleExport("sales")}>
-            Export CSV
-          </AdmButton>
+          exportButtons("sales")
         }
       >
         <div className="p-4">
@@ -160,9 +189,7 @@ export default function AnalyticsPage() {
         <Card
           title="Top-selling products · all time"
           actions={
-            <AdmButton variant="secondary" size="compact" onClick={() => handleExport("top-products")}>
-              Export CSV
-            </AdmButton>
+            exportButtons("top-products")
           }
         >
           <div className="p-4">
@@ -181,9 +208,7 @@ export default function AnalyticsPage() {
         <Card
           title="Profitability per item · all-time sales"
           actions={
-            <AdmButton variant="secondary" size="compact" onClick={() => handleExport("profitability")}>
-              Export CSV
-            </AdmButton>
+            exportButtons("profitability")
           }
         >
           {profitability.length === 0 ? (
@@ -245,9 +270,7 @@ export default function AnalyticsPage() {
       <Card
         title="Inventory movement · sold all time, stock now"
         actions={
-          <AdmButton variant="secondary" size="compact" onClick={() => handleExport("inventory-movement")}>
-            Export CSV
-          </AdmButton>
+          exportButtons("inventory-movement")
         }
       >
         {/* Same narrow-card pattern as Profitability above, so "Current stock" isn't cut off on phones. */}
