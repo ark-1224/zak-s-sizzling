@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 import { describe, expect, it, vi } from "vitest";
 
 // Reading Excel files for the bulk product import (products/xlsxImport.ts). Only the
@@ -8,7 +9,13 @@ vi.mock("../../src/modules/products/service", () => ({}));
 
 import { fromCSV } from "../../src/lib/csv";
 import { HttpError } from "../../src/middleware/errorHandler";
-import { buildImportTemplateXlsx, cellToText, MAX_XLSX_BYTES, xlsxToImportCsv } from "../../src/modules/products/xlsxImport";
+import {
+  buildImportTemplateXlsx,
+  cellToText,
+  MAX_XLSX_BYTES,
+  MAX_XLSX_ENTRIES,
+  xlsxToImportCsv,
+} from "../../src/modules/products/xlsxImport";
 
 /** A workbook with one sheet holding `rows`, as an .xlsx file. */
 async function workbook(rows: ExcelJS.CellValue[][], setup?: (sheet: ExcelJS.Worksheet) => void): Promise<Buffer> {
@@ -120,6 +127,59 @@ describe("turning a sheet into import CSV", () => {
     const err = await failure(xlsxToImportCsv(Buffer.alloc(MAX_XLSX_BYTES + 1)));
 
     expect(err).toMatchObject({ status: 413 });
+  });
+});
+
+describe("files that would cost too much to read", () => {
+  // A zip whose one entry unpacks to 30 MB of zeros, from about 30 KB.
+  async function zipBomb(): Promise<Buffer> {
+    const zip = new JSZip();
+    zip.file("xl/worksheets/sheet1.xml", Buffer.alloc(30 * 1024 * 1024));
+    return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+  }
+
+  it("refuses a small file that unpacks to more than 20 MB, without unpacking it all", async () => {
+    const bomb = await zipBomb();
+
+    const err = await failure(xlsxToImportCsv(bomb));
+
+    expect(bomb.length).toBeLessThan(100_000);
+    expect(err).toMatchObject({ status: 413, message: expect.stringMatching(/too large once unpacked/) });
+  });
+
+  it("refuses it even when the zip claims its contents are tiny", async () => {
+    const bomb = await zipBomb();
+    // Overwrite the declared unpacked size in the local header and the central directory.
+    for (let i = 0; i < bomb.length - 4; i++) {
+      const sig = bomb.readUInt32LE(i);
+      if (sig === 0x04034b50) bomb.writeUInt32LE(100, i + 22);
+      if (sig === 0x02014b50) bomb.writeUInt32LE(100, i + 24);
+    }
+
+    const err = await failure(xlsxToImportCsv(bomb));
+
+    expect(err).toMatchObject({ status: 413 });
+  });
+
+  it("refuses a zip with hundreds of files in it", async () => {
+    const zip = new JSZip();
+    for (let i = 0; i < MAX_XLSX_ENTRIES + 1; i++) zip.file(`part${i}.xml`, "<x/>");
+
+    const err = await failure(xlsxToImportCsv(await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" })));
+
+    expect(err).toMatchObject({ status: 413 });
+  });
+
+  it("reads only the rows that hold something, even with a stray cell a million rows down", async () => {
+    const file = await workbook([["name", "category", "price"], ["Sizzling Sisig", "Sizzling Plates", 185]], (sheet) => {
+      sheet.getCell("A1000000").value = "Far Away Tea";
+    });
+
+    const started = Date.now();
+    const result = await xlsxToImportCsv(file);
+
+    expect(Date.now() - started).toBeLessThan(2000);
+    expect(fromCSV(result.csvText).map((r) => r.name)).toEqual(["Sizzling Sisig", "Far Away Tea"]);
   });
 });
 

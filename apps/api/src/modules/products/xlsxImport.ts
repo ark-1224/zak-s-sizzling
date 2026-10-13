@@ -1,3 +1,4 @@
+import { inflateRawSync } from "node:zlib";
 import ExcelJS from "exceljs";
 import type { Category } from "@prisma/client";
 import { HttpError } from "../../middleware/errorHandler";
@@ -15,6 +16,66 @@ import { IMPORT_HEADERS } from "./bulkImport";
 export const MAX_XLSX_BYTES = 2 * 1024 * 1024;
 /** Rows read from one sheet, so an oversized sheet can't tie the server up. */
 export const MAX_XLSX_ROWS = 5000;
+/**
+ * An .xlsx is a zip, so a small upload can unpack into gigabytes (a "zip bomb"). These
+ * bound what exceljs is ever asked to unpack: a 5000-row product sheet is a few MB.
+ */
+export const MAX_XLSX_UNPACKED_BYTES = 20 * 1024 * 1024;
+export const MAX_XLSX_ENTRIES = 200;
+
+const NOT_XLSX = "This file isn't an Excel workbook (.xlsx). In Excel, use Save As → Excel Workbook, or save it as CSV.";
+const TOO_BIG_UNPACKED = "The Excel file is too large once unpacked. Split it into smaller files, or save it as CSV.";
+
+/**
+ * Walks the zip's central directory and unpacks every entry with a hard output limit,
+ * before exceljs sees the file. The sizes a zip declares can lie, so each entry is
+ * actually inflated (zlib's maxOutputLength stops it at the budget) rather than trusted.
+ */
+export function assertXlsxUnpacksSafely(file: Buffer): void {
+  // End of central directory record: at least 22 bytes, within the last 64 KB + 22.
+  let eocd = -1;
+  for (let i = file.length - 22; i >= Math.max(0, file.length - 65557); i--) {
+    if (file.readUInt32LE(i) === 0x06054b50) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd === -1) throw new HttpError(400, NOT_XLSX);
+
+  const entries = file.readUInt16LE(eocd + 10);
+  if (entries > MAX_XLSX_ENTRIES) throw new HttpError(413, TOO_BIG_UNPACKED);
+  let p = file.readUInt32LE(eocd + 16);
+  let budget = MAX_XLSX_UNPACKED_BYTES;
+
+  for (let n = 0; n < entries; n++) {
+    if (p + 46 > file.length || file.readUInt32LE(p) !== 0x02014b50) throw new HttpError(400, NOT_XLSX);
+    const method = file.readUInt16LE(p + 10);
+    const compressedSize = file.readUInt32LE(p + 20);
+    const localHeader = file.readUInt32LE(p + 42);
+    // 0xFFFFFFFF means Zip64, which no product sheet needs.
+    if (compressedSize === 0xffffffff || localHeader === 0xffffffff) throw new HttpError(413, TOO_BIG_UNPACKED);
+    p += 46 + file.readUInt16LE(p + 28) + file.readUInt16LE(p + 30) + file.readUInt16LE(p + 32);
+
+    if (localHeader + 30 > file.length || file.readUInt32LE(localHeader) !== 0x04034b50) throw new HttpError(400, NOT_XLSX);
+    const start = localHeader + 30 + file.readUInt16LE(localHeader + 26) + file.readUInt16LE(localHeader + 28);
+    if (start + compressedSize > file.length) throw new HttpError(400, NOT_XLSX);
+    const data = file.subarray(start, start + compressedSize);
+
+    let unpacked: number;
+    if (method === 0) unpacked = data.length;
+    else if (method === 8) {
+      try {
+        unpacked = inflateRawSync(data, { maxOutputLength: budget + 1 }).length;
+      } catch (err) {
+        if (err instanceof RangeError) throw new HttpError(413, TOO_BIG_UNPACKED);
+        throw new HttpError(400, NOT_XLSX);
+      }
+    } else throw new HttpError(400, NOT_XLSX);
+
+    budget -= unpacked;
+    if (budget < 0) throw new HttpError(413, TOO_BIG_UNPACKED);
+  }
+}
 
 type Header = (typeof IMPORT_HEADERS)[number];
 
@@ -54,11 +115,13 @@ export interface ConvertedSheet {
 export async function xlsxToImportCsv(file: Buffer): Promise<ConvertedSheet> {
   if (file.length > MAX_XLSX_BYTES) throw new HttpError(413, "The Excel file is larger than 2 MB. Split it into smaller files.");
 
+  assertXlsxUnpacksSafely(file);
+
   const workbook = new ExcelJS.Workbook();
   try {
     await workbook.xlsx.load(file as unknown as ArrayBuffer);
   } catch {
-    throw new HttpError(400, "This file isn't an Excel workbook (.xlsx). In Excel, use Save As → Excel Workbook, or save it as CSV.");
+    throw new HttpError(400, NOT_XLSX);
   }
   const sheet = workbook.worksheets.find((ws) => ws.actualRowCount > 0);
   if (!sheet) throw new HttpError(400, "The Excel file has no rows.");
@@ -97,11 +160,13 @@ export async function xlsxToImportCsv(file: Buffer): Promise<ConvertedSheet> {
   const ordered = IMPORT_HEADERS.filter((h) => [...columns.values()].includes(h));
   const colOf = new Map([...columns.entries()].map(([col, h]) => [h, col]));
   const rows: Record<string, string>[] = [];
-  for (let r = headerRow + 1; r <= sheet.rowCount; r++) {
-    const row = sheet.getRow(r);
+  // eachRow visits only rows that hold values. Counting up to sheet.rowCount instead
+  // would walk a million empty rows for one stray cell at the bottom of the sheet.
+  sheet.eachRow((row, r) => {
+    if (r <= headerRow) return;
     const values = Object.fromEntries(ordered.map((h) => [h, cellToText(row.getCell(colOf.get(h)!).value)]));
     if (Object.values(values).some((v) => v !== "")) rows.push(values);
-  }
+  });
   if (rows.length === 0) throw new HttpError(400, `The sheet "${sheet.name}" has a header row but no products under it.`);
 
   // toCSV takes its header from the first row's keys, which are always all of `ordered`.
