@@ -295,7 +295,7 @@ function PlaceOrderButton({ placing, onClick, className }: { placing: boolean; o
     <button
       disabled={placing}
       onClick={onClick}
-      className={`min-h-14 rounded-full bg-honey px-6 text-lg font-bold text-matcha-deep shadow-card transition-transform active:scale-98 disabled:bg-grey-out disabled:text-white disabled:shadow-none ${className}`}
+      className={`min-h-14 rounded-full bg-matcha px-6 text-lg font-bold text-cream shadow-card transition-transform active:scale-98 disabled:bg-grey-out disabled:text-white disabled:shadow-none ${className}`}
     >
       {placing ? "Placing order…" : "Place order"}
     </button>

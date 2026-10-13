@@ -24,7 +24,7 @@ export function BasketBar({ onOpenCart }: BasketBarProps) {
     >
       <button
         onClick={onOpenCart}
-        className="animate-sheet-up pointer-events-auto flex min-h-14 w-full max-w-xl items-center gap-3 rounded-full bg-matcha-deep py-2 pr-4 pl-2 text-cream shadow-2xl transition-transform active:scale-98 motion-reduce:animate-none"
+        className="animate-sheet-up pointer-events-auto flex min-h-14 w-full max-w-xl items-center gap-3 rounded-full bg-matcha py-2 pr-4 pl-2 text-cream shadow-2xl transition-transform active:scale-98 motion-reduce:animate-none"
       >
         <span className="flex h-10 min-w-10 items-center justify-center rounded-full bg-honey px-2 text-base font-bold text-matcha-deep">
           {count}

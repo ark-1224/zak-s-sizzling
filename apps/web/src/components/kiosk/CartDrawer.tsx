@@ -91,7 +91,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               <Link
                 href="/checkout"
                 onClick={onClose}
-                className="mt-3 flex min-h-14 w-full items-center justify-center rounded-full bg-honey text-lg font-bold text-matcha-deep shadow-card"
+                className="mt-3 flex min-h-14 w-full items-center justify-center rounded-full bg-matcha text-lg font-bold text-cream shadow-card transition-transform active:scale-98"
               >
                 Proceed to checkout
               </Link>

@@ -170,7 +170,15 @@ export default function AnalyticsPage() {
       >
         <div className="p-4">
           {loading ? (
-            <div className="text-adm-ink-3">Loading…</div>
+            <ChartMessage title="Loading…" />
+          ) : sales.length === 0 ? (
+            // An empty chart was just axes and grid lines, which read as broken (UI review #19).
+            <ChartMessage
+              title="No sales in this period"
+              detail={`Paid orders from the ${current.period.toLowerCase()} will show here.${
+                range === "monthly" ? "" : " Try a longer period above."
+              }`}
+            />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={sales}>
@@ -193,15 +201,19 @@ export default function AnalyticsPage() {
           }
         >
           <div className="p-4">
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={topProducts} layout="vertical" margin={{ left: 0, right: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
-                <XAxis type="number" tick={{ fontSize: 12 }} />
-                <YAxis type="category" dataKey="productName" width={104} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="qtySold" fill="var(--adm-warn)" radius={[0, 3, 3, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {!loading && topProducts.length === 0 ? (
+              <ChartMessage title="No sales yet" detail="The best sellers will show here once orders are paid." />
+            ) : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={topProducts} layout="vertical" margin={{ left: 0, right: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
+                  <XAxis type="number" tick={{ fontSize: 12 }} />
+                  <YAxis type="category" dataKey="productName" width={104} tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="qtySold" fill="var(--adm-warn)" radius={[0, 3, 3, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </Card>
 
@@ -313,6 +325,19 @@ export default function AnalyticsPage() {
 }
 
 /** One labelled figure in a narrow-card row (Profitability and Inventory movement). */
+/** Stands in for a chart, at the chart's height so the card doesn't jump. */
+function ChartMessage({ title, detail }: { title: string; detail?: string }) {
+  return (
+    <div
+      role="status"
+      className="flex h-[240px] flex-col items-center justify-center gap-1 rounded-[6px] border border-dashed border-adm-line px-4 text-center"
+    >
+      <p className="text-base font-medium text-adm-ink-2">{title}</p>
+      {detail && <p className="max-w-sm text-sm text-adm-ink-3">{detail}</p>}
+    </div>
+  );
+}
+
 function ProfitFigure({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
