@@ -6,9 +6,26 @@ import { downloadAuthenticated } from "@/lib/download";
 import { PageHeader, Card, AdmButton, StatusPill } from "@/components/admin/ui";
 import type { BulkImportSummary } from "@zaks/shared-types";
 
-// Bulk CSV product import, per the manuscript's Product Management requirement
-// ("bulk product import through CSV or Excel file uploads, reducing the need for
-// manual data entry"). Matching is by barcode: a row whose barcode matches an
+type TemplateFormat = "xlsx" | "csv";
+
+/** Must match MAX_XLSX_BYTES in the API's products/xlsxImport.ts. */
+const MAX_XLSX_BYTES = 2 * 1024 * 1024;
+
+const isExcel = (name: string) => /\.xlsx$/i.test(name);
+
+function toBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  // In chunks: spreading a whole file into one call overflows the call stack.
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+// Bulk CSV and Excel product import, per the manuscript's Product Management
+// requirement ("bulk product import through CSV or Excel file uploads, reducing the
+// need for manual data entry"). An .xlsx file is turned into CSV by the server
+// (POST /api/products/import-xlsx) and loaded into the box below, so it gets the same
+// preview and checks as a CSV, and a row can still be fixed before importing. Matching is by barcode: a row whose barcode matches an
 // existing product updates it, otherwise a new product is created — there's no
 // spreadsheet column-mapping UI here (that's a much bigger feature); the fixed
 // header set is documented via the downloadable template.
@@ -18,6 +35,9 @@ import type { BulkImportSummary } from "@zaks/shared-types";
 // disabled until the file has no errors (UI review #21).
 export default function BulkImportPage() {
   const [fileName, setFileName] = useState<string | null>(null);
+  // For an Excel file: which sheet was read, and any columns that were left out.
+  const [sheetNote, setSheetNote] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
   // True once a loaded file's text is changed in the box below, so the card says so.
   const [fileEdited, setFileEdited] = useState(false);
   const [csvText, setCsvText] = useState("");
@@ -28,7 +48,7 @@ export default function BulkImportPage() {
   const [preview, setPreview] = useState<{ text: string; summary: BulkImportSummary } | null>(null);
   const [previewError, setPreviewError] = useState<{ text: string; message: string } | null>(null);
   const [importedText, setImportedText] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState<TemplateFormat | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,25 +81,60 @@ export default function BulkImportPage() {
     };
   }, [text]);
 
-  function handleFile(file: File) {
-    setFileName(file.name);
-    setFileEdited(false);
-    setSummary(null);
-    const reader = new FileReader();
-    reader.onload = () => setCsvText(String(reader.result ?? ""));
-    reader.readAsText(file);
+  // A file that can't be used only shows why; whatever was loaded before stays as it was.
+  async function handleFile(file: File) {
+    setError(null);
+    if (/\.xls$/i.test(file.name)) {
+      setError("That's an older Excel file (.xls). In Excel, use Save As → Excel Workbook (.xlsx), or save it as CSV.");
+      return;
+    }
+    if (!isExcel(file.name)) {
+      setFileName(file.name);
+      setFileEdited(false);
+      setSheetNote(null);
+      setSummary(null);
+      setCsvText(await file.text());
+      return;
+    }
+    if (file.size > MAX_XLSX_BYTES) {
+      setError("That Excel file is larger than 2 MB. Split it into smaller files.");
+      return;
+    }
+    setReading(true);
+    try {
+      const converted = await apiFetch<{ sheetName: string; csvText: string; rows: number; ignoredColumns: string[] }>(
+        "/api/products/import-xlsx",
+        { method: "POST", auth: "staff", body: JSON.stringify({ fileBase64: toBase64(await file.arrayBuffer()) }) }
+      );
+      setFileName(file.name);
+      setFileEdited(false);
+      setSummary(null);
+      setCsvText(converted.csvText);
+      const ignored = converted.ignoredColumns;
+      setSheetNote(
+        `Read from the sheet "${converted.sheetName}"` +
+          (ignored.length > 0 ? `; column${ignored.length !== 1 ? "s" : ""} left out: ${ignored.join(", ")}` : "")
+      );
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't read the Excel file.");
+    } finally {
+      setReading(false);
+    }
   }
 
   // A failed download used to do nothing visible; now it says why (UI review #12).
-  async function handleDownloadTemplate() {
-    setDownloading(true);
+  async function handleDownloadTemplate(format: TemplateFormat) {
+    setDownloading(format);
     setDownloadError(null);
     try {
-      await downloadAuthenticated("/api/products/import-template", "product_import_template.csv");
+      await downloadAuthenticated(
+        `/api/products/import-template${format === "xlsx" ? "?format=xlsx" : ""}`,
+        `product_import_template.${format}`
+      );
     } catch (err) {
       setDownloadError(err instanceof Error ? err.message : "The download failed. Try again.");
     } finally {
-      setDownloading(false);
+      setDownloading(null);
     }
   }
 
@@ -114,6 +169,7 @@ export default function BulkImportPage() {
   function clearCsv() {
     setCsvText("");
     setFileName(null);
+    setSheetNote(null);
     setFileEdited(false);
     setSummary(null);
     setError(null);
@@ -121,7 +177,7 @@ export default function BulkImportPage() {
 
   return (
     <div className="flex flex-col gap-4.5">
-      <PageHeader eyebrow="Bulk product import" title="Import from CSV" />
+      <PageHeader eyebrow="Bulk product import" title="Import from CSV or Excel" />
 
       <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="flex flex-col gap-4.5">
@@ -135,18 +191,25 @@ export default function BulkImportPage() {
               }}
             >
               <div className="flex h-10.5 w-10.5 flex-shrink-0 items-center justify-center rounded-[5px] border border-adm-accent text-adm-accent">
-                <span className="font-adm-mono text-xs">CSV</span>
+                <span className="font-adm-mono text-xs">{fileName && isExcel(fileName) ? "XLSX" : "CSV"}</span>
               </div>
               <div className="min-w-0 flex-1 basis-40">
                 <div className="text-base font-medium break-all md:text-sm">{sourceLabel}</div>
                 <div className="font-adm-mono mt-1 text-sm text-adm-ink-3">
-                  {text ? `${sizeLabel} · ${rowCount} row${rowCount !== 1 ? "s" : ""}` : "Drop a CSV here, browse, or paste below"}
+                  {reading
+                    ? "Reading the Excel file…"
+                    : text
+                      ? fileName && isExcel(fileName)
+                        ? `${rowCount} row${rowCount !== 1 ? "s" : ""}`
+                        : `${sizeLabel} · ${rowCount} row${rowCount !== 1 ? "s" : ""}`
+                      : "Drop a CSV or Excel (.xlsx) file here, browse, or paste CSV below"}
                 </div>
+                {sheetNote && text && <div className="mt-1 text-sm text-adm-ink-3">{sheetNote}</div>}
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv,text/csv"
+                accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) handleFile(e.target.files[0]);
@@ -158,13 +221,18 @@ export default function BulkImportPage() {
                   Clear
                 </AdmButton>
               )}
-              <AdmButton variant="secondary" className="w-full sm:w-auto" onClick={() => fileInputRef.current?.click()}>
+              <AdmButton
+                variant="secondary"
+                className="w-full sm:w-auto"
+                disabled={reading}
+                onClick={() => fileInputRef.current?.click()}
+              >
                 Browse file
               </AdmButton>
             </div>
           </Card>
 
-          <Card title="Or paste CSV directly">
+          <Card title={fileName && isExcel(fileName) ? "Your Excel rows as CSV — you can edit them here" : "Or paste CSV directly"}>
             <textarea
               value={csvText}
               onChange={(e) => {
@@ -277,13 +345,21 @@ export default function BulkImportPage() {
                 Required columns: <strong>name</strong>, <strong>category</strong> (must match an existing category
                 name), <strong>price</strong>. Optional: barcode, cost, stockQty, minStockThreshold, description.
               </p>
-              <button
-                onClick={handleDownloadTemplate}
-                disabled={downloading}
-                className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent disabled:opacity-60 md:min-h-0 md:text-sm"
-              >
-                {downloading ? "Downloading…" : "product_import_template.csv ↓"}
-              </button>
+              <p className="mb-2 text-base leading-relaxed text-adm-ink-3 md:text-sm">
+                The Excel template has a category list to pick from, and keeps barcodes as text so leading zeros stay.
+              </p>
+              <div className="flex flex-col items-start gap-1 md:gap-2">
+                {(["xlsx", "csv"] as const).map((format) => (
+                  <button
+                    key={format}
+                    onClick={() => handleDownloadTemplate(format)}
+                    disabled={downloading !== null}
+                    className="font-adm-mono inline-flex min-h-11 items-center text-left text-sm font-medium break-all text-adm-accent disabled:opacity-60 md:min-h-0 md:text-sm"
+                  >
+                    {downloading === format ? "Downloading…" : `product_import_template.${format} ↓`}
+                  </button>
+                ))}
+              </div>
               {downloadError && (
                 <p role="alert" className="mt-2 text-base text-adm-bad md:text-sm">
                   {downloadError}

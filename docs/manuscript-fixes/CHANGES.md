@@ -155,7 +155,7 @@ Paste this block, word for word, in each of the three places listed in 2.3. If t
 | Staff updates kitchen preparation status | `PATCH /api/kitchen/tasks/:id`, `authorize("admin", "staff")`; statuses `pending`, `in_progress`, `completed` (`enum KitchenStatus`) |
 | Staff views and adjusts stock and the low-stock list | `apps/api/src/modules/inventory/routes.ts`: `/low-stock`, `/adjustments`, `PATCH /:productId`, `authorize("admin", "staff")` |
 | Staff looks up products by barcode | `GET /api/products/barcode/:code`, `authorize("admin", "staff")` |
-| Administrator adds, edits, removes products and prices; bulk import | `apps/api/src/modules/products/routes.ts`: `POST /`, `PUT /:id`, `DELETE /:id`, `POST /bulk-import`, `GET /import-template`, `authorize("admin")` |
+| Administrator adds, edits, removes products and prices; bulk import | `apps/api/src/modules/products/routes.ts`: `POST /`, `PUT /:id`, `DELETE /:id`, `POST /bulk-import`, `POST /import-xlsx`, `GET /import-template`, `authorize("admin")` |
 | Only the Administrator sees product costs | `withCostForRole` in `apps/api/src/modules/products/service.ts`: product lists and details sent to staff, customers, or visitors leave out `cost` |
 | Administrator views analytics and exports reports | `apps/api/src/modules/reports/routes.ts`: all routes `authorize("admin")` |
 | Staff views and edits orders | `apps/api/src/modules/orders/routes.ts`: `GET /`, `PATCH` and `DELETE /:id/items/:itemId`, `authorize("admin", "staff")` |
@@ -241,7 +241,7 @@ NEW
 >
 > **Administrator**
 > - All Staff Functions – The administrator can perform every staff function listed above.
-> - Product and Price Management – The administrator adds, edits, and removes products and prices, records product costs, and imports products in bulk from a CSV file.
+> - Product and Price Management – The administrator adds, edits, and removes products and prices, records product costs, and imports products in bulk from a CSV or Excel file.
 > - Sales Reports – The administrator views sales, top-selling product, inventory movement, and profitability reports, and exports them as CSV, Excel, or PDF files.
 > - User Account Administration – The administrator creates administrator and staff accounts, changes their roles, resets passwords, and deactivates or reactivates accounts.
 
@@ -636,7 +636,7 @@ The manuscript claims each item below, but the code does not support it (or supp
 4. **Barcode scanning** (Scope, p. 9; Sprint 4, p. 67; Figure 2.2). Products have a barcode field and the API has `GET /api/products/barcode/:code`, but no screen uses the lookup, and there is no scanner input.
 5. **Rate limiting** (Scope, Security Measures, p. 9). Resolved: failed sign-ins are limited per account and per address, order placement per kiosk session and per address, and new kiosk sessions per address; over the limit the API answers "Too many requests" with how long to wait (`apps/api/src/middleware/rateLimit.ts`).
 6. **PDF and Excel export** (Scope, Data Export, p. 11). Resolved: every report (sales, top-selling products, profitability, inventory movement) downloads as CSV, Excel (.xlsx), or PDF from the Analytics page (`apps/api/src/modules/reports/export.ts`, using `pdfkit` and `exceljs`).
-7. **Excel bulk import** (Scope, Product Management, p. 10). Only CSV import exists (`apps/web/src/app/admin/import/page.tsx`).
+7. **Excel bulk import** (Scope, Product Management, p. 10). Resolved: the Bulk import page accepts Excel (.xlsx) files as well as CSV (`apps/api/src/modules/products/xlsxImport.ts`, `POST /api/products/import-xlsx`, using `exceljs`). The sheet is turned into the same CSV the page previews, so both kinds of file get the same row checks, and there is an Excel template with a category dropdown (`GET /api/products/import-template?format=xlsx`).
 8. **Local and cloud backups** (Scope, Database Backup, p. 11; Deployment, p. 43). The backup job in `apps/worker` is scheduled only in development and writes to local disk. No cloud copy is made.
 9. **Deduction of raw materials** (Objective 3, p. 6). Resolved: dishes can use a recipe of raw materials, which are deducted when payment is confirmed (`raw_materials`, `recipe_items`, `raw_material_movements`; design in `docs/design/raw-material-stock.md`). Items sold as they are, such as bottled drinks, still count units. The ERD and data dictionary in section 3 do not show the three new tables yet.
 10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Low-stock products are listed on the admin dashboard and inventory page, and the hourly worker check writes to the server log. No notification is sent to a person.

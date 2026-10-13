@@ -6,6 +6,8 @@ import { HttpError } from "../../middleware/errorHandler";
 import { fromCSV, toCSV } from "../../lib/csv";
 import { createProductSchema, productIdSchema, updateProductSchema } from "./schema";
 import { bulkImportProducts } from "./bulkImport";
+import { buildImportTemplateXlsx, xlsxToImportCsv } from "./xlsxImport";
+import { prisma } from "../../lib/prisma";
 import {
   createProduct,
   deleteProduct,
@@ -47,10 +49,22 @@ productsRouter.get("/barcode/:code", authenticate, authorize("admin", "staff"), 
   }
 });
 
-// Reference sheet with required headers, used by /admin/import's "Download template" link.
+// Reference sheet with required headers, used by /admin/import's "Download template" links.
 // Registered before GET /:id, which is public: otherwise "import-template" is taken as a
 // product id and this admin-only route is never reached (defect D-02).
-productsRouter.get("/import-template", authenticate, authorize("admin"), (req, res) => {
+// ?format=xlsx gives the Excel version, with a category dropdown.
+productsRouter.get("/import-template", authenticate, authorize("admin"), async (req, res, next) => {
+  if (req.query.format === "xlsx") {
+    try {
+      const categories = await prisma.category.findMany({ orderBy: { sortOrder: "asc" }, select: { name: true } });
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", 'attachment; filename="product_import_template.xlsx"');
+      res.send(await buildImportTemplateXlsx(categories));
+    } catch (err) {
+      next(err);
+    }
+    return;
+  }
   const sample = {
     name: "Sample Iced Tea",
     barcode: "",
@@ -90,6 +104,18 @@ productsRouter.post("/bulk-import", authenticate, authorize("admin"), async (req
 
     // dryRun: check every row and report what would happen, without saving anything.
     res.json(await bulkImportProducts(rows, { dryRun: req.body?.dryRun === true }));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Turns an uploaded Excel workbook into the CSV text the import page previews and
+// imports, so .xlsx files go through exactly the same checks as CSV. Nothing is saved.
+productsRouter.post("/import-xlsx", authenticate, authorize("admin"), async (req, res, next) => {
+  try {
+    const fileBase64 = req.body?.fileBase64;
+    if (typeof fileBase64 !== "string" || !fileBase64.trim()) throw new HttpError(400, "fileBase64 is required");
+    res.json(await xlsxToImportCsv(Buffer.from(fileBase64, "base64")));
   } catch (err) {
     next(err);
   }

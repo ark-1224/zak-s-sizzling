@@ -63,7 +63,8 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   renders real aggregate queries (sales by day/week/month, top-selling products,
   inventory movement) — confirmed against actual order data, charts included, not just
   the API response. Every report now exports as CSV, Excel (.xlsx) or PDF
-  (`apps/api/src/modules/reports/export.ts`, with `pdfkit` and `exceljs`; added Oct 2026). The worker's nightly
+  (`apps/api/src/modules/reports/export.ts`, with `pdfkit` and `exceljs`; added Oct 2026). Bulk product import
+  reads Excel (.xlsx) files as well as CSV (`apps/api/src/modules/products/xlsxImport.ts`). The worker's nightly
   backup job was run manually (can't wait for the real 2 AM trigger) and produced a real,
   valid 28KB PostgreSQL dump; the hourly low-stock sweep was also run manually and
   correctly identified all 3 out-of-stock products. Two things worth knowing:

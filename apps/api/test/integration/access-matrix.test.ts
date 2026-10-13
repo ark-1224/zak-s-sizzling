@@ -69,6 +69,7 @@ const MATRIX: Entry[] = [
   { method: "delete", route: "/api/products/:id", path: `/api/products/${MISSING}`, expected: ADMIN },
   { method: "post", route: "/api/products/bulk-import", path: "/api/products/bulk-import", body: {}, expected: ADMIN },
   { method: "get", route: "/api/products/import-template", path: "/api/products/import-template", expected: ADMIN },
+  { method: "post", route: "/api/products/import-xlsx", path: "/api/products/import-xlsx", body: {}, expected: ADMIN },
   { method: "post", route: "/api/raw-materials/", path: "/api/raw-materials", body: {}, expected: ADMIN },
   { method: "put", route: "/api/raw-materials/:id", path: `/api/raw-materials/${MISSING}`, body: {}, expected: ADMIN },
   { method: "get", route: "/api/reports/sales", path: "/api/reports/sales?range=weekly", expected: ADMIN },
