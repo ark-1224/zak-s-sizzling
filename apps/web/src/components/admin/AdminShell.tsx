@@ -12,12 +12,15 @@ import type { AuthUser } from "@zaks/shared-types";
 // Mockups).
 //
 // The sidebar is visible at every width (an adviser/panel requirement): below md it
-// collapses to a 64px icon rail, from md up it's the full 256px sidebar with labels.
-// Because `title` tooltips never appear on touchscreens, the rail has a menu button
-// that opens the same nav as a labelled overlay panel — the rail itself stays put.
+// collapses to a 64px rail, from md up it's the full 256px sidebar with labels. On the
+// rail each icon has a short name under it (UI review #25), since `title` tooltips never
+// appear on touchscreens; its menu button still opens the full nav as an overlay panel,
+// with group names and who is signed in.
 interface NavItem {
   href: string;
   label: string;
+  /** Under the icon on the phone rail: one word that fits 56px at 11px. */
+  short: string;
   icon: IconName;
   adminOnly?: boolean;
 }
@@ -30,50 +33,56 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Operations",
     items: [
-      { href: "/admin", label: "Dashboard", icon: "dashboard" },
-      { href: "/admin/products", label: "Products", icon: "products", adminOnly: true },
-      { href: "/admin/inventory", label: "Inventory", icon: "inventory" },
-      { href: "/admin/raw-materials", label: "Raw materials", icon: "materials" },
-      { href: "/admin/import", label: "Bulk import", icon: "import", adminOnly: true },
+      { href: "/admin", label: "Dashboard", short: "Dashboard", icon: "dashboard" },
+      { href: "/admin/products", label: "Products", short: "Products", icon: "products", adminOnly: true },
+      { href: "/admin/inventory", label: "Inventory", short: "Inventory", icon: "inventory" },
+      { href: "/admin/raw-materials", label: "Raw materials", short: "Materials", icon: "materials" },
+      { href: "/admin/import", label: "Bulk import", short: "Import", icon: "import", adminOnly: true },
     ],
   },
   {
     label: "Sales",
-    items: [{ href: "/admin/analytics", label: "Analytics", icon: "analytics", adminOnly: true }],
+    items: [{ href: "/admin/analytics", label: "Analytics", short: "Analytics", icon: "analytics", adminOnly: true }],
   },
   {
     label: "Front of house",
     items: [
-      { href: "/kitchen", label: "Kitchen display", icon: "kitchen" },
-      { href: "/staff/orders", label: "Orders awaiting payment", icon: "orders" },
+      { href: "/kitchen", label: "Kitchen display", short: "Kitchen", icon: "kitchen" },
+      { href: "/staff/orders", label: "Orders awaiting payment", short: "Orders", icon: "orders" },
     ],
   },
   {
     label: "Administration",
     items: [
-      { href: "/admin/users", label: "Users & roles", icon: "users", adminOnly: true },
-      { href: "/admin/kiosk-qr", label: "Kiosk QR code", icon: "qr", adminOnly: true },
+      { href: "/admin/users", label: "Users & roles", short: "Users", icon: "users", adminOnly: true },
+      { href: "/admin/kiosk-qr", label: "Kiosk QR code", short: "QR code", icon: "qr", adminOnly: true },
     ],
   },
 ];
 
 // Full class strings per mode (never concatenated fragments) so Tailwind can see them.
-// "rail" = the always-visible sidebar (icon-only below md, labelled from md up);
-// "panel" = the mobile overlay, which always shows labels.
+// "rail" = the always-visible sidebar (icon over a short name below md, the full sidebar
+// from md up); "panel" = the mobile overlay, which always shows full labels.
 const MODE = {
   rail: {
+    content: "px-1 md:px-3",
     text: "hidden md:block",
     label: "hidden md:inline",
-    link: "justify-center md:justify-start",
+    short: "text-[11px] leading-tight md:hidden",
+    stack: "flex-col justify-center gap-0.5 px-0 py-1.5 md:flex-row md:justify-start md:gap-3 md:px-3 md:py-0",
     userBox: "items-center md:items-stretch md:rounded-md md:border md:border-adm-line md:p-3",
-    logout: "w-11 md:w-full",
+    logout: "w-full flex-col gap-0.5 py-1.5 md:flex-row md:gap-2 md:py-0",
+    logoutLabel: "text-[11px] leading-tight md:text-sm",
   },
   panel: {
+    content: "px-3",
     text: "block",
     label: "inline",
-    link: "justify-start",
+    short: "hidden",
+    stack: "justify-start gap-3 px-3",
     userBox: "items-stretch rounded-md border border-adm-line p-3",
-    logout: "w-full",
+    logout: "w-full gap-2",
+    logoutLabel: "",
   },
 } as const;
 
@@ -156,7 +165,7 @@ function SidebarContent({
   const m = MODE[mode];
 
   return (
-    <div className="flex flex-1 flex-col gap-4 px-2 py-3 md:gap-5 md:px-3 md:py-5">
+    <div className={`flex flex-1 flex-col gap-4 py-3 md:gap-5 md:py-5 ${m.content}`}>
       <div className="flex items-center justify-center gap-2.5 md:justify-start md:px-1.5">
         <img src="/logo.jpg" alt="Zak's Sizzling Hub" className="h-8 w-8 rounded-md object-cover" />
         <div className={`min-w-0 flex-1 ${m.text}`}>
@@ -181,9 +190,10 @@ function SidebarContent({
           onClick={onOpenMenu}
           aria-label="Open navigation menu"
           title="Show menu labels"
-          className="flex h-11 w-full items-center justify-center rounded-md border border-adm-line text-adm-ink-2 md:hidden"
+          className="flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-md border border-adm-line py-1.5 text-adm-ink-2 md:hidden"
         >
           <Icon name="menu" />
+          <span className="text-[11px] leading-tight">Menu</span>
         </button>
       )}
 
@@ -207,12 +217,14 @@ function SidebarContent({
                       aria-label={item.label}
                       title={item.label}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-11 items-center gap-3 rounded-md px-3 text-base md:text-sm ${m.link} ${
+                      className={`flex min-h-11 items-center rounded-md text-base md:text-sm ${m.stack} ${
                         active ? "bg-adm-accent-soft font-medium text-adm-accent" : "text-adm-ink-2"
                       }`}
                     >
                       <Icon name={item.icon} />
                       <span className={m.label}>{item.label}</span>
+                      {/* Accent on its tint is 4.3:1, short of 4.5:1 for small text, so the active name is ink. */}
+                      <span className={`${m.short} ${active ? "text-adm-ink" : ""}`}>{item.short}</span>
                     </Link>
                   );
                 })}
@@ -239,10 +251,10 @@ function SidebarContent({
           onClick={onLogout}
           aria-label="Log out"
           title="Log out"
-          className={`flex min-h-11 items-center justify-center gap-2 rounded-md border border-adm-line text-sm font-medium text-adm-ink-2 ${m.logout}`}
+          className={`flex min-h-11 items-center justify-center rounded-md border border-adm-line text-sm font-medium text-adm-ink-2 ${m.logout}`}
         >
           <Icon name="logout" className="h-4.5 w-4.5" />
-          <span className={m.label}>Log out</span>
+          <span className={m.logoutLabel}>Log out</span>
         </button>
       </div>
     </div>
