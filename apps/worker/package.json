@@ -8,16 +8,19 @@
     "build": "prisma generate --schema ../api/prisma/schema.prisma && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "backup:now": "tsx src/jobs/backupDatabase.ts",
-    "low-stock:now": "tsx src/jobs/lowStockSweep.ts"
+    "low-stock:now": "tsx src/jobs/lowStockSweep.ts",
+    "mail:test": "tsx src/jobs/sendTestEmail.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",
     "dotenv": "^16.4.7",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "nodemailer": "10.0.12"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "8.0.2",
     "prisma": "^6.1.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"

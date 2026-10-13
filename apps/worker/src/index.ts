@@ -2,6 +2,7 @@ import "dotenv/config";
 import cron from "node-cron";
 import { backupDatabase } from "./jobs/backupDatabase";
 import { lowStockSweep } from "./jobs/lowStockSweep";
+import { describeMailConfig, readMailSettings } from "./lib/mailer";
 
 console.log("[worker] Zak's Sizzling Hub background worker started");
 
@@ -50,3 +51,6 @@ console.log(
     ? "[worker] scheduled: nightly backup (2:00 AM), hourly low-stock sweep"
     : "[worker] scheduled: hourly low-stock sweep (nightly backup skipped outside local dev — see Railway's managed Postgres backups)"
 );
+
+// Says whether email is set up, without printing any of the settings themselves.
+console.log(`[worker] ${describeMailConfig(readMailSettings())}`);

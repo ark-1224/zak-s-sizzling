@@ -17,7 +17,8 @@
     "db:studio": "npm run db:studio -w apps/api",
     "test": "npm run test -w apps/api",
     "backup:now": "npm run backup:now -w apps/worker",
-    "low-stock:now": "npm run low-stock:now -w apps/worker"
+    "low-stock:now": "npm run low-stock:now -w apps/worker",
+    "mail:test": "npm run mail:test -w apps/worker"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
