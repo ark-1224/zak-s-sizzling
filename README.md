@@ -280,6 +280,18 @@ It signs in and sends one test email to `ALERT_EMAIL_TO`, or says what's missing
 the server refused. When the worker starts it logs whether email alerts are on. Without
 these settings everything still runs, and alerts stay in the worker's log.
 
+**Low-stock emails.** When a unit-counted product or an active raw material reaches its
+minimum stock level (goes from above it to at or below it), database triggers on
+`inventory` and `raw_materials` queue a row in `low_stock_alerts`, whatever changed the
+stock: a sale, an adjustment, a restock, an edited minimum. The worker emails whatever is
+waiting every minute, in one message, and retries a failed send up to five times. An item
+that stays low isn't alerted again until it has been restocked above its minimum. To send
+the waiting alerts once, without the worker running:
+
+```bash
+npm run low-stock:alerts
+```
+
 ## Sprint 1 verification checklist
 
 - `POST http://localhost:4000/api/auth/login` with the seeded admin credentials returns

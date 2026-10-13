@@ -18,7 +18,8 @@
     "test": "npm run test -w apps/api",
     "backup:now": "npm run backup:now -w apps/worker",
     "low-stock:now": "npm run low-stock:now -w apps/worker",
-    "mail:test": "npm run mail:test -w apps/worker"
+    "mail:test": "npm run mail:test -w apps/worker",
+    "low-stock:alerts": "npm run low-stock:alerts -w apps/worker"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

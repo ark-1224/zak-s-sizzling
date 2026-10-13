@@ -2,7 +2,8 @@ import "dotenv/config";
 import cron from "node-cron";
 import { backupDatabase } from "./jobs/backupDatabase";
 import { lowStockSweep } from "./jobs/lowStockSweep";
-import { describeMailConfig, readMailSettings } from "./lib/mailer";
+import { sendLowStockAlerts } from "./jobs/sendLowStockAlerts";
+import { createMailer, describeMailConfig, readMailSettings } from "./lib/mailer";
 
 console.log("[worker] Zak's Sizzling Hub background worker started");
 
@@ -52,5 +53,21 @@ console.log(
     : "[worker] scheduled: hourly low-stock sweep (nightly backup skipped outside local dev — see Railway's managed Postgres backups)"
 );
 
-// Says whether email is set up, without printing any of the settings themselves.
-console.log(`[worker] ${describeMailConfig(readMailSettings())}`);
+// Low-stock alert emails, checked every minute: the database queues an alert when an
+// item reaches its minimum, and this sends whatever is waiting. Only scheduled when
+// email is set up; until then alerts wait in low_stock_alerts (the log line says why).
+const mailConfig = readMailSettings();
+console.log(`[worker] ${describeMailConfig(mailConfig)}`);
+if (mailConfig.ok) {
+  const mailer = createMailer(mailConfig.settings);
+  let alertsRunning = false;
+  cron.schedule("* * * * *", () => {
+    if (alertsRunning) return; // a slow mail server mustn't stack up runs
+    alertsRunning = true;
+    sendLowStockAlerts(mailer)
+      .catch((err) => console.error("[low-stock] alert run failed:", err))
+      .finally(() => {
+        alertsRunning = false;
+      });
+  });
+}

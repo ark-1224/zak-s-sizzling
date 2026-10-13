@@ -1,7 +1,5 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma";
 
 export interface LowStockItem {
   kind: "product" | "raw material";
@@ -12,13 +10,11 @@ export interface LowStockItem {
 }
 
 /**
- * Logs unit-counted products and raw materials at or below their minimum level. This
- * is the automated side of the manuscript's low-stock alerting — the admin UI (the
- * dashboard, Inventory and Raw materials banners) covers the on-demand side. Recipe
- * dishes aren't listed themselves: they run low when one of their raw materials does
- * (docs/design/raw-material-stock.md 3.5). Wiring this into an actual notification
- * channel (email/SMS/push) needs credentials this environment doesn't have configured,
- * so it logs to stdout for now rather than claiming to notify anyone.
+ * Logs unit-counted products and raw materials at or below their minimum level, every
+ * hour. The admin UI (the dashboard, Inventory and Raw materials banners) shows the same
+ * list on demand, and an email goes out when an item first reaches its minimum
+ * (sendLowStockAlerts.ts). Recipe dishes aren't listed themselves: they run low when one
+ * of their raw materials does (docs/design/raw-material-stock.md 3.5).
  */
 export async function lowStockSweep(): Promise<LowStockItem[]> {
   const [products, materials] = await Promise.all([

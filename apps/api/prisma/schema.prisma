@@ -148,6 +148,7 @@ model Product {
   orderItems       OrderItem[]
   stockAdjustments StockAdjustment[]
   recipeItems      RecipeItem[]
+  lowStockAlerts   LowStockAlert[]
 
   @@unique([barcode])
   @@index([categoryId])
@@ -272,6 +273,7 @@ model RawMaterial {
   updatedAt         DateTime              @updatedAt @map("updated_at")
   recipeItems       RecipeItem[]
   movements         RawMaterialMovement[]
+  lowStockAlerts    LowStockAlert[]
 
   @@map("raw_materials")
 }
@@ -312,4 +314,29 @@ model RawMaterialMovement {
   @@index([createdAt])
   @@index([orderId])
   @@map("raw_material_movements")
+}
+
+// One row each time a unit-counted product or an active raw material reaches its minimum
+// stock level (goes from above it to at or below it). Rows are written by database
+// triggers on inventory and raw_materials (see the low_stock_alerts migration), so every
+// way stock can change is covered; the worker emails unsent rows (sendLowStockAlerts.ts).
+// An item that stays low doesn't cross again, so it isn't alerted again until it has
+// been restocked above its minimum.
+model LowStockAlert {
+  id                String        @id @default(uuid()) @db.Uuid
+  productId         String?       @map("product_id") @db.Uuid
+  product           Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rawMaterialId     String?       @map("raw_material_id") @db.Uuid
+  rawMaterial       RawMaterial?  @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+  itemName          String        @map("item_name") @db.VarChar(150)
+  stockQty          Decimal       @map("stock_qty") @db.Decimal(12, 3)
+  minStockThreshold Decimal       @map("min_stock_threshold") @db.Decimal(12, 3)
+  unit              MaterialUnit?
+  createdAt         DateTime      @default(now()) @map("created_at")
+  sentAt            DateTime?     @map("sent_at")
+  attempts          Int           @default(0)
+  lastError         String?       @map("last_error") @db.VarChar(500)
+
+  @@index([sentAt, createdAt])
+  @@map("low_stock_alerts")
 }

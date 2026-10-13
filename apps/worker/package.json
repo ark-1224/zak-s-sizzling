@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "backup:now": "tsx src/jobs/backupDatabase.ts",
     "low-stock:now": "tsx src/jobs/lowStockSweep.ts",
-    "mail:test": "tsx src/jobs/sendTestEmail.ts"
+    "mail:test": "tsx src/jobs/sendTestEmail.ts",
+    "low-stock:alerts": "tsx src/jobs/sendLowStockAlerts.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",
