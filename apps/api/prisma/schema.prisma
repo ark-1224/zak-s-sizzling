@@ -320,8 +320,8 @@ model RawMaterialMovement {
 // stock level (goes from above it to at or below it). Rows are written by database
 // triggers on inventory and raw_materials (see the low_stock_alerts migration), so every
 // way stock can change is covered; the worker emails unsent rows (sendLowStockAlerts.ts).
-// An item that stays low doesn't cross again, so it isn't alerted again until it has
-// been restocked above its minimum.
+// An item is alerted once until it is restocked (resolvedAt), however its minimum or
+// in-use flag changes in between.
 model LowStockAlert {
   id                String        @id @default(uuid()) @db.Uuid
   productId         String?       @map("product_id") @db.Uuid
@@ -336,7 +336,12 @@ model LowStockAlert {
   sentAt            DateTime?     @map("sent_at")
   attempts          Int           @default(0)
   lastError         String?       @map("last_error") @db.VarChar(500)
+  /// Set when the item is restocked (stock goes up and ends above its minimum). Until then
+  /// no new alert is queued for the item.
+  resolvedAt        DateTime?     @map("resolved_at")
 
   @@index([sentAt, createdAt])
+  @@index([productId])
+  @@index([rawMaterialId])
   @@map("low_stock_alerts")
 }

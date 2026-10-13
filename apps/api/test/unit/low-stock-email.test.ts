@@ -26,6 +26,12 @@ describe("the low-stock email", () => {
     expect(email.text).toContain("Amounts are from when each item reached its minimum.");
   });
 
+  it("says when an item reached its minimum more than once since the last email", () => {
+    const email = buildLowStockEmail([{ ...juice, times: 3 }]);
+
+    expect(email.text).toContain("- Calamansi Juice: 3 left, minimum 5 (Oct 15, 10:42 PM; reached it 3 times since the last email)");
+  });
+
   it("escapes item names in the HTML version", () => {
     const email = buildLowStockEmail([{ ...juice, itemName: `Tea <b>"Special"</b> & Co` }]);
 

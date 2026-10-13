@@ -3,10 +3,10 @@ import { prisma } from "../lib/prisma";
 import { describeMailConfig, describeMailError, mailerFromEnv, readMailSettings, type Mailer, type MailMessage } from "../lib/mailer";
 
 /**
- * Emails the low-stock alerts that haven't been sent yet (Low-stock notifications 2/3).
- * The database queues an alert when an item reaches its minimum stock level (triggers
- * on inventory and raw_materials, see the low_stock_alerts migration); this job sends
- * everything waiting in one email and marks it sent. A failed send is retried on the
+ * Emails the low-stock alerts that haven't been sent yet. The database queues an alert
+ * when an item reaches its minimum stock level, once until the item is restocked
+ * (triggers on inventory and raw_materials, see the low_stock_alerts migrations); this
+ * job sends everything waiting in one email and marks it sent. A failed send is retried on the
  * next run, up to MAX_ATTEMPTS times, with the reason kept in last_error.
  *
  * The worker runs this every minute when email is set up (index.ts), and
@@ -24,6 +24,8 @@ export interface AlertLine {
   minStockThreshold: number;
   unit: string | null;
   createdAt: Date;
+  /** How many times it reached its minimum since the last email; this line is the latest. */
+  times?: number;
 }
 
 // Same display as the web app (lib/units.ts): large gram and millilitre amounts in kg and L.
@@ -46,11 +48,11 @@ function describe(alert: AlertLine) {
     name: alert.kind === "raw material" ? `${alert.itemName} (raw material)` : alert.itemName,
     left: `${quantity(alert.stockQty, alert.unit)} left`,
     minimum: `minimum ${quantity(alert.minStockThreshold, alert.unit)}`,
-    at: when(alert.createdAt),
+    at: (alert.times ?? 1) > 1 ? `${when(alert.createdAt)}; reached it ${alert.times} times since the last email` : when(alert.createdAt),
   };
 }
 
-/** One email listing every alert, oldest first. */
+/** One email listing every alert, in the order given (oldest first). */
 export function buildLowStockEmail(alerts: AlertLine[]): MailMessage {
   const subject =
     alerts.length === 1
@@ -102,15 +104,25 @@ export async function sendLowStockAlerts(mailer: Mailer | null = mailerFromEnv()
   if (alerts.length === 0) return { sent: 0, failed: 0, waiting: 0 };
 
   const ids = alerts.map((a) => a.id);
+  // An item restocked and run down again before this email went out (say, while the
+  // mail server was unreachable) is listed once, with its latest figures.
+  const byItem = new Map<string, { latest: (typeof alerts)[number]; times: number }>();
+  for (const alert of alerts) {
+    const key = alert.productId ?? alert.rawMaterialId!;
+    byItem.set(key, { latest: alert, times: (byItem.get(key)?.times ?? 0) + 1 });
+  }
   const message = buildLowStockEmail(
-    alerts.map((a) => ({
-      itemName: a.itemName,
-      kind: a.rawMaterialId ? "raw material" : "product",
-      stockQty: a.stockQty.toNumber(),
-      minStockThreshold: a.minStockThreshold.toNumber(),
-      unit: a.unit,
-      createdAt: a.createdAt,
-    }))
+    [...byItem.values()]
+      .sort((a, b) => a.latest.createdAt.getTime() - b.latest.createdAt.getTime())
+      .map(({ latest: a, times }) => ({
+        itemName: a.itemName,
+        kind: a.rawMaterialId ? "raw material" : "product",
+        stockQty: a.stockQty.toNumber(),
+        minStockThreshold: a.minStockThreshold.toNumber(),
+        unit: a.unit,
+        createdAt: a.createdAt,
+        times,
+      }))
   );
 
   let result: SendResult;

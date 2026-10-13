@@ -284,9 +284,11 @@ these settings everything still runs, and alerts stay in the worker's log.
 minimum stock level (goes from above it to at or below it), database triggers on
 `inventory` and `raw_materials` queue a row in `low_stock_alerts`, whatever changed the
 stock: a sale, an adjustment, a restock, an edited minimum. The worker emails whatever is
-waiting every minute, in one message, and retries a failed send up to five times. An item
-that stays low isn't alerted again until it has been restocked above its minimum. To send
-the waiting alerts once, without the worker running:
+waiting every minute, in one message, and retries a failed send up to five times. Each
+item is alerted once until it is restocked (its stock goes up and ends above the minimum);
+changing its minimum or taking a raw material out of use and back doesn't alert it again.
+An item that reached its minimum more than once before an email went out is listed once,
+with its latest figures. To send the waiting alerts once, without the worker running:
 
 ```bash
 npm run low-stock:alerts

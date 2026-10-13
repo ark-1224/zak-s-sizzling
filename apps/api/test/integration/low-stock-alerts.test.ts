@@ -7,8 +7,9 @@ import { MAX_ATTEMPTS, sendLowStockAlerts } from "../../../worker/src/jobs/sendL
 import type { Mailer, MailMessage } from "../../../worker/src/lib/mailer";
 import { app, kioskToken, loginAs } from "./helpers";
 
-// Low-stock notifications (2/3): the database queues an alert when an item reaches its
-// minimum, whatever changed the stock, and the worker emails what is waiting. The tests
+// Low-stock notifications (2/3 and 3/3): the database queues an alert when an item
+// reaches its minimum, whatever changed the stock, once until the item is restocked;
+// the worker emails what is waiting. The tests
 // in this file build on each other. Items are named "LSA Test …"; other files' alerts
 // may also be waiting, so these tests look only at their own.
 
@@ -129,6 +130,43 @@ describe("queuing an alert when an item reaches its minimum", () => {
   });
 });
 
+describe("only once until restocked (3/3)", () => {
+  it("doesn't alert again when the minimum is lowered and raised back without a restock", async () => {
+    await adjustProduct({ minStockThreshold: 10 }); // 20 left: no longer low
+    await adjustProduct({ minStockThreshold: 25 }); // low again, but never restocked
+
+    expect(await alertsFor("LSA Test Juice")).toHaveLength(3);
+  });
+
+  it("doesn't alert again when a low raw material is taken out of use and put back", async () => {
+    const put = (isActive: boolean) => request(app).put(`/api/raw-materials/${ids.syrup}`).set(as(admin)).send({ isActive });
+    await put(false);
+    await put(true);
+
+    expect(await alertsFor("LSA Test Old Syrup")).toHaveLength(1);
+  });
+
+  it("doesn't count a restock that leaves the item at or below its minimum", async () => {
+    await adjustMaterial(ids.sugar, { delta: 100, reason: "restock" }); // 500 g: still at the minimum
+    await adjustMaterial(ids.sugar, { delta: -100, reason: "spoilage" });
+
+    const alerts = await alertsFor("LSA Test Sugar");
+    expect(alerts).toHaveLength(2);
+    expect(alerts[1].resolvedAt).toBeNull();
+  });
+
+  it("closes the alert once restocked above the minimum, so the next time it runs low alerts again", async () => {
+    await adjustMaterial(ids.sugar, { setQty: 1000, reason: "restock" });
+    expect((await alertsFor("LSA Test Sugar")).every((a) => a.resolvedAt !== null)).toBe(true);
+
+    await adjustMaterial(ids.sugar, { delta: -600, reason: "spoilage" });
+
+    const alerts = await alertsFor("LSA Test Sugar");
+    expect(alerts).toHaveLength(3);
+    expect(alerts[2]).toMatchObject({ resolvedAt: null });
+  });
+});
+
 /** A mailer that keeps what it is asked to send, or fails like a refused Gmail sign-in. */
 function fakeMailer(fail = false): Mailer & { sent: MailMessage[] } {
   const sent: MailMessage[] = [];
@@ -155,17 +193,18 @@ describe("emailing the alerts (worker)", () => {
     expect(await prisma.lowStockAlert.count({ where: { ...OUR_ALERTS, sentAt: { not: null } } })).toBe(0);
   });
 
-  it("sends everything waiting, oldest first, and marks it sent", async () => {
+  it("sends everything waiting, one line per item with its latest figures, and marks it sent", async () => {
     const mailer = fakeMailer();
     // Other test files may have left alerts too; one email holds 50, so keep going until none wait.
     for (let run = 0; run < 10 && (await sendLowStockAlerts(mailer)).waiting > 0; run++);
 
     expect(await prisma.lowStockAlert.count({ where: { ...OUR_ALERTS, sentAt: null } })).toBe(0);
     const text = mailer.sent.map((m) => m.text).join("\n");
-    expect(text).toMatch(/- LSA Test Juice: 5 left, minimum 5 \(/);
-    expect(text).toMatch(/- LSA Test Sugar \(raw material\): 400 g left, minimum 500 g \(/);
-    expect(text).toMatch(/- LSA Test Juice: 20 left, minimum 25 \(/);
-    expect(text).toMatch(/- LSA Test Old Syrup \(raw material\): 50 ml left, minimum 100 ml \(/);
+    // The juice and the sugar each reached their minimum three times before this email.
+    expect(text).toMatch(/- LSA Test Juice: 20 left, minimum 25 \([^)]*; reached it 3 times since the last email\)/);
+    expect(text).toMatch(/- LSA Test Sugar \(raw material\): 400 g left, minimum 500 g \([^)]*; reached it 3 times since the last email\)/);
+    expect(text).toMatch(/- LSA Test Old Syrup \(raw material\): 50 ml left, minimum 100 ml \([^;)]*\)/);
+    expect(text.match(/LSA Test Juice/g)).toHaveLength(1);
   });
 
   it("doesn't send them again", async () => {
