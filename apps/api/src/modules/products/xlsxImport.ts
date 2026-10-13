@@ -26,37 +26,56 @@ export const MAX_XLSX_ENTRIES = 200;
 const NOT_XLSX = "This file isn't an Excel workbook (.xlsx). In Excel, use Save As → Excel Workbook, or save it as CSV.";
 const TOO_BIG_UNPACKED = "The Excel file is too large once unpacked. Split it into smaller files, or save it as CSV.";
 
+const SIG_LOCAL = 0x04034b50;
+const SIG_CENTRAL = 0x02014b50;
+const SIG_END = Buffer.from([0x50, 0x4b, 0x05, 0x06]); // 0x06054b50, little-endian
+const SIG_ZIP64_LOCATOR = 0x07064b50;
+
 /**
- * Walks the zip's central directory and unpacks every entry with a hard output limit,
- * before exceljs sees the file. The sizes a zip declares can lie, so each entry is
- * actually inflated (zlib's maxOutputLength stops it at the budget) rather than trusted.
+ * Unpacks every entry of the zip with a hard output limit, before exceljs sees the file.
+ * The sizes a zip declares can lie, so each entry is actually inflated (zlib's
+ * maxOutputLength stops it at the budget) rather than trusted.
+ *
+ * This only protects exceljs if it reads exactly the entries checked here, so the zip is
+ * walked the way JSZip (inside exceljs) walks it, and anything the two could read
+ * differently is refused: JSZip takes the last end-of-directory record in the file,
+ * reads directory records for as long as their signature continues (whatever count the
+ * end record gives), shifts every offset when there are extra bytes before the
+ * directory, and follows Zip64 fields. No product sheet needs Zip64 or extra bytes.
  */
 export function assertXlsxUnpacksSafely(file: Buffer): void {
-  // End of central directory record: at least 22 bytes, within the last 64 KB + 22.
-  let eocd = -1;
-  for (let i = file.length - 22; i >= Math.max(0, file.length - 65557); i--) {
-    if (file.readUInt32LE(i) === 0x06054b50) {
-      eocd = i;
-      break;
-    }
-  }
-  if (eocd === -1) throw new HttpError(400, NOT_XLSX);
+  const eocd = file.lastIndexOf(SIG_END);
+  if (eocd < 0 || eocd + 22 > file.length) throw new HttpError(400, NOT_XLSX);
 
   const entries = file.readUInt16LE(eocd + 10);
+  const directorySize = file.readUInt32LE(eocd + 12);
+  const directoryStart = file.readUInt32LE(eocd + 16);
+  const zip64 =
+    [file.readUInt16LE(eocd + 4), file.readUInt16LE(eocd + 6), file.readUInt16LE(eocd + 8), entries].includes(0xffff) ||
+    directorySize === 0xffffffff ||
+    directoryStart === 0xffffffff ||
+    (eocd >= 20 && file.readUInt32LE(eocd - 20) === SIG_ZIP64_LOCATOR);
+  if (zip64) throw new HttpError(413, TOO_BIG_UNPACKED);
   if (entries > MAX_XLSX_ENTRIES) throw new HttpError(413, TOO_BIG_UNPACKED);
-  let p = file.readUInt32LE(eocd + 16);
+  // Where JSZip would find "extra bytes" and shift every offset by them.
+  if (directoryStart + directorySize !== eocd) throw new HttpError(400, NOT_XLSX);
+
+  let p = directoryStart;
+  let found = 0;
   let budget = MAX_XLSX_UNPACKED_BYTES;
 
-  for (let n = 0; n < entries; n++) {
-    if (p + 46 > file.length || file.readUInt32LE(p) !== 0x02014b50) throw new HttpError(400, NOT_XLSX);
+  while (p + 4 <= file.length && file.readUInt32LE(p) === SIG_CENTRAL) {
+    if (++found > MAX_XLSX_ENTRIES) throw new HttpError(413, TOO_BIG_UNPACKED);
+    if (p + 46 > file.length) throw new HttpError(400, NOT_XLSX);
     const method = file.readUInt16LE(p + 10);
     const compressedSize = file.readUInt32LE(p + 20);
+    const uncompressedSize = file.readUInt32LE(p + 24);
     const localHeader = file.readUInt32LE(p + 42);
-    // 0xFFFFFFFF means Zip64, which no product sheet needs.
-    if (compressedSize === 0xffffffff || localHeader === 0xffffffff) throw new HttpError(413, TOO_BIG_UNPACKED);
+    // 0xFFFFFFFF sends JSZip to the entry's Zip64 extra field for the real value.
+    if ([compressedSize, uncompressedSize, localHeader].includes(0xffffffff)) throw new HttpError(413, TOO_BIG_UNPACKED);
     p += 46 + file.readUInt16LE(p + 28) + file.readUInt16LE(p + 30) + file.readUInt16LE(p + 32);
 
-    if (localHeader + 30 > file.length || file.readUInt32LE(localHeader) !== 0x04034b50) throw new HttpError(400, NOT_XLSX);
+    if (localHeader + 30 > file.length || file.readUInt32LE(localHeader) !== SIG_LOCAL) throw new HttpError(400, NOT_XLSX);
     const start = localHeader + 30 + file.readUInt16LE(localHeader + 26) + file.readUInt16LE(localHeader + 28);
     if (start + compressedSize > file.length) throw new HttpError(400, NOT_XLSX);
     const data = file.subarray(start, start + compressedSize);
@@ -75,6 +94,10 @@ export function assertXlsxUnpacksSafely(file: Buffer): void {
     budget -= unpacked;
     if (budget < 0) throw new HttpError(413, TOO_BIG_UNPACKED);
   }
+
+  // The records must end exactly at the end record and match its count, so the entries
+  // checked above are all the entries there are.
+  if (found === 0 || found !== entries || p !== eocd) throw new HttpError(400, NOT_XLSX);
 }
 
 type Header = (typeof IMPORT_HEADERS)[number];

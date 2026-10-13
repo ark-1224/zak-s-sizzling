@@ -10,6 +10,7 @@ vi.mock("../../src/modules/products/service", () => ({}));
 import { fromCSV } from "../../src/lib/csv";
 import { HttpError } from "../../src/middleware/errorHandler";
 import {
+  assertXlsxUnpacksSafely,
   buildImportTemplateXlsx,
   cellToText,
   MAX_XLSX_BYTES,
@@ -168,6 +169,48 @@ describe("files that would cost too much to read", () => {
     const err = await failure(xlsxToImportCsv(await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" })));
 
     expect(err).toMatchObject({ status: 413 });
+  });
+
+  // The check only helps if it sees every entry JSZip (inside exceljs) will unpack. Each
+  // file below is one JSZip still opens, with more in it than a naive check would see.
+  describe("zips that JSZip would read differently from a naive check", () => {
+    async function smallThenBomb(): Promise<Buffer> {
+      const zip = new JSZip();
+      zip.file("a.xml", "<a/>");
+      zip.file("b.xml", Buffer.alloc(30 * 1024 * 1024));
+      return zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+    }
+    const endRecord = (zip: Buffer) => zip.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+
+    it("refuses an end record that counts fewer entries than the directory holds", async () => {
+      const zip = await smallThenBomb();
+      zip.writeUInt16LE(1, endRecord(zip) + 8);
+      zip.writeUInt16LE(1, endRecord(zip) + 10);
+
+      expect(Object.keys((await JSZip.loadAsync(zip)).files)).toEqual(["a.xml", "b.xml"]);
+      expect(() => assertXlsxUnpacksSafely(zip)).toThrow(HttpError);
+    });
+
+    it("refuses extra bytes before the zip, which make JSZip shift every offset", async () => {
+      const zip = Buffer.concat([Buffer.alloc(64), await smallThenBomb()]);
+
+      expect(Object.keys((await JSZip.loadAsync(zip)).files)).toEqual(["a.xml", "b.xml"]);
+      expect(() => assertXlsxUnpacksSafely(zip)).toThrow(HttpError);
+    });
+
+    it("refuses Zip64 markers, which send JSZip to a different directory", async () => {
+      const zip = await smallThenBomb();
+      zip.writeUInt16LE(0xffff, endRecord(zip) + 10);
+
+      expect(() => assertXlsxUnpacksSafely(zip)).toThrow(expect.objectContaining({ status: 413 }));
+    });
+
+    it("lets an ordinary workbook through, and refuses an empty file", async () => {
+      const file = await workbook([["name", "category", "price"], ["Plain Rice", "Rice & Noodles", 25]]);
+
+      expect(() => assertXlsxUnpacksSafely(file)).not.toThrow();
+      expect(() => assertXlsxUnpacksSafely(Buffer.alloc(0))).toThrow(HttpError);
+    });
   });
 
   it("reads only the rows that hold something, even with a stray cell a million rows down", async () => {
