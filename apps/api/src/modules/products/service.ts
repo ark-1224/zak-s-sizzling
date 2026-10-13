@@ -125,6 +125,14 @@ async function assertValidRecipe(tracking: StockTracking, recipe: RecipeInput[] 
   if (found !== ids.length) throw new HttpError(404, "One of the raw materials in the recipe doesn't exist");
 }
 
+// Barcodes are unique; without this a duplicate reached the generic 500.
+function rethrowDuplicateBarcode(err: unknown): never {
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    throw new HttpError(409, "Another product already uses this barcode");
+  }
+  throw err;
+}
+
 const recipeRows = (recipe: RecipeInput[]) => recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: r.qtyPerServing }));
 
 async function getProductDTO(id: string): Promise<Product> {
@@ -134,22 +142,24 @@ async function getProductDTO(id: string): Promise<Product> {
 export async function createProduct(input: ProductInput): Promise<Product> {
   const tracking = input.tracking ?? "unit";
   await assertValidRecipe(tracking, input.recipe, true);
-  const product = await prisma.product.create({
-    data: {
-      name: input.name,
-      price: input.price,
-      cost: input.cost,
-      barcode: input.barcode || null,
-      categoryId: input.categoryId,
-      description: input.description,
-      icon: input.icon,
-      tracking,
-      // Recipe products keep an inventory row for consistency, but their stock comes
-      // from the raw materials, so their own count stays 0.
-      inventory: { create: { stockQty: tracking === "recipe" ? 0 : input.stockQty, minStockThreshold: input.minStockThreshold } },
-      recipeItems: tracking === "recipe" ? { create: recipeRows(input.recipe!) } : undefined,
-    },
-  });
+  const product = await prisma.product
+    .create({
+      data: {
+        name: input.name,
+        price: input.price,
+        cost: input.cost,
+        barcode: input.barcode || null,
+        categoryId: input.categoryId,
+        description: input.description,
+        icon: input.icon,
+        tracking,
+        // Recipe products keep an inventory row for consistency, but their stock comes
+        // from the raw materials, so their own count stays 0.
+        inventory: { create: { stockQty: tracking === "recipe" ? 0 : input.stockQty, minStockThreshold: input.minStockThreshold } },
+        recipeItems: tracking === "recipe" ? { create: recipeRows(input.recipe!) } : undefined,
+      },
+    })
+    .catch(rethrowDuplicateBarcode);
   if (tracking === "recipe") await refreshAvailability({ productIds: [product.id], materialIds: [] });
   return getProductDTO(product.id);
 }
@@ -183,7 +193,7 @@ export async function updateProduct(id: string, input: Partial<ProductInput> & {
       await tx.recipeItem.deleteMany({ where: { productId: id } });
       await tx.recipeItem.createMany({ data: recipeRows(input.recipe).map((r) => ({ ...r, productId: id })) });
     }
-  });
+  }).catch(rethrowDuplicateBarcode);
 
   // Stock changes made through the product-edit form still go through the same path
   // everything else does (applyStockChange) — that's what keeps isAvailable and the

@@ -132,3 +132,35 @@ describe("DELETE /api/products/:id", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("duplicate barcodes", () => {
+  // Barcodes are unique; a duplicate used to reach the generic 500, so the product form
+  // could only say "Internal server error".
+  it("refuses a new product with a barcode another product already uses", async () => {
+    const adminToken = await loginAs("admin");
+    const categories = await request(app).get("/api/categories");
+
+    const res = await request(app)
+      .post("/api/products")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Duplicate Barcode Dish", price: 100, categoryId: categories.body[0].id, barcode: PRODUCTS.sisig.barcode });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("Another product already uses this barcode");
+    const all = await request(app).get("/api/products");
+    expect(all.body.some((p: { name: string }) => p.name === "Duplicate Barcode Dish")).toBe(false);
+  });
+
+  it("refuses to give a product another product's barcode, and leaves it unchanged", async () => {
+    const adminToken = await loginAs("admin");
+
+    const res = await request(app)
+      .put(`/api/products/${PRODUCTS.calamares.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ name: "Renamed Calamares", barcode: PRODUCTS.sisig.barcode });
+
+    expect(res.status).toBe(409);
+    const after = await request(app).get(`/api/products/${PRODUCTS.calamares.id}`);
+    expect(after.body).toMatchObject({ name: PRODUCTS.calamares.name, barcode: null });
+  });
+});
