@@ -7,6 +7,7 @@ import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { createGzip } from "node:zlib";
 import type { S3Client } from "@aws-sdk/client-s3";
+import { describeCommandFailure, withoutPassword } from "../lib/pgCommand";
 import { createStorageClient, describeStorageConfig, describeStorageError, readStorageSettings, uploadBackup, type StoredBackup } from "../lib/storage";
 
 /**
@@ -54,24 +55,25 @@ export function backupName(now: Date): string {
   return `zaks-backup-${now.toISOString().replace(/\.\d{3}Z$/, "Z").replace(/:/g, "-")}.sql.gz`;
 }
 
+/** pg_dump's arguments: the connection string without its password (lib/pgCommand.ts). */
+export function pgDumpArgs(connectionUrl: string, outFile: string): string[] {
+  return [connectionUrl, "--format=plain", "--no-owner", "--no-acl", "--file", outFile];
+}
+
 function runPgDump(pgDumpPath: string, databaseUrl: string, outFile: string): Promise<void> {
-  // The connection string goes straight through: libpq's own URI parser handles
-  // percent-decoding and query parameters (sslmode and so on) correctly.
+  // The connection string otherwise goes straight through: libpq's own URI parser
+  // handles percent-decoding and query parameters (sslmode and so on) correctly.
+  const { url, env } = withoutPassword(databaseUrl);
   return new Promise((resolve, reject) => {
-    execFile(
-      pgDumpPath,
-      [databaseUrl, "--format=plain", "--no-owner", "--no-acl", "--file", outFile],
-      { timeout: PG_DUMP_TIMEOUT_MS },
-      (error, _stdout, stderr) => {
-        if (!error) return resolve();
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          return reject(
-            new Error(`pg_dump wasn't found ("${pgDumpPath}"). Install the PostgreSQL 18 client, or set PG_DUMP_PATH to pg_dump's location.`)
-          );
-        }
-        reject(new Error(`pg_dump failed: ${stderr.trim() || error.message}`));
+    execFile(pgDumpPath, pgDumpArgs(url, outFile), { timeout: PG_DUMP_TIMEOUT_MS, env }, (error, _stdout, stderr) => {
+      if (!error) return resolve();
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return reject(
+          new Error(`pg_dump wasn't found ("${pgDumpPath}"). Install the PostgreSQL 18 client, or set PG_DUMP_PATH to pg_dump's location.`)
+        );
       }
-    );
+      reject(new Error(describeCommandFailure("pg_dump", error, stderr)));
+    });
   });
 }
 

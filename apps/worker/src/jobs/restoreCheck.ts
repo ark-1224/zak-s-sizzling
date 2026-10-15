@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { PrismaClient } from "@prisma/client";
+import { describeCommandFailure, withoutPassword } from "../lib/pgCommand";
 import { createStorageClient, describeStorageConfig, describeStorageError, downloadBackup, listBackups, readStorageSettings } from "../lib/storage";
 
 /**
@@ -47,15 +48,22 @@ export function databaseName(url: string): string | null {
   }
 }
 
-function runPsql(psqlPath: string, url: string, file: string): Promise<void> {
+function runPsql(psqlPath: string, connectionString: string, file: string): Promise<void> {
+  // The password goes in PGPASSWORD, never on the command line (lib/pgCommand.ts).
+  const { url, env } = withoutPassword(connectionString);
   return new Promise((resolve, reject) => {
-    execFile(psqlPath, [url, "--quiet", "--no-psqlrc", "-v", "ON_ERROR_STOP=1", "--file", file], { timeout: 10 * 60 * 1000, maxBuffer: 16 * 1024 * 1024 }, (error, _stdout, stderr) => {
-      if (!error) return resolve();
-      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        return reject(new Error(`psql wasn't found ("${psqlPath}"). Install the PostgreSQL 18 client, or set PSQL_PATH to psql's location.`));
+    execFile(
+      psqlPath,
+      [url, "--quiet", "--no-psqlrc", "-v", "ON_ERROR_STOP=1", "--file", file],
+      { timeout: 10 * 60 * 1000, maxBuffer: 16 * 1024 * 1024, env },
+      (error, _stdout, stderr) => {
+        if (!error) return resolve();
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          return reject(new Error(`psql wasn't found ("${psqlPath}"). Install the PostgreSQL 18 client, or set PSQL_PATH to psql's location.`));
+        }
+        reject(new Error(describeCommandFailure("psql", error, stderr)));
       }
-      reject(new Error(`psql failed: ${stderr.trim() || error.message}`));
-    });
+    );
   });
 }
 
@@ -64,7 +72,7 @@ export async function restoreCheck(source?: string): Promise<{ backup: string; c
   if (!url) throw new Error(`Set RESTORE_DATABASE_URL to an empty database whose name ends in "${RESTORE_SUFFIX}"`);
   const name = databaseName(url);
   if (!name?.endsWith(RESTORE_SUFFIX)) {
-    throw new Error(`Refusing to restore into "${name ?? url}": the database name must end in "${RESTORE_SUFFIX}"`);
+    throw new Error(`Refusing to restore into "${name ?? "(unreadable connection string)"}": the database name must end in "${RESTORE_SUFFIX}"`);
   }
 
   // The backup: a local file, or a key in cloud storage (the newest when none is given).

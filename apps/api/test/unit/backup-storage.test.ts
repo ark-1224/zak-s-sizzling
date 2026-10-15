@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 // The worker's backup storage settings (Cloud backups). No storage service is contacted.
 import type { S3Client } from "@aws-sdk/client-s3";
-import { backupName } from "../../../worker/src/jobs/backupDatabase";
+import { backupName, pgDumpArgs } from "../../../worker/src/jobs/backupDatabase";
+import { describeCommandFailure, withoutPassword } from "../../../worker/src/lib/pgCommand";
 import { databaseName } from "../../../worker/src/jobs/restoreCheck";
 import {
   describeStorageConfig,
@@ -121,5 +122,34 @@ describe("explaining a storage error", () => {
 
   it("points an unreachable service at the endpoint", () => {
     expect(describeStorageError(Object.assign(new Error("getaddrinfo ENOTFOUND s3.nowhere"), { code: "ENOTFOUND" }))).toMatch(/Could not reach/);
+  });
+});
+
+// pg_dump and psql get the password in PGPASSWORD, never on the command line, and a
+// failure message never repeats the command line (lib/pgCommand.ts).
+describe("keeping the database password out of commands and logs", () => {
+  it("takes the password out of the connection string and passes it in PGPASSWORD", () => {
+    const { url, env } = withoutPassword("postgresql://zaks:Sup3r-Secret@db.internal:5432/railway?sslmode=require", {});
+
+    expect(url).toBe("postgresql://zaks@db.internal:5432/railway?sslmode=require");
+    expect(env).toEqual({ PGPASSWORD: "Sup3r-Secret" });
+    expect(pgDumpArgs(url, "/tmp/out.sql").join(" ")).not.toContain("Sup3r-Secret");
+  });
+
+  it("decodes an escaped password, and keeps one with a stray % as it is", () => {
+    expect(withoutPassword("postgresql://u:p%40ss%2Fword@h/db", {}).env.PGPASSWORD).toBe("p@ss/word");
+    expect(withoutPassword("postgresql://u:P%40ss50%Off@h/db", {}).env.PGPASSWORD).toBe("P%40ss50%Off");
+  });
+
+  it("leaves a connection string without a password unchanged", () => {
+    expect(withoutPassword("postgresql://u@h/db", {})).toEqual({ url: "postgresql://u@h/db", env: {} });
+  });
+
+  it("builds failure messages from the tool's own output, masking any password in it", () => {
+    expect(describeCommandFailure("pg_dump", { code: 1 }, 'connection to "postgresql://zaks:Sup3r-Secret@db/railway" failed\n')).toBe(
+      'pg_dump failed: connection to "postgresql://zaks:***@db/railway" failed'
+    );
+    expect(describeCommandFailure("pg_dump", { killed: true, signal: "SIGTERM" }, "")).toBe("pg_dump took too long and was stopped");
+    expect(describeCommandFailure("psql", { code: 3 }, "")).toBe("psql failed (exit code 3)");
   });
 });

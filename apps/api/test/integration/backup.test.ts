@@ -88,6 +88,20 @@ describe.skipIf(!hasPgDump)("a backup to cloud storage", () => {
   });
 });
 
+describe.skipIf(!hasPgDump)("a failed backup", () => {
+  it("never shows the database password, even when pg_dump can't connect", async () => {
+    const error = await backupDatabase({
+      storage: null,
+      outDir,
+      pgDumpPath: pgDump,
+      databaseUrl: "postgresql://zaks:Sup3r-Secret@127.0.0.1:1/railway?connect_timeout=3",
+    }).catch((e: Error) => e);
+
+    expect((error as Error).message).toMatch(/^pg_dump failed: /);
+    expect((error as Error).message).not.toContain("Sup3r-Secret");
+  });
+});
+
 describe("a backup without pg_dump", () => {
   it("says pg_dump wasn't found and how to fix it", async () => {
     const error = await backupDatabase({ storage: null, outDir, pgDumpPath: "no-such-pg_dump" }).catch((e: Error) => e);
