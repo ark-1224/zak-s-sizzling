@@ -5,10 +5,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // low-stock job is: from the api's test projects, since the worker has none of its own.
 import {
   createMailer,
+  createResendMailer,
   describeMailConfig,
   describeMailError,
   mailerFromEnv,
   readMailSettings,
+  RESEND_TEST_SENDER,
+  ResendError,
   type MailSettings,
 } from "../../../worker/src/lib/mailer";
 
@@ -20,7 +23,7 @@ describe("reading the email settings", () => {
 
     expect(config).toEqual({ ok: false, missing: ["SMTP_USER", "SMTP_PASS", "ALERT_EMAIL_TO"], problems: [] });
     expect(describeMailConfig(config)).toBe(
-      "email alerts off (set SMTP_USER, SMTP_PASS, ALERT_EMAIL_TO; see .env.example)"
+      "email alerts off (set SMTP_USER, SMTP_PASS, ALERT_EMAIL_TO, or set RESEND_API_KEY and ALERT_EMAIL_TO; see .env.example)"
     );
     expect(mailerFromEnv({})).toBeNull();
   });
@@ -36,6 +39,7 @@ describe("reading the email settings", () => {
 
     expect(config).toEqual({
       ok: true,
+      via: "smtp",
       settings: {
         host: "smtp.gmail.com",
         port: 465,
@@ -125,5 +129,82 @@ describe("explaining a failed send", () => {
 
   it("passes any other error's message through", () => {
     expect(describeMailError(new Error("Something else"))).toBe("Something else");
+  });
+});
+
+// Resend sends over HTTPS, which Railway allows on every plan (it blocks outgoing SMTP
+// below Pro). A fake fetch stands in for Resend, so nothing is sent.
+describe("sending through Resend", () => {
+  const RESEND = { RESEND_API_KEY: "re_test_key", ALERT_EMAIL_TO: "owner@example.com" };
+
+  type Call = { url: string; init: RequestInit };
+  function fakeFetch(status: number, body: object): typeof fetch & { calls: Call[] } {
+    const calls: Call[] = [];
+    const fn = (async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), init: init ?? {} });
+      return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+    }) as typeof fetch & { calls: Call[] };
+    fn.calls = calls;
+    return fn;
+  }
+  const settings = { apiKey: "re_test_key", from: RESEND_TEST_SENDER, to: ["owner@example.com"] };
+
+  it("is chosen when RESEND_API_KEY is set, even with SMTP settings too, from Resend's test sender", () => {
+    const config = readMailSettings({ ...GMAIL, ...RESEND });
+
+    expect(config).toEqual({ ok: true, via: "resend", settings });
+    expect(describeMailConfig(config)).toBe("email alerts on: 1 recipient(s) via Resend");
+  });
+
+  it("needs only the recipient besides the key, and uses ALERT_EMAIL_FROM when set", () => {
+    expect(readMailSettings({ RESEND_API_KEY: "re_test_key" })).toEqual({ ok: false, missing: ["ALERT_EMAIL_TO"], problems: [] });
+    expect(readMailSettings({ ...RESEND, ALERT_EMAIL_FROM: "Zak's <alerts@zaks.ph>" })).toMatchObject({
+      ok: true,
+      settings: { from: "Zak's <alerts@zaks.ph>" },
+    });
+  });
+
+  it("posts the message to Resend's API with the key, and returns its id", async () => {
+    const fetch = fakeFetch(200, { id: "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794" });
+
+    const info = await createResendMailer(settings, fetch).send({ subject: "Low stock", text: "Rice is low.", html: "<p>Rice is low.</p>" });
+
+    expect(info).toEqual({ messageId: "49a3999c-0ce1-4ea6-ab68-afcd6dc2e794", accepted: ["owner@example.com"] });
+    expect(fetch.calls).toHaveLength(1);
+    const [{ url, init }] = fetch.calls;
+    expect(url).toBe("https://api.resend.com/emails");
+    expect(init.method).toBe("POST");
+    expect(init.headers).toMatchObject({ Authorization: "Bearer re_test_key", "Content-Type": "application/json" });
+    expect(JSON.parse(String(init.body))).toEqual({
+      from: RESEND_TEST_SENDER,
+      to: ["owner@example.com"],
+      subject: "Low stock",
+      text: "Rice is low.",
+      html: "<p>Rice is low.</p>",
+    });
+  });
+
+  it("explains Resend's refusal to send to anyone but the account owner before a domain is verified", async () => {
+    const fetch = fakeFetch(403, {
+      statusCode: 403,
+      name: "validation_error",
+      message: "You can only send testing emails to your own email address (owner@example.com). To send emails to other recipients, please verify a domain at resend.com/domains.",
+    });
+
+    const err = await createResendMailer({ ...settings, to: ["manager@example.com"] }, fetch).send({ subject: "x", text: "x" }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(ResendError);
+    expect(describeMailError(err)).toMatch(/^Without a verified domain, Resend only sends to the address the account was created with/);
+  });
+
+  it("explains a refused API key, the sending limit, and a network failure", async () => {
+    const send = (fetch: typeof globalThis.fetch) => createResendMailer(settings, fetch).send({ subject: "x", text: "x" }).catch((e: unknown) => e);
+    const offline = (async () => {
+      throw new TypeError("fetch failed");
+    }) as unknown as typeof fetch;
+
+    expect(describeMailError(await send(fakeFetch(403, { name: "invalid_api_key", message: "API key is invalid" })))).toMatch(/RESEND_API_KEY/);
+    expect(describeMailError(await send(fakeFetch(429, { name: "rate_limit_exceeded", message: "Too many requests" })))).toMatch(/tried again/);
+    expect(describeMailError(await send(offline))).toBe("Could not reach Resend. Check that this machine is online.");
   });
 });

@@ -265,19 +265,27 @@ whatever data is in the database, not something to commit).
 
 ### Email alerts (optional)
 
-The worker can send email through Gmail (or any SMTP server) using `nodemailer`
-(`apps/worker/src/lib/mailer.ts`). Put `SMTP_USER`, `SMTP_PASS` and `ALERT_EMAIL_TO` in
-`apps/worker/.env`, and in the worker service's variables on Railway; never commit them.
-For Gmail, turn on 2-Step Verification for the sending account, create an App Password
-(Google Account → Security → 2-Step Verification → App passwords), and use that as
-`SMTP_PASS`. Then check the settings:
+The worker sends email one of two ways (`apps/worker/src/lib/mailer.ts`); put the
+settings in `apps/worker/.env`, and in the worker service's variables on Railway, and never
+commit them:
+
+- **Resend** (HTTPS): set `RESEND_API_KEY` (resend.com → API Keys) and `ALERT_EMAIL_TO`.
+  This is the one to use on Railway, whose Trial and Hobby plans block outgoing SMTP.
+  Without a verified domain, Resend sends from `onboarding@resend.dev` and only to the
+  address the Resend account was created with.
+- **Gmail** (or any SMTP server, with `nodemailer`): set `SMTP_USER`, `SMTP_PASS` and
+  `ALERT_EMAIL_TO`. Turn on 2-Step Verification for the sending account, create an App
+  Password (Google Account → Security → 2-Step Verification → App passwords), and use
+  that as `SMTP_PASS`. Works locally, and on Railway's Pro plan.
+
+If both are set, Resend is used. Then check the settings:
 
 ```bash
 npm run mail:test
 ```
 
-It signs in and sends one test email to `ALERT_EMAIL_TO`, or says what's missing or why
-the server refused. When the worker starts it logs whether email alerts are on. Without
+It sends one test email to `ALERT_EMAIL_TO`, or says what's missing or why it was
+refused. When the worker starts it logs whether email alerts are on. Without
 these settings everything still runs, and alerts stay in the worker's log.
 
 **Low-stock emails.** When a unit-counted product or an active raw material reaches its

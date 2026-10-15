@@ -3,7 +3,7 @@ import cron from "node-cron";
 import { backupDatabase } from "./jobs/backupDatabase";
 import { lowStockSweep } from "./jobs/lowStockSweep";
 import { sendLowStockAlerts } from "./jobs/sendLowStockAlerts";
-import { createMailer, describeMailConfig, readMailSettings } from "./lib/mailer";
+import { describeMailConfig, mailerFromConfig, readMailSettings } from "./lib/mailer";
 
 console.log("[worker] Zak's Sizzling Hub background worker started");
 
@@ -58,8 +58,8 @@ console.log(
 // email is set up; until then alerts wait in low_stock_alerts (the log line says why).
 const mailConfig = readMailSettings();
 console.log(`[worker] ${describeMailConfig(mailConfig)}`);
-if (mailConfig.ok) {
-  const mailer = createMailer(mailConfig.settings);
+const mailer = mailerFromConfig(mailConfig);
+if (mailer) {
   let alertsRunning = false;
   cron.schedule("* * * * *", () => {
     if (alertsRunning) return; // a slow mail server mustn't stack up runs

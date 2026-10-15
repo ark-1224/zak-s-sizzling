@@ -1,9 +1,9 @@
 import "dotenv/config";
-import { createMailer, describeMailConfig, describeMailError, readMailSettings } from "../lib/mailer";
+import { describeMailConfig, describeMailError, mailerFromConfig, readMailSettings } from "../lib/mailer";
 
 /**
- * Checks the email settings by signing in to the SMTP server and sending one short
- * email to ALERT_EMAIL_TO. Run with `npm run mail:test` after setting them.
+ * Checks the email settings by sending one short email to ALERT_EMAIL_TO (signing in to
+ * the SMTP server first when SMTP is used). Run with `npm run mail:test` after setting them.
  */
 export async function sendTestEmail(): Promise<boolean> {
   const config = readMailSettings();
@@ -11,7 +11,8 @@ export async function sendTestEmail(): Promise<boolean> {
     console.error(`[mail] ${describeMailConfig(config)}`);
     return false;
   }
-  const mailer = createMailer(config.settings);
+  const mailer = mailerFromConfig(config)!;
+  console.log(`[mail] ${describeMailConfig(config)}`);
   try {
     await mailer.verify();
     const sentAt = new Date().toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" });
