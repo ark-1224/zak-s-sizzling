@@ -215,6 +215,22 @@ receipt-printer integration. Offline/PWA support was removed from scope.
   cookie too (via `/api/auth/logout`) and confirmed a clean redirect to `/login` instead
   of a raw error string.
 
+- **Estimated preparation time, barcode lookup, product photos, price filter**
+  (October 16, 2026; manuscript corrections "Needs decision" items 2, 4, 13 and 15).
+  Each product has a preparation time; an order's estimate is the longest dish + 1 min
+  per extra serving + 2 min per order already in the kitchen
+  (`apps/api/src/modules/orders/prepTime.ts`), shown at checkout (`POST
+  /api/orders/estimate`), on the receipt, on the kitchen display (ready time, late
+  orders highlighted) and on the payment queue. `/admin/barcode` looks products up from
+  a barcode reader or a typed code, with not-found (add the product with that barcode)
+  and retry states. Product photos are uploaded in the product form, shrunk to WebP in
+  the browser, stored in `product_images` and served by `GET /api/products/:id/image`
+  (versioned, cacheable, format checked from the file's own bytes); the kiosk shows
+  them with the icon as fallback. Price chips filter the kiosk menu. Verified with
+  integration tests (prep-time, barcode-lookup, product-images) and in the browser at
+  1024×600 and 375px: a cart's estimate (17 min) matched the formula through checkout,
+  receipt, counter confirmation and the kitchen display.
+
 **Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
 any real deployment — it's a dev-only default.
 
