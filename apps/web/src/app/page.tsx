@@ -15,6 +15,7 @@ import { CartDrawer } from "@/components/kiosk/CartDrawer";
 import { BasketBar } from "@/components/kiosk/BasketBar";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import { useToast } from "@/components/kiosk/Toast";
+import { inPriceRange, PRICE_RANGES, type PriceRangeId } from "@/lib/priceRanges";
 
 // Kiosk home ("/"). Ported/composed from kiosk.html's #app shell (Downloads/kiosk.html,
 // lines 365-395). Sprint 3: checkout/payment moved to its own /checkout page — this page
@@ -28,6 +29,7 @@ export default function KioskHomePage() {
   const { showToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [priceRange, setPriceRange] = useState<PriceRangeId>("any");
   const [openProductId, setOpenProductId] = useState<string | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -38,19 +40,29 @@ export default function KioskHomePage() {
     });
   }, []);
 
-  // Same search match and "sold-out items last" ordering as before; the only change is
-  // that results are grouped by category (in the API's sortOrder) instead of flattened.
+  // Products matching the search, before the price filter: the price chips count these.
+  const searched = useMemo(
+    () => products.filter((p) => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [products, searchQuery]
+  );
+
+  const priceCounts = useMemo(
+    () => Object.fromEntries(PRICE_RANGES.map((r) => [r.id, searched.filter((p) => inPriceRange(p.price, r.id)).length])) as Record<PriceRangeId, number>,
+    [searched]
+  );
+
+  // Same search match and "sold-out items last" ordering as before, then the price
+  // filter; results are grouped by category (in the API's sortOrder).
   const sections = useMemo<MenuSection[]>(() => {
     return categories
       .map((category) => ({
         category,
-        products: products
-          .filter((p) => p.categoryId === category.id)
-          .filter((p) => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        products: searched
+          .filter((p) => p.categoryId === category.id && inPriceRange(p.price, priceRange))
           .sort((a, b) => Number(!a.isAvailable) - Number(!b.isAvailable)), // stable sort: order otherwise unchanged
       }))
       .filter((section) => section.products.length > 0);
-  }, [categories, products, searchQuery]);
+  }, [categories, searched, priceRange]);
 
   const sectionIds = useMemo(() => sections.map((s) => String(s.category.id)), [sections]);
   const { containerRef, activeId, scrollToId, scrollToTop } = useScrollSpy(sectionIds);
@@ -67,6 +79,11 @@ export default function KioskHomePage() {
     scrollToTop();
   }
 
+  function handlePriceRangeChange(id: PriceRangeId) {
+    setPriceRange(id);
+    scrollToTop();
+  }
+
   function handleQuickAdd(product: Product) {
     addToCart(product, 1, "");
     showToast(`Added 1 × ${product.name} to your order`);
@@ -79,6 +96,7 @@ export default function KioskHomePage() {
     setCartOpen(false);
     setOpenProductId(null);
     setSearchQuery("");
+    setPriceRange("any");
     scrollToTop();
   }
 
@@ -126,6 +144,9 @@ export default function KioskHomePage() {
               sections={sections}
               searchQuery={searchQuery}
               onClearSearch={() => handleSearchChange("")}
+              priceRange={priceRange}
+              priceCounts={priceCounts}
+              onPriceRangeChange={handlePriceRangeChange}
               onOpenProduct={setOpenProductId}
               onQuickAdd={handleQuickAdd}
             />
