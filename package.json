@@ -17,6 +17,7 @@
     "db:studio": "npm run db:studio -w apps/api",
     "test": "npm run test -w apps/api",
     "backup:now": "npm run backup:now -w apps/worker",
+    "backup:restore-check": "npm run backup:restore-check -w apps/worker --",
     "low-stock:now": "npm run low-stock:now -w apps/worker",
     "mail:test": "npm run mail:test -w apps/worker",
     "low-stock:alerts": "npm run low-stock:alerts -w apps/worker"

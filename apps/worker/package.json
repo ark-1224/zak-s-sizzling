@@ -8,11 +8,13 @@
     "build": "prisma generate --schema ../api/prisma/schema.prisma && tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "backup:now": "tsx src/jobs/backupDatabase.ts",
+    "backup:restore-check": "tsx src/jobs/restoreCheck.ts",
     "low-stock:now": "tsx src/jobs/lowStockSweep.ts",
     "mail:test": "tsx src/jobs/sendTestEmail.ts",
     "low-stock:alerts": "tsx src/jobs/sendLowStockAlerts.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "3.1144.0",
     "@prisma/client": "^6.1.0",
     "dotenv": "^16.4.7",
     "node-cron": "^3.0.3",

@@ -256,12 +256,40 @@ run it separately (`npm run dev:worker`) only when you want the scheduled jobs l
 trigger a job once without waiting for its schedule:
 
 ```bash
-npm run backup:now      # requires PG_DUMP_PATH set to pg_dump's location on this machine
+npm run backup:now      # needs pg_dump 18 on the PATH, or PG_DUMP_PATH set to it
 npm run low-stock:now
 ```
 
-Backups are written to `apps/worker/backups/` (gitignored — these are real dumps of
-whatever data is in the database, not something to commit).
+### Database backups
+
+The worker backs up the whole database every night at 2:00 AM (Manila time) with
+`pg_dump`: plain SQL, gzip-compressed, without owners or privileges so it restores into
+any database (`apps/worker/src/jobs/backupDatabase.ts`). When the `BACKUP_STORAGE_*`
+settings are present it uploads each backup to that S3-compatible bucket, under
+`database-backups/`, using the official AWS SDK (`apps/worker/src/lib/storage.ts`).
+
+- **Locally** backups are written to `apps/worker/backups/` (gitignored: these are real
+  dumps of the data), and uploaded too if storage is set up.
+- **Deployed** the backup is scheduled only with cloud storage, since the container's disk
+  doesn't survive a redeploy, and the local copy is deleted once uploaded. Shortly after
+  each start the worker checks the bucket and takes a backup straight away if the newest
+  one is over a day old, so its log shows at every deploy whether storage works.
+- **pg_dump 18** must match the PostgreSQL 18 server. On Railway the worker is built from
+  `apps/worker/Dockerfile`, which installs it from PostgreSQL's apt repository (Debian's
+  own pg_dump is 17 and refuses a newer server).
+- **Old backups** aren't deleted by the worker; set a lifecycle rule on the bucket (for
+  example, keep 30 days) in the storage provider's dashboard.
+
+To prove a backup restores, create an empty database whose name ends in
+`_restore_check`, point `RESTORE_DATABASE_URL` at it, and run:
+
+```bash
+npm run backup:restore-check
+```
+
+It downloads the newest backup (or the key or local `.sql.gz` file given after `--`),
+restores it with `psql`, and prints the row count of each main table to compare with the
+live system. It refuses any other database name, and any database that isn't empty.
 
 ### Email alerts (optional)
 

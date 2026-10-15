@@ -1,0 +1,16 @@
+# Kept out of Docker build contexts (apps/worker/Dockerfile builds from the repository root).
+# Secrets never go into an image: environment files stay out.
+**/.env
+**/.env.*
+!.env.example
+
+# Rebuilt inside the image.
+**/node_modules
+**/dist
+**/.next
+
+# Local only.
+.git
+.impeccable
+apps/worker/backups
+**/coverage
