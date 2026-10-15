@@ -33,13 +33,15 @@ type PhotoChange = { kind: "keep" } | { kind: "new"; image: ResizedImage } | { k
 
 interface ProductFormProps {
   product: Product | null; // null = create mode
+  /** Create mode: a barcode to start with, e.g. one just scanned on the Barcode lookup page. */
+  initialBarcode?: string;
   categories: Category[];
   onClose: () => void;
   /** Called with the saved product; `created` is true for a new one. */
   onSaved: (saved: Product, created: boolean) => void;
 }
 
-export function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps) {
+export function ProductForm({ product, initialBarcode, categories, onClose, onSaved }: ProductFormProps) {
   // The product as last saved here. A new product whose photo failed to upload is already
   // created, so saving again must update it rather than create a second one.
   const [savedProduct, setSavedProduct] = useState<Product | null>(product);
@@ -48,7 +50,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   const [preparingPhoto, setPreparingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(product?.name ?? "");
-  const [barcode, setBarcode] = useState(product?.barcode ?? "");
+  const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? 0);
   const [price, setPrice] = useState(product?.price.toString() ?? "");
   const [cost, setCost] = useState(product?.cost?.toString() ?? "");
