@@ -6,6 +6,7 @@ export type IconName =
   | "products"
   | "inventory"
   | "materials"
+  | "barcode"
   | "import"
   | "analytics"
   | "kitchen"
@@ -46,6 +47,12 @@ const SHAPES: Record<IconName, React.ReactNode> = {
     <>
       <path d="M8 3.5h8M9.5 3.5v3L5.5 11v8a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5v-8l-4-4.5v-3" />
       <path d="M5.5 13.5h13" />
+    </>
+  ),
+  barcode: (
+    <>
+      <path d="M3.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2M17 3.5h2A1.5 1.5 0 0 1 20.5 5v2M20.5 17v2a1.5 1.5 0 0 1-1.5 1.5h-2M7 20.5H5A1.5 1.5 0 0 1 3.5 19v-2" />
+      <path d="M7.5 8v8M10 8v8M13 8v8M16.5 8v8" />
     </>
   ),
   import: (
