@@ -17,11 +17,12 @@ const TRACKING_OPTIONS: [StockTracking, string][] = [
   ["recipe", "Use a recipe"],
 ];
 
-type FieldKey = "name" | "barcode" | "price" | "cost" | "stockQty" | "minStockThreshold" | "recipe";
+type FieldKey = "name" | "barcode" | "price" | "cost" | "prepMinutes" | "stockQty" | "minStockThreshold" | "recipe";
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 // The order the fields appear in, so focus goes to the first problem on the form.
-const FIELD_ORDER: FieldKey[] = ["name", "barcode", "price", "cost", "stockQty", "minStockThreshold", "recipe"];
+const FIELD_ORDER: FieldKey[] = ["name", "barcode", "price", "cost", "prepMinutes", "stockQty", "minStockThreshold", "recipe"];
+const MAX_PREP_MINUTES = 120;
 
 const isWholeNumber = (value: string) => /^\d+$/.test(value.trim());
 
@@ -41,6 +42,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   const [cost, setCost] = useState(product?.cost?.toString() ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [icon, setIcon] = useState(product?.icon ?? "🍽️");
+  const [prepMinutes, setPrepMinutes] = useState(product?.prepMinutes.toString() ?? "10");
   const [stockQty, setStockQty] = useState(product?.stockQty?.toString() ?? "0");
   const [minStockThreshold, setMinStockThreshold] = useState(product?.minStockThreshold?.toString() ?? "5");
   const [tracking, setTracking] = useState<StockTracking>(product?.tracking ?? "unit");
@@ -83,6 +85,9 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
     if (price.trim() === "") errors.price = "Enter a price.";
     else if (!(Number(price) >= 0)) errors.price = "Enter a price of ₱0.00 or more.";
     if (cost.trim() !== "" && !(Number(cost) >= 0)) errors.cost = "Enter a cost of ₱0.00 or more, or leave it blank.";
+    if (!isWholeNumber(prepMinutes) || Number(prepMinutes) > MAX_PREP_MINUTES) {
+      errors.prepMinutes = `Enter whole minutes from 0 to ${MAX_PREP_MINUTES}.`;
+    }
     if (tracking === "unit") {
       if (stockQty.trim() === "") errors.stockQty = "Enter how many are in stock.";
       else if (!isWholeNumber(stockQty)) errors.stockQty = "Enter a whole number, 0 or more.";
@@ -145,6 +150,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
         cost: cost === "" ? undefined : Number(cost),
         description: description || undefined,
         icon: icon || undefined,
+        prepMinutes: Number(prepMinutes),
         tracking,
         ...(tracking === "unit"
           ? { stockQty: Number(stockQty), minStockThreshold: Number(minStockThreshold) }
@@ -260,6 +266,29 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
             />
           </Field>
         </div>
+
+        <Field label="Preparation time (minutes)" required error={fieldErrors.prepMinutes} errorId="pf-prepMinutes-error">
+          <input
+            {...inputProps("prepMinutes")}
+            aria-required
+            aria-describedby={fieldErrors.prepMinutes ? "pf-prepMinutes-error" : "pf-prepMinutes-hint"}
+            type="number"
+            inputMode="numeric"
+            min="0"
+            max={MAX_PREP_MINUTES}
+            step="1"
+            value={prepMinutes}
+            onChange={(e) => {
+              setPrepMinutes(e.target.value);
+              clearError("prepMinutes");
+            }}
+            className={`font-adm-mono sm:max-w-40 ${admInputClass}`}
+          />
+          <span id="pf-prepMinutes-hint" className="mt-1 block text-sm text-adm-ink-3">
+            For one serving. Use 0 for items served as they are, like bottled drinks. Orders use it to estimate when they&apos;ll
+            be ready.
+          </span>
+        </Field>
 
         <div className="mb-3">
           <span className={admLabelClass}>How is stock counted?</span>

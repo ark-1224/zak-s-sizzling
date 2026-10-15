@@ -41,6 +41,8 @@ export interface Product {
   nutrition: Nutrition;
   isAvailable: boolean;
   tracking: StockTracking;
+  /** Minutes the kitchen needs for one serving; 0 for items served as they are. */
+  prepMinutes: number;
   /** Unit products: units on hand. Recipe products: servings the raw materials can still make. */
   stockQty?: number;
   minStockThreshold?: number;
@@ -103,6 +105,10 @@ export interface OrderDTO {
   /** Paid online but stock ran short: nothing was deducted and staff must substitute or refund. */
   stockIssue: boolean;
   stockIssueNote: string | null;
+  /** Estimated preparation time in minutes: from when the order was placed, then from when it reached the kitchen. 0 = ready right away. */
+  estimatedPrepMinutes: number | null;
+  /** When the order should be ready; set once it reaches the kitchen (paid, or confirmed at the counter). */
+  estimatedReadyAt: string | null;
   createdAt: string;
   items: OrderItemDTO[];
   payment: PaymentDTO | null;
@@ -115,6 +121,8 @@ export interface KitchenTaskDTO {
   orderId: string;
   orderNumber: string;
   orderCreatedAt: string;
+  /** When the whole order should be ready (OrderDTO.estimatedReadyAt). */
+  orderEstimatedReadyAt: string | null;
   productId: string;
   productName: string;
   productIcon: string | null;

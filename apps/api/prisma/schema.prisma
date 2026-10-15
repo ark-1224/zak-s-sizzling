@@ -142,6 +142,9 @@ model Product {
   sugarG           Decimal?          @map("sugar_g") @db.Decimal(6, 2)
   isAvailable      Boolean           @default(true) @map("is_available")
   tracking         StockTracking     @default(unit)
+  // Minutes the kitchen needs for one serving; 0 for items served as they are (drinks).
+  // Orders use it for their estimated preparation time (orders/prepTime.ts).
+  prepMinutes      Int               @default(10) @map("prep_minutes")
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
   inventory        Inventory?
@@ -201,6 +204,10 @@ model Order {
   // and staff must substitute or refund (design section 3.3).
   stockIssue           Boolean               @default(false) @map("stock_issue")
   stockIssueNote       String?               @map("stock_issue_note") @db.VarChar(300)
+  // Estimated preparation time (orders/prepTime.ts): worked out when the order is placed,
+  // and again when it reaches the kitchen, which also sets when it should be ready.
+  estimatedPrepMinutes Int?                  @map("estimated_prep_minutes")
+  estimatedReadyAt     DateTime?             @map("estimated_ready_at")
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
   items                OrderItem[]

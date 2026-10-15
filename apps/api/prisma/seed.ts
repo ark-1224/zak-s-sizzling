@@ -17,6 +17,28 @@ const CATEGORIES = [
   { name: "Desserts", icon: "🍮", sortOrder: 7, isNew: false },
 ];
 
+// Minutes the kitchen needs for one serving (estimated preparation time, orders/prepTime.ts).
+// Soups are kept hot, so they are quick to serve; drinks and pickles are poured or scooped.
+const PREP_MINUTES: Record<string, number> = {
+  "Sizzling Sisig": 12,
+  "Sizzling Beef Bulgogi": 12,
+  "Sizzling Calamares": 10,
+  "Sizzling Tofu Sisig": 10,
+  "Sizzling Pork Chop": 15,
+  "Garlic Fried Rice": 5,
+  "Plain Rice": 1,
+  "Pancit Canton": 10,
+  "Java Rice": 5,
+  "Sinigang na Baboy": 6,
+  Bulalo: 6,
+  "Lumpiang Shanghai (6pcs)": 8,
+  Atchara: 1,
+  "House Iced Tea": 1,
+  "Buko Juice": 1,
+  "Kare-Kare": 8,
+  "Crispy Pata (Half)": 20,
+};
+
 // Ported from kiosk.html's PRODUCTS mock array (Downloads/kiosk.html, lines 432-518)
 const PRODUCTS = [
   {
@@ -264,6 +286,7 @@ async function main() {
             carbsG: p.nutrition.carbs,
             sugarG: p.nutrition.sugar,
             isAvailable: p.inStock,
+            prepMinutes: PREP_MINUTES[p.name],
           },
         })
       : await prisma.product.create({
@@ -280,6 +303,7 @@ async function main() {
             carbsG: p.nutrition.carbs,
             sugarG: p.nutrition.sugar,
             isAvailable: p.inStock,
+            prepMinutes: PREP_MINUTES[p.name],
           },
         });
 

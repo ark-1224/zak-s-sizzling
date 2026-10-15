@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
+import { setEstimateOnReachingKitchen } from "../orders/prepTime";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
 
 type TaskWithRelations = Prisma.KitchenTaskGetPayload<{
@@ -14,6 +15,7 @@ function toTaskDTO(task: TaskWithRelations): KitchenTaskDTO {
     orderId: task.orderItem.orderId,
     orderNumber: task.orderItem.order.orderNumber,
     orderCreatedAt: task.orderItem.order.createdAt.toISOString(),
+    orderEstimatedReadyAt: task.orderItem.order.estimatedReadyAt?.toISOString() ?? null,
     productId: task.orderItem.productId,
     productName: task.orderItem.product.name,
     productIcon: task.orderItem.product.icon,
@@ -29,6 +31,11 @@ function toTaskDTO(task: TaskWithRelations): KitchenTaskDTO {
  *  order on the kitchen's radar. Orders that are only `pending` (unpaid) never reach
  *  the kitchen, matching the manuscript's payment-before-prep flow. */
 export async function createKitchenTasksForOrder(orderId: string): Promise<void> {
+  // The estimate is set once, when the order first reaches the kitchen, so running this
+  // twice doesn't move the ready time.
+  const current = await prisma.order.findUnique({ where: { id: orderId }, select: { estimatedReadyAt: true } });
+  if (current && !current.estimatedReadyAt) await setEstimateOnReachingKitchen(orderId);
+
   const items = await prisma.orderItem.findMany({ where: { orderId } });
   await prisma.kitchenTask.createMany({
     data: items.map((item) => ({ orderItemId: item.id })),

@@ -29,6 +29,8 @@ export const createProductSchema = z.object({
   minStockThreshold: z.number().int().nonnegative().default(5),
   tracking: z.enum(["unit", "recipe"]).optional(),
   recipe: recipeSchema.optional(),
+  // Minutes for one serving; 0 for items served as they are (orders/prepTime.ts).
+  prepMinutes: z.number().int().min(0).max(120).optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial().extend({

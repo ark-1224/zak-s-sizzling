@@ -42,6 +42,7 @@ export function toProductDTO(p: ProductWithRelations): Product {
     },
     isAvailable: p.isAvailable,
     tracking: p.tracking,
+    prepMinutes: p.prepMinutes,
     // Same number the kiosk's live inventory:updated event carries (fulfillment.ts).
     stockQty: isRecipe
       ? servingsAvailable(p.recipeItems.map((r) => ({ qtyPerServing: r.qtyPerServing, stockQty: r.rawMaterial.stockQty })))
@@ -107,6 +108,7 @@ export interface ProductInput {
   minStockThreshold: number;
   tracking?: StockTracking;
   recipe?: RecipeInput[];
+  prepMinutes?: number;
 }
 
 /** Checks a recipe against the tracking mode it will be saved with. */
@@ -153,6 +155,7 @@ export async function createProduct(input: ProductInput): Promise<Product> {
         description: input.description,
         icon: input.icon,
         tracking,
+        prepMinutes: input.prepMinutes,
         // Recipe products keep an inventory row for consistency, but their stock comes
         // from the raw materials, so their own count stays 0.
         inventory: { create: { stockQty: tracking === "recipe" ? 0 : input.stockQty, minStockThreshold: input.minStockThreshold } },
@@ -185,6 +188,7 @@ export async function updateProduct(id: string, input: Partial<ProductInput> & {
         icon: input.icon,
         isAvailable: input.isAvailable,
         tracking,
+        prepMinutes: input.prepMinutes,
       },
     });
     // Switching to unit tracking drops the recipe; saving a recipe replaces the old one.

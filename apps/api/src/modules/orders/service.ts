@@ -4,6 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { isPaymongoConfigured } from "../../lib/paymongo";
 import { HttpError } from "../../middleware/errorHandler";
 import { assertStockForNewOrder, PRODUCT_STOCK_INCLUDE } from "../inventory/fulfillment";
+import { countOrdersInKitchen, estimatePrepMinutes } from "./prepTime";
 import type { OrderDTO } from "@zaks/shared-types";
 
 type OrderWithRelations = Prisma.OrderGetPayload<{
@@ -18,6 +19,8 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
     totalAmount: Number(order.totalAmount),
     stockIssue: order.stockIssue,
     stockIssueNote: order.stockIssueNote,
+    estimatedPrepMinutes: order.estimatedPrepMinutes,
+    estimatedReadyAt: order.estimatedReadyAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),
     items: order.items.map((item) => ({
       id: item.id,
@@ -90,6 +93,11 @@ export async function createOrder(input: CreateOrderInput) {
   });
 
   const totalAmount = lines.reduce((sum, l) => sum.add(l.subtotal), new Prisma.Decimal(0));
+  // Shown on the receipt; worked out again when the order reaches the kitchen (prepTime.ts).
+  const estimatedPrepMinutes = estimatePrepMinutes(
+    input.items.map((item) => ({ qty: item.qty, prepMinutes: productById.get(item.productId)!.prepMinutes })),
+    await countOrdersInKitchen()
+  );
   // Without PayMongo, GCash and Maya can't be paid, so such an order is a counter order
   // from the start and the payment queue labels it that way (UI review #2).
   const paymentMethod = input.paymentMethod && input.paymentMethod !== "counter" && !isPaymongoConfigured() ? "counter" : input.paymentMethod;
@@ -104,6 +112,7 @@ export async function createOrder(input: CreateOrderInput) {
           customerName: input.customerName,
           kioskSessionId: input.kioskSessionId,
           totalAmount,
+          estimatedPrepMinutes,
           items: { create: lines },
           // Recording the intended method as a `pending` payment as soon as the order
           // exists (rather than only once it's paid) means the receipt screen and the
