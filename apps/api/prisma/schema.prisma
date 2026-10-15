@@ -152,10 +152,25 @@ model Product {
   stockAdjustments StockAdjustment[]
   recipeItems      RecipeItem[]
   lowStockAlerts   LowStockAlert[]
+  image            ProductImage?
 
   @@unique([barcode])
   @@index([categoryId])
   @@map("products")
+}
+
+// A product's photo, kept apart from products so listing the menu never loads image
+// bytes. The admin's browser shrinks a photo to a small WebP or JPEG before uploading;
+// GET /api/products/:id/image serves it (products/image.ts). It is in the database, so
+// the nightly backup includes it.
+model ProductImage {
+  productId   String   @id @map("product_id") @db.Uuid
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  data        Bytes
+  contentType String   @map("content_type") @db.VarChar(32)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("product_images")
 }
 
 model Inventory {

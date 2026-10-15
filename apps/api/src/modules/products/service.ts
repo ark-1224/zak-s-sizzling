@@ -4,12 +4,15 @@ import { Prisma, type StockTracking } from "@prisma/client";
 import { applyStockChange } from "../inventory/service";
 import { refreshAvailability, servingsAvailable } from "../inventory/fulfillment";
 import { HttpError } from "../../middleware/errorHandler";
+import { productImageUrl } from "./image";
 
 /** Everything toProductDTO needs; recipe products work out their stock from the recipe. */
 export const PRODUCT_DTO_INCLUDE = {
   category: true,
   inventory: true,
   recipeItems: { include: { rawMaterial: true }, orderBy: { rawMaterial: { name: "asc" } } },
+  // Only whether there's a photo and its version, never the bytes (products/image.ts).
+  image: { select: { updatedAt: true } },
 } satisfies Prisma.ProductInclude;
 
 type ProductWithRelations = Prisma.ProductGetPayload<{ include: typeof PRODUCT_DTO_INCLUDE }>;
@@ -32,6 +35,7 @@ export function toProductDTO(p: ProductWithRelations): Product {
     },
     description: p.description,
     icon: p.icon,
+    imageUrl: p.image ? productImageUrl(p.id, p.image.updatedAt) : null,
     ingredients: p.ingredients,
     allergens: p.allergens,
     nutrition: {

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { apiFetch, ApiError } from "@/lib/api-client";
+import { useEffect, useRef, useState } from "react";
+import { apiFetch, apiUrl, ApiError } from "@/lib/api-client";
+import { ImageResizeError, resizeProductPhoto, type ResizedImage } from "@/lib/imageResize";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { AdmButton, admInputClass, admLabelClass, admModalActionsClass, admModalBackdropClass, admModalPanelClass } from "./ui";
 import { formatMaterialQty } from "@/lib/units";
@@ -26,6 +27,10 @@ const MAX_PREP_MINUTES = 120;
 
 const isWholeNumber = (value: string) => /^\d+$/.test(value.trim());
 
+// The photo is saved after the product itself (it needs the product's id): keep the
+// current one, upload a new one, or remove it.
+type PhotoChange = { kind: "keep" } | { kind: "new"; image: ResizedImage } | { kind: "remove" };
+
 interface ProductFormProps {
   product: Product | null; // null = create mode
   categories: Category[];
@@ -35,6 +40,13 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps) {
+  // The product as last saved here. A new product whose photo failed to upload is already
+  // created, so saving again must update it rather than create a second one.
+  const [savedProduct, setSavedProduct] = useState<Product | null>(product);
+  const [photo, setPhoto] = useState<PhotoChange>({ kind: "keep" });
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [preparingPhoto, setPreparingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(product?.name ?? "");
   const [barcode, setBarcode] = useState(product?.barcode ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? 0);
@@ -54,6 +66,28 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [justScanned, setJustScanned] = useState(false);
+
+  // Free the preview's memory when it's replaced or the form closes.
+  const previewUrl = photo.kind === "new" ? photo.image.previewUrl : null;
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  async function handlePhotoChosen(file: File | undefined) {
+    if (!file) return;
+    setPhotoError(null);
+    setPreparingPhoto(true);
+    try {
+      setPhoto({ kind: "new", image: await resizeProductPhoto(file) });
+    } catch (err) {
+      setPhotoError(err instanceof ImageResizeError ? err.message : "Could not prepare the photo.");
+    } finally {
+      setPreparingPhoto(false);
+      if (photoInputRef.current) photoInputRef.current.value = ""; // choosing the same file again still fires
+    }
+  }
 
   useEffect(() => {
     apiFetch<RawMaterialDTO[]>("/api/raw-materials", { auth: "staff" })
@@ -156,11 +190,26 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
           ? { stockQty: Number(stockQty), minStockThreshold: Number(minStockThreshold) }
           : { recipe: recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) }),
       };
-      if (product) {
-        onSaved(await apiFetch<Product>(`/api/products/${product.id}`, { method: "PUT", auth: "staff", body: JSON.stringify(body) }), false);
-      } else {
-        onSaved(await apiFetch<Product>("/api/products", { method: "POST", auth: "staff", body: JSON.stringify(body) }), true);
+      let saved = savedProduct
+        ? await apiFetch<Product>(`/api/products/${savedProduct.id}`, { method: "PUT", auth: "staff", body: JSON.stringify(body) })
+        : await apiFetch<Product>("/api/products", { method: "POST", auth: "staff", body: JSON.stringify(body) });
+      setSavedProduct(saved);
+      try {
+        if (photo.kind === "new") {
+          saved = await apiFetch<Product>(`/api/products/${saved.id}/image`, {
+            method: "PUT",
+            auth: "staff",
+            body: JSON.stringify({ contentType: photo.image.contentType, imageBase64: photo.image.base64 }),
+          });
+        } else if (photo.kind === "remove") {
+          saved = await apiFetch<Product>(`/api/products/${saved.id}/image`, { method: "DELETE", auth: "staff" });
+        }
+      } catch (err) {
+        const reason = err instanceof ApiError ? err.message : "the server didn't respond";
+        setError(`${saved.name} was saved, but the photo wasn't (${reason}). Save again to retry, or choose another photo.`);
+        return;
       }
+      onSaved(saved, !product);
     } catch (err) {
       if (err instanceof ApiError && err.status === 409 && /barcode/i.test(err.message)) {
         setFieldErrors({ barcode: `${err.message}. Scan or type a different one, or leave it blank.` });
@@ -231,6 +280,21 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
             <input value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={4} className={admInputClass} />
           </Field>
         </div>
+
+        <PhotoField
+          currentUrl={photo.kind === "new" ? photo.image.previewUrl : photo.kind === "keep" && savedProduct?.imageUrl ? apiUrl(savedProduct.imageUrl) : null}
+          icon={icon}
+          isNew={photo.kind === "new"}
+          preparing={preparingPhoto}
+          error={photoError}
+          inputRef={photoInputRef}
+          onChoose={handlePhotoChosen}
+          onRemove={() => {
+            setPhotoError(null);
+            setPhoto(savedProduct?.imageUrl ? { kind: "remove" } : { kind: "keep" });
+          }}
+          onUndo={photo.kind !== "keep" ? () => setPhoto({ kind: "keep" }) : undefined}
+        />
 
         <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
           <Field label="Price (₱)" required error={fieldErrors.price} errorId="pf-price-error">
@@ -471,6 +535,88 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
           </AdmButton>
         </div>
       </form>
+    </div>
+  );
+}
+
+interface PhotoFieldProps {
+  /** What the kiosk will show: the chosen photo, the current one, or null for the icon. */
+  currentUrl: string | null;
+  icon: string;
+  isNew: boolean;
+  preparing: boolean;
+  error: string | null;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  onChoose: (file: File | undefined) => void;
+  onRemove: () => void;
+  /** Present when the photo was changed or removed, to go back to the saved one. */
+  onUndo?: () => void;
+}
+
+function PhotoField({ currentUrl, icon, isNew, preparing, error, inputRef, onChoose, onRemove, onUndo }: PhotoFieldProps) {
+  return (
+    <div className="mb-3">
+      <span id="pf-photo-label" className={admLabelClass}>
+        Photo
+      </span>
+      <div className="flex items-center gap-3">
+        <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[6px] border border-adm-line bg-adm-bg">
+          {currentUrl ? (
+            // A local preview (blob:) or the API's photo; next/image adds nothing for either.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={currentUrl} alt="Product photo" className="h-full w-full object-cover" />
+          ) : (
+            <span aria-hidden="true" className="text-4xl">
+              {icon}
+            </span>
+          )}
+        </span>
+        <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <input
+            ref={inputRef}
+            id="pf-photo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => onChoose(e.target.files?.[0])}
+          />
+          <AdmButton
+            type="button"
+            variant="secondary"
+            size="compact"
+            disabled={preparing}
+            aria-describedby={error ? "pf-photo-error" : "pf-photo-hint"}
+            onClick={() => inputRef.current?.click()}
+          >
+            {preparing ? "Preparing…" : currentUrl ? "Change photo" : "Choose photo"}
+          </AdmButton>
+          {currentUrl && !isNew && (
+            <AdmButton type="button" variant="secondary" size="compact" onClick={onRemove}>
+              Remove photo
+            </AdmButton>
+          )}
+          {onUndo && (
+            <AdmButton type="button" variant="secondary" size="compact" onClick={onUndo}>
+              {isNew ? "Don't change" : "Keep photo"}
+            </AdmButton>
+          )}
+        </div>
+      </div>
+      {error ? (
+        <FieldError id="pf-photo-error" message={error} />
+      ) : (
+        <span id="pf-photo-hint" className="mt-1 block text-sm text-adm-ink-3">
+          {isNew
+            ? "New photo, saved when you save the product."
+            : currentUrl
+              ? "Shown on the kiosk menu."
+              : onUndo
+                ? "The photo will be removed when you save; the kiosk shows the icon instead."
+                : "Optional. Without a photo, the kiosk shows the icon. JPEG, PNG or WebP; it's made smaller before uploading."}
+        </span>
+      )}
     </div>
   );
 }

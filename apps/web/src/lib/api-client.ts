@@ -2,6 +2,11 @@ import { clearStaffSession, getAccessToken, refreshAccessToken, refreshKioskSess
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
+/** The full address of an API path, e.g. a product's imageUrl. */
+export function apiUrl(path: string): string {
+  return `${API_URL}${path}`;
+}
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {

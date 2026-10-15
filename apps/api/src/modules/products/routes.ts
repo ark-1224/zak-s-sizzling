@@ -8,6 +8,7 @@ import { createProductSchema, productIdSchema, updateProductSchema } from "./sch
 import { bulkImportProducts } from "./bulkImport";
 import { buildImportTemplateXlsx, xlsxToImportCsv } from "./xlsxImport";
 import { prisma } from "../../lib/prisma";
+import { deleteProductImage, getProductImage, saveProductImage, uploadImageSchema } from "./image";
 import {
   createProduct,
   deleteProduct,
@@ -86,6 +87,47 @@ productsRouter.get("/:id", optionalAuthenticate, async (req: AuthenticatedReques
     const product = await getProductById(parseProductId(req.params.id));
     if (!product) throw new HttpError(404, "Product not found");
     res.json(withAdminFieldsForRole(product, req.user?.role));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// A product's photo (products/image.ts). Public, like the menu. The URL carries the
+// photo's version (?v=), so a browser can keep it for a year: a new photo gets a new URL.
+// The web app is on another origin, so the photo is marked as loadable cross-origin
+// (helmet's default would block it from the kiosk page).
+productsRouter.get("/:id/image", async (req, res, next) => {
+  try {
+    const image = await getProductImage(parseProductId(req.params.id));
+    if (!image) throw new HttpError(404, "This product has no photo");
+    res.set({
+      "Content-Type": image.contentType,
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cross-Origin-Resource-Policy": "cross-origin",
+      "Last-Modified": image.updatedAt.toUTCString(),
+    });
+    res.send(Buffer.from(image.data));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Upload or replace a product's photo: { contentType, imageBase64 }. Admin only.
+productsRouter.put("/:id/image", authenticate, authorize("admin"), async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const id = parseProductId(req.params.id);
+    await saveProductImage(id, uploadImageSchema.parse(req.body));
+    res.json(withAdminFieldsForRole((await getProductById(id))!, req.user?.role));
+  } catch (err) {
+    next(err);
+  }
+});
+
+productsRouter.delete("/:id/image", authenticate, authorize("admin"), async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const id = parseProductId(req.params.id);
+    await deleteProductImage(id);
+    res.json(withAdminFieldsForRole((await getProductById(id))!, req.user?.role));
   } catch (err) {
     next(err);
   }

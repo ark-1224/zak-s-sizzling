@@ -37,6 +37,7 @@ const MATRIX: Entry[] = [
   { method: "get", route: "/api/categories/", path: "/api/categories", expected: PUBLIC },
   { method: "get", route: "/api/products/", path: "/api/products", expected: PUBLIC },
   { method: "get", route: "/api/products/:id", path: `/api/products/${PRODUCTS.sisig.id}`, expected: PUBLIC },
+  { method: "get", route: "/api/products/:id/image", path: `/api/products/${MISSING}/image`, expected: PUBLIC },
   { method: "post", route: "/api/auth/kiosk-session", path: "/api/auth/kiosk-session", expected: PUBLIC },
   { method: "get", route: "/api/payments/options", path: "/api/payments/options", expected: PUBLIC },
 
@@ -67,6 +68,8 @@ const MATRIX: Entry[] = [
   { method: "post", route: "/api/products/", path: "/api/products", body: {}, expected: ADMIN },
   { method: "put", route: "/api/products/:id", path: `/api/products/${MISSING}`, body: { price: -1 }, expected: ADMIN },
   { method: "delete", route: "/api/products/:id", path: `/api/products/${MISSING}`, expected: ADMIN },
+  { method: "put", route: "/api/products/:id/image", path: `/api/products/${MISSING}/image`, body: {}, expected: ADMIN },
+  { method: "delete", route: "/api/products/:id/image", path: `/api/products/${MISSING}/image`, expected: ADMIN },
   { method: "post", route: "/api/products/bulk-import", path: "/api/products/bulk-import", body: {}, expected: ADMIN },
   { method: "get", route: "/api/products/import-template", path: "/api/products/import-template", expected: ADMIN },
   { method: "post", route: "/api/products/import-xlsx", path: "/api/products/import-xlsx", body: {}, expected: ADMIN },

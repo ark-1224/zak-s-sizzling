@@ -36,6 +36,8 @@ export interface Product {
   category?: Category;
   description: string | null;
   icon: string | null;
+  /** Path of the product's photo on the API (GET /api/products/:id/image?v=…), or null for none; the kiosk shows the icon then. */
+  imageUrl: string | null;
   ingredients: string[];
   allergens: string[];
   nutrition: Nutrition;
