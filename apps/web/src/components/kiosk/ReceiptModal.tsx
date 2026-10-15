@@ -1,6 +1,7 @@
 "use client";
 
 import type { OrderDTO } from "@zaks/shared-types";
+import { aboutMinutes, clockTime } from "@/lib/prepTime";
 
 // New in Sprint 3 — kiosk.html's checkout was a stub with no confirmation screen to
 // port from. Shows the digital receipt + order number the manuscript's Payment
@@ -44,6 +45,8 @@ export function ReceiptModal({ order, onDone }: ReceiptModalProps) {
               : "We couldn't confirm payment yet — please check with staff."}
         </p>
 
+        <PrepTime order={order} isPaid={isPaid} />
+
         <div className="mb-5 rounded-xl border border-line bg-white p-4 text-left sm:p-5">
           <div className="mb-3 flex items-center justify-between gap-3 border-b border-line pb-3">
             <span className="text-sm text-ink-soft">Order number</span>
@@ -77,6 +80,30 @@ export function ReceiptModal({ order, onDone }: ReceiptModalProps) {
           Back to menu
         </button>
       </div>
+    </div>
+  );
+}
+
+// Estimated preparation time (Scope, Payment Transaction). A paid order is in the kitchen
+// and has a ready time; an unpaid one is told how long it takes once paid.
+function PrepTime({ order, isPaid }: { order: OrderDTO; isPaid: boolean }) {
+  const minutes = order.estimatedPrepMinutes;
+  if (minutes === null) return null;
+
+  let headline: string;
+  let detail: string | null = null;
+  if (isPaid && order.estimatedReadyAt) {
+    headline = minutes === 0 ? "Ready right away" : `Ready at about ${clockTime(order.estimatedReadyAt)}`;
+    if (minutes > 0) detail = `In ${aboutMinutes(minutes)}. We'll call your order number.`;
+  } else {
+    headline = minutes === 0 ? "Ready as soon as you've paid" : `Ready ${aboutMinutes(minutes)} after you pay`;
+  }
+
+  return (
+    <div className="mb-5 rounded-xl bg-honey-soft/70 px-4 py-3 text-left">
+      <div className="text-sm text-ink-soft">Estimated preparation time</div>
+      <div className="font-display text-lg font-semibold text-matcha-deep">{headline}</div>
+      {detail && <div className="text-sm text-ink-soft">{detail}</div>}
     </div>
   );
 }

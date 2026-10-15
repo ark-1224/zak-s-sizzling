@@ -5,6 +5,7 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { PageHeader, Card, AdmButton, StatusPill, admInputClass } from "@/components/admin/ui";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { formatDateTime, timeAgo } from "@/lib/time";
+import { aboutMinutes, clockTime } from "@/lib/prepTime";
 import type { OrderDTO } from "@zaks/shared-types";
 
 // New in Sprint 3 — lets front-desk staff find counter orders awaiting payment and
@@ -91,8 +92,15 @@ export default function StaffOrdersPage() {
   async function handleConfirm(order: OrderDTO) {
     setConfirmingId(order.id);
     try {
-      await apiFetch(`/api/payments/counter/${order.id}/confirm`, { method: "POST", auth: "staff" });
-      setMessage({ text: `${order.orderNumber} confirmed and sent to the kitchen. Collect ₱${order.totalAmount.toFixed(2)} from the customer.`, error: false });
+      const confirmed = await apiFetch<OrderDTO>(`/api/payments/counter/${order.id}/confirm`, { method: "POST", auth: "staff" });
+      const ready =
+        confirmed.estimatedReadyAt && confirmed.estimatedPrepMinutes
+          ? ` Tell the customer it will be ready at about ${clockTime(confirmed.estimatedReadyAt)}.`
+          : "";
+      setMessage({
+        text: `${order.orderNumber} confirmed and sent to the kitchen. Collect ₱${order.totalAmount.toFixed(2)} from the customer.${ready}`,
+        error: false,
+      });
       await load();
     } catch (err) {
       // A 409 here is usually a shortage: nothing was deducted and the order is still
@@ -188,6 +196,9 @@ export default function StaffOrdersPage() {
                         <time dateTime={order.createdAt} title={formatDateTime(order.createdAt)}>
                           placed {timeAgo(order.createdAt, now)}
                         </time>
+                        {order.estimatedPrepMinutes !== null && !order.stockIssue && order.payment?.status !== "paid" && (
+                          <> · ready {order.estimatedPrepMinutes === 0 ? "right away" : `${aboutMinutes(order.estimatedPrepMinutes)} after confirming`}</>
+                        )}
                       </div>
                       {order.stockIssue && (
                         <div className="mt-2 rounded-[5px] border border-adm-bad bg-adm-bad-soft p-2.5 text-base text-adm-ink md:text-sm">

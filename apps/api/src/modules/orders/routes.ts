@@ -6,7 +6,8 @@ import { orderAddressLimit, orderPlacementLimit } from "../../middleware/rateLim
 import { HttpError } from "../../middleware/errorHandler";
 import { prisma } from "../../lib/prisma";
 import { parseId } from "../../lib/ids";
-import { createOrderSchema } from "./schema";
+import { createOrderSchema, estimateOrderSchema } from "./schema";
+import { estimateForCart } from "./prepTime";
 import { cancelOrder, createOrder, getOrderById, getOrderOwnerSessionId, listOrders } from "./service";
 
 export const ordersRouter = Router();
@@ -18,6 +19,17 @@ ordersRouter.post("/", authenticate, orderAddressLimit, orderPlacementLimit, asy
     const body = createOrderSchema.parse(req.body);
     const order = await createOrder({ ...body, kioskSessionId: req.kioskSessionId });
     res.status(201).json(order);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Estimated preparation time for the cart at checkout, before the order is placed: the
+// same formula and kitchen queue as the order itself gets (prepTime.ts). Any signed-in
+// caller, like placing an order; nothing is saved.
+ordersRouter.post("/estimate", authenticate, async (req, res, next) => {
+  try {
+    res.json(await estimateForCart(estimateOrderSchema.parse(req.body).items));
   } catch (err) {
     next(err);
   }

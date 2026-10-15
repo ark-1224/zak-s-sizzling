@@ -12,7 +12,8 @@ import { categoryBgColor } from "@/lib/categoryColors";
 import { Icon } from "@/components/Icon";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
-import type { OrderDTO, PaymentMethod, PaymentOptions } from "@zaks/shared-types";
+import type { OrderDTO, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
+import { aboutMinutes } from "@/lib/prepTime";
 
 const METHODS: { id: PaymentMethod; label: string; icon: string; blurb: string }[] = [
   { id: "counter", label: "Pay at counter", icon: "💵", blurb: "Cash or card with staff" },
@@ -40,6 +41,44 @@ export default function CheckoutPage() {
   const [placedOrder, setPlacedOrder] = useState<OrderDTO | null>(null);
   // null while checking; if the check fails, online payment is treated as unavailable.
   const [onlineAvailable, setOnlineAvailable] = useState<boolean | null>(null);
+
+  // Estimated preparation time for the cart, from the same formula and kitchen queue the
+  // order will get. Fetched again (shortly after) whenever the cart changes; if it fails,
+  // the line is simply left out.
+  const [estimate, setEstimate] = useState<PrepEstimate | null>(null);
+  const cartKey = lines.map((l) => `${l.productId}:${l.qty}`).join(",");
+  useEffect(() => {
+    if (!cartKey) return;
+    let cancelled = false;
+    const items = cartKey.split(",").map((entry) => {
+      const [productId, qty] = entry.split(":");
+      return { productId, qty: Number(qty) };
+    });
+    // Merge lines of the same dish (different instructions) into one count.
+    const merged = Object.values(
+      items.reduce<Record<string, { productId: string; qty: number }>>((acc, item) => {
+        acc[item.productId] = { productId: item.productId, qty: (acc[item.productId]?.qty ?? 0) + item.qty };
+        return acc;
+      }, {})
+    );
+    const timer = setTimeout(async () => {
+      try {
+        await ensureKioskSession();
+        const result = await apiFetch<PrepEstimate>("/api/orders/estimate", {
+          method: "POST",
+          auth: "kiosk",
+          body: JSON.stringify({ items: merged }),
+        });
+        if (!cancelled) setEstimate(result);
+      } catch {
+        if (!cancelled) setEstimate(null);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [cartKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -213,6 +252,20 @@ export default function CheckoutPage() {
                 </li>
               ))}
             </ul>
+            {estimate && (
+              <p className="mt-1 border-t border-line pt-3 text-base text-ink">
+                <span className="font-semibold">Estimated preparation time:</span>{" "}
+                {estimate.estimatedPrepMinutes === 0
+                  ? "ready as soon as you've paid"
+                  : `${aboutMinutes(estimate.estimatedPrepMinutes)} after payment`}
+                {estimate.estimatedPrepMinutes > 0 && estimate.ordersAhead > 0 && (
+                  <span className="text-ink-soft">
+                    {" "}
+                    ({estimate.ordersAhead} order{estimate.ordersAhead !== 1 ? "s" : ""} ahead in the kitchen)
+                  </span>
+                )}
+              </p>
+            )}
           </section>
 
           <section aria-labelledby="payment-heading" className="mt-5 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0">

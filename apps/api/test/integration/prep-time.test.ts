@@ -161,3 +161,65 @@ describe("when the order reaches the kitchen", () => {
     expect(task.orderEstimatedReadyAt).toBe(order.body.estimatedReadyAt);
   });
 });
+
+describe("the estimate at checkout, for different order sizes", () => {
+  const estimate = (items: { productId: string; qty: number }[]) =>
+    request(app).post("/api/orders/estimate").set(auth(customer)).send({ items });
+
+  it.each([
+    ["one plate", () => [{ productId: ids.plate, qty: 1 }], 12],
+    ["three plates", () => [{ productId: ids.plate, qty: 3 }], 12 + 2],
+    ["ten plates", () => [{ productId: ids.plate, qty: 10 }], 12 + 9],
+    [
+      "a family order: four plates, two sides and four drinks",
+      () => [
+        { productId: ids.plate, qty: 4 },
+        { productId: ids.side, qty: 2 },
+        { productId: ids.drink, qty: 4 },
+      ],
+      12 + 5,
+    ],
+  ])("%s", async (_label, items, withoutQueue) => {
+    const res = await estimate(items());
+
+    expect(res.status).toBe(200);
+    expect(res.body.ordersAhead).toBe(await countOrdersInKitchen());
+    expect(res.body.estimatedPrepMinutes).toBe(withoutQueue + 2 * res.body.ordersAhead);
+  });
+
+  it("is 0 for drinks only, however many", async () => {
+    expect((await estimate([{ productId: ids.drink, qty: 12 }])).body.estimatedPrepMinutes).toBe(0);
+  });
+
+  it("matches what the order gets when it's placed", async () => {
+    const items = [
+      { productId: ids.plate, qty: 2 },
+      { productId: ids.side, qty: 3 },
+    ];
+    const before = await estimate(items);
+    const placed = await placeOrder(items);
+
+    expect(placed.body.estimatedPrepMinutes).toBe(before.body.estimatedPrepMinutes);
+  });
+
+  it("grows by 2 minutes once another order reaches the kitchen", async () => {
+    const items = [{ productId: ids.plate, qty: 1 }];
+    const before = (await estimate(items)).body.estimatedPrepMinutes;
+
+    const other = await placeOrder([{ productId: ids.side, qty: 1 }]);
+    await confirm(other.body.id);
+
+    expect((await estimate(items)).body.estimatedPrepMinutes).toBe(before + 2);
+  });
+
+  it("refuses an empty cart and a product that doesn't exist", async () => {
+    expect((await estimate([])).status).toBe(400);
+    expect((await estimate([{ productId: "99999999-9999-4999-8999-999999999999", qty: 1 }])).status).toBe(404);
+  });
+
+  it("needs a kiosk session or a sign-in", async () => {
+    const res = await request(app).post("/api/orders/estimate").send({ items: [{ productId: ids.plate, qty: 1 }] });
+
+    expect(res.status).toBe(401);
+  });
+});

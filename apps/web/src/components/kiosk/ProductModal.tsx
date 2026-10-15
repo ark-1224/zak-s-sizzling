@@ -119,14 +119,21 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               <span className="text-xl font-bold whitespace-nowrap text-price-accent">₱{product.price.toFixed(2)}</span>
             </div>
 
-            <span
-              className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold ${
-                out ? "bg-grey-out/18 text-ink-soft" : "bg-available/14 text-available"
-              }`}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-current" />
-              {out ? "Currently unavailable" : "In stock"}
-            </span>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-semibold ${
+                  out ? "bg-grey-out/18 text-ink-soft" : "bg-available/14 text-available"
+                }`}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                {out ? "Currently unavailable" : "In stock"}
+              </span>
+              {!out && (
+                <span className="inline-flex items-center rounded-full bg-honey-soft/70 px-2.5 py-1 text-sm font-semibold text-matcha-deep">
+                  {product.prepMinutes > 0 ? `Takes about ${product.prepMinutes} min` : "Ready to serve"}
+                </span>
+              )}
+            </div>
 
             {product.description && <p className="mt-3 text-base leading-relaxed text-ink-soft">{product.description}</p>}
 

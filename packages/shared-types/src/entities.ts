@@ -70,6 +70,14 @@ export interface CreateOrderInput {
   customerName?: string;
 }
 
+/** POST /api/orders/estimate: the cart's estimated preparation time at checkout. */
+export interface PrepEstimate {
+  /** 0 = ready right away (only items served as they are). */
+  estimatedPrepMinutes: number;
+  /** Orders in the kitchen right now, which the estimate allows for. */
+  ordersAhead: number;
+}
+
 export type OrderStatus = "pending" | "confirmed" | "preparing" | "ready" | "completed" | "cancelled";
 export type PaymentMethod = "gcash" | "maya" | "counter";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";

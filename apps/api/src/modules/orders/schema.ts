@@ -17,3 +17,11 @@ export const createOrderSchema = z.object({
   customerName: z.string().max(120).optional(),
   paymentMethod: z.enum(["gcash", "maya", "counter"]).optional(),
 });
+
+// The cart shown at checkout, for its estimated preparation time (prepTime.ts).
+export const estimateOrderSchema = z.object({
+  items: z
+    .array(z.object({ productId: z.string().uuid(), qty: z.number().int().positive().max(999) }))
+    .min(1, "Order must contain at least one item")
+    .max(100),
+});

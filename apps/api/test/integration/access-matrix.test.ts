@@ -43,6 +43,7 @@ const MATRIX: Entry[] = [
 
   // Any signed-in caller, including an anonymous kiosk session
   { method: "post", route: "/api/orders/", path: "/api/orders", body: {}, expected: SIGNED_IN },
+  { method: "post", route: "/api/orders/estimate", path: "/api/orders/estimate", body: {}, expected: SIGNED_IN },
   { method: "get", route: "/api/orders/:id", path: `/api/orders/${MISSING}`, expected: SIGNED_IN },
   { method: "get", route: "/api/orders/:id/receipt", path: `/api/orders/${MISSING}/receipt`, expected: SIGNED_IN },
   { method: "post", route: "/api/payments/intent", path: "/api/payments/intent", body: {}, expected: SIGNED_IN },

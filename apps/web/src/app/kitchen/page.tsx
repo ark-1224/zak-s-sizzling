@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
+import { clockTime, dueIn } from "@/lib/prepTime";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
 
 // Kitchen Display System — real-time order queue per the manuscript's Kitchen Display
@@ -21,6 +22,12 @@ export default function KitchenPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  // Keeps each order's "in 6 min" / "4 min late" current between updates.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(timer);
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -71,9 +78,14 @@ export default function KitchenPage() {
   }
 
   const orders = useMemo(() => {
-    const byOrder = new Map<string, { orderNumber: string; createdAt: string; tasks: KitchenTaskDTO[] }>();
+    const byOrder = new Map<string, { orderNumber: string; createdAt: string; readyAt: string | null; tasks: KitchenTaskDTO[] }>();
     for (const t of tasks) {
-      const entry = byOrder.get(t.orderId) ?? { orderNumber: t.orderNumber, createdAt: t.orderCreatedAt, tasks: [] };
+      const entry = byOrder.get(t.orderId) ?? {
+        orderNumber: t.orderNumber,
+        createdAt: t.orderCreatedAt,
+        readyAt: t.orderEstimatedReadyAt,
+        tasks: [],
+      };
       entry.tasks.push(t);
       byOrder.set(t.orderId, entry);
     }
@@ -107,9 +119,12 @@ export default function KitchenPage() {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-3 md:gap-4">
           {orders.map((order) => (
             <div key={order.orderId} className="min-w-0 rounded-card bg-white/8 p-4">
-              <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/15 pb-2.5">
-                <span className="font-display text-lg font-bold break-all">{order.orderNumber}</span>
-                <span className="shrink-0 text-sm text-cream/60">{new Date(order.createdAt).toLocaleTimeString()}</span>
+              <div className="mb-3 border-b border-white/15 pb-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display text-lg font-bold break-all">{order.orderNumber}</span>
+                  <span className="shrink-0 text-sm text-cream/60">{clockTime(order.createdAt)}</span>
+                </div>
+                {order.readyAt && <DueTime readyAt={order.readyAt} now={now} />}
               </div>
               <div className="space-y-2.5">
                 {order.tasks.map((task) => (
@@ -142,6 +157,16 @@ export default function KitchenPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// The estimated ready time the customer was given (orders/prepTime.ts), and how long is left.
+function DueTime({ readyAt, now }: { readyAt: string; now: number }) {
+  const due = dueIn(readyAt, now);
+  return (
+    <div className={`mt-1 text-base md:text-sm ${due.late ? "font-bold text-honey" : "text-cream/80"}`}>
+      Ready by {clockTime(readyAt)} · {due.text}
     </div>
   );
 }

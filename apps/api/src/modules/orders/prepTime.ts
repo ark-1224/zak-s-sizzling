@@ -1,5 +1,7 @@
 import type { Prisma } from "@prisma/client";
+import type { PrepEstimate } from "@zaks/shared-types";
 import { prisma } from "../../lib/prisma";
+import { HttpError } from "../../middleware/errorHandler";
 
 /**
  * Estimated preparation time for an order (Scope, Payment Transaction; Sprint 3).
@@ -40,6 +42,22 @@ export function countOrdersInKitchen(excludeOrderId?: string, db: Db = prisma): 
       items: { some: { kitchenTask: { status: { not: "completed" } } } },
     },
   });
+}
+
+/** The estimate for a cart at checkout, before any order exists: same formula, same queue. */
+export async function estimateForCart(items: { productId: string; qty: number }[]): Promise<PrepEstimate> {
+  const ids = [...new Set(items.map((item) => item.productId))];
+  const products = await prisma.product.findMany({ where: { id: { in: ids } }, select: { id: true, prepMinutes: true } });
+  if (products.length !== ids.length) throw new HttpError(404, "One of the products in the order doesn't exist");
+  const prepById = new Map(products.map((p) => [p.id, p.prepMinutes]));
+  const ordersAhead = await countOrdersInKitchen();
+  return {
+    estimatedPrepMinutes: estimatePrepMinutes(
+      items.map((item) => ({ qty: item.qty, prepMinutes: prepById.get(item.productId)! })),
+      ordersAhead
+    ),
+    ordersAhead,
+  };
 }
 
 /**
