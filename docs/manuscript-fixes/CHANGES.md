@@ -12,7 +12,7 @@ This file lists every change needed to align the manuscript with the system as b
 4. The ERD matches the current database schema.
 5. The limitation that contradicts the diagrams is rewritten (approved).
 
-Section 7 (QR code access) records a feature completed after the review, so the manuscript's QR text can be checked against it.
+Sections 7 (QR code access) and 8 (low-stock notifications) record features completed after the review, so the manuscript's text can be checked against them.
 
 Items the code does not support, and which were not covered by these decisions, are listed at the end under **Needs decision**. They are not rewritten here.
 
@@ -626,6 +626,38 @@ NEW
 
 ---
 
+## 8. Low-stock notifications
+
+The system now notifies a person when stock runs low (Low-stock notifications, sessions 1/3 to 3/3). When a product counted in units, or a raw material in use, reaches its minimum stock level, the system records an alert and emails it to the owner. Each item is alerted once until it is restocked above its minimum, so an item that stays low does not send repeated emails. Low stock is still shown on the dashboard and on the Inventory and Raw materials pages as well.
+
+**Evidence:** database triggers (migrations `20261013160000_low_stock_alerts` and `20261014090000_low_stock_alerts_once_until_restocked` in `apps/api/prisma/migrations/`) record each alert in the `low_stock_alerts` table, whatever changed the stock: a sale, an adjustment, a restock, or an edited minimum. The background worker sends waiting alerts every minute (`apps/worker/src/jobs/sendLowStockAlerts.ts`) through Gmail or another mail server (`apps/worker/src/lib/mailer.ts`, using `nodemailer`). The seventh testing session covers it (UT-65 to UT-79, IT-155 to IT-174), including a paid kiosk order followed through to a received email on a test mail server.
+
+**Still to do before the defense:**
+
+- Send a real email: set `SMTP_USER`, `SMTP_PASS` (a Gmail App Password), and `ALERT_EMAIL_TO` for the worker, then run `npm run mail:test`.
+- On Railway, outgoing email through a mail server (SMTP) is available only on the Pro plan. On the Trial and Hobby plans the deployed worker cannot send through Gmail, so either upgrade, add an email service that sends over HTTPS, or demonstrate the alerts from the worker running on a local computer.
+- The ERD and data dictionary in section 3 do not show the `low_stock_alerts` table yet (see Needs decision item 9 for the other new tables).
+
+### 8.1 Scope of the System: "Realtime Stock Tracking", p. 10 [PDF 13]
+
+The paragraph promises "automatic notifications" but does not say how they reach anyone. This edit names the channel, and adds raw materials, which have minimum levels too now (Needs decision item 9).
+
+OLD
+> The system features real-time stock tracking through a live dashboard that displays current inventory levels with visual indicators representing stock status. Inventory data is automatically updated whenever a transaction occurs, ensuring high data accuracy. The system allows administrators to define minimum stock levels for each product and generate automatic notifications when inventory reaches critical thresholds, enabling timely replenishment and preventing stock shortages.
+
+NEW
+> The system features real-time stock tracking through a live dashboard that displays current inventory levels with visual indicators representing stock status. Inventory data is automatically updated whenever a transaction occurs, ensuring high data accuracy. The system allows administrators to define minimum stock levels for each product and raw material. When an item reaches its minimum level, the system shows it on the dashboard and automatically sends an email notification to the owner, once until the item is restocked, enabling timely replenishment and preventing stock shortages.
+
+### 8.2 Mentions that stay unchanged
+
+These describe the alerts correctly and need no edit:
+
+- Introduction, "issues automated alerts when ingredients are running low", p. 4 [PDF 7]
+- Objective 4, "Analytics and Notification Dashboard", p. 6 [PDF 9]
+- Product Backlog example "Real-time stock deduction and alerts", p. 37 [PDF 40]
+- ERD description, as rewritten in section 3.3 ("flag products whose stock falls to the minimum threshold"), pp. 61–62 [PDF 64–65]
+- Sprint execution, "Stock adjustment tools and low-stock alerts supported effective inventory management", p. 67 [PDF 70]
+
 ## Needs decision
 
 The manuscript claims each item below, but the code does not support it (or supports it only in part). The adviser decisions above did not cover them, so they are listed here and not rewritten.
@@ -639,8 +671,8 @@ The manuscript claims each item below, but the code does not support it (or supp
 7. **Excel bulk import** (Scope, Product Management, p. 10). Resolved: the Bulk import page accepts Excel (.xlsx) files as well as CSV (`apps/api/src/modules/products/xlsxImport.ts`, `POST /api/products/import-xlsx`, using `exceljs`). The sheet is turned into the same CSV the page previews, so both kinds of file get the same row checks, and there is an Excel template with a category dropdown (`GET /api/products/import-template?format=xlsx`).
 8. **Local and cloud backups** (Scope, Database Backup, p. 11; Deployment, p. 43). The backup job in `apps/worker` is scheduled only in development and writes to local disk. No cloud copy is made.
 9. **Deduction of raw materials** (Objective 3, p. 6). Resolved: dishes can use a recipe of raw materials, which are deducted when payment is confirmed (`raw_materials`, `recipe_items`, `raw_material_movements`; design in `docs/design/raw-material-stock.md`). Items sold as they are, such as bottled drinks, still count units. The ERD and data dictionary in section 3 do not show the three new tables yet.
-10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Low-stock products are listed on the admin dashboard and inventory page, and the hourly worker check writes to the server log. No notification is sent to a person.
-11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). Resolved: 249 automated unit, integration, and security tests (`apps/api/test/`), documented session by session in `Automated-Testing-Results.docx`.
+10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Resolved: when a product or raw material reaches its minimum stock level, the worker emails the owner, once until the item is restocked (section 8). Still to do: a real Gmail send, and email from the deployed worker (outgoing SMTP needs Railway's Pro plan).
+11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). Resolved: 405 automated unit, integration, and security tests (`apps/api/test/`), documented session by session (seven sessions so far) in `Automated-Testing-Results.docx`.
 12. **Staff and Administrator permissions.** Resolved: the code now matches the earlier drafts. Product, price, bulk import, and report functions, and product costs, are limited to the Administrator; Staff keep payments, the kitchen display, stock, barcode lookup, and orders. The role table in 2.2 describes this split. The removed "Customer Assistance" and "System Maintenance Supervision" items (2.4(f)) have no matching function in the code.
 13. **Product images** (Scope, Product Catalog and Display, p. 7; Product Catalog Management, p. 10). The products table has no image field; the kiosk shows an icon.
 14. **Online payment through GCash and Maya** (FR2, the role table, and several sections). The code integrates PayMongo, but it has not been tested with real or test keys. The client's approval is pending.
