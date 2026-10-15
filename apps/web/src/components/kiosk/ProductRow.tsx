@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Product } from "@zaks/shared-types";
 import { categoryBgColor } from "@/lib/categoryColors";
 import { Icon } from "@/components/Icon";
+import { ProductPhoto } from "./ProductPhoto";
 
 // One menu item as a delivery-app style row: name, two-line description and price on
 // the left, a square thumbnail on the right, and a round "+" that adds one straight to
@@ -11,10 +12,8 @@ import { Icon } from "@/components/Icon";
 // special instructions. Sold-out state follows product.isAvailable, which the
 // `inventory:updated` WebSocket event flips live.
 //
-// The thumbnail box is the photo slot. Products have no image field yet, so it shows the
-// item's emoji on its category colour; once photos exist, an
-// <img className="h-full w-full object-cover" /> goes inside the same box and nothing
-// else about the row changes.
+// The thumbnail box is the photo slot: the product's photo, or its emoji on its category
+// colour when it has none (ProductPhoto).
 interface ProductRowProps {
   product: Product;
   onOpen: () => void;
@@ -67,9 +66,7 @@ export function ProductRow({ product, onOpen, onQuickAdd }: ProductRowProps) {
           className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl lg:h-28 lg:w-28"
           style={{ background: categoryBgColor(product.category?.name) }}
         >
-          <span aria-hidden="true" className="flex h-full w-full items-center justify-center text-4xl lg:text-5xl">
-            {product.icon}
-          </span>
+          <ProductPhoto imageUrl={product.imageUrl} icon={product.icon} iconClassName="text-4xl lg:text-5xl" />
           {out && (
             <span className="absolute inset-x-1.5 top-1.5 rounded-full bg-ink-soft/95 py-0.5 text-center text-xs font-bold text-cream">
               Sold out

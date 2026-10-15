@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "@/hooks/useCart";
 import { categoryBgColor } from "@/lib/categoryColors";
+import { ProductPhoto } from "./ProductPhoto";
 import { Icon } from "@/components/Icon";
 import type { CartLine as CartLineType } from "@/hooks/useCart";
 
@@ -109,12 +110,8 @@ function CartLineRow({ line }: { line: CartLineType }) {
   return (
     <div className="flex gap-3 border-b border-line py-4 last:border-b-0">
       {/* Photo slot, same as the menu rows. */}
-      <div
-        className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl text-2xl"
-        style={{ background: categoryBgColor(line.categoryName) }}
-        aria-hidden="true"
-      >
-        {line.icon}
+      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl" style={{ background: categoryBgColor(line.categoryName) }}>
+        <ProductPhoto imageUrl={line.imageUrl} icon={line.icon} iconClassName="text-2xl" eager />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex justify-between gap-2">

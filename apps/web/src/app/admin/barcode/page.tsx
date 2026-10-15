@@ -9,6 +9,7 @@ import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { PageHeader, Card, AdmButton, StatusPill, admButtonClass, admInputClass } from "@/components/admin/ui";
 import { AdjustStockModal } from "@/components/admin/AdjustStockModal";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
 import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import type { Category, InventoryUpdatedEvent, Product } from "@zaks/shared-types";
 
@@ -297,8 +298,8 @@ function ProductResult({ product, isAdmin, onAdjust }: { product: Product; isAdm
   return (
     <Card>
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start md:p-5">
-        <span aria-hidden="true" className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[6px] bg-adm-bg text-4xl">
-          {product.icon}
+        <span className="h-16 w-16 shrink-0 overflow-hidden rounded-[6px] bg-adm-bg">
+          <ProductPhoto imageUrl={product.imageUrl} icon={product.icon} iconClassName="text-4xl" eager />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

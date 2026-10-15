@@ -12,6 +12,7 @@ import { categoryBgColor } from "@/lib/categoryColors";
 import { Icon } from "@/components/Icon";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
+import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
 import type { OrderDTO, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
 import { aboutMinutes } from "@/lib/prepTime";
 
@@ -231,12 +232,8 @@ export default function CheckoutPage() {
               {lines.map((l) => (
                 <li key={l.cartId} className="flex gap-3 py-3">
                   {/* Photo slot, same as the menu rows and basket. */}
-                  <span
-                    aria-hidden="true"
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
-                    style={{ background: categoryBgColor(l.categoryName) }}
-                  >
-                    {l.icon}
+                  <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl" style={{ background: categoryBgColor(l.categoryName) }}>
+                    <ProductPhoto imageUrl={l.imageUrl} icon={l.icon} iconClassName="text-2xl" eager />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-3 text-base">

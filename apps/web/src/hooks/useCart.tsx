@@ -13,6 +13,8 @@ export interface CartLine {
   name: string;
   price: number;
   icon: string | null;
+  /** The product's photo (Product.imageUrl); missing in carts saved before photos existed. */
+  imageUrl?: string | null;
   categoryName: string | undefined;
   qty: number;
   instructions: string;
@@ -75,6 +77,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           name: product.name,
           price: product.price,
           icon: product.icon,
+          imageUrl: product.imageUrl,
           categoryName: product.category?.name,
           qty,
           instructions: instructions.trim(),

@@ -9,6 +9,7 @@ import { Icon } from "@/components/Icon";
 import { useToast } from "./Toast";
 import { QtyStepper } from "./QtyStepper";
 import { NutritionGrid } from "./NutritionGrid";
+import { ProductPhoto } from "./ProductPhoto";
 
 // Item sheet: a bottom sheet on phones, a centred sheet from md up. The quantity stepper
 // and "Add to order" button sit in a footer outside the scrolling area, so they're always
@@ -105,12 +106,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         </button>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          {/* Photo slot: same box an <img className="h-full w-full object-cover" /> will fill. */}
-          <div
-            className="flex h-36 items-center justify-center text-6xl md:h-40 md:text-7xl"
-            style={{ background: categoryBgColor(product.category?.name) }}
-          >
-            <span aria-hidden="true">{product.icon}</span>
+          {/* Photo slot: the product's photo, or its icon on the category colour. */}
+          <div className="h-36 overflow-hidden md:h-40" style={{ background: categoryBgColor(product.category?.name) }}>
+            <ProductPhoto imageUrl={product.imageUrl} icon={product.icon} iconClassName="text-6xl md:text-7xl" eager />
           </div>
 
           <div className="px-5 pt-4 pb-5 md:px-7">
