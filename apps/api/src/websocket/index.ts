@@ -1,6 +1,7 @@
 import type { Server as HttpServer } from "node:http";
 import { Server } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@zaks/shared-types";
+import { webOrigins } from "../lib/origins";
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents>;
 
@@ -10,7 +11,7 @@ let ioInstance: IO | null = null;
 // Sprint 1 just stood the server up; Sprint 3 is the first module (payments) to emit.
 export function attachWebSocket(httpServer: HttpServer): IO {
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
-    cors: { origin: process.env.WEB_ORIGIN ?? "http://localhost:3000" },
+    cors: { origin: webOrigins() },
   });
 
   io.on("connection", (socket) => {

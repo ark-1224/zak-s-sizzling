@@ -307,6 +307,20 @@ It downloads the newest backup (or the key or local `.sql.gz` file given after `
 restores it with `psql`, and prints the row count of each main table to compare with the
 live system. It refuses any other database name, and any database that isn't empty.
 
+### Separate links for customers and staff
+
+The same web app is deployed twice on Railway: the **web** service is the kiosk link
+(menu and checkout) and the **admin** service is the staff link (sign-in, admin pages,
+kitchen display, payment queue). `apps/web/src/proxy.ts` sends anyone who opens the
+other side's page to the other link, at the same path. Locally, with no `SITE_ROLE`,
+both sides are served from one address as before.
+
+| Service | Variables |
+|---|---|
+| web (kiosk) | `SITE_ROLE=kiosk`, `ADMIN_SITE_URL` = the admin link |
+| admin | `SITE_ROLE=admin`, `KIOSK_SITE_URL` = the kiosk link, `NEXT_PUBLIC_KIOSK_URL` = the kiosk link (build time, for the Kiosk QR code page), plus the same `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` as web |
+| api | `WEB_ORIGIN` = both links, comma-separated, kiosk first (online payments return customers to the first) |
+
 ### Email alerts (optional)
 
 The worker sends email one of two ways (`apps/worker/src/lib/mailer.ts`); put the

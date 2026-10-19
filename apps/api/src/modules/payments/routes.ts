@@ -5,13 +5,12 @@ import { HttpError } from "../../middleware/errorHandler";
 import { parseId } from "../../lib/ids";
 import { paymentStartAddressLimit, paymentStartLimit } from "../../middleware/rateLimit";
 import { isPaymongoConfigured, PaymongoNotConfiguredError } from "../../lib/paymongo";
+import { kioskOrigin } from "../../lib/origins";
 import { createPaymentIntentSchema } from "./schema";
 import { confirmCounterPayment, createGatewayPaymentIntent, handleWebhook } from "./service";
 import type { PaymentOptions } from "@zaks/shared-types";
 
 export const paymentsRouter = Router();
-
-const WEB_ORIGIN = () => process.env.WEB_ORIGIN ?? "http://localhost:3000";
 
 // Public, so the kiosk can grey out GCash and Maya before anyone picks them (UI review #2).
 paymentsRouter.get("/options", (_req, res) => {
@@ -25,7 +24,7 @@ paymentsRouter.get("/options", (_req, res) => {
 paymentsRouter.post("/intent", authenticate, paymentStartAddressLimit, paymentStartLimit, async (req, res, next) => {
   try {
     const { orderId, method } = createPaymentIntentSchema.parse(req.body);
-    const result = await createGatewayPaymentIntent(orderId, method, WEB_ORIGIN());
+    const result = await createGatewayPaymentIntent(orderId, method, kioskOrigin());
     res.json(result);
   } catch (err) {
     if (err instanceof PaymongoNotConfiguredError) return next(new HttpError(501, err.message));

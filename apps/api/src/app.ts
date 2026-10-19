@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { webOrigins } from "./lib/origins";
 import type { Request } from "express";
 import { authRouter } from "./modules/auth/routes";
 import { categoriesRouter } from "./modules/categories/routes";
@@ -26,7 +27,8 @@ export function createApp() {
 
   app.use(helmet());
   app.use(compression());
-  app.use(cors({ origin: process.env.WEB_ORIGIN ?? "http://localhost:3000", credentials: true }));
+  // The kiosk site and the admin site (WEB_ORIGIN may list both, lib/origins.ts).
+  app.use(cors({ origin: webOrigins(), credentials: true }));
   app.use(cookieParser());
   // Stashes the raw request body on req.rawBody — needed by the PayMongo webhook route
   // to verify the Paymongo-Signature header, which is computed over the exact raw bytes.
