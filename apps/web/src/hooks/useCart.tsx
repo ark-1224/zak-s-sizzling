@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { Product } from "@zaks/shared-types";
+import type { OrderType, Product } from "@zaks/shared-types";
 
 // Cart state model ported from kiosk.html's `cart[]` / `cartIdSeq` (Downloads/kiosk.html,
 // lines 523-524, 707-743). Kept entirely client-side (localStorage-backed) until
@@ -24,6 +24,11 @@ interface CartContextValue {
   lines: CartLine[];
   count: number;
   total: number;
+  /** Dine in or take out, asked right after the welcome screen; null until chosen. */
+  orderType: OrderType | null;
+  setOrderType: (orderType: OrderType) => void;
+  /** True once the saved cart has been read, so screens don't flash the welcome screen. */
+  hydrated: boolean;
   addToCart: (product: Product, qty: number, instructions: string) => void;
   changeQty: (cartId: string, delta: number) => void;
   removeLine: (cartId: string) => void;
@@ -35,10 +40,12 @@ const CartContext = createContext<CartContextValue | null>(null);
 /** Instructions compared loosely, so "No onions" and " no onions " count as the same request. */
 const sameInstructions = (a: string, b: string) => a.trim().replace(/\s+/g, " ").toLowerCase() === b.trim().replace(/\s+/g, " ").toLowerCase();
 const STORAGE_KEY = "zaks.kiosk.cart";
+const ORDER_TYPE_KEY = "zaks.kiosk.orderType";
 let cartIdSeq = 1;
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [orderType, setOrderType] = useState<OrderType | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   // Hydrate from localStorage once on mount (cart persists across a page refresh).
@@ -51,6 +58,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const maxId = parsed.reduce((max, l) => Math.max(max, Number(l.cartId.slice(1)) || 0), 0);
         cartIdSeq = maxId + 1;
       }
+      const savedType = window.localStorage.getItem(ORDER_TYPE_KEY);
+      if (savedType === "dine_in" || savedType === "take_out") setOrderType(savedType);
     } catch {
       // corrupted localStorage — start with an empty cart rather than crashing the kiosk
     } finally {
@@ -60,8 +69,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
-  }, [lines, hydrated]);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+      if (orderType) window.localStorage.setItem(ORDER_TYPE_KEY, orderType);
+      else window.localStorage.removeItem(ORDER_TYPE_KEY);
+    } catch {
+      // Storage can be full or blocked; the cart still works for this visit.
+    }
+  }, [lines, orderType, hydrated]);
 
   // The same dish with the same instructions goes on one line ("2 × Sisig") instead
   // of two identical lines; different instructions keep their own line (UI review #3).
@@ -98,8 +113,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) => prev.filter((l) => l.cartId !== cartId));
   }
 
+  /** Empties the order and forgets dine in / take out, ready for the next customer. */
   function clearCart() {
     setLines([]);
+    setOrderType(null);
   }
 
   const { count, total } = useMemo(
@@ -111,7 +128,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <CartContext.Provider value={{ lines, count, total, addToCart, changeQty, removeLine, clearCart }}>
+    <CartContext.Provider
+      value={{ lines, count, total, orderType, setOrderType, hydrated, addToCart, changeQty, removeLine, clearCart }}
+    >
       {children}
     </CartContext.Provider>
   );

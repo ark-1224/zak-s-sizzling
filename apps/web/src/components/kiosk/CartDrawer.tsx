@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useCart } from "@/hooks/useCart";
 import { categoryBgColor } from "@/lib/categoryColors";
 import { ProductPhoto } from "./ProductPhoto";
+import { SizzlingPlate } from "./SizzlingPlate";
 import { Icon } from "@/components/Icon";
 import type { CartLine as CartLineType } from "@/hooks/useCart";
 
-// Ported from kiosk.html's cart drawer (Downloads/kiosk.html, lines 295-347, 402-415,
-// 751-809). renderCart()/changeCartQty()/removeCartLine() become useCart() mutations.
-// Sprint 3: checkout moved to its own page (payment method selection), so this drawer
-// now just links there instead of submitting the order itself.
+// The order review: opened from the order bar's chips to change quantities or remove a
+// dish, then on to checkout. renderCart()/changeCartQty()/removeCartLine() from the
+// original kiosk.html are useCart() mutations.
 //
 // Layout: a bottom sheet on phones (slides up, nearly full height), a right-hand side
 // sheet from md up (slides in from the right).
@@ -25,7 +25,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 bg-[#22301f]/45 transition-opacity duration-200 ${
+        className={`fixed inset-0 z-40 bg-char/55 transition-opacity duration-200 ${
           open ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         onClick={onClose}
@@ -47,7 +47,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         >
           <span aria-hidden="true" className="mx-auto mt-2 h-1.5 w-12 rounded-full bg-line md:hidden" />
           <div className="flex items-center justify-between border-b border-line py-2 pr-2 pl-5">
-            <h2 className="font-display text-xl font-semibold text-matcha-deep">
+            <h2 className="font-display text-2xl font-extrabold text-matcha-deep">
               Your order{" "}
               <span className="font-sans text-base font-normal text-ink-soft">
                 ({count} item{count !== 1 ? "s" : ""})
@@ -62,13 +62,11 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5">
+          <div className="kiosk-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5">
             {lines.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-center text-ink-soft">
-                <span aria-hidden="true" className="text-5xl">
-                  🛒
-                </span>
-                <div className="font-display mt-3 text-xl text-matcha-deep">Your order is empty</div>
+                <SizzlingPlate className="h-20 w-auto" />
+                <div className="font-display mt-3 text-2xl font-bold text-matcha-deep">Your order is empty</div>
                 <div className="mt-1 text-base">Tap + on any dish to add it.</div>
               </div>
             ) : (
@@ -82,11 +80,11 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           >
             <div className="flex items-baseline justify-between text-lg font-bold text-ink">
               <span>Total</span>
-              <span className="text-xl">₱{total.toFixed(2)}</span>
+              <span className="font-display text-2xl font-extrabold">₱{total.toFixed(2)}</span>
             </div>
             {lines.length === 0 ? (
               <button disabled className="mt-3 min-h-14 w-full rounded-full bg-grey-out text-lg font-bold text-white">
-                Proceed to checkout
+                Review &amp; pay
               </button>
             ) : (
               <Link
@@ -94,7 +92,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                 onClick={onClose}
                 className="mt-3 flex min-h-14 w-full items-center justify-center rounded-full bg-matcha text-lg font-bold text-cream shadow-card transition-transform active:scale-98"
               >
-                Proceed to checkout
+                Review &amp; pay
               </Link>
             )}
           </div>
@@ -128,17 +126,17 @@ function CartLineRow({ line }: { line: CartLineType }) {
             <button
               onClick={() => changeQty(line.cartId, -1)}
               aria-label={`Decrease ${line.name} quantity`}
-              className="h-12 w-12 text-xl font-bold text-matcha-deep active:bg-paper"
+              className="flex h-12 w-12 items-center justify-center text-matcha-deep active:bg-paper"
             >
-              −
+              <Icon name="minus" className="h-5 w-5" />
             </button>
             <span className="w-8 text-center text-base font-bold">{line.qty}</span>
             <button
               onClick={() => changeQty(line.cartId, 1)}
               aria-label={`Increase ${line.name} quantity`}
-              className="h-12 w-12 text-xl font-bold text-matcha-deep active:bg-paper"
+              className="flex h-12 w-12 items-center justify-center text-matcha-deep active:bg-paper"
             >
-              +
+              <Icon name="plus" className="h-5 w-5" />
             </button>
           </div>
           <button

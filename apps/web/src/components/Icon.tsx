@@ -19,7 +19,14 @@ export type IconName =
   | "plus"
   | "check"
   | "chevronDown"
-  | "chevronRight";
+  | "chevronRight"
+  | "search"
+  | "minus"
+  | "dineIn"
+  | "takeOut"
+  | "restart"
+  | "cash"
+  | "phone";
 
 const SHAPES: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -105,9 +112,51 @@ const SHAPES: Record<IconName, React.ReactNode> = {
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  minus: <path d="M5 12h14" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronRight: <path d="m9 6 6 6-6 6" />,
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m20 20-4.6-4.6" />
+    </>
+  ),
+  // A plate between a fork and a knife.
+  dineIn: (
+    <>
+      <circle cx="12" cy="12.5" r="5.5" />
+      <circle cx="12" cy="12.5" r="2.5" />
+      <path d="M3.5 4v5a1.5 1.5 0 0 0 3 0V4M5 9.5V20" />
+      <path d="M20.5 20V4c-1.7.6-2.5 2.6-2.5 5v3.5h2.5" />
+    </>
+  ),
+  // A paper takeaway bag with handles.
+  takeOut: (
+    <>
+      <path d="M5 8.5h14l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H7.7a1.5 1.5 0 0 1-1.5-1.3z" />
+      <path d="M9 11V6.5a3 3 0 0 1 6 0V11" />
+    </>
+  ),
+  restart: (
+    <>
+      <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" />
+      <path d="M4.5 4.5v4h4" />
+    </>
+  ),
+  cash: (
+    <>
+      <rect x="2.5" y="6.5" width="19" height="11" rx="1.5" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 9.5v5M18 9.5v5" />
+    </>
+  ),
+  phone: (
+    <>
+      <rect x="6.5" y="2.5" width="11" height="19" rx="2" />
+      <path d="M10.5 18.5h3" />
+    </>
+  ),
 };
 
 export function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: string }) {

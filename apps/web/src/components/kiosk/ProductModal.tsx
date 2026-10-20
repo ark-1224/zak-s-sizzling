@@ -86,7 +86,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
   return (
     <div
-      className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center bg-[#22301f]/55 pt-8 motion-reduce:animate-none md:items-center md:p-6"
+      className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center bg-char/60 pt-8 motion-reduce:animate-none md:items-center md:p-6"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* max-h-full: capped at the backdrop's height, which (being fixed inset-0) tracks
@@ -105,7 +105,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
           <Icon name="close" className="h-6 w-6" />
         </button>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="kiosk-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
           {/* Photo slot: the product's photo, or its icon on the category colour. */}
           <div className="h-36 overflow-hidden md:h-40" style={{ background: categoryBgColor(product.category?.name) }}>
             <ProductPhoto imageUrl={product.imageUrl} icon={product.icon} iconClassName="text-6xl md:text-7xl" eager />
@@ -113,8 +113,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
           <div className="px-5 pt-4 pb-5 md:px-7">
             <div className="flex items-start justify-between gap-4">
-              <h2 className="font-display min-w-0 text-2xl font-semibold break-words text-matcha-deep">{product.name}</h2>
-              <span className="text-xl font-bold whitespace-nowrap text-price-accent">₱{product.price.toFixed(2)}</span>
+              <h2 className="font-display min-w-0 text-3xl leading-tight font-extrabold tracking-[-0.02em] break-words text-matcha-deep">{product.name}</h2>
+              <span className="font-display text-2xl font-extrabold whitespace-nowrap text-price-accent">₱{product.price.toFixed(2)}</span>
             </div>
 
             <div className="mt-2 flex flex-wrap gap-2">

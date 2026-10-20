@@ -17,9 +17,17 @@ interface ProductPhotoProps {
   iconClassName: string;
   /** Load at once instead of when scrolled near: for a photo that's on screen right away. */
   eager?: boolean;
+  /** Where the icon sits in the slot (default: centred). */
+  iconPlacement?: string;
 }
 
-export function ProductPhoto({ imageUrl, icon, iconClassName, eager = false }: ProductPhotoProps) {
+export function ProductPhoto({
+  imageUrl,
+  icon,
+  iconClassName,
+  eager = false,
+  iconPlacement = "items-center justify-center",
+}: ProductPhotoProps) {
   // Remembers which photo failed, so a new photo (a new URL) gets its own try.
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
@@ -40,7 +48,7 @@ export function ProductPhoto({ imageUrl, icon, iconClassName, eager = false }: P
     );
   }
   return (
-    <span aria-hidden="true" className={`flex h-full w-full items-center justify-center ${iconClassName}`}>
+    <span aria-hidden="true" className={`flex h-full w-full ${iconPlacement} ${iconClassName}`}>
       {icon}
     </span>
   );

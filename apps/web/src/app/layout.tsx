@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Archivo, Fraunces, Inter, Space_Mono } from "next/font/google";
+import { Archivo, Bricolage_Grotesque, Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/hooks/useCart";
 import { ToastProvider } from "@/components/kiosk/Toast";
 
-// Fonts ported from kiosk.html's Google Fonts <link> (Downloads/kiosk.html, lines 7-8)
-// — used by the customer-facing kiosk only.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Customer kiosk type: Bricolage Grotesque for headings, prices and signage-scale text
+// (heavy, slightly condensed, like a grill's menu board), Inter for body text.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  axes: ["wdth", "opsz"],
 });
 
 const inter = Inter({
@@ -45,7 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${inter.variable} ${archivo.variable} ${spaceMono.variable} h-full`}
+      className={`${bricolage.variable} ${inter.variable} ${archivo.variable} ${spaceMono.variable} h-full`}
     >
       <body className="min-h-full font-sans antialiased">
         <ToastProvider>

@@ -14,6 +14,10 @@
      was 3.4:1) (UI review #6). */
   --matcha: #b84a20;
   --matcha-deep: #7a2a14; /* deep char-ember - header/active states */
+  /* char - the cast-iron frame of the kiosk (top bar, category rail, welcome screen).
+     Cream text on it is 15:1, honey 8:1. */
+  --char: #2b1912;
+  --char-soft: #44291d; /* raised tiles on the char frame */
   /* mustard - accent for the dark header's basket button and count badges. Not for
      buttons on the cream page: its edge there is only 1.8:1 against the background,
      so main actions moved to --matcha (UI review #24). Lightened from #cc8a2e so dark
@@ -59,7 +63,7 @@
 }
 
 @theme inline {
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-bricolage);
   --font-sans: var(--font-inter);
 
   --color-cream: var(--cream);
@@ -68,6 +72,8 @@
   --color-ink-soft: var(--ink-soft);
   --color-matcha: var(--matcha);
   --color-matcha-deep: var(--matcha-deep);
+  --color-char: var(--char);
+  --color-char-soft: var(--char-soft);
   --color-honey: var(--honey);
   --color-honey-soft: var(--honey-soft);
   --color-berry: var(--berry);
@@ -121,6 +127,23 @@
     }
   }
 
+  /* The welcome screen's steam, rising off the sizzling plate. */
+  --animate-steam: steam 3.2s cubic-bezier(0.3, 0, 0.4, 1) infinite;
+
+  @keyframes steam {
+    0% {
+      opacity: 0;
+      transform: translateY(10px) scaleY(0.85);
+    }
+    30% {
+      opacity: 0.85;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-46px) scaleY(1.15);
+    }
+  }
+
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -136,6 +159,12 @@ body {
   color: var(--ink);
 }
 
+/* Page scrollbars thin and warm too, never the browser's grey arrows. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
 /* A visible focus ring for keyboard users on every button, link and field
    (UI review #26). In the base layer so a utility can recolour it where the
    background is dark, e.g. the kiosk header's search box. */
@@ -144,4 +173,39 @@ body {
     outline: 2px solid var(--matcha-deep);
     outline-offset: 2px;
   }
+
+  ::selection {
+    background: var(--honey-soft);
+    color: var(--ink);
+  }
+}
+
+/* The kiosk's display face, a little condensed like a grill's menu board (Bricolage's
+   width axis runs 75-100%). */
+.font-display {
+  font-stretch: 88%;
+}
+
+/* Thin, warm scrollbars on the kiosk's scrolling panes (rail, grid, order strip) instead
+   of the browser's grey ones. */
+.kiosk-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.kiosk-scroll-dark {
+  scrollbar-width: thin;
+  scrollbar-color: var(--char-soft) transparent;
+}
+
+/* Touch-only panes (the category rail, the order strip): no scrollbar at all, so it can
+   never take width from the content or add clutter; people swipe them. The order strip
+   fades at its right edge to show there is more. */
+.kiosk-no-scrollbar {
+  scrollbar-width: none;
+}
+.kiosk-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.kiosk-fade-end {
+  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
 }

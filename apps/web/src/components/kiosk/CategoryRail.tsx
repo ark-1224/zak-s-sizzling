@@ -1,18 +1,15 @@
 "use client";
 
 import type { Category } from "@zaks/shared-types";
+import { categoryBgColor } from "@/lib/categoryColors";
 
-// Ported from kiosk.html's nav.cat-rail / .cat-item (Downloads/kiosk.html, lines 103-134,
-// 527-546).
+// The left side of the kiosk's char frame: one picture tile per category, like an
+// in-store burger kiosk. Tapping a tile shows that category's dishes; the chosen one is a
+// honey slab. While searching, no tile is chosen (the results span every category), and
+// categories the price filter leaves empty are dimmed and can't be tapped.
 //
-// The rail navigates one continuous menu (MenuList): tapping a category scrolls to its
-// section, and the highlight follows whichever section is in view. Categories with no
-// matching items (e.g. during a search) are dimmed and can't be tapped.
-//
-// The sidebar stays visible at every width (an adviser/panel requirement). Below md it's
-// a 64px rail with each category's emoji over its name, in up to two lines (UI review
-// #25); from md up, emoji and name side by side. With the names always on screen, the
-// rail no longer needs the button that opened them in an overlay.
+// The rail stays visible at every width (an adviser/panel requirement): below md each
+// tile is its picture over its name, from md up the picture sits beside the name.
 const FALLBACK_ICON = "🍽️";
 
 interface CategoryRailProps {
@@ -26,60 +23,45 @@ export function CategoryRail({ categories, activeCategoryId, disabledIds, onSele
   return (
     <nav
       aria-label="Menu categories"
-      className="flex w-16 shrink-0 flex-col gap-1 overflow-y-auto border-r border-line bg-paper px-1 pt-3 pb-24 md:w-52 md:gap-0 md:px-0 md:pt-4 lg:w-56"
+      className="kiosk-no-scrollbar flex w-[84px] shrink-0 flex-col gap-1.5 overflow-y-auto border-r-2 border-honey/50 bg-char px-1.5 py-2.5 md:w-48 md:px-2.5 lg:w-52"
     >
-      {categories.map((c) => (
-        <CategoryItem
-          key={c.id}
-          label={c.name}
-          icon={c.icon ?? FALLBACK_ICON}
-          isNew={c.isNew}
-          active={activeCategoryId === c.id}
-          disabled={disabledIds.has(c.id)}
-          onClick={() => onSelect(c.id)}
-        />
-      ))}
+      {categories.map((category) => {
+        const active = category.id === activeCategoryId;
+        const disabled = disabledIds.has(category.id);
+        return (
+          <button
+            key={category.id}
+            type="button"
+            onClick={() => onSelect(category.id)}
+            disabled={disabled}
+            aria-current={active ? "true" : undefined}
+            className={`relative flex min-h-14 w-full shrink-0 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1.5 transition-colors disabled:opacity-35 md:flex-row md:justify-start md:gap-3 md:px-2 ${
+              active ? "bg-honey text-char" : "text-cream/85 active:bg-char-soft"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-2xl shadow-[0_4px_10px_-4px_rgba(0,0,0,0.6)]"
+              style={{ background: categoryBgColor(category.name) }}
+            >
+              {category.icon ?? FALLBACK_ICON}
+            </span>
+            <span className="line-clamp-2 w-full text-center text-[13px] leading-tight font-semibold [overflow-wrap:anywhere] md:w-auto md:min-w-0 md:flex-1 md:text-left md:text-base md:[overflow-wrap:normal]">
+              {category.name}
+            </span>
+            {/* NEW sits on the tile's corner, so it never takes room from the name. */}
+            {category.isNew && (
+              <span
+                className={`absolute top-1 right-1 rounded-md px-1.5 py-0.5 text-[10px] leading-none font-bold ${
+                  active ? "bg-char text-honey" : "bg-matcha text-cream"
+                }`}
+              >
+                NEW
+              </span>
+            )}
+          </button>
+        );
+      })}
     </nav>
-  );
-}
-
-function CategoryItem({
-  label,
-  icon,
-  isNew,
-  active,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  icon: string;
-  isNew: boolean;
-  active: boolean;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={isNew ? `${label} (new)` : label}
-      aria-current={active ? "true" : undefined}
-      title={label}
-      className={`flex min-h-12 w-full flex-col items-center justify-center gap-1 rounded-lg px-0.5 py-2 text-base leading-tight font-medium transition-colors disabled:opacity-35 md:flex-row md:justify-start md:gap-3 md:rounded-none md:border-l-4 md:px-4 md:py-3 md:text-left lg:px-5 lg:text-lg ${
-        active
-          ? "bg-matcha/15 font-bold text-matcha-deep md:border-matcha md:bg-transparent md:bg-gradient-to-r md:from-matcha/12 md:to-transparent"
-          : "text-ink-soft md:border-transparent"
-      }`}
-    >
-      <span aria-hidden="true" className="relative text-2xl leading-none">
-        {icon}
-        {isNew && <span className="absolute -top-0.5 -right-1 h-2.5 w-2.5 rounded-full border-2 border-paper bg-berry md:hidden" />}
-      </span>
-      {/* Two lines at most on the rail; a word longer than the rail breaks rather than spilling over. */}
-      <span className="line-clamp-2 w-full text-center text-[11px] [overflow-wrap:anywhere] md:line-clamp-none md:w-auto md:min-w-0 md:flex-1 md:text-left md:text-base md:[overflow-wrap:normal] lg:text-lg">
-        {label}
-      </span>
-      {isNew && <span className="hidden shrink-0 rounded-md bg-berry px-1.5 py-0.5 text-xs font-bold text-white md:inline">NEW</span>}
-    </button>
   );
 }

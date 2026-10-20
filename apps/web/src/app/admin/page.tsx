@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
           <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub={inventoryValueSub} />
         )}
         <KpiTile label="Needs restock" value={String(lowCount)} sub="At or below minimum, incl. sold out" color="var(--adm-warn)" />
-        {/* The kiosk keeps sold-out items on the menu, marked "Sold out" (kiosk/ProductRow.tsx). */}
+        {/* The kiosk keeps sold-out items on the menu, marked "Sold out" (kiosk/ItemTile.tsx). */}
         <KpiTile label="Out of stock" value={String(outOfStock)} sub="Shown as sold out" color="var(--adm-bad)" />
       </div>
 

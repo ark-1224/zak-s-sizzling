@@ -9,32 +9,39 @@ import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ensureKioskSession } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { categoryBgColor } from "@/lib/categoryColors";
-import { Icon } from "@/components/Icon";
+import { Icon, type IconName } from "@/components/Icon";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
-import type { OrderDTO, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
+import { SizzlingPlate } from "@/components/kiosk/SizzlingPlate";
+import type { OrderDTO, OrderType, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
 import { aboutMinutes } from "@/lib/prepTime";
 
-const METHODS: { id: PaymentMethod; label: string; icon: string; blurb: string }[] = [
-  { id: "counter", label: "Pay at counter", icon: "💵", blurb: "Cash or card with staff" },
-  { id: "gcash", label: "GCash", icon: "📱", blurb: "Pay online via GCash" },
-  { id: "maya", label: "Maya", icon: "📲", blurb: "Pay online via Maya" },
+const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string }[] = [
+  { id: "counter", label: "Pay at counter", icon: "cash", blurb: "Cash or card with staff" },
+  { id: "gcash", label: "GCash", icon: "phone", blurb: "Pay online via GCash" },
+  { id: "maya", label: "Maya", icon: "phone", blurb: "Pay online via Maya" },
+];
+
+const ORDER_TYPES: { value: OrderType; label: string; icon: IconName }[] = [
+  { value: "dine_in", label: "Dine in", icon: "dineIn" },
+  { value: "take_out", label: "Take out", icon: "takeOut" },
 ];
 
 // New in Sprint 3 — kiosk.html's checkout was a stub; this replaces it with a real
 // payment-method selection + order submission flow.
 //
-// Layout matches the menu's delivery-app style. From lg (the 1024px kiosk) it's two
-// columns: the order summary on the left, payment on the right in a sticky panel so
-// "Place order" never scrolls out of view. Below lg it's one column with the total and
-// "Place order" in a sticky bottom bar.
+// In the menu's frame: the char top bar, then from lg (the 1024px kiosk) two columns, the
+// order summary on the left and, on the right in a sticky panel, dine in / take out (as
+// chosen after the welcome screen, changeable here), payment and "Place order", which
+// never scrolls out of view. Below lg it's one column with the total and "Place order"
+// in a sticky bottom bar. An order can't be placed until dine in or take out is chosen.
 //
 // GCash and Maya stay greyed out until the server confirms online payment is set up
 // (GET /api/payments/options), so a customer can't pick a method that can't work
 // (UI review #2).
 export default function CheckoutPage() {
-  const { lines, total, clearCart } = useCart();
+  const { lines, total, clearCart, orderType, setOrderType } = useCart();
   const { showToast } = useToast();
 
   const [method, setMethod] = useState<PaymentMethod>("counter");
@@ -103,6 +110,10 @@ export default function CheckoutPage() {
   });
 
   async function handlePlaceOrder() {
+    if (!orderType) {
+      showToast("Choose Dine in or Take out first.");
+      return;
+    }
     const payWith: PaymentMethod = method !== "counter" && onlineAvailable !== true ? "counter" : method;
     setPlacing(true);
     try {
@@ -117,6 +128,7 @@ export default function CheckoutPage() {
             specialInstructions: l.instructions || undefined,
           })),
           paymentMethod: payWith,
+          orderType,
         }),
       });
 
@@ -173,11 +185,9 @@ export default function CheckoutPage() {
   if (lines.length === 0) {
     return (
       <>
-        <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-cream px-6 text-center">
-          <span aria-hidden="true" className="text-5xl">
-            🛒
-          </span>
-          <h1 className="font-display text-2xl text-matcha-deep">Your order is empty</h1>
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-paper px-6 text-center">
+          <SizzlingPlate className="h-28 w-auto" />
+          <h1 className="font-display text-3xl font-extrabold text-matcha-deep">Your order is empty</h1>
           <p className="text-base text-ink-soft">Add a few dishes from the menu first.</p>
           <Link
             href="/"
@@ -195,16 +205,16 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="flex min-h-dvh flex-col bg-cream">
-        <header className="flex shrink-0 items-center gap-3 bg-matcha-deep px-3 py-2.5 text-cream sm:px-6">
+      <div className="flex min-h-dvh flex-col bg-paper">
+        <header className="flex shrink-0 items-center gap-3 border-b-2 border-honey/50 bg-char px-3 py-2.5 text-cream sm:px-6">
           <Link
             href="/"
-            className="flex min-h-12 items-center gap-1 rounded-full bg-white/12 pr-4 pl-2 text-base font-semibold"
+            className="flex min-h-12 items-center gap-1 rounded-full bg-char-soft pr-4 pl-2 text-base font-semibold"
           >
             <Icon name="chevronRight" className="h-5 w-5 rotate-180" />
             Menu
           </Link>
-          <h1 className="font-display text-xl font-semibold sm:text-2xl">Checkout</h1>
+          <h1 className="font-display text-2xl font-extrabold">Review &amp; pay</h1>
           <Image
             src="/logo.jpg"
             alt="Zak's Sizzling Hub"
@@ -218,7 +228,7 @@ export default function CheckoutPage() {
         <div className="mx-auto w-full max-w-5xl flex-1 px-3 pt-4 pb-32 sm:px-6 lg:grid lg:grid-cols-5 lg:items-start lg:gap-6 lg:pb-6">
           <section aria-labelledby="order-heading" className="rounded-2xl bg-white p-4 shadow-card sm:p-5 lg:col-span-3">
             <div className="flex items-center justify-between gap-3">
-              <h2 id="order-heading" className="font-display text-xl font-semibold text-matcha-deep">
+              <h2 id="order-heading" className="font-display text-2xl font-extrabold text-matcha-deep">
                 Your order{" "}
                 <span className="font-sans text-base font-normal text-ink-soft">
                   ({itemCount} item{itemCount !== 1 ? "s" : ""})
@@ -266,10 +276,35 @@ export default function CheckoutPage() {
           </section>
 
           <section aria-labelledby="payment-heading" className="mt-5 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0">
-            <h2 id="payment-heading" className="font-display text-xl font-semibold text-matcha-deep">
+            <h2 id="order-type-heading" className="font-display text-2xl font-extrabold text-matcha-deep">
+              Where will you eat?
+            </h2>
+            <div role="radiogroup" aria-labelledby="order-type-heading" className="mt-3 grid grid-cols-2 gap-2.5">
+              {ORDER_TYPES.map((t) => {
+                const selected = orderType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setOrderType(t.value)}
+                    className={`flex min-h-16 items-center justify-center gap-2.5 rounded-2xl border-2 px-3 text-lg font-bold transition-colors ${
+                      selected ? "border-honey bg-honey text-char" : "border-line bg-white text-ink"
+                    }`}
+                  >
+                    <Icon name={t.icon} className={`h-7 w-7 ${selected ? "text-char" : "text-matcha"}`} />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+            {!orderType && <p className="mt-2 text-base font-semibold text-berry">Choose one to place your order.</p>}
+
+            <h2 id="payment-heading" className="font-display mt-5 text-2xl font-extrabold text-matcha-deep">
               How would you like to pay?
             </h2>
-            <div role="radiogroup" aria-labelledby="payment-heading" className="mt-3 space-y-2.5">
+            <div role="radiogroup" aria-labelledby="payment-heading" className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
               {METHODS.map((m) => {
                 const unavailable = m.id !== "counter" && onlineAvailable !== true;
                 const selected = method === m.id && !unavailable;
@@ -280,22 +315,22 @@ export default function CheckoutPage() {
                     aria-checked={selected}
                     disabled={unavailable}
                     onClick={() => setMethod(m.id)}
-                    className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors disabled:cursor-not-allowed ${
+                    className={`relative flex min-h-16 w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-colors disabled:cursor-not-allowed sm:flex-col sm:items-center sm:gap-1.5 sm:px-2 sm:text-center ${
                       unavailable ? "border-line bg-line/40 opacity-60" : selected ? "border-matcha bg-white" : "border-line bg-white"
                     }`}
                   >
-                    <span className="text-2xl" aria-hidden="true">
-                      {m.icon}
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-honey-soft text-matcha">
+                      <Icon name={m.icon} className="h-6 w-6" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-base font-semibold text-ink lg:text-lg">{m.label}</span>
-                      <span className="block text-sm text-ink-soft">
-                        {!unavailable ? m.blurb : onlineAvailable === null ? "Checking…" : "Not available yet — please pay at the counter"}
+                      <span className="block text-base leading-tight font-semibold text-ink">{m.label}</span>
+                      <span className="block text-sm leading-snug text-ink-soft">
+                        {!unavailable ? m.blurb : onlineAvailable === null ? "Checking…" : "Not set up yet"}
                       </span>
                     </span>
                     <span
                       aria-hidden="true"
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 sm:absolute sm:top-2 sm:right-2 sm:h-6 sm:w-6 ${
                         selected ? "border-matcha bg-matcha text-cream" : "border-line"
                       }`}
                     >
@@ -306,19 +341,19 @@ export default function CheckoutPage() {
               })}
             </div>
 
-            <div className="mt-4 hidden rounded-2xl bg-white p-4 shadow-card lg:block">
+            <div className="mt-4 hidden rounded-2xl bg-white px-4 py-3 shadow-card lg:block">
               <TotalRow total={total} />
-              <PlaceOrderButton placing={placing} onClick={handlePlaceOrder} className="mt-3 w-full" />
+              <PlaceOrderButton placing={placing} ready={Boolean(orderType)} onClick={handlePlaceOrder} className="mt-3 w-full" />
             </div>
           </section>
         </div>
 
         <div
-          className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-line bg-cream px-4 pt-3 shadow-2xl lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t border-line bg-white px-4 pt-3 shadow-2xl lg:hidden"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
         >
           <TotalRow total={total} compact />
-          <PlaceOrderButton placing={placing} onClick={handlePlaceOrder} className="flex-1" />
+          <PlaceOrderButton placing={placing} ready={Boolean(orderType)} onClick={handlePlaceOrder} className="flex-1" />
         </div>
       </div>
       <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
@@ -330,20 +365,31 @@ function TotalRow({ total, compact }: { total: number; compact?: boolean }) {
   return compact ? (
     <div className="shrink-0">
       <div className="text-sm text-ink-soft">Total</div>
-      <div className="text-xl font-bold text-price-accent">₱{total.toFixed(2)}</div>
+      <div className="font-display text-2xl font-extrabold text-ink">₱{total.toFixed(2)}</div>
     </div>
   ) : (
     <div className="flex items-baseline justify-between">
       <span className="text-lg font-bold">Total</span>
-      <span className="text-2xl font-bold text-price-accent">₱{total.toFixed(2)}</span>
+      <span className="font-display text-3xl font-extrabold text-ink">₱{total.toFixed(2)}</span>
     </div>
   );
 }
 
-function PlaceOrderButton({ placing, onClick, className }: { placing: boolean; onClick: () => void; className: string }) {
+function PlaceOrderButton({
+  placing,
+  ready,
+  onClick,
+  className,
+}: {
+  placing: boolean;
+  /** Dine in or take out has been chosen. */
+  ready: boolean;
+  onClick: () => void;
+  className: string;
+}) {
   return (
     <button
-      disabled={placing}
+      disabled={placing || !ready}
       onClick={onClick}
       className={`min-h-14 rounded-full bg-matcha px-6 text-lg font-bold text-cream shadow-card transition-transform active:scale-98 disabled:bg-grey-out disabled:text-white disabled:shadow-none ${className}`}
     >
