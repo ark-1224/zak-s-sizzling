@@ -68,6 +68,7 @@ export interface CreateOrderItemInput {
 export interface CreateOrderInput {
   items: CreateOrderItemInput[];
   customerName?: string;
+  orderType?: OrderType;
 }
 
 /** POST /api/orders/estimate: the cart's estimated preparation time at checkout. */
@@ -79,6 +80,8 @@ export interface PrepEstimate {
 }
 
 export type OrderStatus = "pending" | "confirmed" | "preparing" | "ready" | "completed" | "cancelled";
+/** Where the customer eats, chosen on the kiosk right after the welcome screen. */
+export type OrderType = "dine_in" | "take_out";
 export type PaymentMethod = "gcash" | "maya" | "counter";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
@@ -111,6 +114,7 @@ export interface OrderDTO {
   id: string;
   orderNumber: string;
   status: OrderStatus;
+  orderType: OrderType;
   totalAmount: number;
   /** Paid online but stock ran short: nothing was deducted and staff must substitute or refund. */
   stockIssue: boolean;
@@ -133,6 +137,7 @@ export interface KitchenTaskDTO {
   orderCreatedAt: string;
   /** When the whole order should be ready (OrderDTO.estimatedReadyAt). */
   orderEstimatedReadyAt: string | null;
+  orderType: OrderType;
   productId: string;
   productName: string;
   productIcon: string | null;

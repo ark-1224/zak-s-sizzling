@@ -16,6 +16,7 @@ function toTaskDTO(task: TaskWithRelations): KitchenTaskDTO {
     orderNumber: task.orderItem.order.orderNumber,
     orderCreatedAt: task.orderItem.order.createdAt.toISOString(),
     orderEstimatedReadyAt: task.orderItem.order.estimatedReadyAt?.toISOString() ?? null,
+    orderType: task.orderItem.order.orderType,
     productId: task.orderItem.productId,
     productName: task.orderItem.product.name,
     productIcon: task.orderItem.product.icon,

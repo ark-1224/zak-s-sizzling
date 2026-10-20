@@ -16,6 +16,7 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
+    orderType: order.orderType,
     totalAmount: Number(order.totalAmount),
     stockIssue: order.stockIssue,
     stockIssueNote: order.stockIssueNote,
@@ -49,6 +50,7 @@ interface CreateOrderInput {
   customerName?: string;
   kioskSessionId?: string;
   paymentMethod?: "gcash" | "maya" | "counter";
+  orderType?: "dine_in" | "take_out";
 }
 
 const ORDER_NUMBER_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
@@ -111,6 +113,7 @@ export async function createOrder(input: CreateOrderInput) {
           orderNumber: generateOrderNumber(),
           customerName: input.customerName,
           kioskSessionId: input.kioskSessionId,
+          orderType: input.orderType,
           totalAmount,
           estimatedPrepMinutes,
           items: { create: lines },

@@ -16,6 +16,8 @@ export const createOrderSchema = z.object({
     .min(1, "Order must contain at least one item"),
   customerName: z.string().max(120).optional(),
   paymentMethod: z.enum(["gcash", "maya", "counter"]).optional(),
+  // Dine in or take out, chosen on the kiosk; orders that don't say are dine in.
+  orderType: z.enum(["dine_in", "take_out"]).optional(),
 });
 
 // The cart shown at checkout, for its estimated preparation time (prepTime.ts).

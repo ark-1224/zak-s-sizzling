@@ -191,7 +191,8 @@ export default function StaffOrdersPage() {
                         {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
                       </div>
                       <div className="mt-1 text-sm text-adm-ink-3">
-                        <PaymentMethodText order={order} /> · ₱{order.totalAmount.toFixed(2)}
+                        {order.orderType === "take_out" ? "Take out" : "Dine in"} · <PaymentMethodText order={order} /> · ₱
+                        {order.totalAmount.toFixed(2)}
                         {order.payment?.status === "paid" && " · paid"} ·{" "}
                         <time dateTime={order.createdAt} title={formatDateTime(order.createdAt)}>
                           placed {timeAgo(order.createdAt, now)}

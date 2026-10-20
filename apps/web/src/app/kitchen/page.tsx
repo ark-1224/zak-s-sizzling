@@ -5,7 +5,7 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { clockTime, dueIn } from "@/lib/prepTime";
-import type { KitchenTaskDTO } from "@zaks/shared-types";
+import type { KitchenTaskDTO, OrderType } from "@zaks/shared-types";
 
 // Kitchen Display System — real-time order queue per the manuscript's Kitchen Display
 // Module wireframe: order ID/date, food items, and serving status. KitchenTask is
@@ -78,12 +78,16 @@ export default function KitchenPage() {
   }
 
   const orders = useMemo(() => {
-    const byOrder = new Map<string, { orderNumber: string; createdAt: string; readyAt: string | null; tasks: KitchenTaskDTO[] }>();
+    const byOrder = new Map<
+      string,
+      { orderNumber: string; createdAt: string; readyAt: string | null; orderType: OrderType; tasks: KitchenTaskDTO[] }
+    >();
     for (const t of tasks) {
       const entry = byOrder.get(t.orderId) ?? {
         orderNumber: t.orderNumber,
         createdAt: t.orderCreatedAt,
         readyAt: t.orderEstimatedReadyAt,
+        orderType: t.orderType,
         tasks: [],
       };
       entry.tasks.push(t);
@@ -121,7 +125,17 @@ export default function KitchenPage() {
             <div key={order.orderId} className="min-w-0 rounded-card bg-white/8 p-4">
               <div className="mb-3 border-b border-white/15 pb-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-display text-lg font-bold break-all">{order.orderNumber}</span>
+                  <span className="flex min-w-0 flex-wrap items-center gap-2">
+                    <span className="font-display text-lg font-bold break-all">{order.orderNumber}</span>
+                    {/* Take out needs packing, so it stands out; dine in is the usual case. */}
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-bold ${
+                        order.orderType === "take_out" ? "bg-honey text-ink" : "bg-white/10 text-cream/80"
+                      }`}
+                    >
+                      {order.orderType === "take_out" ? "TAKE OUT" : "DINE IN"}
+                    </span>
+                  </span>
                   <span className="shrink-0 text-sm text-cream/60">{clockTime(order.createdAt)}</span>
                 </div>
                 {order.readyAt && <DueTime readyAt={order.readyAt} now={now} />}

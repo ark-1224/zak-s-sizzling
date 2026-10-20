@@ -26,6 +26,14 @@ enum OrderStatus {
   @@map("order_status")
 }
 
+// Where the customer eats: chosen on the kiosk right after the welcome screen.
+enum OrderType {
+  dine_in
+  take_out
+
+  @@map("order_type")
+}
+
 enum PaymentMethod {
   gcash
   maya
@@ -214,6 +222,7 @@ model Order {
   kioskSessionId       String?               @map("kiosk_session_id") @db.VarChar(64)
   source               String                @default("kiosk") @db.VarChar(20)
   status               OrderStatus           @default(pending)
+  orderType            OrderType             @default(dine_in) @map("order_type")
   totalAmount          Decimal               @default(0) @map("total_amount") @db.Decimal(10, 2)
   // Set when an online payment arrived but stock ran short, so nothing was deducted
   // and staff must substitute or refund (design section 3.3).
