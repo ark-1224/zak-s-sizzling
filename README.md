@@ -231,9 +231,6 @@ receipt-printer integration. Offline/PWA support was removed from scope.
   1024×600 and 375px: a cart's estimate (17 min) matched the formula through checkout,
   receipt, counter confirmation and the kitchen display.
 
-**Rotate the seeded admin password** (`admin@zakssizzlinghub.ph` / `ChangeMe123!`) before
-any real deployment — it's a dev-only default.
-
 ## Prerequisites
 
 - Node.js 20+ and npm
