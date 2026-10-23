@@ -21,7 +21,7 @@ import { useToast } from "@/components/kiosk/Toast";
 
 // Kiosk home ("/"), laid out like an in-store burger kiosk:
 //   welcome screen → "Where will you eat today?" → menu.
-// The menu sits in a dark frame: the top bar (dine in / take out, search, start over),
+// The menu sits in a dark frame: the top bar (search, start over),
 // the category rail on the left, and the order bar along the bottom with the order so far
 // and "Review & pay". Between them, one category's dishes at a time, or the search
 // results across every category, narrowed by the price chips.
@@ -155,8 +155,6 @@ export default function KioskHomePage() {
       {stage === "choose" && <OrderTypeScreen onChoose={chooseOrderType} onStartOver={startOver} />}
 
       <TopBar
-        orderType={orderType}
-        onOrderTypeChange={setOrderType}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         onStartOver={startOver}

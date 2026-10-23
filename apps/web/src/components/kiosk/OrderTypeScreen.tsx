@@ -5,8 +5,8 @@ import { Icon } from "@/components/Icon";
 import { DineInArt, TakeOutArt } from "./OrderTypeArt";
 
 // Asked once, right after the welcome screen (like an in-store burger kiosk): the answer
-// rides with the order to the receipt and the kitchen display, and can still be changed
-// from the menu's top bar or at checkout.
+// rides with the order to the receipt and the kitchen display. It isn't asked again;
+// "Start over" clears it along with the order.
 const CHOICES: { value: OrderType; label: string; hint: string; Art: typeof DineInArt }[] = [
   { value: "dine_in", label: "Dine in", hint: "Eat here at Zak's", Art: DineInArt },
   { value: "take_out", label: "Take out", hint: "Packed to go", Art: TakeOutArt },

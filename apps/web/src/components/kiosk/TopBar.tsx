@@ -1,54 +1,25 @@
 "use client";
 
-import type { OrderType } from "@zaks/shared-types";
 import { Icon } from "@/components/Icon";
 
-// The menu's top bar, part of the kiosk's dark "char" frame: the logo, the dine-in /
-// take-out switch (chosen on the screen before, changeable here with one tap), search,
-// and Start over (empties the order and goes back to the welcome screen).
+// The menu's top bar, part of the kiosk's dark "char" frame: the logo, search, and Start
+// over (empties the order and goes back to the welcome screen). Dine in / take out is
+// asked once, on the screen before the menu, so the bar doesn't repeat it.
 //
-// On a phone it takes two rows: logo, switch and Start over, then search full width.
+// On a phone it takes two rows: logo and Start over, then search full width.
 interface TopBarProps {
-  orderType: OrderType | null;
-  onOrderTypeChange: (orderType: OrderType) => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onStartOver: () => void;
 }
 
-const TYPES: { value: OrderType; label: string }[] = [
-  { value: "dine_in", label: "Dine in" },
-  { value: "take_out", label: "Take out" },
-];
-
-export function TopBar({ orderType, onOrderTypeChange, searchQuery, onSearchChange, onStartOver }: TopBarProps) {
+export function TopBar({ searchQuery, onSearchChange, onStartOver }: TopBarProps) {
   return (
     <header className="flex shrink-0 flex-col gap-2 border-b-2 border-honey/50 bg-char px-3 py-2 text-cream sm:flex-row sm:items-center sm:gap-4 sm:px-4">
       <div className="flex items-center gap-2.5 sm:contents">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.jpg" alt="Zak's Sizzling Hub" className="h-10 w-10 shrink-0 rounded-[50%_50%_50%_8px] object-cover" />
         <span className="font-display hidden text-xl leading-none font-bold whitespace-nowrap xl:block">Zak&apos;s Sizzling Hub</span>
-
-        <div role="radiogroup" aria-label="Dine in or take out" className="flex shrink-0 rounded-full bg-char-soft p-1">
-          {TYPES.map((t) => {
-            const selected = orderType === t.value;
-            return (
-              <button
-                key={t.value}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => onOrderTypeChange(t.value)}
-                className={`flex min-h-10 items-center gap-1.5 rounded-full px-3 text-base font-semibold whitespace-nowrap transition-colors ${
-                  selected ? "bg-honey text-char" : "text-cream/75"
-                }`}
-              >
-                <Icon name={t.value === "dine_in" ? "dineIn" : "takeOut"} className="h-5 w-5" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
 
         <button
           type="button"

@@ -226,7 +226,7 @@ A warm, low-key palette of cast iron, toasted paper and ember, with exactly one 
 
 ### Neutral
 - **Cast Iron** (`char`): the frame. Top bar, rail, welcome screen, order-number plate, the selected price chip, and scrims (char at 55–60%). Cream text on it is 15:1, honey 8:1.
-- **Seasoned Iron** (`char-soft`): raised elements on the frame, such as the order-type switch track, the back button and pressed rail tiles.
+- **Seasoned Iron** (`char-soft`): raised elements on the frame, such as the back button and pressed rail tiles.
 - **Toasted Paper** (`paper`): the work surface behind the menu grid, the order-type screen and checkout. It is also the pressed state of light controls.
 - **Cream** (`cream`): page background, sheets and dialogs, the search field on the char bar, order chips, and the text colour on every dark or ember surface.
 - **Tile White** (`white`): item tiles, the order bar, checkout panels, inputs and unselected chips. It is the brightest thing on the paper surface.
@@ -278,7 +278,7 @@ Only the work surface scrolls. The rail and order strip scroll by swipe with hid
 
 The tile grid is 2 columns on phones, 3 from 640px and 4 from 1024px, with a 12px gap and 12–20px side gutters. Photo slots are 4:3 rather than square so that two rows fit under the frame on the 600px-tall screen. Spacing steps by 6/8/12/16/20/24px. Inside components, 10–12px is the common inner padding and 20–28px is used for sheets and dialogs.
 
-On phones, the top bar wraps to two rows with search at full width. The order strip collapses to a single "count + total" button. Checkout becomes a single column with a fixed bottom action bar. From lg it splits 3:2 (order on the left, order type and payment sticky on the right). The receipt also goes two-column at lg so "Done" is visible without scrolling. Every touch target is at least 44px tall, and actions are 48–56px.
+On phones, the top bar wraps to two rows with search at full width. The order strip collapses to a single "count + total" button. Checkout becomes a single column with a fixed bottom action bar. From lg it splits 3:2 (order on the left, payment sticky on the right). The receipt also goes two-column at lg so "Done" is visible without scrolling. Every touch target is at least 44px tall, and actions are 48–56px.
 
 ## Elevation & Depth
 
@@ -327,7 +327,7 @@ Big, round-ended and confident. They press in rather than glow.
 - **Sold out:** the tile drops to 60% opacity, a char band at 85% reading SOLD OUT crosses the bottom of the photo, the + is removed and the tile can't be tapped.
 - **Choice card** (dine in or take out): cream, 22px corners, 2px rule border, card lift, a drawn illustration over a 1.875rem Bricolage label.
 - **Checkout panels:** white, 16px corners, card lift, 16–20px padding, rule-tan dividers between lines.
-- **Selectable option cards** (order type and payment at checkout): 16px corners, 2px border, at least 64px tall. Order type fills with honey when selected; payment gets an ember border and a filled ember check disc.
+- **Selectable option cards** (payment at checkout): 16px corners, 2px border, at least 64px tall. The selected one gets an ember border and a filled ember check disc.
 
 ### Inputs / Fields
 - **Search:** a cream pill sitting in the char bar, 48px tall, with an ink-soft search icon. On focus the whole pill gets a 2px honey ring, because the deep ember outline would vanish on char. A round clear button appears once there is text.
@@ -335,7 +335,7 @@ Big, round-ended and confident. They press in rather than glow.
 
 ### Navigation
 - **Category rail:** char column of 16px slabs, each holding a 40px category icon square (on its category gradient, with icon-square shadow) and an Inter 600 name. The active category becomes a honey slab with char text. Categories emptied by the price filter dim to 35% and can't be tapped. A NEW flag (ember, or char-on-honey when active) sits in the tile's corner.
-- **Order-type switch:** a char-soft pill track holding two segments. The selected one is a honey pill with char text; the other is cream at 75%.
+- **Dine in / take out** is asked once, on the order-type screen, and not repeated in the top bar or at checkout; "Start over" clears it with the order.
 
 ### Order Bar (signature)
 The white bar along the bottom with a 1px rule top border and the order bar rise shadow. It holds:

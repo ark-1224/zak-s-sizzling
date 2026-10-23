@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/components/kiosk/Toast";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
@@ -14,7 +15,7 @@ import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
 import { SizzlingPlate } from "@/components/kiosk/SizzlingPlate";
-import type { OrderDTO, OrderType, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
+import type { OrderDTO, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
 import { aboutMinutes } from "@/lib/prepTime";
 
 const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string }[] = [
@@ -23,26 +24,27 @@ const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string
   { id: "maya", label: "Maya", icon: "phone", blurb: "Pay online via Maya" },
 ];
 
-const ORDER_TYPES: { value: OrderType; label: string; icon: IconName }[] = [
-  { value: "dine_in", label: "Dine in", icon: "dineIn" },
-  { value: "take_out", label: "Take out", icon: "takeOut" },
-];
-
 // New in Sprint 3 — kiosk.html's checkout was a stub; this replaces it with a real
 // payment-method selection + order submission flow.
 //
 // In the menu's frame: the char top bar, then from lg (the 1024px kiosk) two columns, the
-// order summary on the left and, on the right in a sticky panel, dine in / take out (as
-// chosen after the welcome screen, changeable here), payment and "Place order", which
-// never scrolls out of view. Below lg it's one column with the total and "Place order"
-// in a sticky bottom bar. An order can't be placed until dine in or take out is chosen.
+// order summary on the left and, on the right in a sticky panel, payment and "Place
+// order", which never scrolls out of view. Below lg it's one column with the total and
+// "Place order" in a sticky bottom bar. Dine in / take out was chosen before the menu and
+// goes with the order; an order saved on the device without that choice (left from before
+// it was asked) is sent back to the kiosk home page to choose it.
 //
 // GCash and Maya stay greyed out until the server confirms online payment is set up
 // (GET /api/payments/options), so a customer can't pick a method that can't work
 // (UI review #2).
 export default function CheckoutPage() {
-  const { lines, total, clearCart, orderType, setOrderType } = useCart();
+  const { lines, total, clearCart, orderType, hydrated } = useCart();
   const { showToast } = useToast();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (hydrated && lines.length > 0 && !orderType) router.replace("/");
+  }, [hydrated, lines.length, orderType, router]);
 
   const [method, setMethod] = useState<PaymentMethod>("counter");
   const [placing, setPlacing] = useState(false);
@@ -276,32 +278,7 @@ export default function CheckoutPage() {
           </section>
 
           <section aria-labelledby="payment-heading" className="mt-5 lg:sticky lg:top-4 lg:col-span-2 lg:mt-0">
-            <h2 id="order-type-heading" className="font-display text-2xl font-extrabold text-matcha-deep">
-              Where will you eat?
-            </h2>
-            <div role="radiogroup" aria-labelledby="order-type-heading" className="mt-3 grid grid-cols-2 gap-2.5">
-              {ORDER_TYPES.map((t) => {
-                const selected = orderType === t.value;
-                return (
-                  <button
-                    key={t.value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => setOrderType(t.value)}
-                    className={`flex min-h-16 items-center justify-center gap-2.5 rounded-2xl border-2 px-3 text-lg font-bold transition-colors ${
-                      selected ? "border-honey bg-honey text-char" : "border-line bg-white text-ink"
-                    }`}
-                  >
-                    <Icon name={t.icon} className={`h-7 w-7 ${selected ? "text-char" : "text-matcha"}`} />
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-            {!orderType && <p className="mt-2 text-base font-semibold text-berry">Choose one to place your order.</p>}
-
-            <h2 id="payment-heading" className="font-display mt-5 text-2xl font-extrabold text-matcha-deep">
+            <h2 id="payment-heading" className="font-display text-2xl font-extrabold text-matcha-deep">
               How would you like to pay?
             </h2>
             <div role="radiogroup" aria-labelledby="payment-heading" className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
