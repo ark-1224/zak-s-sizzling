@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1125" viewBox="0 0 1328 1125">
+<rect x="0" y="0" width="1328" height="1125" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">16  Bulk import: preview with an error</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/import   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin only (admin site, signed in)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/admin/import/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
+<text x="24" y="1002" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Load a .csv or .xlsx by Browse or drag-and-drop, or paste CSV. An .xlsx file is converted to CSV by the server and shown in the box, where rows can be edited; the card then says which</text>
+<text x="24" y="1041" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   sheet was read.</text>
+<text x="24" y="1060" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Half a second after any change the server checks every row without saving (a dry run) and fills the Preview. Import stays disabled while checking (“Checking rows…”) and until no row has</text>
+<text x="24" y="1079" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   an error.</text>
+<text x="24" y="1098" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• File checks: an old .xls is refused with instructions; an .xlsx over 2 MB is refused. Template download failures show their reason under the links.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="880"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="880" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="880" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="256" height="880" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="256" y1="0" x2="256" y2="880" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="20" y="20" width="32" height="32" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="20" y1="20" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="20" x2="20" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<text x="62" y="33" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Zak&#x27;s Sizzling Hub</text>
+<text x="62" y="49" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">STOCK INVENTORY</text>
+<text x="24" y="92" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OPERATIONS</text>
+<circle cx="36" cy="123" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="128" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Dashboard</text>
+<circle cx="36" cy="163" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Products</text>
+<circle cx="36" cy="203" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="208" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Inventory</text>
+<circle cx="36" cy="243" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="248" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Raw materials</text>
+<circle cx="36" cy="283" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Barcode lookup</text>
+<rect x="12" y="304" width="232" height="38" rx="6" fill="#e2e2e2" stroke="none"/>
+<circle cx="36" cy="323" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="328" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Bulk import</text>
+<text x="24" y="360" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
+<circle cx="36" cy="391" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<text x="24" y="428" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
+<circle cx="36" cy="459" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="464" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kitchen display</text>
+<circle cx="36" cy="499" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Orders awaiting payment</text>
+<text x="24" y="536" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
+<circle cx="36" cy="567" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
+<rect x="12" y="724" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="746" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
+<circle cx="40" cy="776" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="40" y="780" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
+<text x="64" y="772" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
+<text x="64" y="790" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="24" y="808" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="128.0" y="832.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
+<circle cx="84" cy="828" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="280" y="36" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">BULK PRODUCT IMPORT</text>
+<text x="280" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">Import from CSV or Excel</text>
+<rect x="280" y="94" width="658" height="92" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="292" y="106" width="634" height="68" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1" stroke-dasharray="6 4"/>
+<rect x="306" y="119" width="42" height="42" rx="5" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="327" y="144" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#222222">CSV</text>
+<text x="362" y="136" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">products.csv</text>
+<text x="362" y="156" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">1.2 KB · 12 rows</text>
+<rect x="798.49" y="121" width="113.50999999999999" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="855.245" y="144.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Browse file</text>
+<rect x="719.44" y="121" width="69.05" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="753.965" y="144.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Clear</text>
+<rect x="280" y="204" width="658" height="210" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="234" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Or paste CSV directly</text>
+<line x1="280" y1="252" x2="938" y2="252" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="281" y="252" width="656" height="160" rx="0" fill="#f3f3f3" stroke="none"/>
+<text x="296" y="276" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">name,barcode,category,price,cost,stockQty,minStockThreshold,description</text>
+<text x="296" y="296" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">Product name,4800000000000,Sizzling Plates,000,00,20,5,…</text>
+<text x="296" y="316" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">…</text>
+<rect x="280" y="432" width="658" height="280" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="462" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Preview — nothing is saved until you press Import</text>
+<line x1="280" y1="480" x2="938" y2="480" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="296" y="494" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="323.1" y="507.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">10 NEW</text>
+<rect x="358.2" y="494" width="65.6" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="391.0" y="507.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">1 UPDATE</text>
+<rect x="431.79999999999995" y="494" width="59.9" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="461.74999999999994" y="507.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">1 ERROR</text>
+<text x="505.69999999999993" y="508" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">Fix the 1 row marked ERROR, in the box above or in your file,</text>
+<text x="505.69999999999993" y="524" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">and the preview updates.</text>
+<line x1="280" y1="536" x2="938" y2="536" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="280" y="536" width="658" height="30" rx="0" fill="#f3f3f3" stroke="none" stroke-width="1"/>
+<text x="292" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">ROW</text>
+<text x="352" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">NAME</text>
+<text x="561.3" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">WILL</text>
+<text x="680.9" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">PROBLEM</text>
+<line x1="280" y1="566" x2="938" y2="566" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="589.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">2</text>
+<text x="352" y="589.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Product name</text>
+<rect x="561.3" y="575.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="579.8499999999999" y="588.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">NEW</text>
+<text x="680.9" y="589.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222"></text>
+<line x1="280" y1="604" x2="938" y2="604" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="627.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">3</text>
+<text x="352" y="627.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Product name</text>
+<rect x="561.3" y="613.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="588.4" y="626.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">UPDATE</text>
+<text x="680.9" y="627.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222"></text>
+<line x1="280" y1="642" x2="938" y2="642" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="665.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">4</text>
+<text x="352" y="665.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Product name</text>
+<rect x="561.3" y="651.0" width="48.5" height="19" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<text x="585.55" y="664.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ERROR</text>
+<text x="680.9" y="665.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">(the API&#x27;s reason, e.g. an unknown category)</text>
+<line x1="280" y1="680" x2="938" y2="680" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="703.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">5</text>
+<text x="352" y="703.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Product name</text>
+<rect x="561.3" y="689.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="579.8499999999999" y="702.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">NEW</text>
+<text x="680.9" y="703.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222"></text>
+<rect x="956" y="94" width="300" height="236" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="974" y="124" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Template</text>
+<line x1="956" y1="142" x2="1256" y2="142" stroke="#9a9a9a" stroke-width="1"/>
+<text x="972" y="166" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">Required columns: name, category (must</text>
+<text x="972" y="182.2" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">match an existing category name), price.</text>
+<text x="972" y="198.39999999999998" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">Optional: barcode, cost, stockQty,</text>
+<text x="972" y="214.59999999999997" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">minStockThreshold, description.</text>
+<text x="972" y="236.79999999999995" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">The Excel template has a category list to</text>
+<text x="972" y="252.99999999999994" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">pick from, and keeps barcodes as text so</text>
+<text x="972" y="269.19999999999993" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">leading zeros stay.</text>
+<text x="972" y="297.3999999999999" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#222222">product_import_template.xlsx ↓</text>
+<text x="972" y="319.3999999999999" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#222222">product_import_template.csv ↓</text>
+<rect x="956" y="348" width="300" height="150" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="974" y="378" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">How matching works</text>
+<line x1="956" y1="396" x2="1256" y2="396" stroke="#9a9a9a" stroke-width="1"/>
+<text x="972" y="420" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">A row with a barcode that matches an</text>
+<text x="972" y="436.2" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">existing product updates it. A row with no</text>
+<text x="972" y="452.4" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">barcode, or a barcode that doesn&#x27;t match</text>
+<text x="972" y="468.59999999999997" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">anything, creates a new product.</text>
+<rect x="956" y="516" width="300" height="42" rx="4" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1106.0" y="541.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#8a8a8a">Import 12 rows</text>
+<text x="956" y="582" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Import turns on once no row has an error.</text>
+</g><rect x="0" y="0" width="1280" height="880" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

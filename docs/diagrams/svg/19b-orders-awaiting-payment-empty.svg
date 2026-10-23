@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="988" viewBox="0 0 1328 988">
+<rect x="0" y="0" width="1328" height="988" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">19b  Orders awaiting payment: nothing waiting</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /staff/orders   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/staff/orders/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
+<text x="24" y="922" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Shown only after a successful load. If loading fails, an alert “Couldn&#x27;t load the orders.” with Retry appears instead.</text>
+<text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The list loads when the page opens; it doesn&#x27;t refresh by itself when a new order is placed (there is no live update on this page).</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="800"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="256" height="800" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="256" y1="0" x2="256" y2="800" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="20" y="20" width="32" height="32" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="20" y1="20" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="20" x2="20" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<text x="62" y="33" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Zak&#x27;s Sizzling Hub</text>
+<text x="62" y="49" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">STOCK INVENTORY</text>
+<text x="24" y="92" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OPERATIONS</text>
+<circle cx="36" cy="123" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="128" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Dashboard</text>
+<circle cx="36" cy="163" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Products</text>
+<circle cx="36" cy="203" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="208" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Inventory</text>
+<circle cx="36" cy="243" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="248" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Raw materials</text>
+<circle cx="36" cy="283" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Barcode lookup</text>
+<circle cx="36" cy="323" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="328" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Bulk import</text>
+<text x="24" y="360" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
+<circle cx="36" cy="391" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<text x="24" y="428" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
+<circle cx="36" cy="459" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="464" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kitchen display</text>
+<rect x="12" y="480" width="232" height="38" rx="6" fill="#e2e2e2" stroke="none"/>
+<circle cx="36" cy="499" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Orders awaiting payment</text>
+<text x="24" y="536" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
+<circle cx="36" cy="567" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
+<rect x="12" y="644" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="666" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
+<circle cx="40" cy="696" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="40" y="700" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
+<text x="64" y="692" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
+<text x="64" y="710" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="24" y="728" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="128.0" y="752.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
+<circle cx="84" cy="748" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="280" y="36" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">BILLING &amp; PAYMENT</text>
+<text x="280" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">Orders awaiting payment</text>
+<text x="280" y="94" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Counter orders show up here once placed. Confirm, then collect payment: confirming checks the stock first, so if something has run out you can</text>
+<text x="280" y="111.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">change the order before the customer pays. Cancel an order the customer never came back to pay for.</text>
+<text x="280" y="153.1" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#8a8a8a">Nothing awaiting payment right now.</text>
+</g><rect x="0" y="0" width="1280" height="800" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="807" viewBox="0 0 1072 807">
+<rect x="0" y="0" width="1072" height="807" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">03b  Menu: search with no results</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/page.tsx, apps/web/src/components/kiosk/MenuGrid.tsx (EmptyGrid), CategoryRail.tsx</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• While searching, no category is highlighted. Categories with no dish in the chosen price range (here “Under ₱100”) are dimmed and can&#x27;t be tapped.</text>
+<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Other wordings in the code: no search but a price filter → “No dishes here under ₱100” with only Show every price; neither → “Nothing here right</text>
+<text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   now”.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="64" rx="0" fill="#c9c9c9" stroke="none"/>
+<line x1="0" y1="64" x2="1024" y2="64" stroke="#555555" stroke-width="2"/>
+<rect x="12" y="12" width="40" height="40" rx="8" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="12" y1="12" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="12" x2="12" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="64" y="8" width="800" height="48" rx="24" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<circle cx="88" cy="32" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="106" y="38" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#222222">xyz</text>
+<circle cx="838" cy="32" r="14" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
+<text x="838" y="37" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="middle" fill="#555555">×</text>
+<circle cx="894" cy="32" r="9" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="910" y="37" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Start over</text>
+<rect x="0" y="64" width="208" height="460" rx="0" fill="#c9c9c9" stroke="none"/>
+<line x1="208" y1="64" x2="208" y2="524" stroke="#555555" stroke-width="2"/>
+<rect x="18" y="82" width="40" height="40" rx="10" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="82" x2="58" y2="122" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="82" x2="18" y2="122" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="107" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#8a8a8a">Sizzling Plates</text>
+<rect x="18" y="144" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="144" x2="58" y2="184" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="144" x2="18" y2="184" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="169" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Rice &amp; Noodles</text>
+<rect x="18" y="206" width="40" height="40" rx="10" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="206" x2="58" y2="246" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="206" x2="18" y2="246" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="231" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#8a8a8a">Soups &amp; Stews</text>
+<rect x="18" y="268" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="268" x2="58" y2="308" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="268" x2="18" y2="308" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="293" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Sides</text>
+<rect x="18" y="330" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="330" x2="58" y2="370" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="330" x2="18" y2="370" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="355" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Drinks</text>
+<rect x="18" y="392" width="40" height="40" rx="10" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="392" x2="58" y2="432" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="392" x2="18" y2="432" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="417" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#8a8a8a">Specials</text>
+<rect x="158.61" y="388" width="35.39" height="18" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<text x="176.305" y="400.24" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" text-anchor="middle" fill="#555555">NEW</text>
+<rect x="210" y="65" width="814" height="459" rx="0" fill="#f3f3f3" stroke="none"/>
+<text x="228" y="106" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" text-anchor="start" fill="#222222">Search results</text>
+<text x="465.43999999999994" y="106" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">0 dishes for “xyz”</text>
+<rect x="228" y="120" width="127.75999999999999" height="40" rx="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="291.88" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">Any price  0</text>
+<rect x="363.76" y="120" width="135.74" height="40" rx="20" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="431.63" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#ffffff">Under ₱100  0</text>
+<rect x="507.5" y="120" width="127.75999999999999" height="40" rx="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="571.38" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">₱100–₱199  0</text>
+<rect x="643.26" y="120" width="143.71999999999997" height="40" rx="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="715.12" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">₱200 and up  0</text>
+<circle cx="617" cy="270" r="32" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<circle cx="617" cy="270" r="12" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="617" y="342" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#222222">Nothing matches “xyz”</text>
+<text x="617" y="368" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#555555">Try another word, or show every price.</text>
+<rect x="455" y="392" width="160" height="48" rx="24" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="535.0" y="421.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#ffffff">Show every price</text>
+<rect x="627" y="392" width="140" height="48" rx="24" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="697.0" y="421.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">Clear search</text>
+<rect x="0" y="524" width="1024" height="76" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="0" y1="524" x2="1024" y2="524" stroke="#9a9a9a" stroke-width="1"/>
+<text x="16" y="556" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" text-anchor="start" fill="#222222">Your</text>
+<text x="16" y="576" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" text-anchor="start" fill="#222222">order</text>
+<clipPath id="clip1"><rect x="80" y="526" width="640" height="72"/></clipPath><g clip-path="url(#clip1)">
+<rect x="84" y="534" width="204" height="56" rx="14" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="90" y="540" width="44" height="44" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="90" y1="540" x2="134" y2="584" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="134" y1="540" x2="90" y2="584" stroke="#c9c9c9" stroke-width="1"/>
+<text x="142" y="557" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">1× Dish name</text>
+<text x="142" y="577" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">₱000.00</text>
+<rect x="298" y="534" width="204" height="56" rx="14" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="304" y="540" width="44" height="44" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="304" y1="540" x2="348" y2="584" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="348" y1="540" x2="304" y2="584" stroke="#c9c9c9" stroke-width="1"/>
+<text x="356" y="557" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">2× Dish name</text>
+<text x="356" y="577" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">₱000.00</text>
+<rect x="512" y="534" width="204" height="56" rx="14" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="518" y="540" width="44" height="44" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="518" y1="540" x2="562" y2="584" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="562" y1="540" x2="518" y2="584" stroke="#c9c9c9" stroke-width="1"/>
+<text x="570" y="557" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">1× Dish name</text>
+<text x="570" y="577" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">₱000.00</text>
+</g>
+<rect x="818" y="534" width="190" height="56" rx="28" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="913.0" y="568.12" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="middle" fill="#ffffff">Review &amp; pay  ›</text>
+<text x="800" y="553" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#555555">Total</text>
+<text x="800" y="580" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

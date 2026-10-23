@@ -1,0 +1,173 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="769" viewBox="0 0 1072 769">
+<rect x="0" y="0" width="1072" height="769" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">05b  Order review: empty</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /  (panel over the menu)   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/kiosk/CartDrawer.tsx</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Reached by removing the last dish while the panel is open. Review &amp; pay is disabled.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="64" rx="0" fill="#c9c9c9" stroke="none"/>
+<line x1="0" y1="64" x2="1024" y2="64" stroke="#555555" stroke-width="2"/>
+<rect x="12" y="12" width="40" height="40" rx="8" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="12" y1="12" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="12" x2="12" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="64" y="8" width="800" height="48" rx="24" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<circle cx="88" cy="32" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="106" y="38" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="400" text-anchor="start" fill="#8a8a8a">Search the menu</text>
+<circle cx="894" cy="32" r="9" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="910" y="37" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Start over</text>
+<rect x="0" y="64" width="208" height="460" rx="0" fill="#c9c9c9" stroke="none"/>
+<line x1="208" y1="64" x2="208" y2="524" stroke="#555555" stroke-width="2"/>
+<rect x="10" y="74" width="188" height="56" rx="16" fill="#ffffff" stroke="#555555" stroke-width="2"/>
+<rect x="18" y="82" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="82" x2="58" y2="122" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="82" x2="18" y2="122" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="107" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Sizzling Plates</text>
+<rect x="18" y="144" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="144" x2="58" y2="184" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="144" x2="18" y2="184" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="169" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Rice &amp; Noodles</text>
+<rect x="18" y="206" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="206" x2="58" y2="246" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="206" x2="18" y2="246" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="231" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Soups &amp; Stews</text>
+<rect x="18" y="268" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="268" x2="58" y2="308" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="268" x2="18" y2="308" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="293" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Sides</text>
+<rect x="18" y="330" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="330" x2="58" y2="370" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="330" x2="18" y2="370" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="355" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Drinks</text>
+<rect x="18" y="392" width="40" height="40" rx="10" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="18" y1="392" x2="58" y2="432" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="58" y1="392" x2="18" y2="432" stroke="#c9c9c9" stroke-width="1"/>
+<text x="68" y="417" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Specials</text>
+<rect x="158.61" y="388" width="35.39" height="18" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<text x="176.305" y="400.24" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" text-anchor="middle" fill="#555555">NEW</text>
+<rect x="210" y="65" width="814" height="459" rx="0" fill="#f3f3f3" stroke="none"/>
+<text x="228" y="106" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" text-anchor="start" fill="#222222">Sizzling Plates</text>
+<text x="481.4" y="106" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">8 dishes</text>
+<rect x="228" y="120" width="127.75999999999999" height="40" rx="20" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="291.88" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#ffffff">Any price  8</text>
+<rect x="363.76" y="120" width="135.74" height="40" rx="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="431.63" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">Under ₱100  2</text>
+<rect x="507.5" y="120" width="127.75999999999999" height="40" rx="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="571.38" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">₱100–₱199  3</text>
+<rect x="643.26" y="120" width="143.71999999999997" height="40" rx="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="715.12" y="145.04" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#555555">₱200 and up  3</text>
+<clipPath id="clip1"><rect x="210" y="65" width="814" height="459"/></clipPath><g clip-path="url(#clip1)">
+<rect x="230.0" y="176.0" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="230.0" y="176.0" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="230.0" y1="176.0" x2="414.5" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="414.5" y1="176.0" x2="230.0" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="273.31" y="232.1875" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="322.25" y="249.7375" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="384.5" cy="284.375" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="384.5" y="293.375" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="242.0" y="340.375" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="242.0" y="372.375" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<rect x="426.5" y="176.0" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="426.5" y="176.0" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="426.5" y1="176.0" x2="611.0" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="611.0" y1="176.0" x2="426.5" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="469.81" y="232.1875" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="518.75" y="249.7375" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="581.0" cy="284.375" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="581.0" y="293.375" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="438.5" y="340.375" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="438.5" y="372.375" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<rect x="623.0" y="176.0" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="623.0" y="176.0" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="623.0" y1="176.0" x2="807.5" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="807.5" y1="176.0" x2="623.0" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="666.31" y="232.1875" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="715.25" y="249.7375" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<rect x="623.0" y="286.375" width="184.5" height="28" rx="0" fill="#555555" stroke="none"/>
+<text x="715.25" y="305.375" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">SOLD OUT</text>
+<text x="635.0" y="340.375" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#8a8a8a">Dish name</text>
+<text x="635.0" y="372.375" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#8a8a8a">₱000.00</text>
+<rect x="623.0" y="176.0" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="none" fill-opacity="0.35"/>
+<rect x="819.5" y="176.0" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="819.5" y="176.0" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="819.5" y1="176.0" x2="1004.0" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="1004.0" y1="176.0" x2="819.5" y2="314.375" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="862.81" y="232.1875" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="911.75" y="249.7375" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="974.0" cy="284.375" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="974.0" y="293.375" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="831.5" y="340.375" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="831.5" y="372.375" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<rect x="230.0" y="400.375" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="230.0" y="400.375" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="230.0" y1="400.375" x2="414.5" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="414.5" y1="400.375" x2="230.0" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="273.31" y="456.5625" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="322.25" y="474.1125" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="384.5" cy="508.75" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="384.5" y="517.75" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="242.0" y="564.75" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="242.0" y="596.75" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<rect x="426.5" y="400.375" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="426.5" y="400.375" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="426.5" y1="400.375" x2="611.0" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="611.0" y1="400.375" x2="426.5" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="469.81" y="456.5625" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="518.75" y="474.1125" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="581.0" cy="508.75" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="581.0" y="517.75" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="438.5" y="564.75" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="438.5" y="596.75" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<rect x="623.0" y="400.375" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="623.0" y="400.375" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="623.0" y1="400.375" x2="807.5" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="807.5" y1="400.375" x2="623.0" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="666.31" y="456.5625" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="715.25" y="474.1125" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="777.5" cy="508.75" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="777.5" y="517.75" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="635.0" y="564.75" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="635.0" y="596.75" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<rect x="819.5" y="400.375" width="184.5" height="212.375" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="819.5" y="400.375" width="184.5" height="138.375" rx="0" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="819.5" y1="400.375" x2="1004.0" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="1004.0" y1="400.375" x2="819.5" y2="538.75" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="862.81" y="456.5625" width="97.88000000000001" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="911.75" y="474.1125" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Photo or icon</text>
+<circle cx="974.0" cy="508.75" r="24" fill="#555555" stroke="#ffffff" stroke-width="2"/>
+<text x="974.0" y="517.75" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="middle" fill="#ffffff">+</text>
+<text x="831.5" y="564.75" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Dish name</text>
+<text x="831.5" y="596.75" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+</g>
+<rect x="0" y="524" width="1024" height="76" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="0" y1="524" x2="1024" y2="524" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="16" y="536" width="64" height="50" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="16" y1="536" x2="80" y2="586" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="80" y1="536" x2="16" y2="586" stroke="#c9c9c9" stroke-width="1"/>
+<text x="94" y="567" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Your order is empty.</text>
+<text x="273.0" y="567" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">Tap a dish to start.</text>
+<rect x="818" y="534" width="190" height="56" rx="28" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="913.0" y="568.12" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="middle" fill="#8a8a8a">Review &amp; pay</text>
+<text x="800" y="553" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#555555">Total</text>
+<text x="800" y="580" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="end" fill="#222222">₱0.00</text>
+<rect x="0" y="0" width="1024" height="600" rx="0" fill="#000000" stroke="none" stroke-width="1" fill-opacity="0.45"/>
+<rect x="640" y="0" width="384" height="600" rx="0" fill="#ffffff" stroke="#555555" stroke-width="2"/>
+<text x="660" y="44" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="start" fill="#222222">Your order</text>
+<text x="804.8" y="44" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">(0 items)</text>
+<circle cx="992" cy="36" r="20" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="992" y="42" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="400" text-anchor="middle" fill="#222222">×</text>
+<line x1="640" y1="66" x2="1024" y2="66" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="772" y="150" width="120" height="80" rx="8" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="772" y1="150" x2="892" y2="230" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="892" y1="150" x2="772" y2="230" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="810.1" y="177.0" width="43.800000000000004" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="832.0" y="194.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Plate</text>
+<text x="832" y="268" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="middle" fill="#222222">Your order is empty</text>
+<text x="832" y="294" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="middle" fill="#555555">Tap + on any dish to add it.</text>
+<line x1="640" y1="500" x2="1024" y2="500" stroke="#9a9a9a" stroke-width="1"/>
+<text x="660" y="526" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">Total</text>
+<text x="1004" y="528" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="end" fill="#222222">₱0.00</text>
+<rect x="660" y="538" width="344" height="52" rx="26" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="832.0" y="570.12" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="middle" fill="#8a8a8a">Review &amp; pay</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

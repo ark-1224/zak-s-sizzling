@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="988" viewBox="0 0 1328 988">
+<rect x="0" y="0" width="1328" height="988" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">10b  Staff &amp; Admin Login: wrong details</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /login   ·   Screen: 1280 px wide desktop browser   ·   Access: Anyone on the admin site (signs in Staff and Admin)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/login/page.tsx, apps/web/src/lib/auth.ts</text>
+<text x="24" y="922" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The API answers 401 “Invalid email or password” for an unknown email, a suspended account or a wrong password (the same message for all three). Too many failed attempts are rate limited:</text>
+<text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   “Too many failed sign-in attempts. Try again in …”.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="800"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="448" y="210" width="384" height="388" rx="16" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="480" y="262" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="start" fill="#222222">Staff &amp; Admin Login</text>
+<text x="480" y="288" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">Zak&#x27;s Sizzling Hub back office</text>
+<text x="480" y="335" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Email</text>
+<rect x="480" y="342" width="320" height="44" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="490" y="368.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">name@example.com</text>
+<text x="480" y="415" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Password</text>
+<rect x="480" y="422" width="320" height="44" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="490" y="448.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">••••••••</text>
+<text x="480" y="496" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">Invalid email or password</text>
+<rect x="480" y="520" width="320" height="48" rx="24" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="640.0" y="549.76" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff">Sign in</text>
+</g><rect x="0" y="0" width="1280" height="800" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

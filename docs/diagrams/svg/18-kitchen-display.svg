@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1064" viewBox="0 0 1328 1064">
+<rect x="0" y="0" width="1328" height="1064" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">18  Kitchen display</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /kitchen   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/kitchen/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
+<text x="24" y="922" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Only paid orders appear (a counter order after staff confirm it, an online order after the payment arrives), oldest first, one card per order with one row per dish. Updates live</text>
+<text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   (order:created, kitchen:task_updated).</text>
+<text x="24" y="980" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Each dish goes Pending → Start preparing → In Progress → Mark done. The queue only returns unfinished dishes, so a dish marked done drops off its card and the card goes when its last</text>
+<text x="24" y="999" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   dish is done. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.</text>
+<text x="24" y="1018" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• PARTIAL: finishing every dish doesn&#x27;t change the order&#x27;s own status (the database has preparing / ready / completed, but the code never sets them), and nothing tells the customer the</text>
+<text x="24" y="1037" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   order is ready.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="800"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="256" height="800" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="256" y1="0" x2="256" y2="800" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="20" y="20" width="32" height="32" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="20" y1="20" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="20" x2="20" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<text x="62" y="33" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Zak&#x27;s Sizzling Hub</text>
+<text x="62" y="49" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">STOCK INVENTORY</text>
+<text x="24" y="92" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OPERATIONS</text>
+<circle cx="36" cy="123" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="128" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Dashboard</text>
+<circle cx="36" cy="163" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Products</text>
+<circle cx="36" cy="203" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="208" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Inventory</text>
+<circle cx="36" cy="243" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="248" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Raw materials</text>
+<circle cx="36" cy="283" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Barcode lookup</text>
+<circle cx="36" cy="323" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="328" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Bulk import</text>
+<text x="24" y="360" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
+<circle cx="36" cy="391" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<text x="24" y="428" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
+<rect x="12" y="440" width="232" height="38" rx="6" fill="#e2e2e2" stroke="none"/>
+<circle cx="36" cy="459" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="464" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Kitchen display</text>
+<circle cx="36" cy="499" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Orders awaiting payment</text>
+<text x="24" y="536" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
+<circle cx="36" cy="567" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
+<rect x="12" y="644" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="666" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
+<circle cx="40" cy="696" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="40" y="700" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
+<text x="64" y="692" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
+<text x="64" y="710" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="24" y="728" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="128.0" y="752.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
+<circle cx="84" cy="748" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<rect x="280" y="24" width="976" height="752" rx="6" fill="#c9c9c9" stroke="none"/>
+<text x="304" y="66" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="start" fill="#222222">Kitchen Display</text>
+<text x="304" y="90" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">3 active orders</text>
+<rect x="304.0" y="112" width="298.6666666666667" height="314" rx="12" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="320.0" y="142" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
+<rect x="424.0" y="127" width="59.9" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="453.95" y="140.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">DINE IN</text>
+<text x="586.6666666666667" y="142" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#555555">12:30 PM</text>
+<text x="320.0" y="166" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Ready by 12:45 PM · in 6 min</text>
+<line x1="320.0" y1="180" x2="586.6666666666667" y2="180" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="316.0" y="192" width="274.6666666666667" height="100" rx="8" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="330.0" y="218" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">1× Dish name</text>
+<text x="330.0" y="238" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">“Extra spicy”</text>
+<rect x="493.96666666666675" y="204" width="82.69999999999999" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="535.3166666666667" y="217.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">In Progress</text>
+<rect x="330.0" y="248" width="246.66666666666669" height="34" rx="17" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="453.33333333333337" y="269.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Mark done</text>
+<rect x="316.0" y="300" width="274.6666666666667" height="100" rx="8" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="330.0" y="326" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">2× Dish name</text>
+<rect x="516.7666666666668" y="312" width="59.9" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="546.7166666666668" y="325.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">Pending</text>
+<rect x="330.0" y="356" width="246.66666666666669" height="34" rx="17" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="453.33333333333337" y="377.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Start preparing</text>
+<rect x="618.6666666666667" y="112" width="298.6666666666667" height="426" rx="12" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="634.6666666666667" y="142" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
+<rect x="738.6666666666667" y="127" width="65.6" height="19" rx="10" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<text x="771.4666666666667" y="140.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">TAKE OUT</text>
+<text x="901.3333333333335" y="142" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#555555">12:30 PM</text>
+<text x="634.6666666666667" y="166" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#555555">Ready by 12:45 PM · 2 min late</text>
+<line x1="634.6666666666667" y1="180" x2="901.3333333333335" y2="180" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="630.6666666666667" y="192" width="274.6666666666667" height="100" rx="8" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="644.6666666666667" y="218" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">1× Dish name</text>
+<text x="644.6666666666667" y="238" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">“Extra spicy”</text>
+<rect x="808.6333333333334" y="204" width="82.69999999999999" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="849.9833333333335" y="217.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">In Progress</text>
+<rect x="644.6666666666667" y="248" width="246.66666666666669" height="34" rx="17" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="768.0000000000001" y="269.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Mark done</text>
+<rect x="630.6666666666667" y="300" width="274.6666666666667" height="100" rx="8" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="644.6666666666667" y="326" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">2× Dish name</text>
+<rect x="831.4333333333335" y="312" width="59.9" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="861.3833333333336" y="325.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">Pending</text>
+<rect x="644.6666666666667" y="356" width="246.66666666666669" height="34" rx="17" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="768.0000000000001" y="377.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Start preparing</text>
+<rect x="630.6666666666667" y="408" width="274.6666666666667" height="100" rx="8" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="644.6666666666667" y="434" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">3× Dish name</text>
+<rect x="831.4333333333335" y="420" width="59.9" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="861.3833333333336" y="433.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">Pending</text>
+<rect x="644.6666666666667" y="464" width="246.66666666666669" height="34" rx="17" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="768.0000000000001" y="485.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Start preparing</text>
+<rect x="933.3333333333334" y="112" width="298.6666666666667" height="202" rx="12" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="949.3333333333334" y="142" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
+<rect x="1053.3333333333335" y="127" width="59.9" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1083.2833333333335" y="140.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">DINE IN</text>
+<text x="1216.0" y="142" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#555555">12:30 PM</text>
+<text x="949.3333333333334" y="166" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Ready by 12:45 PM · in 14 min</text>
+<line x1="949.3333333333334" y1="180" x2="1216.0" y2="180" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="945.3333333333334" y="192" width="274.6666666666667" height="100" rx="8" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="959.3333333333334" y="218" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">1× Dish name</text>
+<text x="959.3333333333334" y="238" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">“Extra spicy”</text>
+<rect x="1146.1" y="204" width="59.9" height="19" rx="10" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1176.05" y="217.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">Pending</text>
+<rect x="959.3333333333334" y="248" width="246.66666666666669" height="34" rx="17" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="1082.6666666666667" y="269.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Start preparing</text>
+</g><rect x="0" y="0" width="1280" height="800" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

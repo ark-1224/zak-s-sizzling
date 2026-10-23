@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="807" viewBox="0 0 1072 807">
+<rect x="0" y="0" width="1072" height="807" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">07b  Review &amp; pay: empty order</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /checkout   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/checkout/page.tsx (empty branch)</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Shown when /checkout is opened with nothing in the order.</text>
+<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• An order saved on the device without a dine-in / take-out choice (left from before it was asked) doesn&#x27;t open checkout: the page sends it back to</text>
+<text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   the kiosk home page (01 → 02) to choose, keeping the dishes.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="600" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="442" y="150" width="140" height="112" rx="8" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="442" y1="150" x2="582" y2="262" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="582" y1="150" x2="442" y2="262" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="490.1" y="193.0" width="43.800000000000004" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="512.0" y="210.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Plate</text>
+<text x="512.0" y="306" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" text-anchor="middle" fill="#222222">Your order is empty</text>
+<text x="512.0" y="336" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="middle" fill="#555555">Add a few dishes from the menu first.</text>
+<rect x="412.0" y="360" width="200" height="56" rx="28" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="512.0" y="394.48" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="middle" fill="#ffffff">Back to menu</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="807" viewBox="0 0 1072 807">
+<rect x="0" y="0" width="1072" height="807" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">08b  Receipt: paid online</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /checkout/success  (after PayMongo)   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/kiosk/ReceiptModal.tsx, apps/web/src/app/checkout/success/page.tsx</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• PARTIAL: reached only after a GCash or Maya payment on PayMongo&#x27;s page. The code comment says this path hasn&#x27;t been tested against a live PayMongo</text>
+<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   sandbox, and production has no PayMongo keys yet.</text>
+<text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• A third wording exists for an order with no payment record: “We couldn&#x27;t confirm payment yet — please check with staff.”</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="600" rx="0" fill="#8a8a8a" stroke="none"/>
+<rect x="64" y="100" width="896" height="400" rx="28" fill="#ffffff" stroke="#555555" stroke-width="2"/>
+<text x="92" y="156" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" text-anchor="start" fill="#222222">Payment received!</text>
+<text x="92" y="184" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">Your order has been sent to the kitchen.</text>
+<rect x="92" y="202" width="406" height="150" rx="22" fill="#c9c9c9" stroke="none"/>
+<text x="110" y="230" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#222222">Your order number</text>
+<text x="110" y="284" font-family="Arial, Helvetica, sans-serif" font-size="46" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
+<rect x="110" y="304" width="112" height="32" rx="16" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<circle cx="130" cy="320" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="144" y="325" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Dine in</text>
+<rect x="392" y="252" width="96" height="90" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="392" y1="252" x2="488" y2="342" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="488" y1="252" x2="392" y2="342" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="92" y="368" width="406" height="84" rx="12" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
+<text x="108" y="392" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Estimated preparation time</text>
+<text x="108" y="418" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="start" fill="#222222">Ready at about 12:45 PM</text>
+<text x="108" y="440" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">In about 15 min. We&#x27;ll call your order number.</text>
+<rect x="534" y="128" width="398" height="220" rx="12" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="552" y="162" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#222222">1 × Dish name</text>
+<text x="914" y="162" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<text x="552" y="190" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#222222">2 × Dish name</text>
+<text x="914" y="190" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<text x="552" y="218" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#222222">1 × Dish name</text>
+<text x="914" y="218" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<line x1="552" y1="250" x2="914" y2="250" stroke="#9a9a9a" stroke-width="1"/>
+<text x="552" y="278" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">Total</text>
+<text x="914" y="278" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<text x="552" y="304" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Payment method: GCash · Ref: (PayMongo reference)</text>
+<rect x="534" y="416" width="398" height="56" rx="28" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="733.0" y="450.48" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="middle" fill="#ffffff">Done</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

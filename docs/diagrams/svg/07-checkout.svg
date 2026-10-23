@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="902" viewBox="0 0 1072 902">
+<rect x="0" y="0" width="1072" height="902" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">07  Review &amp; pay (checkout)</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /checkout   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/checkout/page.tsx</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Left: the order with special instructions, Edit (back to the menu), and the estimated preparation time (only when POST /api/orders/estimate</text>
+<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   answers).</text>
+<text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Right: payment method, total and Place order. Dine in / take out isn&#x27;t asked here: it was chosen on 02 and goes with the order. Below 1024 px wide</text>
+<text x="24" y="799" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   the right side drops under the order and Place order sits in a bar at the bottom.</text>
+<text x="24" y="818" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• GCash and Maya stay greyed out (“Not set up yet”) until online payment is set up (GET /api/payments/options). PARTIAL: online payment isn&#x27;t set up</text>
+<text x="24" y="837" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   in production, so only Pay at counter can be chosen there.</text>
+<text x="24" y="856" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Place order sends the order; Pay at counter then shows the receipt (08). GCash or Maya would open PayMongo&#x27;s payment page instead. An error (e.g. a</text>
+<text x="24" y="875" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   dish sold out) appears as a toast message.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="600" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="1024" height="64" rx="0" fill="#c9c9c9" stroke="none"/>
+<line x1="0" y1="64" x2="1024" y2="64" stroke="#555555" stroke-width="2"/>
+<rect x="12" y="8" width="96" height="48" rx="24" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="60.0" y="37.4" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="middle" fill="#555555">‹  Menu</text>
+<text x="124" y="41" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="start" fill="#222222">Review &amp; pay</text>
+<rect x="976" y="14" width="36" height="36" rx="8" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="976" y1="14" x2="1012" y2="50" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="1012" y1="14" x2="976" y2="50" stroke="#c9c9c9" stroke-width="1"/>
+<rect x="24" y="80" width="571" height="318" rx="16" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="44" y="116" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="start" fill="#222222">Your order</text>
+<text x="188.79999999999998" y="116" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">(4 items)</text>
+<text x="575" y="116" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">Edit</text>
+<line x1="44" y1="134" x2="575" y2="134" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="44" y="146" width="48" height="48" rx="12" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="44" y1="146" x2="92" y2="194" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="92" y1="146" x2="44" y2="194" stroke="#c9c9c9" stroke-width="1"/>
+<text x="104" y="166" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">1 × Dish name</text>
+<text x="575" y="166" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<text x="104" y="186" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">“Extra spicy”</text>
+<line x1="44" y1="206" x2="575" y2="206" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="44" y="218" width="48" height="48" rx="12" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="44" y1="218" x2="92" y2="266" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="92" y1="218" x2="44" y2="266" stroke="#c9c9c9" stroke-width="1"/>
+<text x="104" y="238" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">2 × Dish name</text>
+<text x="575" y="238" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<line x1="44" y1="278" x2="575" y2="278" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="44" y="290" width="48" height="48" rx="12" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="44" y1="290" x2="92" y2="338" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="92" y1="290" x2="44" y2="338" stroke="#c9c9c9" stroke-width="1"/>
+<text x="104" y="310" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">1 × Dish name</text>
+<text x="575" y="310" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<line x1="44" y1="352" x2="575" y2="352" stroke="#9a9a9a" stroke-width="1"/>
+<text x="44" y="372" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#222222">Estimated preparation time: about 15 min after payment (2 orders ahead</text>
+<text x="44" y="390.9" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#222222">in the kitchen)</text>
+<text x="619" y="104" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="start" fill="#222222">How would you like to pay?</text>
+<rect x="619" y="118" width="120" height="104" rx="16" fill="#ffffff" stroke="#555555" stroke-width="2"/>
+<circle cx="723" cy="134" r="10" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="723" y="138" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#ffffff">✓</text>
+<circle cx="679" cy="146" r="14" fill="#e2e2e2" stroke="#8a8a8a" stroke-width="1"/>
+<text x="679" y="182" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Pay at counter</text>
+<text x="627" y="202" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#555555">Cash or card with</text>
+<text x="627" y="216.85" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#555555">staff</text>
+<rect x="747" y="118" width="120" height="104" rx="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1" stroke-dasharray="4 3"/>
+<circle cx="807" cy="146" r="14" fill="#e2e2e2" stroke="#8a8a8a" stroke-width="1"/>
+<text x="807" y="182" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#8a8a8a">GCash</text>
+<text x="755" y="202" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Not set up yet</text>
+<rect x="875" y="118" width="120" height="104" rx="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1" stroke-dasharray="4 3"/>
+<circle cx="935" cy="146" r="14" fill="#e2e2e2" stroke="#8a8a8a" stroke-width="1"/>
+<text x="935" y="182" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#8a8a8a">Maya</text>
+<text x="883" y="202" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Not set up yet</text>
+<rect x="619" y="238" width="381" height="124" rx="16" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="635" y="274" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">Total</text>
+<text x="984" y="276" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>
+<rect x="635" y="292" width="349" height="56" rx="28" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="809.5" y="326.48" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="middle" fill="#ffffff">Place order</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

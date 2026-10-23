@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="769" viewBox="0 0 1072 769">
+<rect x="0" y="0" width="1072" height="769" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">03d  Menu: couldn&#x27;t load</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/page.tsx (error branch)</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Shown when the categories or products request fails. Try again reloads the page.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="600" rx="0" fill="#c9c9c9" stroke="none"/>
+<text x="512.0" y="250" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700" text-anchor="middle" fill="#222222">We couldn&#x27;t load the menu</text>
+<text x="512.0" y="288" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="middle" fill="#222222">Please try again, or ask our staff for help. (error message)</text>
+<rect x="422.0" y="318" width="180" height="56" rx="28" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="512.0" y="352.48" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="middle" fill="#ffffff">Try again</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>
