@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,8 @@ import { ensureKioskSession } from "@/lib/auth";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { categoryBgColor } from "@/lib/categoryColors";
 import { Icon, type IconName } from "@/components/Icon";
-import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
+import { ReceiptModal, type PrintStatus } from "@/components/kiosk/ReceiptModal";
+import { hasReceiptPrinter, printReceipt } from "@/lib/receiptPrinter";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
 import { SizzlingPlate } from "@/components/kiosk/SizzlingPlate";
@@ -49,6 +50,17 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("counter");
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<OrderDTO | null>(null);
+
+  // On the in-store kiosk the receipt also prints on paper, once per order. A failed
+  // print doesn't affect the order: the receipt on screen says to show it at the counter.
+  const [printStatus, setPrintStatus] = useState<PrintStatus | null>(null);
+  const printedOrderId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!placedOrder || printedOrderId.current === placedOrder.id || !hasReceiptPrinter()) return;
+    printedOrderId.current = placedOrder.id;
+    setPrintStatus("printing");
+    printReceipt(placedOrder).then((ok) => setPrintStatus(ok ? "printed" : "failed"));
+  }, [placedOrder]);
   // null while checking; if the check fails, online payment is treated as unavailable.
   const [onlineAvailable, setOnlineAvailable] = useState<boolean | null>(null);
 
@@ -178,7 +190,7 @@ export default function CheckoutPage() {
   if (placedOrder) {
     return (
       <>
-        <ReceiptModal order={placedOrder} onDone={() => (window.location.href = "/")} />
+        <ReceiptModal order={placedOrder} printStatus={printStatus} onDone={() => (window.location.href = "/")} />
         <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
       </>
     );

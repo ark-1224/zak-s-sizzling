@@ -6,6 +6,7 @@ import { useCatalog } from "@/hooks/useCatalog";
 import { useCart } from "@/hooks/useCart";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ensureKioskSession } from "@/lib/auth";
+import { rememberPrinterSetting } from "@/lib/receiptPrinter";
 import { apiFetch } from "@/lib/api-client";
 import { inPriceRange, PRICE_RANGES, type PriceRangeId } from "@/lib/priceRanges";
 import { WelcomeScreen } from "@/components/kiosk/WelcomeScreen";
@@ -47,8 +48,10 @@ export default function KioskHomePage() {
   const [onlinePayments, setOnlinePayments] = useState<boolean | null>(null);
   const gridRef = useRef<HTMLElement>(null);
 
-  // Anonymous kiosk session: ties this device's orders together.
+  // Anonymous kiosk session: ties this device's orders together. The in-store kiosk also
+  // opens with ?printer=1 once, so it prints receipts (lib/receiptPrinter.ts).
   useEffect(() => {
+    rememberPrinterSetting();
     ensureKioskSession().catch(() => {
       // Non-fatal: checkout shows an error if the session couldn't be created.
     });

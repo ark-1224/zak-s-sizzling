@@ -8,10 +8,20 @@ import { SizzlingPlate } from "./SizzlingPlate";
 // New in Sprint 3 — kiosk.html's checkout was a stub with no confirmation screen to
 // port from. Shows the digital receipt + order number the manuscript's Payment
 // Transaction requirement calls for.
+export type PrintStatus = "printing" | "printed" | "failed";
+
 interface ReceiptModalProps {
   order: OrderDTO;
   onDone: () => void;
+  /** On the in-store kiosk, how printing the paper receipt went (lib/receiptPrinter.ts). */
+  printStatus?: PrintStatus | null;
 }
+
+const PRINT_MESSAGE: Record<PrintStatus, string> = {
+  printing: "Printing your receipt…",
+  printed: "Take your printed receipt below.",
+  failed: "We couldn't print your receipt. Please show this screen at the counter.",
+};
 
 const METHOD_LABEL: Record<string, string> = {
   gcash: "GCash",
@@ -19,7 +29,7 @@ const METHOD_LABEL: Record<string, string> = {
   counter: "Pay at counter",
 };
 
-export function ReceiptModal({ order, onDone }: ReceiptModalProps) {
+export function ReceiptModal({ order, onDone, printStatus = null }: ReceiptModalProps) {
   const isPaid = order.payment?.status === "paid";
   // Covers true counter orders and the "online payment wasn't configured, fell back
   // to counter" path — either way, the actionable answer for the customer is the same.
@@ -89,7 +99,18 @@ export function ReceiptModal({ order, onDone }: ReceiptModalProps) {
             )}
           </div>
 
-          <button onClick={onDone} className="min-h-14 w-full rounded-full bg-matcha text-lg font-bold text-cream shadow-card lg:mt-auto">
+          {printStatus && (
+            <p
+              role="status"
+              className={`mb-3 text-base font-semibold lg:mt-auto lg:mb-3 ${printStatus === "failed" ? "text-berry" : "text-matcha-deep"}`}
+            >
+              {PRINT_MESSAGE[printStatus]}
+            </p>
+          )}
+          <button
+            onClick={onDone}
+            className={`min-h-14 w-full rounded-full bg-matcha text-lg font-bold text-cream shadow-card ${printStatus ? "" : "lg:mt-auto"}`}
+          >
             Done
           </button>
         </div>
