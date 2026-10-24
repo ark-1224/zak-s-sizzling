@@ -1,18 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="3239" viewBox="0 0 810 3239">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="3609" viewBox="0 0 810 3609">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="3239" fill="#ffffff"/>
+<rect x="0" y="0" width="810" height="3609" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 03  Customer ordering at the kiosk</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
 <text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/page.tsx, apps/web/src/components/kiosk/*.tsx, apps/web/src/hooks/useCart.tsx,</text>
 <text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/web/src/app/checkout/page.tsx, apps/api/src/modules/orders/routes.ts, apps/api/src/modules/orders/service.ts,</text>
 <text x="30" y="114" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/orders/prepTime.ts, apps/api/src/modules/inventory/fulfillment.ts (assertStockForNewOrder)</text>
-<rect x="30" y="137" width="250" height="2742" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="30" y="137" width="250" height="3078" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
 <rect x="30" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
 <text x="155.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Customer</text>
-<rect x="280" y="137" width="250" height="2742" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
+<rect x="280" y="137" width="250" height="3078" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
 <rect x="280" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
 <text x="405.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kiosk (web app)</text>
-<rect x="530" y="137" width="250" height="2742" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="530" y="137" width="250" height="3078" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
 <rect x="530" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
 <text x="655.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
 <path d="M155.0 268.5 L155.0 292.5 L405.0 292.5 L405.0 316.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
@@ -77,7 +77,15 @@
 <path d="M503.0 2589.0 L655.0 2589.0 L655.0 2676.0" fill="none" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
 <rect x="506.0" y="2571.5" width="119.43499999999999" height="16.5" fill="#ffffff" opacity="0.9"/>
 <text x="509.0" y="2583.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No (GCash / Maya)</text>
-<path d="M307.0 2701.0 L155.0 2701.0 L155.0 2788.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 2733.5 L405.0 2767.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 2859.0 L405.0 2885.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="408.0" y="2862.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="411.0" y="2874.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M307.0 2813.0 L155.0 2813.0 L155.0 3124.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="230.45" y="2795.5" width="73.55" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="301.0" y="2807.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No (phone)</text>
+<path d="M405.0 2965.0 L405.0 2997.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M314.0 3037.0 L264.0 3037.0 L264.0 3149.0 L253.0 3149.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="57.0" y="205.5" width="196" height="63" rx="31.5" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
 <text x="155.0" y="226.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Walks up to the kiosk, or</text>
 <text x="155.0" y="241.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">opens it on a phone with</text>
@@ -177,39 +185,55 @@
 <text x="405.0" y="2690.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Empty the order; show the</text>
 <text x="405.0" y="2705.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">receipt with the order</text>
 <text x="405.0" y="2720.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number (08)</text>
-<rect x="57.0" y="2788.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<line x1="66.0" y1="2788.0" x2="66.0" y2="2838.0" stroke="#222222" stroke-width="1.2"/>
-<line x1="244.0" y1="2788.0" x2="244.0" y2="2838.0" stroke="#222222" stroke-width="1.2"/>
-<text x="155.0" y="2810.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pays at the counter</text>
-<text x="155.0" y="2825.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Flow 04)</text>
+<polygon points="405.0,2767.0 503.0,2813.0 405.0,2859.0 307.0,2813.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="2803.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">In-store kiosk</text>
+<text x="405.0" y="2817.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">(opened once with</text>
+<text x="405.0" y="2831.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">?printer=1)?</text>
+<rect x="307.0" y="2885.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="2907.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send the receipt to the</text>
+<text x="405.0" y="2922.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">print service on the Pi;</text>
+<text x="405.0" y="2937.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it prints on the 58 mm</text>
+<text x="405.0" y="2952.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">printer</text>
+<polygon points="321.0,2997.0 503.0,2997.0 489.0,3077.0 307.0,3077.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="3019.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “Take your printed</text>
+<text x="405.0" y="3034.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">receipt below.”, or “We</text>
+<text x="405.0" y="3049.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">couldn&#x27;t print your</text>
+<text x="405.0" y="3064.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">receipt …” if it failed</text>
+<rect x="57.0" y="3124.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<line x1="66.0" y1="3124.0" x2="66.0" y2="3174.0" stroke="#222222" stroke-width="1.2"/>
+<line x1="244.0" y1="3124.0" x2="244.0" y2="3174.0" stroke="#222222" stroke-width="1.2"/>
+<text x="155.0" y="3146.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pays at the counter</text>
+<text x="155.0" y="3161.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Flow 04)</text>
 <rect x="557.0" y="2676.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
 <line x1="566.0" y1="2676.0" x2="566.0" y2="2726.0" stroke="#222222" stroke-width="1.2"/>
 <line x1="744.0" y1="2676.0" x2="744.0" y2="2726.0" stroke="#222222" stroke-width="1.2"/>
 <text x="655.0" y="2698.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pays online with GCash</text>
 <text x="655.0" y="2713.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">or Maya (Flow 05)</text>
-<text x="30" y="2913" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
-<rect x="30" y="2927" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
-<text x="82" y="2944" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
-<rect x="182.64" y="2927" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="234.64" y="2944" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
-<polygon points="363.52,2927 385.52,2940.0 363.52,2953 341.52,2940.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="393.52" y="2944" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
-<polygon points="483.44,2927 519.44,2927 511.44000000000005,2953 475.44,2953" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="527.44" y="2944" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
-<rect x="30" y="2965" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<line x1="36" y1="2965" x2="36" y2="2991" stroke="#222222"/><line x1="68" y1="2965" x2="68" y2="2991" stroke="#222222"/>
-<text x="82" y="2982" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
-<rect x="263.76" y="2965" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="315.76" y="2982" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
-<text x="30" y="3029" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="30" y="3049" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Sold-out dishes stay on the menu but can&#x27;t be opened or added; availability updates live while the customer</text>
-<text x="30" y="3066" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   browses (inventory:updated).</text>
-<text x="30" y="3083" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• “Start over” in the top bar, or the idle reset (Flow 13), empties the order and returns to the welcome screen at</text>
-<text x="30" y="3100" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   any point. Dine in / take out is asked only once (02); changing it means starting over.</text>
-<text x="30" y="3117" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• If checkout finds an order saved on the device without a dine-in / take-out choice, it sends the customer back</text>
-<text x="30" y="3134" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   to the kiosk home page to choose it (the dishes are kept).</text>
-<text x="30" y="3151" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Estimated preparation time = longest dish + 1 min for each extra serving + 2 min for each order already in the</text>
-<text x="30" y="3168" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   kitchen (orders/prepTime.ts). It is worked out again when the order reaches the kitchen.</text>
-<text x="30" y="3185" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• GCash or Maya chosen while PayMongo isn&#x27;t set up is saved as Pay at counter. Online payment is not set up in</text>
-<text x="30" y="3202" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   production.</text>
+<text x="30" y="3249" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
+<rect x="30" y="3263" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
+<text x="82" y="3280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
+<rect x="182.64" y="3263" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="234.64" y="3280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
+<polygon points="363.52,3263 385.52,3276.0 363.52,3289 341.52,3276.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="393.52" y="3280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
+<polygon points="483.44,3263 519.44,3263 511.44000000000005,3289 475.44,3289" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="527.44" y="3280" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
+<rect x="30" y="3301" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<line x1="36" y1="3301" x2="36" y2="3327" stroke="#222222"/><line x1="68" y1="3301" x2="68" y2="3327" stroke="#222222"/>
+<text x="82" y="3318" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
+<rect x="263.76" y="3301" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="315.76" y="3318" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
+<text x="30" y="3365" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="30" y="3385" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Sold-out dishes stay on the menu but can&#x27;t be opened or added; availability updates live while the customer</text>
+<text x="30" y="3402" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   browses (inventory:updated).</text>
+<text x="30" y="3419" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• “Start over” in the top bar, or the idle reset (Flow 13), empties the order and returns to the welcome screen at</text>
+<text x="30" y="3436" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   any point. Dine in / take out is asked only once (02); changing it means starting over.</text>
+<text x="30" y="3453" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• If checkout finds an order saved on the device without a dine-in / take-out choice, it sends the customer back</text>
+<text x="30" y="3470" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   to the kiosk home page to choose it (the dishes are kept).</text>
+<text x="30" y="3487" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Estimated preparation time = longest dish + 1 min for each extra serving + 2 min for each order already in the</text>
+<text x="30" y="3504" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   kitchen (orders/prepTime.ts). It is worked out again when the order reaches the kitchen.</text>
+<text x="30" y="3521" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The print service is a small program on the kiosk&#x27;s Raspberry Pi (POST http://127.0.0.1:4000/print, printing to</text>
+<text x="30" y="3538" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   the USB printer); it is not in this repository. Printing never blocks the order.</text>
+<text x="30" y="3555" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• GCash or Maya chosen while PayMongo isn&#x27;t set up is saved as Pay at counter. Online payment is not set up in</text>
+<text x="30" y="3572" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   production.</text>
 </svg>

@@ -23,7 +23,7 @@ WIREFRAME_DESC = {
     "06": "“Still there?” popup shown after 60 seconds without a touch.",
     "07": "Review & pay: the order with the prep-time estimate, payment method, total and Place order.",
     "07b": "Review & pay with an empty order.",
-    "08": "Receipt for a pay-at-counter order: order number, order type, prep time, items, Done.",
+    "08": "Receipt for a pay-at-counter order: order number, order type, prep time, items, print status, Done.",
     "08b": "Receipt after an online payment (partial: online payment isn't live).",
     "09": "Return page from PayMongo while the payment is being confirmed (partial).",
     "09b": "Return page when the order can't be loaded.",
@@ -142,7 +142,9 @@ def main():
         "- **Orders awaiting payment** doesn't refresh by itself when an order is placed or paid; the server sends `payment:confirmed`, but no page listens (19).",
         "- **Low-stock emails** need email set up for the worker (Resend or SMTP); without it alerts wait in the database (flow 07).",
         "- **No custom “page not found”**: staff pages on the kiosk site show Next.js's default 404, so it has no wireframe.",
-        "- **No receipt printer** code; the receipt is on screen only.",
+        "- **Receipt printing** works only through the print service on the kiosk's Raspberry Pi, whose code isn't in this repository; "
+        "it currently prints the order number, date, items and total, always with “Please pay at the counter” (08, flow 03). "
+        "Receipts after an online payment (08b) don't print yet.",
         "",
         "## Rebuilding",
         "",

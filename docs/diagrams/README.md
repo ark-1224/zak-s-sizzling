@@ -30,7 +30,7 @@ The kiosk is drawn at its 1024 × 600 touchscreen size; the back office at a 128
 | [06-idle-popup.png](png/06-idle-popup.png) | “Still there?” idle popup | `/, /checkout, /checkout/success` | “Still there?” popup shown after 60 seconds without a touch. | components/kiosk/IdleTimeoutOverlay.tsx, hooks/useIdleTimer.ts |
 | [07-checkout.png](png/07-checkout.png) | Review & pay (checkout) | `/checkout` | Review & pay: the order with the prep-time estimate, payment method, total and Place order. | app/checkout/page.tsx |
 | [07b-checkout-empty.png](png/07b-checkout-empty.png) | Review & pay: empty order | `/checkout` | Review & pay with an empty order. | app/checkout/page.tsx (empty branch) |
-| [08-receipt-counter.png](png/08-receipt-counter.png) | Receipt: pay at counter | `/checkout  (after Place order)` | Receipt for a pay-at-counter order: order number, order type, prep time, items, Done. | components/kiosk/ReceiptModal.tsx, app/checkout/page.tsx |
+| [08-receipt-counter.png](png/08-receipt-counter.png) | Receipt: pay at counter | `/checkout  (after Place order)` | Receipt for a pay-at-counter order: order number, order type, prep time, items, print status, Done. | components/kiosk/ReceiptModal.tsx, app/checkout/page.tsx, lib/receiptPrinter.ts |
 | [08b-receipt-paid.png](png/08b-receipt-paid.png) | Receipt: paid online | `/checkout/success  (after PayMongo)` | Receipt after an online payment (partial: online payment isn't live). | components/kiosk/ReceiptModal.tsx, app/checkout/success/page.tsx |
 | [09-payment-return.png](png/09-payment-return.png) | Payment return: confirming | `/checkout/success?order=…` | Return page from PayMongo while the payment is being confirmed (partial). | app/checkout/success/page.tsx |
 | [09b-payment-return-error.png](png/09b-payment-return-error.png) | Payment return: no order to show | `/checkout/success` | Return page when the order can't be loaded. | app/checkout/success/page.tsx |
@@ -96,7 +96,7 @@ These are marked in the diagrams (dashed outlines or notes). They describe the c
 - **Orders awaiting payment** doesn't refresh by itself when an order is placed or paid; the server sends `payment:confirmed`, but no page listens (19).
 - **Low-stock emails** need email set up for the worker (Resend or SMTP); without it alerts wait in the database (flow 07).
 - **No custom “page not found”**: staff pages on the kiosk site show Next.js's default 404, so it has no wireframe.
-- **No receipt printer** code; the receipt is on screen only.
+- **Receipt printing** works only through the print service on the kiosk's Raspberry Pi, whose code isn't in this repository; it currently prints the order number, date, items and total, always with “Please pay at the counter” (08, flow 03). Receipts after an online payment (08b) don't print yet.
 
 ## Rebuilding
 

@@ -430,12 +430,16 @@ def receipt(f, paid):
     f.text(rx + 18, y + 178, "Total", size=17, bold=True)
     f.text(rx + rw - 18, y + 178, "₱000.00", size=20, bold=True, anchor="end")
     f.text(rx + 18, y + 204, "Payment method: GCash · Ref: (PayMongo reference)" if paid else "Payment method: Pay at counter", size=13, fill=INK2)
+    if not paid:
+        f.text(rx, y + h - 98, "Take your printed receipt below.", size=15, bold=True)
     f.btn(rx, y + h - 84, rw, 56, "Done", kind="primary", r=28, size=18)
 
 
 def receipt_counter():
-    f = kiosk("08", "Receipt: pay at counter", "/checkout  (after Place order)", K + "ReceiptModal.tsx, apps/web/src/app/checkout/page.tsx")
+    f = kiosk("08", "Receipt: pay at counter", "/checkout  (after Place order)",
+              K + "ReceiptModal.tsx, apps/web/src/app/checkout/page.tsx, apps/web/src/lib/receiptPrinter.ts")
     receipt(f, paid=False)
+    f.add_note("On the in-store kiosk the receipt also prints on the 58 mm thermal printer, through the print service on the Raspberry Pi. The line above Done shows “Printing your receipt…”, then “Take your printed receipt below.” (shown), or “We couldn't print your receipt. Please show this screen at the counter.” The order is placed either way. Phones opened from the QR code don't print and show no line.")
     f.add_note("The order number is what the customer reads to the cashier (19). Dine in / Take out shows as the pill under the number.")
     f.add_note("If an online payment couldn't start (online payment not set up, or too many attempts), the order is shown the same way as a counter order, with a toast explaining it.")
     f.add_note("Done (or the idle reset) returns to the welcome screen (01). The order was already emptied when it was placed.")

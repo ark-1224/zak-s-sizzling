@@ -66,6 +66,7 @@ def ordering():
                  "“Start over” in the top bar, or the idle reset (Flow 13), empties the order and returns to the welcome screen at any point. Dine in / take out is asked only once (02); changing it means starting over.",
                  "If checkout finds an order saved on the device without a dine-in / take-out choice, it sends the customer back to the kiosk home page to choose it (the dishes are kept).",
                  "Estimated preparation time = longest dish + 1 min for each extra serving + 2 min for each order already in the kitchen (orders/prepTime.ts). It is worked out again when the order reaches the kitchen.",
+                 "The print service is a small program on the kiosk's Raspberry Pi (POST http://127.0.0.1:4000/print, printing to the USB printer); it is not in this repository. Printing never blocks the order.",
                  "GCash or Maya chosen while PayMongo isn't set up is saved as Pay at counter. Online payment is not set up in production.",
              ])
     C, K, A = f.lanes
@@ -97,7 +98,10 @@ def ordering():
     f.n("create", A, 20, "process", "Create order ZK-XXXXXX (pending) with a pending payment, total and estimate")
     f.n("counter", K, 21, "decision", "Pay at counter?")
     f.n("receipt", K, 22, "process", "Empty the order; show the receipt with the order number (08)")
-    f.n("pay4", C, 23, "sub", "Pays at the counter (Flow 04)")
+    f.n("printer", K, 23, "decision", "In-store kiosk (opened once with ?printer=1)?")
+    f.n("print", K, 24, "process", "Send the receipt to the print service on the Pi; it prints on the 58 mm printer")
+    f.n("printed", K, 25, "io", "Show “Take your printed receipt below.”, or “We couldn't print your receipt …” if it failed")
+    f.n("pay4", C, 26, "sub", "Pays at the counter (Flow 04)")
     f.n("pay5", A, 22, "sub", "Pays online with GCash or Maya (Flow 05)", partial=True)
     f.e("start", "load")
     f.e("load", "api_menu", exit="r", entry="l")
@@ -133,7 +137,11 @@ def ordering():
     f.e("create", "counter")
     f.e("counter", "receipt", "Yes")
     f.e("counter", "pay5", "No (GCash / Maya)", exit="r", partial=True)
-    f.e("receipt", "pay4", exit="l")
+    f.e("receipt", "printer")
+    f.e("printer", "print", "Yes")
+    f.e("printer", "pay4", "No (phone)", exit="l")
+    f.e("print", "printed")
+    f.e("printed", "pay4", exit="l", entry="r")
     return f
 
 
