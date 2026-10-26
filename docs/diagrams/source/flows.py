@@ -67,7 +67,7 @@ def ordering():
                  "If checkout finds an order saved on the device without a dine-in / take-out choice, it sends the customer back to the kiosk home page to choose it (the dishes are kept).",
                  "Estimated preparation time = longest dish + 1 min for each extra serving + 2 min for each order already in the kitchen (orders/prepTime.ts). It is worked out again when the order reaches the kitchen.",
                  "The print service is a small program on the kiosk's Raspberry Pi (POST http://127.0.0.1:4000/print, printing to the USB printer); it is not in this repository. Printing never blocks the order.",
-                 "GCash or Maya chosen while PayMongo isn't set up is saved as Pay at counter. Online payment is not set up in production.",
+                 "QR Ph chosen while PayMongo isn't set up is saved as Pay at counter. Online payment is not set up in production.",
              ])
     C, K, A = f.lanes
     f.n("start", C, 0, "start", "Walks up to the kiosk, or opens it on a phone with the QR code")
@@ -102,7 +102,7 @@ def ordering():
     f.n("print", K, 24, "process", "Send the receipt to the print service on the Pi; it prints on the 58 mm printer")
     f.n("printed", K, 25, "io", "Show “Take your printed receipt below.”, or “We couldn't print your receipt …” if it failed")
     f.n("pay4", C, 26, "sub", "Pays at the counter (Flow 04)")
-    f.n("pay5", A, 22, "sub", "Pays online with GCash or Maya (Flow 05)", partial=True)
+    f.n("pay5", A, 22, "sub", "Pays online with QR Ph (Flow 05)", partial=True)
     f.e("start", "load")
     f.e("load", "api_menu", exit="r", entry="l")
     f.e("api_menu", "loaded")
@@ -136,7 +136,7 @@ def ordering():
     f.e("toast", "place", exit="l")
     f.e("create", "counter")
     f.e("counter", "receipt", "Yes")
-    f.e("counter", "pay5", "No (GCash / Maya)", exit="r", partial=True)
+    f.e("counter", "pay5", "No (QR Ph)", exit="r", partial=True)
     f.e("receipt", "printer")
     f.e("printer", "print", "Yes")
     f.e("printer", "pay4", "No (phone)", exit="l")

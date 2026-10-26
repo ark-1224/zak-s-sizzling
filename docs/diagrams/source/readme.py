@@ -61,7 +61,7 @@ FLOW_DESC = {
     "02": "Kiosk-site block, saved-session check, sign-in checks (rate limit, active account, password), admin-only pages.",
     "03": "From walking up to the kiosk to a placed order: menu, dine in / take out, adding dishes, checkout, server checks.",
     "04": "Staff confirm a counter order (stock check and deduction in one transaction), collect payment, or cancel it.",
-    "05": "GCash / Maya through PayMongo: payment link, fallbacks, webhook, stock-issue flag (partial: not live).",
+    "05": "QR Ph through PayMongo: payment link, fallbacks, webhook, stock-issue flag (partial: not live).",
     "06": "Paid orders on the kitchen display: Start preparing, Mark done, card leaves when all dishes are done.",
     "07": "Manual adjustments and automatic deduction, live sold-out updates, low-stock alert queue and emails.",
     "08": "Admin adds or edits a product (web and server checks, photo upload) or deletes one.",
@@ -129,8 +129,8 @@ def main():
         "",
         "These are marked in the diagrams (dashed outlines or notes). They describe the code as found; nothing was changed.",
         "",
-        "- **Online payment (GCash / Maya)** is coded but not live: production has no PayMongo keys, so GCash and Maya show “Not set up yet”, "
-        "and the code comment on `/checkout/success` says it hasn't been tested against a live PayMongo sandbox (08b, 09, flow 05).",
+        "- **Online payment (QR Ph)** is coded but not yet tested with PayMongo: QR Ph is the one online method (it replaced "
+        "GCash and Maya), and it shows “Not set up yet” until the PayMongo keys are set (08b, 09, flow 05).",
         "- **Cancelling on PayMongo's page** returns to `/checkout?order=…&cancelled=1`, which the checkout page doesn't handle; the order was already "
         "emptied, so the customer sees “Your order is empty” (flow 05).",
         "- **A payment not confirmed within 5 checks** shows the receipt with the counter wording, although the customer paid online (flow 05).",

@@ -6,7 +6,7 @@
 <text x="24" y="1122" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1142" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The address starts as the kiosk site&#x27;s address (NEXT_PUBLIC_KIOSK_URL, else this site) and is remembered on this device; Use this site resets it. The QR code is made in the browser;</text>
 <text x="24" y="1161" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   nothing is sent to an outside service.</text>
-<text x="24" y="1180" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Print poster prints only the poster on A4; Download PNG saves the code as zaks-kiosk-qr.png. Step 3 mentions GCash and Maya, which aren&#x27;t set up in production yet.</text>
+<text x="24" y="1180" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Print poster prints only the poster on A4; Download PNG saves the code as zaks-kiosk-qr.png. Step 3 mentions QR Ph, the one online payment method.</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="1000"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="1000" fill="#ffffff"/>
 <rect x="0" y="0" width="1280" height="1000" rx="0" fill="#f3f3f3" stroke="none"/>
 <rect x="0" y="0" width="256" height="1000" rx="0" fill="#ffffff" stroke="none"/>
@@ -80,7 +80,7 @@
 <text x="768.0" y="600.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">QR code</text>
 <text x="618.0" y="778" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#222222">1. Point your phone camera at the code.</text>
 <text x="618.0" y="800" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#222222">2. Choose your meal on the menu that opens.</text>
-<text x="618.0" y="822" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#222222">3. Pay at the counter, or online with GCash or Maya.</text>
+<text x="618.0" y="822" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#222222">3. Pay at the counter, or online with QR Ph.</text>
 <text x="768.0" y="854" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="middle" fill="#8a8a8a">https://(kiosk site address)/</text>
 </g><rect x="0" y="0" width="1280" height="1000" fill="none" stroke="#222222" stroke-width="2"/></g>
 </svg>

@@ -69,8 +69,8 @@
 <rect x="557.0" y="518.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
 <line x1="566.0" y1="518.0" x2="566.0" y2="568.0" stroke="#222222" stroke-width="1.2"/>
 <line x1="744.0" y1="518.0" x2="744.0" y2="568.0" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="540.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Online payment with</text>
-<text x="655.0" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">GCash or Maya (Flow 05)</text>
+<text x="655.0" y="540.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Online payment with QR</text>
+<text x="655.0" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Ph (Flow 05)</text>
 <rect x="557.0" y="622.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="655.0" y="644.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Mark paid; deduct stock;</text>
 <text x="655.0" y="659.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">create kitchen tasks;</text>

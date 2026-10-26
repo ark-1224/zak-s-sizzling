@@ -144,7 +144,7 @@ Paste this block, word for word, in each of the three places listed in 2.3. If t
 > |---|---|---|
 > | Administrator | The owner of Zak's Sizzling Hub, who signs in with an administrator account. | Performs every Staff function. In addition, adds, edits, and removes products and prices, imports products in bulk, and sees product costs; views analytics and exports reports; and manages user accounts: creates administrator and staff accounts, changes their roles, resets passwords, and deactivates or reactivates accounts. |
 > | Staff | Front-desk and kitchen personnel of Zak's Sizzling Hub, who sign in with staff accounts. | Confirms counter payments; updates the preparation status of ordered items on the kitchen display; views and adjusts stock levels and the low-stock list; looks up products by barcode; views and edits orders. |
-> | Customer | Any person ordering at the kiosk. Customers do not have accounts; the kiosk starts an anonymous session that expires after two hours. | Browses the menu, places orders, views their own order and receipt, and chooses to pay at the counter or online through GCash or Maya. |
+> | Customer | Any person ordering at the kiosk. Customers do not have accounts; the kiosk starts an anonymous session that expires after two hours. | Browses the menu, places orders, views their own order and receipt, and chooses to pay at the counter or online through QR Ph. |
 
 **Evidence for each permission**
 
@@ -231,7 +231,7 @@ NEW
 > - Self-Service Ordering Experience – Customers access the kiosk interface to browse available menu items, view product details, and place orders independently.
 > - Interactive Product Selection – Customers select items, adjust quantities, and add special instructions for the kitchen.
 > - Cart and Order Management – Customers review selected items, update quantities, and confirm orders before checkout.
-> - Payment Processing – Customers choose to pay at the counter or online through GCash or Maya.
+> - Payment Processing – Customers choose to pay at the counter or online through QR Ph, which any bank or e-wallet app can scan.
 > - Order Confirmation – Customers receive a digital receipt on screen with the order number and order details, and a printed receipt from the kiosk's thermal printer.
 >
 > **Staff**
@@ -289,7 +289,7 @@ Replace the image with `docs/manuscript-fixes/erd.png`. It is rendered from `doc
 | **orders** | `user_id` FK to users | **Removed.** Orders are not linked to user accounts, because customers order anonymously. The anonymous kiosk session is stored in `kiosk_session_id` instead |
 | **orders** | `transact_process` key | **Does not exist.** Orders and payments are linked only by `payments.order_id` |
 | **orders** | `order_num int`, `order_date date`, `order_status varchar`, `total_amount double` | `order_number varchar` (unique), `created_at`, `status` (`order_status` enum: pending, confirmed, preparing, ready, completed, cancelled), `total_amount decimal(10,2)`. Added `customer_name`, `kiosk_session_id`, `source`, `updated_at` |
-| **payments** | `transact_process` FK, `payment_date`, `payment_status varchar`, `payment_method varchar` | No `transact_process`. `order_id` is unique (one payment per order). `paid_at`, `status` (`payment_status` enum: pending, paid, failed, refunded), `method` (`payment_method` enum: gcash, maya, counter). Added `amount`, `reference`, `gateway_payload`, `created_at` |
+| **payments** | `transact_process` FK, `payment_date`, `payment_status varchar`, `payment_method varchar` | No `transact_process`. `order_id` is unique (one payment per order). `paid_at`, `status` (`payment_status` enum: pending, paid, failed, refunded), `method` (`payment_method` enum: counter, qrph; gcash and maya remain only for earlier orders). Added `amount`, `reference`, `gateway_payload`, `created_at` |
 | **order_items** | `quantity`, `subtotal double` | `qty`, `subtotal decimal(10,2)`. Added `unit_price` (price at the time of ordering), `special_instructions` (up to 140 characters), `created_at` |
 | **kitchen_tasks** | `prep_status int`, `completion_time` | `status` (`kitchen_status` enum: pending, in_progress, completed), `completed_at`. Added `started_at`, `created_at`. `order_item_id` is unique (one task per item) |
 | **inventory** | `quantity`, `minimum_stock`; described as "One-to-One/Many" | `stock_qty`, `min_stock_threshold` (default 5), `updated_at`. `product_id` is unique, so the relationship is strictly one-to-one |
@@ -451,7 +451,7 @@ NEW
 > |---|---|---|---|
 > | id | uuid | PK | Payment identifier |
 > | order_id | uuid | FK → orders.id, UK | Order being paid |
-> | method | payment_method (gcash, maya, counter) | | Payment method |
+> | method | payment_method (counter, qrph; gcash, maya on earlier orders only) | | Payment method |
 > | status | payment_status (pending, paid, failed, refunded) | | Payment status (default pending) |
 > | amount | decimal(10,2) | | Amount to be paid |
 > | reference | varchar(100) | UK | Optional payment gateway reference |
@@ -569,7 +569,7 @@ Replaced by "Dependence on Internet Connectivity". See 1.1.
 | No Integration with External POS/ERP Systems | Figures 1.1 and 1.2 show no external POS or ERP; the POS-Lite module in the Scope is internal | Consistent |
 | Absence of Predictive Analytics | Figure 1.1 Analytics box, Figure 2.1; `apps/api/src/modules/reports` has only descriptive reports | Consistent |
 | Single-Location Deployment | Figures 1.1 and 1.2 show one deployment; the schema has no branch or location table | Consistent |
-| Exclusion of Advanced Payment and Delivery Features | Figure 1.2 Payment Module; `enum PaymentMethod` (gcash, maya, counter) | Consistent. The `payment_status` enum includes a `refunded` value, but no refund function exists, which agrees with the limitation |
+| Exclusion of Advanced Payment and Delivery Features | Figure 1.2 Payment Module; `enum PaymentMethod` (counter, qrph; gcash and maya kept for earlier orders) | Consistent. The `payment_status` enum includes a `refunded` value, but no refund function exists, which agrees with the limitation |
 
 ---
 
@@ -616,13 +616,13 @@ These describe QR access correctly and need no edit:
 
 ### 7.3 Figure 2.2 description: "QR code-based payments", p. 60 [PDF 63]
 
-This is a different feature from QR code access. GCash and Maya payments go through PayMongo's checkout page; the system itself does not generate payment QR codes.
+This is a different feature from QR code access. QR Ph payments go through PayMongo's checkout page, which shows the payment QR code; the system itself does not generate payment QR codes.
 
 OLD
 > The Payment Module for Kiosk provides multiple payment options, including counter payments, online transactions, and QR code-based payments.
 
 NEW
-> The Payment Module for Kiosk provides multiple payment options, including payment at the counter and online payment through GCash and Maya.
+> The Payment Module for Kiosk provides two payment options: payment at the counter, and online payment through QR Ph, which customers scan with any bank or e-wallet app.
 
 ---
 
@@ -675,6 +675,6 @@ The manuscript claims each item below, but the code does not support it (or supp
 11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). Resolved: 405 automated unit, integration, and security tests (`apps/api/test/`), documented session by session (seven sessions so far) in `Automated-Testing-Results.docx`.
 12. **Staff and Administrator permissions.** Resolved: the code now matches the earlier drafts. Product, price, bulk import, and report functions, and product costs, are limited to the Administrator; Staff keep payments, the kitchen display, stock, barcode lookup, and orders. The role table in 2.2 describes this split. The removed "Customer Assistance" and "System Maintenance Supervision" items (2.4(f)) have no matching function in the code.
 13. **Product images** (Scope, Product Catalog and Display, p. 7; Product Catalog Management, p. 10). Resolved: the Administrator uploads a photo in the product form; the browser shrinks it to a small WebP before uploading, and it is stored in the database (new table `product_images`, so the nightly backup includes it) and served at `GET /api/products/:id/image`. The kiosk shows the photo on the menu, the item sheet, the basket and checkout, and the icon for products without one. Still to do: the client's real food photos.
-14. **Online payment through GCash and Maya** (FR2, the role table, and several sections). The code integrates PayMongo, but it has not been tested with real or test keys. The client's approval is pending.
+14. **Online payment** (FR2, the role table, and several sections). Decided on 26 October 2026: online payment is **QR Ph only**, through PayMongo, replacing the separate GCash and Maya options; customers scan with any bank or e-wallet app, GCash and Maya included. Every manuscript mention of "GCash and Maya" as payment options should become "QR Ph". The code is changed accordingly, but it has not yet been tested with PayMongo keys, and the client's approval for live payments is pending.
 15. **Filtering by price** (Figure 2.2 description, p. 60). Resolved: price chips above the kiosk menu (Any price, Under ₱100, ₱100–₱199, ₱200 and up), each showing how many items it has, working together with the search and the category rail.
 16. **Use case, activity, and data flow diagrams.** The manuscript has none. If the panel expects them, they must be created.

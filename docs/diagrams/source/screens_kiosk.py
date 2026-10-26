@@ -149,9 +149,9 @@ def welcome():
     f.icon(700, 557, 9)
     f.text(716, 562, "Pay at the counter", size=15)
     f.icon(872, 557, 9)
-    f.text(888, 562, "GCash · Maya", size=15)
+    f.text(888, 562, "QR Ph", size=15)
     f.add_note("The whole screen is one button: a tap anywhere opens 02 (Dine in / Take out).")
-    f.add_note("“GCash · Maya” only appears when online payment is set up (GET /api/payments/options); it is not set up in production yet.")
+    f.add_note("“QR Ph” only appears when online payment is set up (GET /api/payments/options); it is not set up in production yet.")
     f.add_note("Once a product has a photo, the first available dish photo replaces the illustration.")
     f.add_note("The kiosk returns here after “Start over” and after the idle reset (06).")
     return f
@@ -360,18 +360,18 @@ def checkout_page(f, estimate=True):
     x = 619
     py = 88
     f.text(x, py + 16, "How would you like to pay?", size=22, bold=True)
-    methods = [("Pay at counter", "Cash or card with staff", True), ("GCash", "Not set up yet", False), ("Maya", "Not set up yet", False)]
+    methods = [("Pay at counter", "Cash or card with staff", True), ("QR Ph", "Not set up yet", False)]
     for i, (label, blurb, available) in enumerate(methods):
-        bx, by = x + i * 128, py + 30
+        bx, by = x + i * 195, py + 30
         if available:
-            f.rect(bx, by, 120, 104, fill=WHITE, stroke=INK2, r=16, sw=2)
-            f.circle(bx + 104, by + 16, 10, fill=DARK, stroke=DARK)
-            f.text(bx + 104, by + 20, "✓", size=11, anchor="middle", fill=WHITE, bold=True)
+            f.rect(bx, by, 186, 104, fill=WHITE, stroke=INK2, r=16, sw=2)
+            f.circle(bx + 168, by + 16, 10, fill=DARK, stroke=DARK)
+            f.text(bx + 168, by + 20, "✓", size=11, anchor="middle", fill=WHITE, bold=True)
         else:
-            f.rect(bx, by, 120, 104, fill=FILL3, stroke=LINE, r=16, dash="4 3")
-        f.icon(bx + 60, by + 28, 14, filled=True)
-        f.text(bx + 60, by + 64, label, size=14, bold=True, anchor="middle", fill=INK if available else INK3)
-        f.wrap(bx + 8, by + 84, 110, blurb, size=11, fill=INK2 if available else INK3)
+            f.rect(bx, by, 186, 104, fill=FILL3, stroke=LINE, r=16, dash="4 3")
+        f.icon(bx + 93, by + 28, 14, filled=True)
+        f.text(bx + 93, by + 64, label, size=15, bold=True, anchor="middle", fill=INK if available else INK3)
+        f.text(bx + 93, by + 86, blurb, size=12, anchor="middle", fill=INK2 if available else INK3)
     cy = py + 150
     f.rect(x, cy, 381, 124, fill=WHITE, stroke=LINE, r=16)
     f.text(x + 16, cy + 36, "Total", size=17, bold=True)
@@ -384,8 +384,8 @@ def checkout():
     checkout_page(f)
     f.add_note("Left: the order with special instructions, Edit (back to the menu), and the estimated preparation time (only when POST /api/orders/estimate answers).")
     f.add_note("Right: payment method, total and Place order. Dine in / take out isn't asked here: it was chosen on 02 and goes with the order. Below 1024 px wide the right side drops under the order and Place order sits in a bar at the bottom.")
-    f.add_note("GCash and Maya stay greyed out (“Not set up yet”) until online payment is set up (GET /api/payments/options). PARTIAL: online payment isn't set up in production, so only Pay at counter can be chosen there.")
-    f.add_note("Place order sends the order; Pay at counter then shows the receipt (08). GCash or Maya would open PayMongo's payment page instead. An error (e.g. a dish sold out) appears as a toast message.")
+    f.add_note("QR Ph is the one online method (scan with any bank or e-wallet app, through PayMongo). It stays greyed out (“Not set up yet”) until online payment is set up (GET /api/payments/options); once set up it reads “Scan with any bank or e-wallet app”. PARTIAL: not yet tested with PayMongo.")
+    f.add_note("Place order sends the order; Pay at counter then shows the receipt (08). QR Ph opens PayMongo's payment page instead, showing the QR code. An error (e.g. a dish sold out) appears as a toast message.")
     return f
 
 
@@ -429,7 +429,7 @@ def receipt(f, paid):
     f.line(rx + 18, y + 150, rx + rw - 18, y + 150, stroke=LINE)
     f.text(rx + 18, y + 178, "Total", size=17, bold=True)
     f.text(rx + rw - 18, y + 178, "₱000.00", size=20, bold=True, anchor="end")
-    f.text(rx + 18, y + 204, "Payment method: GCash · Ref: (PayMongo reference)" if paid else "Payment method: Pay at counter", size=13, fill=INK2)
+    f.text(rx + 18, y + 204, "Payment method: QR Ph · Ref: (PayMongo reference)" if paid else "Payment method: Pay at counter", size=13, fill=INK2)
     if not paid:
         f.text(rx, y + h - 98, "Take your printed receipt below.", size=15, bold=True)
     f.btn(rx, y + h - 84, rw, 56, "Done", kind="primary", r=28, size=18)
@@ -449,7 +449,7 @@ def receipt_counter():
 def receipt_paid():
     f = kiosk("08b", "Receipt: paid online", "/checkout/success  (after PayMongo)", K + "ReceiptModal.tsx, apps/web/src/app/checkout/success/page.tsx")
     receipt(f, paid=True)
-    f.add_note("PARTIAL: reached only after a GCash or Maya payment on PayMongo's page. The code comment says this path hasn't been tested against a live PayMongo sandbox, and production has no PayMongo keys yet.")
+    f.add_note("PARTIAL: reached only after a QR Ph payment on PayMongo's page. This path hasn't yet been tested against the PayMongo sandbox.")
     f.add_note("A third wording exists for an order with no payment record: “We couldn't confirm payment yet — please check with staff.”")
     return f
 

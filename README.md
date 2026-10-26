@@ -31,10 +31,10 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
 - **Sprint 3** — payment method selection, order placement, and receipts. Confirmed
   live: placing a "Pay at counter" order creates a `pending` payment record, and a
   staff/admin user can confirm it from `/staff/orders`, flipping the order to
-  `confirmed`. The GCash/Maya path (`POST /api/payments/intent`, PayMongo checkout
-  sessions, webhook signature verification) is fully wired but **not yet tested against
-  a real PayMongo sandbox** — this environment has no PayMongo credentials. Until
-  `PAYMONGO_SECRET_KEY` is set, choosing GCash/Maya at checkout gracefully falls back to
+  `confirmed`. The online path (`POST /api/payments/intent`, PayMongo checkout
+  sessions, webhook signature verification), now QR Ph only (it replaced GCash and Maya
+  on 26 October 2026), is fully wired but **not yet tested against a real PayMongo
+  sandbox**. Until `PAYMONGO_SECRET_KEY` is set, choosing QR Ph at checkout gracefully falls back to
   the counter-payment receipt with a toast explaining online payment isn't set up yet
   (verified live). See "Payments" below for what's needed to test the real gateway path.
 
@@ -369,20 +369,22 @@ npm run low-stock:alerts
 
 ## Payments (Sprint 3)
 
-GCash/Maya go through [PayMongo](https://paymongo.com), a PH payment aggregator — see
-the plan's rationale for why (direct GCash/Maya merchant API access needs a registered
-business account, generally out of reach for a capstone). To test the real gateway path:
+Online payment is **QR Ph** through [PayMongo](https://paymongo.com), a PH payment
+aggregator: the customer scans the QR code on PayMongo's page with any bank or e-wallet
+app (GCash and Maya included). It is the one online method; it replaced separate GCash
+and Maya options on 26 October 2026. To test the real gateway path:
 
-1. Create a PayMongo account and grab your **test** secret/public keys from the
-   dashboard, plus a webhook signing secret after registering a webhook endpoint.
-2. Fill in `apps/api/.env`: `PAYMONGO_SECRET_KEY`, `PAYMONGO_PUBLIC_KEY`,
-   `PAYMONGO_WEBHOOK_SECRET`.
-3. Register a webhook in the PayMongo dashboard pointing at
-   `http://<your-tunnel-url>/api/payments/webhook` (use `ngrok http 4000` or similar for
-   local testing, since PayMongo can't reach `localhost` directly), subscribed to
-   `checkout_session.payment.paid`.
-4. Run through checkout choosing GCash or Maya — you should land on PayMongo's hosted
-   checkout page, and completing a test payment there should redirect back to
+1. Create a PayMongo account and copy your **test** secret key (`sk_test_…`) from
+   Developers → API keys. The public key isn't used.
+2. Register a webhook pointing at `https://<api address>/api/payments/webhook` (for local
+   testing, a tunnel such as `ngrok http 4000`, since PayMongo can't reach `localhost`),
+   subscribed to `checkout_session.payment.paid`. If the dashboard has no webhook screen,
+   create it with `POST https://api.paymongo.com/v1/webhooks` using the secret key; the
+   response contains the webhook's signing secret (`whsk_…`).
+3. Set `PAYMONGO_SECRET_KEY` and `PAYMONGO_WEBHOOK_SECRET` in `apps/api/.env` (or on the
+   Railway api service). `GET /api/payments/options` then reports `{"online":true}`.
+4. Run through checkout choosing QR Ph — you should land on PayMongo's hosted checkout
+   page, and completing a test payment there should redirect back to
    `/checkout/success` and flip the order to `confirmed` once the webhook lands.
 
 The integration code (`apps/api/src/lib/paymongo.ts`) follows PayMongo's [Checkout

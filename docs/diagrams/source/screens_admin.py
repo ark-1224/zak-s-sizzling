@@ -711,7 +711,7 @@ def orders_page(empty):
     # row 2: asking to cancel
     f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
     f.text(CX + 18, y + 54, "1× Dish name", size=13, fill=INK2)
-    f.text(CX + 18, y + 74, "Take out · Counter (chose GCash, but online payment didn't start) · ₱000.00 · placed 25 min ago", size=12, fill=INK3)
+    f.text(CX + 18, y + 74, "Take out · Counter (chose QR Ph, but online payment didn't start) · ₱000.00 · placed 25 min ago", size=12, fill=INK3)
     bx = CX + CW - 18 - 300
     f.rect(bx, y + 12, 300, 92, fill=WHITE, stroke=INK, r=6, sw=1.5)
     f.wrap(bx + 12, y + 32, 276, "Cancel ZK-XXXXXX? It leaves the queue and can't be paid any more.", size=12)
@@ -722,7 +722,7 @@ def orders_page(empty):
     f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
     f.pill(CX + 128, y + 17, "STOCK ISSUE", size=10, filled=True)
     f.text(CX + 18, y + 54, "1× Dish name", size=13, fill=INK2)
-    f.text(CX + 18, y + 74, "Take out · GCash · ₱000.00 · paid · placed 8 min ago", size=12, fill=INK3)
+    f.text(CX + 18, y + 74, "Take out · QR Ph · ₱000.00 · paid · placed 8 min ago", size=12, fill=INK3)
     f.rect(CX + 18, y + 86, CW - 360, 84, fill=WHITE, stroke=INK, r=5, sw=1.5)
     f.text(CX + 30, y + 108, "Paid online, but the stock ran out before the payment arrived, so nothing was sent to the kitchen.", size=12)
     f.text(CX + 30, y + 128, "(stock-issue note from the server)", size=12, fill=INK2, italic=True)
@@ -845,7 +845,7 @@ def qr_page(invalid):
     else:
         f.img(px + 60, y + 232, 300, 300, label="QR code")
     for i, step in enumerate(["1. Point your phone camera at the code.", "2. Choose your meal on the menu that opens.",
-                              "3. Pay at the counter, or online with GCash or Maya."]):
+                              "3. Pay at the counter, or online with QR Ph."]):
         f.text(px + 60, y + 564 + i * 22, step, size=14)
     if not invalid:
         f.text(px + 210, y + 640, "https://(kiosk site address)/", size=11, anchor="middle", fill=INK3)
@@ -854,7 +854,7 @@ def qr_page(invalid):
         f.add_note("A localhost address shows a warning instead: “This address only works on this computer, so a phone that scans it won't open the kiosk…”.")
     else:
         f.add_note("The address starts as the kiosk site's address (NEXT_PUBLIC_KIOSK_URL, else this site) and is remembered on this device; Use this site resets it. The QR code is made in the browser; nothing is sent to an outside service.")
-        f.add_note("Print poster prints only the poster on A4; Download PNG saves the code as zaks-kiosk-qr.png. Step 3 mentions GCash and Maya, which aren't set up in production yet.")
+        f.add_note("Print poster prints only the poster on A4; Download PNG saves the code as zaks-kiosk-qr.png. Step 3 mentions QR Ph, the one online payment method.")
     return f
 
 

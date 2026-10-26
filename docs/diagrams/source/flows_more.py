@@ -21,7 +21,7 @@ def overview():
     f.n("y1", Y, 1, "process", "Check stock; save the order (pending) with an estimated preparation time")
     f.n("y2", Y, 2, "decision", "Pay at the counter or online?")
     f.n("s3", S, 3, "sub", "Confirm the order, then collect payment (Flow 04)")
-    f.n("y3", Y, 3, "sub", "Online payment with GCash or Maya (Flow 05)", partial=True)
+    f.n("y3", Y, 3, "sub", "Online payment with QR Ph (Flow 05)", partial=True)
     f.n("y4", Y, 4, "process", "Mark paid; deduct stock; create kitchen tasks; update the kiosk menu live")
     f.n("x4", X, 4, "process", "Every minute: email waiting low-stock alerts")
     f.n("s5", S, 5, "sub", "Prepare the dishes on the kitchen display (Flow 06)")
@@ -57,7 +57,7 @@ def overview():
 
 
 def online_payment():
-    f = Flow("online-payment", "05", "Online payment with GCash or Maya (partial)",
+    f = Flow("online-payment", "05", "Online payment with QR Ph (partial)",
              ["Customer", "Kiosk (web app)", "API server", "PayMongo"],
              W + "app/checkout/page.tsx, " + W + "app/checkout/success/page.tsx, " + API + "payments/routes.ts, " + API
              + "payments/service.ts (createGatewayPaymentIntent, handleWebhook), apps/api/src/lib/paymongo.ts, " + API + "inventory/fulfillment.ts",
@@ -65,11 +65,11 @@ def online_payment():
                  "PARTIAL: this path is coded, but production has no PayMongo keys, so today every order takes the “not set up” branch and is paid at the counter. The success page's code comment says it hasn't been tested against a live PayMongo sandbox.",
                  "UNCLEAR: a customer who cancels on PayMongo's page is sent to /checkout?order=…&cancelled=1, but the checkout page doesn't read that address and the order was already emptied, so it shows “Your order is empty”. The unpaid order stays in Orders awaiting payment (19) until staff cancel it.",
                  "UNCLEAR: if the payment isn't confirmed within the 5 checks, the receipt shows the counter wording “Please pay at the counter to confirm your order.” although the customer paid online.",
-                 "When PayMongo isn't set up (501) the server also saves the payment as Pay at counter. After too many attempts (429) the payment keeps its online method, and Orders awaiting payment shows it as “Counter (chose GCash, but online payment didn't start)”.",
+                 "When PayMongo isn't set up (501) the server also saves the payment as Pay at counter. After too many attempts (429) the payment keeps its online method, and Orders awaiting payment shows it as “Counter (chose QR Ph, but online payment didn't start)”.",
                  "A webhook can arrive more than once; the paid check makes a repeat delivery do nothing.",
              ])
     C, K, A, P = f.lanes
-    f.n("start", K, 0, "start", "Order placed with GCash or Maya (Flow 03)")
+    f.n("start", K, 0, "start", "Order placed with QR Ph (Flow 03)")
     f.n("intent", K, 1, "process", "Ask for a payment link (POST /api/payments/intent)")
     f.n("rate", A, 2, "decision", "Too many payment attempts from this kiosk?")
     f.n("payable", A, 3, "decision", "Order exists, unpaid and not cancelled?")
@@ -81,7 +81,7 @@ def online_payment():
     f.n("session", A, 5, "process", "Create a PayMongo checkout session; save the pending payment with its reference", partial=True)
     f.n("hosted", P, 5, "process", "Hosted payment page for this order", partial=True)
     f.n("redirect", K, 6, "process", "Empty the order; send the customer to PayMongo's page", partial=True)
-    f.n("pays", C, 7, "io", "Pays with GCash or Maya on PayMongo's page", partial=True)
+    f.n("pays", C, 7, "io", "Scans the QR code with a bank or e-wallet app and pays", partial=True)
     f.n("done", P, 8, "decision", "Payment completed?")
     f.n("cancelled", C, 9, "io", "Returns to /checkout?…&cancelled=1 and sees “Your order is empty”", partial=True)
     f.n("back", P, 9, "process", "Send the customer to /checkout/success; send a “paid” webhook to the API", partial=True)

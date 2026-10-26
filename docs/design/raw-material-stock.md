@@ -90,7 +90,7 @@ All of the following happens in **one database transaction**:
 
 The staff workflow changes from "Confirm once the customer has paid" to **"Confirm, then collect payment"**, so a short order is caught before any money changes hands. The customer then changes the order at the counter.
 
-### 3.3 Online payment (GCash or Maya through PayMongo)
+### 3.3 Online payment (QR Ph through PayMongo)
 PayMongo collects the money on its own hosted checkout page, so the rare short case cannot be blocked before the customer pays. When the payment confirmation from PayMongo (the webhook) arrives:
 - Run the same transaction as in 3.2.
 - **If stock is short:** deduct nothing and never go negative. Mark the payment paid (money was received), set `orders.stock_issue = true` with a note naming the missing item, and do not create kitchen tasks. The order appears on the staff screen as **"Stock issue: staff action needed"**, so staff can offer a substitute or refund.

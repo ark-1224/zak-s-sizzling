@@ -74,7 +74,7 @@
 <line x1="280" y1="321.1" x2="1256" y2="321.1" stroke="#cfcfcf" stroke-width="1"/>
 <text x="298" y="353.1" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
 <text x="298" y="375.1" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">1× Dish name</text>
-<text x="298" y="395.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · Counter (chose GCash, but online payment didn&#x27;t start) · ₱000.00 · placed 25 min ago</text>
+<text x="298" y="395.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · Counter (chose QR Ph, but online payment didn&#x27;t start) · ₱000.00 · placed 25 min ago</text>
 <rect x="938" y="333.1" width="300" height="92" rx="6" fill="#ffffff" stroke="#222222" stroke-width="1.5"/>
 <text x="950" y="353.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Cancel ZK-XXXXXX? It leaves the queue and</text>
 <text x="950" y="369.3" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">can&#x27;t be paid any more.</text>
@@ -87,7 +87,7 @@
 <rect x="408" y="456.1" width="82.69999999999999" height="19" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
 <text x="449.35" y="469.20000000000005" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">STOCK ISSUE</text>
 <text x="298" y="493.1" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">1× Dish name</text>
-<text x="298" y="513.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · GCash · ₱000.00 · paid · placed 8 min ago</text>
+<text x="298" y="513.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · QR Ph · ₱000.00 · paid · placed 8 min ago</text>
 <rect x="298" y="525.1" width="616" height="84" rx="5" fill="#ffffff" stroke="#222222" stroke-width="1.5"/>
 <text x="310" y="547.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Paid online, but the stock ran out before the payment arrived, so nothing was sent to the kitchen.</text>
 <text x="310" y="567.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">(stock-issue note from the server)</text>
