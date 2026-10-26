@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/auth";
+import { login, pageAfterLogin } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,7 +17,8 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      router.push("/admin");
+      // Back to the page that sent the user here (?next=), otherwise the dashboard.
+      router.push(pageAfterLogin(new URLSearchParams(window.location.search).get("next")));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

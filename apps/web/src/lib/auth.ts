@@ -52,6 +52,29 @@ export async function login(email: string, password: string): Promise<AuthUser> 
   return data.user;
 }
 
+/** The login page, set to come back to the current page (address and query, e.g. the
+ *  kitchen display's ?printer=1) after signing in. */
+export function loginUrlForCurrentPage(): string {
+  const here = window.location.pathname + window.location.search;
+  return window.location.pathname === "/login" ? "/login" : `/login?next=${encodeURIComponent(here)}`;
+}
+
+/** Where to go after signing in: the ?next= page if it is a page of this site, otherwise
+ *  the dashboard. Anything pointing at another site is ignored (no open redirect). */
+export function pageAfterLogin(next: string | null): string {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.includes("\\")) return "/admin";
+  try {
+    const url = new URL(next, window.location.origin);
+    if (url.origin !== window.location.origin || url.pathname === "/login") return "/admin";
+    const page = url.pathname + url.search + url.hash;
+    // e.g. "/.//evil.example" normalises to "//evil.example", which a browser reads as
+    // another site; only a single leading slash is a page of this site.
+    return page.startsWith("//") || page.startsWith("/\\") ? "/admin" : page;
+  } catch {
+    return "/admin";
+  }
+}
+
 export function logout() {
   // Best-effort — clears the httpOnly refresh cookie server-side. Not awaited: the
   // caller navigates to /login immediately regardless, and the cookie is scoped to

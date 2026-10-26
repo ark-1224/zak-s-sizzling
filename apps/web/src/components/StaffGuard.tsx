@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getAccessToken, getStoredUser, scheduleTokenRefresh } from "@/lib/auth";
+import { getAccessToken, getStoredUser, loginUrlForCurrentPage, scheduleTokenRefresh } from "@/lib/auth";
 
 // Client-side route guard shared by /admin, /staff, and /kitchen. Real enforcement
 // always happens server-side via the API's authenticate/authorize middleware — this
@@ -16,7 +16,8 @@ export function StaffGuard({ children }: { children: React.ReactNode }) {
     const token = getAccessToken("staff");
     const user = getStoredUser();
     if (!token || !user || (user.role !== "admin" && user.role !== "staff")) {
-      router.replace("/login");
+      // Comes back here after signing in (with its query, e.g. /kitchen?printer=1).
+      router.replace(loginUrlForCurrentPage());
       return;
     }
     scheduleTokenRefresh();

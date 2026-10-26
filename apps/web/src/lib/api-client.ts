@@ -1,4 +1,4 @@
-import { clearStaffSession, getAccessToken, refreshAccessToken, refreshKioskSession } from "./auth";
+import { clearStaffSession, getAccessToken, loginUrlForCurrentPage, refreshAccessToken, refreshKioskSession } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -77,7 +77,7 @@ export async function apiFetch<T>(
     const body = await res.json().catch(() => ({ error: res.statusText }));
     if (res.status === 401 && auth === "staff") {
       clearStaffSession();
-      if (typeof window !== "undefined") window.location.href = "/login";
+      if (typeof window !== "undefined") window.location.href = loginUrlForCurrentPage();
     }
     throw new ApiError(res.status, body.error ?? "Request failed");
   }
