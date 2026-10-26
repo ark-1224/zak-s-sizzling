@@ -49,7 +49,7 @@ interface CreateOrderInput {
   items: { productId: string; qty: number; specialInstructions?: string }[];
   customerName?: string;
   kioskSessionId?: string;
-  paymentMethod?: "gcash" | "maya" | "counter";
+  paymentMethod?: "counter" | "qrph";
   orderType?: "dine_in" | "take_out";
 }
 
@@ -100,7 +100,7 @@ export async function createOrder(input: CreateOrderInput) {
     input.items.map((item) => ({ qty: item.qty, prepMinutes: productById.get(item.productId)!.prepMinutes })),
     await countOrdersInKitchen()
   );
-  // Without PayMongo, GCash and Maya can't be paid, so such an order is a counter order
+  // Without PayMongo, QR Ph can't be paid, so such an order is a counter order
   // from the start and the payment queue labels it that way (UI review #2).
   const paymentMethod = input.paymentMethod && input.paymentMethod !== "counter" && !isPaymongoConfigured() ? "counter" : input.paymentMethod;
 

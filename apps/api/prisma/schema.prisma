@@ -34,10 +34,13 @@ enum OrderType {
   @@map("order_type")
 }
 
+// Online payment is QR Ph through PayMongo. gcash and maya are no longer offered; they
+// stay in the list only so orders recorded with them before still read correctly.
 enum PaymentMethod {
   gcash
   maya
   counter
+  qrph
 
   @@map("payment_method")
 }

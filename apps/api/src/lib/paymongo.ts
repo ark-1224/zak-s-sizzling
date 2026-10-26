@@ -8,7 +8,7 @@ export class PaymongoNotConfiguredError extends Error {
   }
 }
 
-/** GCash and Maya work only once the server has a PayMongo secret key. */
+/** QR Ph works only once the server has a PayMongo secret key. */
 export function isPaymongoConfigured(): boolean {
   return Boolean(process.env.PAYMONGO_SECRET_KEY);
 }
@@ -29,7 +29,6 @@ interface CheckoutLineItem {
 interface CreateCheckoutSessionInput {
   orderId: string;
   orderNumber: string;
-  method: "gcash" | "maya";
   amountPhp: number;
   lineItems: { name: string; qty: number; unitPricePhp: number }[];
   successUrl: string;
@@ -41,15 +40,12 @@ interface PaymongoCheckoutSession {
   checkoutUrl: string;
 }
 
-// PayMongo's checkout method id for Maya is "paymaya" (their API predates the Maya
-// rebrand from PayMaya) — mapped here so the rest of the app can just say "maya".
-const METHOD_MAP: Record<"gcash" | "maya", string> = { gcash: "gcash", maya: "paymaya" };
-
 /**
- * Creates a PayMongo hosted Checkout Session scoped to GCash or Maya.
- * NOT yet exercised against a live PayMongo sandbox — this session doesn't have
- * PayMongo credentials. Verify against https://developers.paymongo.com/reference/create-a-checkout-session
- * once PAYMONGO_SECRET_KEY is set, and adjust the payload shape if their API has moved on.
+ * Creates a PayMongo hosted Checkout Session for QR Ph, the one online payment method:
+ * the customer scans the QR code with any bank or e-wallet app (GCash and Maya included).
+ * NOT yet exercised against the PayMongo sandbox. Verify against
+ * https://docs.paymongo.com/reference/checkout-session-resource once PAYMONGO_SECRET_KEY is
+ * set, and adjust the payload shape if their API has moved on.
  */
 export async function createCheckoutSession(input: CreateCheckoutSessionInput): Promise<PaymongoCheckoutSession> {
   const lineItems: CheckoutLineItem[] = input.lineItems.map((li) => ({
@@ -66,7 +62,7 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
       data: {
         attributes: {
           line_items: lineItems,
-          payment_method_types: [METHOD_MAP[input.method]],
+          payment_method_types: ["qrph"],
           description: `Zak's Sizzling Hub order ${input.orderNumber}`,
           reference_number: input.orderId,
           success_url: input.successUrl,

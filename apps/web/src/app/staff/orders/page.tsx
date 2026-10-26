@@ -17,11 +17,11 @@ import type { OrderDTO } from "@zaks/shared-types";
 // Each order shows how long ago it was placed, and the list can be searched by order
 // number (the customer reads it off their receipt screen). An abandoned unpaid order
 // can be cancelled, after a second click to make sure (UI review #15).
-const ONLINE_LABEL: Record<string, string> = { gcash: "GCash", maya: "Maya" };
+const ONLINE_LABEL: Record<string, string> = { qrph: "QR Ph", gcash: "GCash", maya: "Maya" }; // GCash, Maya: older orders
 
 /**
- * The customer pays at the counter unless an online payment was started: a GCash or
- * Maya order with no PayMongo reference never reached the payment page (for example,
+ * The customer pays at the counter unless an online payment was started: a QR Ph
+ * order with no PayMongo reference never reached the payment page (for example,
  * online payment wasn't set up), so it's labelled a counter order (UI review #2).
  */
 function paymentLabel(order: OrderDTO): { method: string; note?: string } {

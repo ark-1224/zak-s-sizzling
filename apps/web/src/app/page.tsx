@@ -57,7 +57,7 @@ export default function KioskHomePage() {
     });
   }, []);
 
-  // The welcome screen only mentions GCash and Maya once online payment is really set up.
+  // The welcome screen only mentions QR Ph once online payment is really set up.
   useEffect(() => {
     let cancelled = false;
     apiFetch<PaymentOptions>("/api/payments/options")

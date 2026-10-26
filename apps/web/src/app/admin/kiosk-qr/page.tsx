@@ -173,7 +173,7 @@ export default function KioskQrPage() {
               <b>2.</b> Choose your meal on the menu that opens.
             </li>
             <li>
-              <b>3.</b> Pay at the counter, or online with GCash or Maya.
+              <b>3.</b> Pay at the counter, or online with QR Ph.
             </li>
           </ol>
           {shownQr && <div className="font-adm-mono max-w-full text-[12px] break-all text-[#5a5750]">{shownQr.url}</div>}

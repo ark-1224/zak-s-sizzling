@@ -24,6 +24,8 @@ const PRINT_MESSAGE: Record<PrintStatus, string> = {
 };
 
 const METHOD_LABEL: Record<string, string> = {
+  qrph: "QR Ph",
+  // Older orders only.
   gcash: "GCash",
   maya: "Maya",
   counter: "Pay at counter",

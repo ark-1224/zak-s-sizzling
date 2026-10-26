@@ -10,7 +10,7 @@ import { SizzlingPlate } from "./SizzlingPlate";
 // product has a photo, the first one takes its place.
 interface WelcomeScreenProps {
   onStart: () => void;
-  /** Online payment (GCash, Maya) is set up; null while still checking. */
+  /** Online payment (QR Ph) is set up; null while still checking. */
   onlinePayments: boolean | null;
   featuredPhoto: { imageUrl: string; name: string } | null;
 }
@@ -68,8 +68,8 @@ export function WelcomeScreen({ onStart, onlinePayments, featuredPhoto }: Welcom
           </span>
           {onlinePayments && (
             <span className="flex items-center gap-2">
-              <Icon name="phone" className="h-5 w-5 text-honey" />
-              GCash · Maya
+              <Icon name="qr" className="h-5 w-5 text-honey" />
+              QR Ph
             </span>
           )}
         </span>

@@ -21,8 +21,7 @@ import { aboutMinutes } from "@/lib/prepTime";
 
 const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string }[] = [
   { id: "counter", label: "Pay at counter", icon: "cash", blurb: "Cash or card with staff" },
-  { id: "gcash", label: "GCash", icon: "phone", blurb: "Pay online via GCash" },
-  { id: "maya", label: "Maya", icon: "phone", blurb: "Pay online via Maya" },
+  { id: "qrph", label: "QR Ph", icon: "qr", blurb: "Scan with any bank or e-wallet app" },
 ];
 
 // New in Sprint 3 — kiosk.html's checkout was a stub; this replaces it with a real
@@ -35,7 +34,8 @@ const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string
 // goes with the order; an order saved on the device without that choice (left from before
 // it was asked) is sent back to the kiosk home page to choose it.
 //
-// GCash and Maya stay greyed out until the server confirms online payment is set up
+// QR Ph (the one online method, through PayMongo) stays greyed out until the server
+// confirms online payment is set up
 // (GET /api/payments/options), so a customer can't pick a method that can't work
 // (UI review #2).
 export default function CheckoutPage() {
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
             <h2 id="payment-heading" className="font-display text-2xl font-extrabold text-matcha-deep">
               How would you like to pay?
             </h2>
-            <div role="radiogroup" aria-labelledby="payment-heading" className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <div role="radiogroup" aria-labelledby="payment-heading" className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {METHODS.map((m) => {
                 const unavailable = m.id !== "counter" && onlineAvailable !== true;
                 const selected = method === m.id && !unavailable;

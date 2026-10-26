@@ -82,7 +82,8 @@ export interface PrepEstimate {
 export type OrderStatus = "pending" | "confirmed" | "preparing" | "ready" | "completed" | "cancelled";
 /** Where the customer eats, chosen on the kiosk right after the welcome screen. */
 export type OrderType = "dine_in" | "take_out";
-export type PaymentMethod = "gcash" | "maya" | "counter";
+/** "gcash" and "maya" appear only on older orders; new orders use "counter" or "qrph". */
+export type PaymentMethod = "counter" | "qrph" | "gcash" | "maya";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
 export interface OrderItemDTO {
@@ -98,7 +99,7 @@ export interface OrderItemDTO {
 
 /** Which payment methods the kiosk can offer right now (GET /api/payments/options). */
 export interface PaymentOptions {
-  /** False until PayMongo is configured on the server: GCash and Maya can't be used yet. */
+  /** False until PayMongo is configured on the server: QR Ph can't be used yet. */
   online: boolean;
 }
 

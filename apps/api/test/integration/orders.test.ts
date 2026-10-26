@@ -312,7 +312,7 @@ describe("cancelling an unpaid order (UI review #15)", () => {
   });
 
   it("refuses to start an online payment for it", async () => {
-    const res = await request(app).post("/api/payments/intent").set(auth(customer)).send({ orderId, method: "gcash" });
+    const res = await request(app).post("/api/payments/intent").set(auth(customer)).send({ orderId, method: "qrph" });
 
     expect(res.status).toBe(409);
   });

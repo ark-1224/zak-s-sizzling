@@ -5,7 +5,7 @@ import { prisma } from "../../src/lib/prisma";
 import { PRODUCTS } from "./fixtures";
 import { app, kioskToken, loginAs } from "./helpers";
 
-// GCash/Maya checkout through PayMongo. The webhook is exercised with requests signed
+// QR Ph checkout through PayMongo. The webhook is exercised with requests signed
 // using a test secret, the same way PayMongo signs them. PayMongo itself is never
 // contacted. Uses Test Soda, which no other test file touches.
 
@@ -29,7 +29,7 @@ afterAll(() => {
 const soda = PRODUCTS.soda;
 const sodaStock = async () => (await prisma.inventory.findUniqueOrThrow({ where: { productId: soda.id } })).stockQty;
 
-// The API only checks that a PayMongo key is present before offering GCash and Maya;
+// The API only checks that a PayMongo key is present before offering QR Ph;
 // PayMongo itself is never called with it.
 const FAKE_SECRET_KEY = "sk_test_not_a_real_key";
 async function withPaymongoKey<T>(fn: () => Promise<T>): Promise<T> {
@@ -44,9 +44,9 @@ async function withPaymongoKey<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 const postOrder = (qty: number) =>
-  request(app).post("/api/orders").set("Authorization", `Bearer ${customer}`).send({ items: [{ productId: soda.id, qty }], paymentMethod: "gcash" });
-/** A customer chose GCash while online payment was set up. */
-const placeGcashOrder = async (qty: number) => (await withPaymongoKey(() => postOrder(qty))).body;
+  request(app).post("/api/orders").set("Authorization", `Bearer ${customer}`).send({ items: [{ productId: soda.id, qty }], paymentMethod: "qrph" });
+/** A customer chose QR Ph while online payment was set up. */
+const placeQrphOrder = async (qty: number) => (await withPaymongoKey(() => postOrder(qty))).body;
 
 function paidEvent(orderId: string, type = "checkout_session.payment.paid") {
   return JSON.stringify({ data: { attributes: { type, data: { attributes: { reference_number: orderId } } } } });
@@ -67,25 +67,35 @@ const postWebhook = (body: string, signature?: string) => {
 
 describe("starting an online payment", () => {
   it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("explains that online payment isn't set up yet when PayMongo has no key", async () => {
-    const order = await placeGcashOrder(1);
+    const order = await placeQrphOrder(1);
 
-    const res = await request(app).post("/api/payments/intent").set("Authorization", `Bearer ${customer}`).send({ orderId: order.id, method: "gcash" });
+    const res = await request(app).post("/api/payments/intent").set("Authorization", `Bearer ${customer}`).send({ orderId: order.id, method: "qrph" });
 
     expect(res.status).toBe(501);
     expect(res.body.error).toMatch(/Online payment isn't configured yet/);
   });
 
   it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("turns that order into a counter order, still unpaid, so staff see it as one", async () => {
-    const order = await placeGcashOrder(1);
-    expect(order.payment.method).toBe("gcash");
+    const order = await placeQrphOrder(1);
+    expect(order.payment.method).toBe("qrph");
 
-    await request(app).post("/api/payments/intent").set("Authorization", `Bearer ${customer}`).send({ orderId: order.id, method: "gcash" });
+    await request(app).post("/api/payments/intent").set("Authorization", `Bearer ${customer}`).send({ orderId: order.id, method: "qrph" });
 
     expect(await prisma.payment.findUniqueOrThrow({ where: { orderId: order.id } })).toMatchObject({ method: "counter", status: "pending" });
   });
 
+  it("no longer accepts GCash or Maya for a new order", async () => {
+    for (const paymentMethod of ["gcash", "maya"]) {
+      const res = await request(app)
+        .post("/api/orders")
+        .set("Authorization", `Bearer ${customer}`)
+        .send({ items: [{ productId: soda.id, qty: 1 }], paymentMethod });
+      expect(res.status).toBe(400);
+    }
+  });
+
   it("rejects an unsupported payment method", async () => {
-    const order = await placeGcashOrder(1);
+    const order = await placeQrphOrder(1);
 
     const res = await request(app).post("/api/payments/intent").set("Authorization", `Bearer ${customer}`).send({ orderId: order.id, method: "counter" });
 
@@ -119,7 +129,7 @@ describe("PayMongo webhook security", () => {
   // Regression test for defect D-03: a test-mode header has `li=` present but empty,
   // which used to make the check compare against "" and reject every sandbox webhook.
   it("accepts a test-mode (sandbox) signature", async () => {
-    const order = await placeGcashOrder(1);
+    const order = await placeQrphOrder(1);
     const body = paidEvent(order.id, "checkout_session.expired"); // accepted but changes nothing
 
     const res = await postWebhook(body, sign(body, { mode: "test" }));
@@ -128,7 +138,7 @@ describe("PayMongo webhook security", () => {
   });
 
   it("rejects a body that was changed after signing", async () => {
-    const order = await placeGcashOrder(1);
+    const order = await placeQrphOrder(1);
     const signature = sign(paidEvent(order.id));
 
     const res = await postWebhook(paidEvent(order.id, "checkout_session.payment.failed"), signature);
@@ -141,7 +151,7 @@ describe("a paid online order", () => {
   let order: { id: string };
 
   beforeAll(async () => {
-    order = await placeGcashOrder(2);
+    order = await placeQrphOrder(2);
   });
 
   it("ignores events that are not payments", async () => {
@@ -162,7 +172,7 @@ describe("a paid online order", () => {
     expect(res.status).toBe(200);
     const saved = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
     expect(saved.status).toBe("confirmed");
-    expect(saved.payment).toMatchObject({ method: "gcash", status: "paid" });
+    expect(saved.payment).toMatchObject({ method: "qrph", status: "paid" });
     expect(await sodaStock()).toBe(before - 2);
     expect(await prisma.kitchenTask.count({ where: { orderItem: { orderId: order.id } } })).toBe(1);
   });
@@ -184,7 +194,7 @@ describe("an online order paid after stock ran out", () => {
 
   beforeAll(async () => {
     await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 3 } });
-    order = await placeGcashOrder(3);
+    order = await placeQrphOrder(3);
     // Stock drops before PayMongo confirms the payment (another sale, a spoilage count).
     await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 1 } });
   });
@@ -217,7 +227,7 @@ describe("an online order cancelled before the payment arrived", () => {
 
   beforeAll(async () => {
     await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 5 } });
-    order = await placeGcashOrder(1);
+    order = await placeQrphOrder(1);
     // Staff cancel it while the customer is still on PayMongo's page.
     await request(app).post(`/api/orders/${order.id}/cancel`).set("Authorization", `Bearer ${staff}`);
   });
@@ -254,7 +264,7 @@ describe("which payment methods the kiosk offers (UI review #2)", () => {
     expect(await withPaymongoKey(options)).toEqual({ online: true });
   });
 
-  it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("records a GCash order as a counter order while online payment isn't set up", async () => {
+  it.skipIf(Boolean(process.env.PAYMONGO_SECRET_KEY))("records a QR Ph order as a counter order while online payment isn't set up", async () => {
     const res = await postOrder(1);
 
     expect(res.status).toBe(201);

@@ -128,7 +128,7 @@ describe("starting an online payment", () => {
       request(app)
         .post("/api/payments/intent")
         .set("Authorization", `Bearer ${session}`)
-        .send({ orderId: "99999999-9999-4999-8999-999999999999", method: "gcash" });
+        .send({ orderId: "99999999-9999-4999-8999-999999999999", method: "qrph" });
     // Any answer counts toward the limit: these find no such order.
     for (let i = 0; i < 2; i++) expect((await start()).status).toBe(404);
 

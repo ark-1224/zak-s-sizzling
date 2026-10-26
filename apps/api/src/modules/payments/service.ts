@@ -43,7 +43,7 @@ function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSes
   });
 }
 
-export async function createGatewayPaymentIntent(orderId: string, method: "gcash" | "maya", webOrigin: string) {
+export async function createGatewayPaymentIntent(orderId: string, method: "qrph", webOrigin: string) {
   const order = await loadPayableOrder(orderId);
   if (!isPaymongoConfigured()) {
     // The kiosk falls back to "Pay at counter" on this error, so record the order as a
@@ -59,7 +59,6 @@ export async function createGatewayPaymentIntent(orderId: string, method: "gcash
   const session = await createCheckoutSession({
     orderId: order.id,
     orderNumber: order.orderNumber,
-    method,
     amountPhp: Number(order.totalAmount),
     lineItems: order.items.map((i) => ({ name: i.product.name, qty: i.qty, unitPricePhp: Number(i.unitPrice) })),
     successUrl: `${webOrigin}/checkout/success?order=${order.id}`,
@@ -165,7 +164,7 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
   if (!order) return;
 
   // createGatewayPaymentIntent always creates the pending payment row (with the real
-  // gcash/maya method) before the customer ever reaches PayMongo's hosted checkout, so
+  // qrph method) before the customer ever reaches PayMongo's hosted checkout, so
   // a webhook arriving with no existing row would mean something upstream is broken —
   // bail rather than synthesize a method we don't actually know.
   if (!order.payment) {
@@ -174,7 +173,7 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
   }
 
   // Deliberately doesn't touch `method` on update — the existing row already has the
-  // correct gcash/maya value from checkout-intent time.
+  // correct qrph value from checkout-intent time.
   const paymentUpdate = { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")) };
   const paymentCreate = { method: order.payment.method, paidAt: new Date() };
 

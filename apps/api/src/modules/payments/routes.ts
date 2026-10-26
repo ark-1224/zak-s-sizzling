@@ -12,13 +12,13 @@ import type { PaymentOptions } from "@zaks/shared-types";
 
 export const paymentsRouter = Router();
 
-// Public, so the kiosk can grey out GCash and Maya before anyone picks them (UI review #2).
+// Public, so the kiosk can grey out QR Ph before anyone picks it (UI review #2).
 paymentsRouter.get("/options", (_req, res) => {
   const options: PaymentOptions = { online: isPaymongoConfigured() };
   res.json(options);
 });
 
-// GCash/Maya via PayMongo — see apps/api/src/lib/paymongo.ts. Returns 501 with a clear
+// QR Ph via PayMongo — see apps/api/src/lib/paymongo.ts. Returns 501 with a clear
 // message until PAYMONGO_SECRET_KEY is configured, so the kiosk can fall back to
 // "Pay at counter" instead of the checkout flow silently breaking.
 paymentsRouter.post("/intent", authenticate, paymentStartAddressLimit, paymentStartLimit, async (req, res, next) => {
