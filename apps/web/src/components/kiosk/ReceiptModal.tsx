@@ -18,9 +18,8 @@ interface ReceiptModalProps {
 }
 
 const PRINT_MESSAGE: Record<PrintStatus, string> = {
-  printing: "Printing your receipt and kitchen copy…",
-  // Two slips print: the customer's receipt and the kitchen copy (print-service/).
-  printed: "Take both slips below: keep your receipt and give the kitchen copy to the counter.",
+  printing: "Printing your receipt…",
+  printed: "Take your printed receipt below.",
   failed: "We couldn't print your receipt. Please show this screen at the counter.",
 };
 

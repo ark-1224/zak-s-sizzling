@@ -1,8 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
+import {
+  hasPrinter,
+  loadPrintedKitchenOrders,
+  printKitchenTicket,
+  rememberPrintedKitchenOrders,
+  rememberPrinterSetting,
+} from "@/lib/receiptPrinter";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { clockTime, dueIn } from "@/lib/prepTime";
 import type { KitchenTaskDTO, OrderType } from "@zaks/shared-types";
@@ -13,6 +20,15 @@ import type { KitchenTaskDTO, OrderType } from "@zaks/shared-types";
 // Pending → In-Progress → Completed control.
 const STATUS_LABEL = { pending: "Pending", in_progress: "In Progress", completed: "Completed" } as const;
 const NEXT_STATUS = { pending: "in_progress", in_progress: "completed" } as const;
+const TICKET_FAILED = "Couldn't print the kitchen ticket for";
+
+// The printer setting lives in this device's storage; it only changes through the address
+// (?printer=1 / ?printer=0), so there is nothing to subscribe to.
+const noSubscription = () => () => {};
+function kitchenPrinterOn() {
+  rememberPrinterSetting("kitchen");
+  return hasPrinter("kitchen");
+}
 
 export default function KitchenPage() {
   const [tasks, setTasks] = useState<KitchenTaskDTO[]>([]);
@@ -98,11 +114,45 @@ export default function KitchenPage() {
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   }, [tasks]);
 
+  // Kitchen tickets: on the device with the kitchen printer (this page opened once with
+  // ?printer=1), each order prints a ticket with its number and dishes when it first
+  // appears here, which is once it's paid. A failed ticket is tried again with the next
+  // update or the 30-second tick.
+  const ticketPrinter = useSyncExternalStore(noSubscription, kitchenPrinterOn, () => false);
+  const printingNow = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!ticketPrinter || !loaded) return;
+    const printed = loadPrintedKitchenOrders();
+    if (printed === null) {
+      // The printer was only just switched on: orders already on screen aren't printed.
+      rememberPrintedKitchenOrders(orders.map((order) => order.orderId));
+      return;
+    }
+    for (const order of orders) {
+      if (printed.has(order.orderId) || printingNow.current.has(order.orderId)) continue;
+      printingNow.current.add(order.orderId);
+      printKitchenTicket({
+        orderNumber: order.orderNumber,
+        items: order.tasks.map((task) => ({ qty: task.qty, name: task.productName, note: task.specialInstructions })),
+      }).then((ok) => {
+        printingNow.current.delete(order.orderId);
+        if (ok) {
+          rememberPrintedKitchenOrders([order.orderId]);
+          setMessage((current) => (current?.startsWith(TICKET_FAILED) ? null : current));
+        } else {
+          setMessage(`${TICKET_FAILED} ${order.orderNumber}. Check the kitchen printer; it will try again.`);
+        }
+      });
+    }
+  }, [ticketPrinter, loaded, orders, now]);
+
   return (
     <div className="rounded-[6px] bg-ink p-4 text-cream md:p-6">
       <h1 className="font-display mb-1 text-2xl font-semibold">Kitchen Display</h1>
       <p className="mb-4 text-base text-cream/70 md:mb-6 md:text-sm">
         {loaded ? `${orders.length} active order${orders.length !== 1 ? "s" : ""}` : "\u00a0"}
+        {ticketPrinter && " \u00b7 Ticket printer on"}
       </p>
 
       {loadError && (
