@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
-import { createCheckoutSession, isPaymongoConfigured, parseWebhookEvent, PaymongoNotConfiguredError, verifyWebhookSignature } from "../../lib/paymongo";
+import { createQrPhCode, getPaymentIntent, isPaymongoConfigured, parseWebhookEvent, PaymongoNotConfiguredError, verifyWebhookSignature } from "../../lib/paymongo";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
@@ -43,7 +43,12 @@ function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSes
   });
 }
 
-export async function createGatewayPaymentIntent(orderId: string, method: "qrph", webOrigin: string) {
+/**
+ * Starts (or restarts, after a code expires) a QR Ph payment: asks PayMongo for a QR code
+ * and records the payment as pending, with the Payment Intent as its reference. The kiosk
+ * shows the code on its own screen.
+ */
+export async function createQrPhPayment(orderId: string) {
   const order = await loadPayableOrder(orderId);
   if (!isPaymongoConfigured()) {
     // The kiosk falls back to "Pay at counter" on this error, so record the order as a
@@ -56,22 +61,48 @@ export async function createGatewayPaymentIntent(orderId: string, method: "qrph"
     throw new PaymongoNotConfiguredError();
   }
 
-  const session = await createCheckoutSession({
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    amountPhp: Number(order.totalAmount),
-    lineItems: order.items.map((i) => ({ name: i.product.name, qty: i.qty, unitPricePhp: Number(i.unitPrice) })),
-    successUrl: `${webOrigin}/checkout/success?order=${order.id}`,
-    cancelUrl: `${webOrigin}/checkout?order=${order.id}&cancelled=1`,
-  });
+  const code = await createQrPhCode({ orderId: order.id, orderNumber: order.orderNumber, amountPhp: Number(order.totalAmount) });
 
   await prisma.payment.upsert({
     where: { orderId: order.id },
-    update: { method, status: "pending", amount: order.totalAmount, reference: session.id },
-    create: { orderId: order.id, method, status: "pending", amount: order.totalAmount, reference: session.id },
+    update: { method: "qrph", status: "pending", amount: order.totalAmount, reference: code.paymentIntentId },
+    create: { orderId: order.id, method: "qrph", status: "pending", amount: order.totalAmount, reference: code.paymentIntentId },
   });
 
-  return { checkoutUrl: session.checkoutUrl };
+  return { imageUrl: code.imageUrl, expiresAt: code.expiresAt, testUrl: code.testUrl };
+}
+
+/**
+ * The kiosk asks this every few seconds while the QR code is on screen. If the payment
+ * isn't recorded yet, it asks PayMongo whether the Payment Intent has succeeded, and if
+ * so records it exactly as the webhook would (whichever comes first wins; the other is a
+ * no-op). Returns the order as it now stands.
+ */
+export async function checkQrPhPayment(orderId: string) {
+  const order = await prisma.order.findUnique({ where: { id: orderId }, include: { payment: true } });
+  if (!order) throw new HttpError(404, "Order not found");
+  const payment = order.payment;
+  if (payment && payment.status !== "paid" && payment.method === "qrph" && payment.reference && isPaymongoConfigured()) {
+    const intent = await getPaymentIntent(payment.reference);
+    const expected = Math.round(Number(order.totalAmount) * 100);
+    if (intent.status === "succeeded" && intent.amountCentavos === expected) {
+      await recordOnlinePayment(order, { paidAt: new Date() }, { method: "qrph", paidAt: new Date() });
+    }
+  }
+  return getOrderById(orderId);
+}
+
+/**
+ * The customer chose to pay at the counter instead of scanning: the order becomes an
+ * ordinary counter order in the staff queue. Refused once the order is paid.
+ */
+export async function switchToCounterPayment(orderId: string) {
+  const order = await loadPayableOrder(orderId);
+  await prisma.payment.updateMany({
+    where: { orderId: order.id, status: { not: "paid" } },
+    data: { method: "counter", reference: null },
+  });
+  return getOrderById(order.id);
 }
 
 /**
@@ -149,34 +180,20 @@ export async function confirmCounterPayment(orderId: string) {
   return getOrderById(order.id);
 }
 
-export async function handleWebhook(rawBody: Buffer, signatureHeader: string | undefined) {
-  if (!verifyWebhookSignature(rawBody, signatureHeader)) {
-    throw new HttpError(401, "Invalid webhook signature");
-  }
+type OrderWithPayment = Prisma.OrderGetPayload<{ include: { payment: true } }>;
 
-  const event = parseWebhookEvent(rawBody);
-  if (!event.orderId || !event.type.includes("paid")) return;
-
-  const order = await prisma.order.findUnique({
-    where: { id: event.orderId },
-    include: { payment: true },
-  });
-  if (!order) return;
-
-  // createGatewayPaymentIntent always creates the pending payment row (with the real
-  // qrph method) before the customer ever reaches PayMongo's hosted checkout, so
-  // a webhook arriving with no existing row would mean something upstream is broken —
-  // bail rather than synthesize a method we don't actually know.
-  if (!order.payment) {
-    console.error(`[payments] webhook for order ${order.id} has no existing payment record — ignoring`);
-    return;
-  }
-
-  // Deliberately doesn't touch `method` on update — the existing row already has the
-  // correct qrph value from checkout-intent time.
-  const paymentUpdate = { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")) };
-  const paymentCreate = { method: order.payment.method, paidAt: new Date() };
-
+/**
+ * Records a payment PayMongo has taken: marks it paid, deducts the stock, confirms the
+ * order and sends it to the kitchen, all or nothing. Shared by the webhook and the
+ * kiosk's status check, so whichever arrives first does the work and the other changes
+ * nothing. When the order was cancelled meanwhile, or stock ran out, the money is
+ * recorded but nothing goes to the kitchen, and the order is flagged for staff.
+ */
+async function recordOnlinePayment(
+  order: OrderWithPayment,
+  paymentUpdate: Omit<Prisma.PaymentUpdateManyMutationInput, "status">,
+  paymentCreate: Omit<Prisma.PaymentUncheckedCreateInput, "orderId" | "status" | "amount">
+) {
   try {
     const touched = await prisma.$transaction(async (tx) => {
       const applied = await markPaymentPaidIfNotAlready(tx, order, paymentUpdate, paymentCreate);
@@ -193,9 +210,9 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     emitPaymentConfirmed(order);
   } catch (err) {
     if (err instanceof OrderCancelledError) {
-      // Staff cancelled the order while the customer was still on PayMongo's page. The
-      // money was taken, so record it, deduct nothing, and flag the order so staff refund
-      // the customer (it shows in the payment queue with a stock-issue badge).
+      // Staff cancelled the order while the customer was paying. The money was taken, so
+      // record it, deduct nothing, and flag the order so staff refund the customer (it
+      // shows in the payment queue with a stock-issue badge).
       const applied = await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate);
       if (!applied) return;
       await prisma.order.update({
@@ -207,9 +224,9 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     }
     if (!(err instanceof StockShortageError)) throw err;
 
-    // The customer already paid on PayMongo's page, so this can't be refused like a
-    // counter order. Record the payment, deduct nothing (stock never goes negative),
-    // create no kitchen tasks, and flag the order so staff substitute or refund.
+    // The customer already paid, so this can't be refused like a counter order. Record the
+    // payment, deduct nothing (stock never goes negative), create no kitchen tasks, and
+    // flag the order so staff substitute or refund.
     const applied = await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate);
     if (!applied) return;
     await prisma.order.update({
@@ -219,3 +236,43 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     console.warn(`[payments] order ${order.orderNumber} paid online but stock is short: ${err.message}`);
   }
 }
+
+// payment.paid comes from the QR Ph flow (Payment Intents); checkout_session.payment.paid
+// from PayMongo's hosted checkout, which earlier versions used.
+const PAID_EVENTS = ["payment.paid", "checkout_session.payment.paid"];
+
+export async function handleWebhook(rawBody: Buffer, signatureHeader: string | undefined) {
+  if (!verifyWebhookSignature(rawBody, signatureHeader)) {
+    throw new HttpError(401, "Invalid webhook signature");
+  }
+
+  const event = parseWebhookEvent(rawBody);
+  if (!PAID_EVENTS.includes(event.type)) return;
+
+  // The order is named in the intent's metadata; failing that, find it by the Payment
+  // Intent stored as the payment's reference.
+  const where = event.orderId
+    ? { id: event.orderId }
+    : event.paymentIntentId
+      ? { payment: { reference: event.paymentIntentId } }
+      : null;
+  if (!where) return;
+  const order = await prisma.order.findFirst({ where, include: { payment: true } }).catch(() => null);
+  if (!order) return;
+
+  // A pending payment row always exists before the customer can pay (it is created with
+  // the order), so a webhook with no row means something upstream is broken: bail rather
+  // than synthesize a method we don't actually know.
+  if (!order.payment) {
+    console.error(`[payments] webhook for order ${order.id} has no existing payment record — ignoring`);
+    return;
+  }
+
+  // Deliberately doesn't touch `method` on update: the row already has the right value.
+  await recordOnlinePayment(
+    order,
+    { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")) },
+    { method: order.payment.method, paidAt: new Date() }
+  );
+}
+

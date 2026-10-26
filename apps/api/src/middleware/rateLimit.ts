@@ -186,7 +186,7 @@ export const kioskSessionLimit = rateLimit({
 });
 
 /**
- * Starting an online payment creates a PayMongo checkout session each time, so it is
+ * Starting an online payment creates a PayMongo QR Ph code each time, so it is
  * limited too: 10 starts per kiosk session in 10 minutes (a customer who backs out
  * and tries again a few times stays well under it), and 60 per address.
  */

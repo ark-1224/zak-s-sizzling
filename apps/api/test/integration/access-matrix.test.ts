@@ -47,6 +47,8 @@ const MATRIX: Entry[] = [
   { method: "get", route: "/api/orders/:id", path: `/api/orders/${MISSING}`, expected: SIGNED_IN },
   { method: "get", route: "/api/orders/:id/receipt", path: `/api/orders/${MISSING}/receipt`, expected: SIGNED_IN },
   { method: "post", route: "/api/payments/intent", path: "/api/payments/intent", body: {}, expected: SIGNED_IN },
+  { method: "get", route: "/api/payments/qrph/:orderId", path: `/api/payments/qrph/${MISSING}`, expected: SIGNED_IN },
+  { method: "post", route: "/api/payments/qrph/:orderId/counter", path: `/api/payments/qrph/${MISSING}/counter`, expected: SIGNED_IN },
   { method: "get", route: "/api/users/me", path: "/api/users/me", expected: SIGNED_IN },
 
   // Staff and Administrator: daily operations

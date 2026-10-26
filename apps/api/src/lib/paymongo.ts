@@ -19,68 +19,91 @@ function authHeader(): string {
   return `Basic ${Buffer.from(`${secret}:`).toString("base64")}`;
 }
 
-interface CheckoutLineItem {
-  name: string;
-  amount: number; // centavos
-  quantity: number;
-  currency: "PHP";
+/** How long a QR Ph code can be scanned before it expires (PayMongo allows 60-9000 s). */
+export const QRPH_EXPIRY_SECONDS = 10 * 60;
+
+export interface QrPhCode {
+  paymentIntentId: string;
+  /** The QR code image as a data: URL, ready for an <img>. */
+  imageUrl: string;
+  expiresAt: string;
+  /** Test mode only: PayMongo's page for simulating the customer's payment. */
+  testUrl: string | null;
 }
 
-interface CreateCheckoutSessionInput {
-  orderId: string;
-  orderNumber: string;
-  amountPhp: number;
-  lineItems: { name: string; qty: number; unitPricePhp: number }[];
-  successUrl: string;
-  cancelUrl: string;
+type Resource = { data: { id: string; attributes: Record<string, unknown> } };
+
+async function paymongo<T>(path: string, init: { method: "GET" | "POST"; attributes?: Record<string, unknown> }): Promise<T> {
+  const res = await fetch(`${PAYMONGO_API}${path}`, {
+    method: init.method,
+    headers: { Authorization: authHeader(), "Content-Type": "application/json" },
+    body: init.attributes ? JSON.stringify({ data: { attributes: init.attributes } }) : undefined,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`PayMongo ${init.method} ${path} failed (${res.status}): ${body}`);
+  }
+  return (await res.json()) as T;
 }
 
-interface PaymongoCheckoutSession {
-  id: string;
-  checkoutUrl: string;
+/** The first string found under a key named `key`, anywhere in a JSON value. */
+function findString(value: unknown, key: string): string | null {
+  if (!value || typeof value !== "object") return null;
+  for (const [k, v] of Object.entries(value)) {
+    if (k === key && typeof v === "string") return v;
+    const nested = findString(v, key);
+    if (nested) return nested;
+  }
+  return null;
 }
 
 /**
- * Creates a PayMongo hosted Checkout Session for QR Ph, the one online payment method:
- * the customer scans the QR code with any bank or e-wallet app (GCash and Maya included).
- * NOT yet exercised against the PayMongo sandbox. Verify against
- * https://docs.paymongo.com/reference/checkout-session-resource once PAYMONGO_SECRET_KEY is
- * set, and adjust the payload shape if their API has moved on.
+ * Makes a QR Ph code for an order, shown on the kiosk's own screen: the customer scans it
+ * with any bank or e-wallet app (GCash and Maya included). PayMongo's QR Ph flow is to
+ * create a Payment Intent that allows "qrph", create a "qrph" Payment Method, and attach
+ * it; the attach response carries the QR image (next_action.code.image_url).
+ * https://docs.paymongo.com/docs/payment-acceptance-qr-ph-api
+ *
+ * The order id travels in the intent's metadata so the payment.paid webhook can name the
+ * order, and the intent id is stored as the payment's reference.
  */
-export async function createCheckoutSession(input: CreateCheckoutSessionInput): Promise<PaymongoCheckoutSession> {
-  const lineItems: CheckoutLineItem[] = input.lineItems.map((li) => ({
-    name: li.name,
-    amount: Math.round(li.unitPricePhp * 100),
-    quantity: li.qty,
-    currency: "PHP",
-  }));
-
-  const res = await fetch(`${PAYMONGO_API}/checkout_sessions`, {
+export async function createQrPhCode(input: { orderId: string; orderNumber: string; amountPhp: number }): Promise<QrPhCode> {
+  const intent = await paymongo<Resource>("/payment_intents", {
     method: "POST",
-    headers: { Authorization: authHeader(), "Content-Type": "application/json" },
-    body: JSON.stringify({
-      data: {
-        attributes: {
-          line_items: lineItems,
-          payment_method_types: ["qrph"],
-          description: `Zak's Sizzling Hub order ${input.orderNumber}`,
-          reference_number: input.orderId,
-          success_url: input.successUrl,
-          cancel_url: input.cancelUrl,
-          send_email_receipt: false,
-          show_line_items: true,
-        },
-      },
-    }),
+    attributes: {
+      amount: Math.round(input.amountPhp * 100), // centavos
+      currency: "PHP",
+      payment_method_allowed: ["qrph"],
+      description: `Zak's Sizzling Hub order ${input.orderNumber}`,
+      metadata: { order_id: input.orderId, order_number: input.orderNumber },
+    },
+  });
+  const method = await paymongo<Resource>("/payment_methods", {
+    method: "POST",
+    attributes: { type: "qrph", expiry_seconds: QRPH_EXPIRY_SECONDS },
+  });
+  const attached = await paymongo<Resource>(`/payment_intents/${intent.data.id}/attach`, {
+    method: "POST",
+    attributes: { payment_method: method.data.id, client_key: intent.data.attributes.client_key },
   });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`PayMongo checkout session creation failed (${res.status}): ${body}`);
-  }
+  const imageUrl = findString(attached.data.attributes.next_action, "image_url");
+  if (!imageUrl) throw new Error("PayMongo didn't return a QR Ph code");
+  return {
+    paymentIntentId: intent.data.id,
+    imageUrl: imageUrl.startsWith("data:") ? imageUrl : `data:image/png;base64,${imageUrl}`,
+    expiresAt: new Date(Date.now() + QRPH_EXPIRY_SECONDS * 1000).toISOString(),
+    testUrl: attached.data.attributes.livemode === false ? findString(attached.data.attributes, "test_url") : null,
+  };
+}
 
-  const json = (await res.json()) as { data: { id: string; attributes: { checkout_url: string } } };
-  return { id: json.data.id, checkoutUrl: json.data.attributes.checkout_url };
+/** A Payment Intent's status and amount, to confirm a QR Ph payment without waiting for the webhook. */
+export async function getPaymentIntent(id: string): Promise<{ status: string; amountCentavos: number }> {
+  const json = await paymongo<{ data: { attributes: { status: string; amount: number } } }>(
+    `/payment_intents/${encodeURIComponent(id)}`,
+    { method: "GET" }
+  );
+  return { status: json.data.attributes.status, amountCentavos: json.data.attributes.amount };
 }
 
 /**
@@ -121,15 +144,26 @@ export function verifyWebhookSignature(rawBody: Buffer, signatureHeader: string 
 
 export interface PaymongoWebhookEvent {
   type: string;
+  /** The order, when the event names it (metadata.order_id, or a checkout session's reference_number). */
   orderId: string | null;
+  /** The Payment Intent the event is about, when it says (payment.paid carries payment_intent_id). */
+  paymentIntentId: string | null;
 }
 
 export function parseWebhookEvent(rawBody: Buffer): PaymongoWebhookEvent {
   const json = JSON.parse(rawBody.toString("utf8")) as {
-    data: { attributes: { type: string; data: { attributes: { reference_number?: string } } } };
+    data: {
+      attributes: {
+        type: string;
+        data?: { attributes?: { reference_number?: string; payment_intent_id?: string; metadata?: Record<string, unknown> | null } };
+      };
+    };
   };
+  const resource = json.data.attributes.data?.attributes ?? {};
+  const metadataOrderId = resource.metadata?.order_id;
   return {
     type: json.data.attributes.type,
-    orderId: json.data.attributes.data.attributes.reference_number ?? null,
+    orderId: (typeof metadataOrderId === "string" ? metadataOrderId : null) ?? resource.reference_number ?? null,
+    paymentIntentId: resource.payment_intent_id ?? null,
   };
 }

@@ -10,6 +10,8 @@ interface UseIdleTimerOptions {
   /** Additional inactivity after the prompt appears before auto-resetting the session. */
   resetAfterMs?: number;
   onReset: () => void;
+  /** While true the timer doesn't run (e.g. a QR code waiting to be scanned on a phone). */
+  paused?: boolean;
 }
 
 /**
@@ -17,7 +19,7 @@ interface UseIdleTimerOptions {
  * Timeout" requirement: if the kiosk sits inactive, the session resets — clearing the
  * cart and returning to the default screen — to prevent abandoned carts.
  */
-export function useIdleTimer({ warningAfterMs = 60_000, resetAfterMs = 20_000, onReset }: UseIdleTimerOptions) {
+export function useIdleTimer({ warningAfterMs = 60_000, resetAfterMs = 20_000, onReset, paused = false }: UseIdleTimerOptions) {
   const [showWarning, setShowWarning] = useState(false);
   // Mirrors showWarning for the activity handler to read synchronously — the handler
   // is registered once (empty-deps effect below) so it can't close over fresh state,
@@ -28,6 +30,7 @@ export function useIdleTimer({ warningAfterMs = 60_000, resetAfterMs = 20_000, o
   const onResetRef = useRef(onReset);
   const warningTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pausedRef = useRef(paused);
 
   useEffect(() => {
     onResetRef.current = onReset;
@@ -40,6 +43,7 @@ export function useIdleTimer({ warningAfterMs = 60_000, resetAfterMs = 20_000, o
 
   function scheduleWarning() {
     clearTimers();
+    if (pausedRef.current) return;
     warningTimer.current = setTimeout(() => {
       showWarningRef.current = true;
       setShowWarning(true);
@@ -76,5 +80,14 @@ export function useIdleTimer({ warningAfterMs = 60_000, resetAfterMs = 20_000, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { showWarning, stayActive };
+  // Pausing stops both timers; resuming starts a fresh full wait.
+  useEffect(() => {
+    pausedRef.current = paused;
+    showWarningRef.current = false;
+    scheduleWarning();
+    // scheduleWarning only reads refs, so it is safe to leave out.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused]);
+
+  return { showWarning: showWarning && !paused, stayActive };
 }

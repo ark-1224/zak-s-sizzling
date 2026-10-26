@@ -97,4 +97,15 @@ export const PRODUCTS = {
     tracking: "unit",
     recipe: [],
   },
+  // Used only by qrph-payment.test.ts.
+  juice: {
+    id: "77777777-7777-4777-8777-777777777777",
+    name: "Test Mango Juice",
+    price: "55.00",
+    barcode: null,
+    stockQty: 10,
+    isAvailable: true,
+    tracking: "unit",
+    recipe: [],
+  },
 } as const satisfies Record<string, Fixture>;

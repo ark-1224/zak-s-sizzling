@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { categoryBgColor } from "@/lib/categoryColors";
 import { Icon, type IconName } from "@/components/Icon";
 import { ReceiptModal, type PrintStatus } from "@/components/kiosk/ReceiptModal";
+import { QrPaymentScreen, type QrCode } from "@/components/kiosk/QrPaymentScreen";
 import { hasReceiptPrinter, printReceipt } from "@/lib/receiptPrinter";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
 import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
@@ -50,6 +51,10 @@ export default function CheckoutPage() {
   const [method, setMethod] = useState<PaymentMethod>("counter");
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<OrderDTO | null>(null);
+  // A QR Ph payment in progress: the order and the code on screen. While the code can
+  // still be scanned the idle reset is paused (the customer is busy on their phone).
+  const [qrPayment, setQrPayment] = useState<{ order: OrderDTO; qr: QrCode } | null>(null);
+  const [qrExpired, setQrExpired] = useState(false);
 
   // On the in-store kiosk the receipt also prints on paper, once per order. A failed
   // print doesn't affect the order: the receipt on screen says to show it at the counter.
@@ -121,7 +126,54 @@ export default function CheckoutPage() {
       clearCart();
       window.location.href = "/";
     },
+    paused: qrPayment !== null && !qrExpired,
   });
+
+  /** Asks the API for a QR Ph code for this order (again, after one expires). */
+  async function requestQrCode(order: OrderDTO) {
+    const qr = await apiFetch<QrCode>("/api/payments/intent", {
+      method: "POST",
+      auth: "kiosk",
+      body: JSON.stringify({ orderId: order.id, method: "qrph" }),
+    });
+    setQrExpired(false);
+    setQrPayment({ order, qr });
+  }
+
+  /** Online payment can't go ahead: finish as a counter order, with a message. */
+  function finishAsCounterOrder(order: OrderDTO, message: string) {
+    setQrPayment(null);
+    setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
+    showToast(message);
+  }
+
+  const handleQrPaid = useCallback((order: OrderDTO) => {
+    setQrPayment(null);
+    setPlacedOrder(order);
+  }, []);
+  const handleQrExpired = useCallback(() => setQrExpired(true), []);
+
+  async function handleNewQrCode() {
+    if (!qrPayment) return;
+    try {
+      await requestQrCode(qrPayment.order);
+    } catch (err) {
+      if (err instanceof ApiError && (err.status === 501 || err.status === 429)) finishAsCounterOrder(qrPayment.order, err.message);
+      else showToast(err instanceof ApiError ? err.message : "Couldn't get a new code. Please try again, or pay at the counter.");
+    }
+  }
+
+  async function handlePayAtCounterInstead() {
+    if (!qrPayment) return;
+    try {
+      const order = await apiFetch<OrderDTO>(`/api/payments/qrph/${qrPayment.order.id}/counter`, { method: "POST", auth: "kiosk" });
+      setQrPayment(null);
+      setPlacedOrder(order);
+    } catch (err) {
+      // Most likely it was paid a moment ago; the QR screen's next check shows the receipt.
+      showToast(err instanceof ApiError ? err.message : "Couldn't switch to paying at the counter. Please try again.");
+    }
+  }
 
   async function handlePlaceOrder() {
     if (!orderType) {
@@ -152,31 +204,23 @@ export default function CheckoutPage() {
         return;
       }
 
+      // QR Ph: the order exists from here on, so the cart is emptied whatever happens next.
+      clearCart();
       try {
-        const { checkoutUrl } = await apiFetch<{ checkoutUrl: string }>("/api/payments/intent", {
-          method: "POST",
-          auth: "kiosk",
-          body: JSON.stringify({ orderId: order.id, method: payWith }),
-        });
-        clearCart();
-        window.location.href = checkoutUrl; // hands off to PayMongo's hosted checkout
+        await requestQrCode(order);
       } catch (err) {
         if (err instanceof ApiError && err.status === 501) {
-          // PayMongo isn't configured yet — the order still exists, just unpaid, and the
-          // server has recorded it as a counter order. Show it as one so the kiosk flow
-          // doesn't dead-end.
-          clearCart();
-          setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
-          showToast("Online payment isn't set up yet — please pay at the counter.");
+          // PayMongo isn't configured yet. The server has recorded the order as a counter
+          // order, so show it as one and the kiosk flow doesn't dead-end.
+          finishAsCounterOrder(order, "Online payment isn't set up yet — please pay at the counter.");
         } else if (err instanceof ApiError && err.status === 429) {
-          // Too many payment attempts from this kiosk for now. The order exists, unpaid,
-          // and staff see it as a counter order (its online payment never started), so
-          // finish the same way rather than inviting a second order.
-          clearCart();
-          setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
-          showToast(err.message);
+          // Too many payment attempts from this kiosk for now; finish as a counter order
+          // rather than inviting a second order.
+          finishAsCounterOrder(order, err.message);
         } else {
-          throw err;
+          // Any other failure (PayMongo unreachable, an error from it): the order is placed
+          // and unpaid, so the customer pays at the counter.
+          finishAsCounterOrder(order, "We couldn't show a QR code — please pay at the counter.");
         }
       }
     } catch (err) {
@@ -185,6 +229,22 @@ export default function CheckoutPage() {
     } finally {
       setPlacing(false);
     }
+  }
+
+  if (qrPayment && !placedOrder) {
+    return (
+      <>
+        <QrPaymentScreen
+          order={qrPayment.order}
+          qr={qrPayment.qr}
+          onPaid={handleQrPaid}
+          onExpired={handleQrExpired}
+          onNewCode={handleNewQrCode}
+          onPayAtCounter={handlePayAtCounterInstead}
+        />
+        <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
+      </>
+    );
   }
 
   if (placedOrder) {
