@@ -38,7 +38,15 @@ app.use(cors({ origin: (origin, callback) => callback(null, isAllowedOrigin(orig
 app.use(express.json());
 
 const ORDER_TYPE = { dine_in: "DINE IN", take_out: "TAKE OUT" };
-const peso = (n) => Number(n).toFixed(2);
+const peso = (n) => (Number(n) || 0).toFixed(2);
+const count = (n) => Math.max(0, Math.floor(Number(n) || 0));
+// Text that reaches the printer must not carry control characters: ESC/POS commands are
+// control sequences, and special instructions are typed by customers.
+const clean = (value, maxLength) =>
+  String(value ?? "")
+    .replace(/[\x00-\x1F\x7F]/g, " ")
+    .trim()
+    .slice(0, maxLength);
 const timeOf = (createdAt) =>
   new Date(createdAt || Date.now()).toLocaleString("en-PH", { timeZone: "Asia/Manila" });
 
@@ -61,13 +69,13 @@ function customerReceipt(printer, order) {
   printer.println("ZAK'S SIZZLING HUB");
   printer.bold(false);
   printer.setTextDoubleHeight();
-  printer.println("ORDER #" + order.orderNumber);
+  printer.println("ORDER #" + clean(order.orderNumber, 20));
   printer.setTextNormal();
   if (ORDER_TYPE[order.orderType]) printer.println(ORDER_TYPE[order.orderType]);
   printer.println(timeOf(order.createdAt));
   printer.drawLine();
   printer.alignLeft();
-  order.items.forEach((item) => printer.leftRight(`${item.qty}x ${item.name}`, peso(item.price)));
+  order.items.forEach((item) => printer.leftRight(`${count(item.qty)}x ${clean(item.name, 60)}`, peso(item.price)));
   printer.drawLine();
   printer.bold(true);
   printer.leftRight("TOTAL", peso(order.total));
@@ -83,15 +91,16 @@ function customerReceipt(printer, order) {
 function kitchenTicket(printer, order) {
   printer.alignCenter();
   printer.setTextQuadArea();
-  printer.println("#" + order.orderNumber);
+  printer.println("#" + clean(order.orderNumber, 20));
   printer.setTextNormal();
   printer.drawLine();
   printer.alignLeft();
   order.items.forEach((item) => {
     printer.setTextDoubleHeight();
-    printer.println(`${item.qty} x ${item.name}`);
+    printer.println(`${count(item.qty)} x ${clean(item.name, 60)}`);
     printer.setTextNormal();
-    if (item.note) printer.println(`   > ${item.note}`);
+    const note = clean(item.note, 140); // the API allows 140 characters
+    if (note) printer.println(`   > ${note}`);
   });
   printer.drawLine();
 }

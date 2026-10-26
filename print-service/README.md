@@ -47,7 +47,9 @@ Kitchen ticket, `POST /print/kitchen`:
 ```
 
 `note` (the dish's special instructions) is optional. For both, only `orderNumber` and
-`items` are required. The answer is `{ "ok": true }` once the slip is sent to the
+`items` are required. Text is printed without control characters (ESC/POS printer commands
+are control sequences, and special instructions are typed by customers) and is cut to 20
+characters for the order number, 60 for a dish name and 140 for a note. The answer is `{ "ok": true }` once the slip is sent to the
 printer, or `{ "ok": false, "error": "…" }` with status 400, 403 or 500.
 
 ## Setup on each device
