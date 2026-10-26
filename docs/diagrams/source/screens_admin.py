@@ -189,7 +189,7 @@ def login_page(error):
         f.add_note("The API answers 401 “Invalid email or password” for an unknown email, a suspended account or a wrong password (the same message for all three). Too many failed attempts are rate limited: “Too many failed sign-in attempts. Try again in …”.")
     else:
         f.add_note("Both fields are required. On success the access token and user are stored on the device and the dashboard (11) opens; a background refresh keeps the session alive and re-checks the account.")
-        f.add_note("Staff pages (/admin, /staff, /kitchen) send anyone not signed in back here. On the kiosk site this page doesn't exist (page not found).")
+        f.add_note("Staff pages (/admin, /staff, /kitchen) send anyone not signed in back here, and after signing in return them to that page with its address (e.g. /kitchen?printer=1); signing in directly opens the dashboard. On the kiosk site this page doesn't exist (page not found).")
     return f
 
 

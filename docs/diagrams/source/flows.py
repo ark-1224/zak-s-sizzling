@@ -30,7 +30,7 @@ def login():
     f.n("active", A, 6, "decision", "Active account with this email?")
     f.n("pw", A, 7, "decision", "Password matches?")
     f.n("token", A, 8, "process", "Issue a 15-minute access token and a 7-day refresh cookie")
-    f.n("store", Wb, 9, "process", "Save the token and user on this device; open the dashboard (11)")
+    f.n("store", Wb, 9, "process", "Save the token and user on this device; return to the page first opened, or the dashboard (11)")
     f.n("adminonly", Wb, 10, "decision", "Admin-only page and the user is Staff?")
     f.n("redirect", Wb, 11, "process", "Send to the dashboard (11) instead")
     f.n("page", U, 11, "end", "Sees the page; the sidebar hides admin-only items for Staff")

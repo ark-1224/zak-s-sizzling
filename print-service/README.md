@@ -79,9 +79,10 @@ another Linux computer with Node.js).
 
 4. Switch printing on in the browser of that device, once:
    - on the kiosk's Pi, open the kiosk with `?printer=1` at the end of the address;
-   - on the kitchen device, sign in and open the kitchen display with `?printer=1`, for
-     example `https://zaks-sizzling-hub-admin.up.railway.app/kitchen?printer=1`. The page
-     then shows "Ticket printer on" under its title. Orders already on screen at that
+   - on the kitchen device, open the kitchen display with `?printer=1`:
+     `https://zaks-sizzling-hub-admin.up.railway.app/kitchen?printer=1`. If the login page
+     appears first, sign in; it brings you back to that address. The page then shows
+     "Ticket printer on" under its title. Orders already on screen at that
      moment don't print; every order that arrives after does.
 
    `?printer=0` switches it off again. Only switch it on for one kitchen display, or each
