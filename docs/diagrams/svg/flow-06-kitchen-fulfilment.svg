@@ -1,117 +1,137 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2019" viewBox="0 0 810 2019">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2292" viewBox="0 0 810 2292">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="2019" fill="#ffffff"/>
+<rect x="0" y="0" width="810" height="2292" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 06  Kitchen fulfilment</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
-<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/kitchen/page.tsx, apps/api/src/modules/kitchen/routes.ts,</text>
-<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/kitchen/service.ts, apps/api/src/modules/orders/prepTime.ts (setEstimateOnReachingKitchen)</text>
-<rect x="30" y="122" width="250" height="1622" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
-<rect x="30" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="155.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kitchen staff</text>
-<rect x="280" y="122" width="250" height="1622" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
-<rect x="280" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="405.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kitchen display (web app)</text>
-<rect x="530" y="122" width="250" height="1622" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
-<rect x="530" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
-<path d="M655.0 246.0 L655.0 301.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 366.5 L655.0 421.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 471.0 L655.0 494.5 L405.0 494.5 L405.0 518.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 598.0 L405.0 630.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 710.0 L405.0 723.0 L155.0 723.0 L155.0 736.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M155.0 828.0 L155.0 869.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="158.0" y="831.5" width="53.885" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="161.0" y="843.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Pending</text>
-<path d="M57.0 782.0 L40.0 782.0 L40.0 1068.0 L155.0 1068.0 L155.0 1093.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="42" y="804.5" width="80.10499999999999" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="45" y="816.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">In Progress</text>
-<path d="M253.0 894.0 L557.0 894.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 926.5 L655.0 953.8 L405.0 953.8 L405.0 981.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 1031.0 L405.0 1062.0 L155.0 1062.0 L155.0 1093.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M253.0 1118.0 L557.0 1118.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 1150.5 L655.0 1174.0 L405.0 1174.0 L405.0 1197.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 1262.5 L405.0 1302.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M307.0 1342.0 L290.0 1342.0 L290.0 782.0 L253.0 782.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="260.335" y="1324.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="285" y="1336.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">Yes</text>
-<path d="M405.0 1382.0 L405.0 1429.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="408.0" y="1385.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="411.0" y="1397.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
-<path d="M405.0 1479.0 L405.0 1510.0 L155.0 1510.0 L155.0 1541.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M155.0 1591.0 L155.0 1657.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="557.0" y="198.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="219.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Order is paid (Flow 04 or</text>
-<text x="655.0" y="234.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">05)</text>
-<rect x="557.0" y="301.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="323.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Create one task per dish</text>
-<text x="655.0" y="338.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Pending); set the</text>
-<text x="655.0" y="353.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">estimated ready time once</text>
-<rect x="557.0" y="421.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="443.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send “order:created” to</text>
-<text x="655.0" y="458.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">every open kitchen display</text>
-<rect x="307.0" y="518.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="540.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Reload the queue:</text>
-<text x="405.0" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">unfinished dishes only,</text>
-<text x="405.0" y="570.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">grouped by order, oldest</text>
-<text x="405.0" y="585.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">first</text>
-<polygon points="321.0,630.0 503.0,630.0 489.0,710.0 307.0,710.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="652.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the order cards:</text>
-<text x="405.0" y="667.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number, DINE IN / TAKE</text>
-<text x="405.0" y="682.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">OUT, ready-by time,</text>
-<text x="405.0" y="697.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">dishes (18)</text>
-<polygon points="155.0,736.0 253.0,782.0 155.0,828.0 57.0,782.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="772.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Next dish:</text>
-<text x="155.0" y="786.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Pending or In</text>
-<text x="155.0" y="800.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Progress?</text>
-<rect x="57.0" y="869.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="898.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Press Start preparing</text>
-<rect x="557.0" y="861.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="883.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Set In Progress and the</text>
-<text x="655.0" y="898.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">start time; send</text>
-<text x="655.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“kitchen:task_updated”</text>
-<rect x="307.0" y="981.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1003.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Reload the queue; the dish</text>
-<text x="405.0" y="1018.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">shows In Progress</text>
-<rect x="57.0" y="1093.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1115.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Cook the dish; press Mark</text>
-<text x="155.0" y="1130.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">done</text>
-<rect x="557.0" y="1085.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1107.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Set Completed and the</text>
-<text x="655.0" y="1122.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">finish time; send</text>
-<text x="655.0" y="1137.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“kitchen:task_updated”</text>
-<rect x="307.0" y="1197.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1219.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Reload the queue; the</text>
-<text x="405.0" y="1234.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">finished dish drops off</text>
-<text x="405.0" y="1249.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">its card</text>
-<polygon points="405.0,1302.0 503.0,1342.0 405.0,1382.0 307.0,1342.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1339.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Any dish of this</text>
-<text x="405.0" y="1353.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">order left?</text>
-<rect x="307.0" y="1429.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1451.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">The order&#x27;s card leaves</text>
-<text x="405.0" y="1466.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the display</text>
-<rect x="57.0" y="1541.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="155.0" y="1563.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Call the order number</text>
-<text x="155.0" y="1578.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(outside the system)</text>
-<rect x="57.0" y="1657.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1682.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<text x="30" y="1778" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
-<rect x="30" y="1792" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
-<text x="82" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
-<rect x="182.64" y="1792" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="234.64" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
-<polygon points="363.52,1792 385.52,1805.0 363.52,1818 341.52,1805.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="393.52" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
-<polygon points="483.44,1792 519.44,1792 511.44000000000005,1818 475.44,1818" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="527.44" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
-<rect x="30" y="1830" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<line x1="36" y1="1830" x2="36" y2="1856" stroke="#222222"/><line x1="68" y1="1830" x2="68" y2="1856" stroke="#222222"/>
-<text x="82" y="1847" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
-<rect x="263.76" y="1830" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="315.76" y="1847" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
-<text x="30" y="1894" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="30" y="1914" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• PARTIAL: finishing every dish doesn&#x27;t change the order&#x27;s own status (the database has preparing, ready and</text>
-<text x="30" y="1931" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   completed, but the code never sets them), and nothing in the system tells the customer the order is ready; the</text>
-<text x="30" y="1948" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   receipt says “We&#x27;ll call your order number”.</text>
-<text x="30" y="1965" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress →</text>
-<text x="30" y="1982" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Completed.</text>
+<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/kitchen/page.tsx, apps/web/src/lib/receiptPrinter.ts, print-service/server.js,</text>
+<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/kitchen/routes.ts, apps/api/src/modules/kitchen/service.ts, apps/api/src/modules/orders/prepTime.ts</text>
+<text x="30" y="114" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">(setEstimateOnReachingKitchen)</text>
+<rect x="30" y="137" width="250" height="1846" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="30" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="155.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kitchen staff</text>
+<rect x="280" y="137" width="250" height="1846" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
+<rect x="280" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="405.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kitchen display (web app)</text>
+<rect x="530" y="137" width="250" height="1846" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="530" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="655.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
+<path d="M655.0 261.0 L655.0 316.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 381.5 L655.0 436.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 486.0 L655.0 509.5 L405.0 509.5 L405.0 533.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 613.0 L405.0 645.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 725.0 L405.0 751.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 843.0 L405.0 861.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="408.0" y="846.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="411.0" y="858.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M307.0 797.0 L270.0 797.0 L270.0 1021.0 L253.0 1021.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="282.89" y="779.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="301.0" y="791.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M405.0 956.5 L405.0 965.8 L155.0 965.8 L155.0 975.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M155.0 1067.0 L155.0 1108.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="158.0" y="1070.5" width="53.885" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="161.0" y="1082.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Pending</text>
+<path d="M57.0 1021.0 L40.0 1021.0 L40.0 1307.0 L155.0 1307.0 L155.0 1332.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="42" y="1043.5" width="80.10499999999999" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="45" y="1055.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">In Progress</text>
+<path d="M253.0 1133.0 L557.0 1133.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 1165.5 L655.0 1192.8 L405.0 1192.8 L405.0 1220.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 1270.0 L405.0 1301.0 L155.0 1301.0 L155.0 1332.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M253.0 1357.0 L557.0 1357.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 1389.5 L655.0 1413.0 L405.0 1413.0 L405.0 1436.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 1501.5 L405.0 1541.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M307.0 1581.0 L290.0 1581.0 L290.0 1021.0 L253.0 1021.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="260.335" y="1563.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="285" y="1575.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">Yes</text>
+<path d="M405.0 1621.0 L405.0 1668.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="408.0" y="1624.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="411.0" y="1636.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
+<path d="M405.0 1718.0 L405.0 1749.0 L155.0 1749.0 L155.0 1780.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M155.0 1830.0 L155.0 1896.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="557.0" y="213.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="234.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Order is paid (Flow 04 or</text>
+<text x="655.0" y="249.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">05)</text>
+<rect x="557.0" y="316.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="338.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Create one task per dish</text>
+<text x="655.0" y="353.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Pending); set the</text>
+<text x="655.0" y="368.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">estimated ready time once</text>
+<rect x="557.0" y="436.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="458.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send “order:created” to</text>
+<text x="655.0" y="473.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">every open kitchen display</text>
+<rect x="307.0" y="533.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Reload the queue:</text>
+<text x="405.0" y="570.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">unfinished dishes only,</text>
+<text x="405.0" y="585.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">grouped by order, oldest</text>
+<text x="405.0" y="600.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">first</text>
+<polygon points="321.0,645.0 503.0,645.0 489.0,725.0 307.0,725.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="667.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the order cards:</text>
+<text x="405.0" y="682.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number, DINE IN / TAKE</text>
+<text x="405.0" y="697.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">OUT, ready-by time,</text>
+<text x="405.0" y="712.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">dishes (18)</text>
+<polygon points="405.0,751.0 503.0,797.0 405.0,843.0 307.0,797.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="787.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Kitchen printer</text>
+<text x="405.0" y="801.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">here, ticket not</text>
+<text x="405.0" y="815.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">printed yet?</text>
+<rect x="307.0" y="861.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="883.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send the ticket to the</text>
+<text x="405.0" y="898.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">print service: order</text>
+<text x="405.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number and dishes; it</text>
+<text x="405.0" y="928.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">prints on the kitchen</text>
+<text x="405.0" y="943.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">printer</text>
+<polygon points="155.0,975.0 253.0,1021.0 155.0,1067.0 57.0,1021.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1011.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Next dish:</text>
+<text x="155.0" y="1025.1399999999999" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Pending or In</text>
+<text x="155.0" y="1039.1399999999999" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Progress?</text>
+<rect x="57.0" y="1108.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1137.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Press Start preparing</text>
+<rect x="557.0" y="1100.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1122.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Set In Progress and the</text>
+<text x="655.0" y="1137.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">start time; send</text>
+<text x="655.0" y="1152.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“kitchen:task_updated”</text>
+<rect x="307.0" y="1220.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1242.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Reload the queue; the dish</text>
+<text x="405.0" y="1257.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">shows In Progress</text>
+<rect x="57.0" y="1332.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1354.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Cook the dish; press Mark</text>
+<text x="155.0" y="1369.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">done</text>
+<rect x="557.0" y="1324.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1346.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Set Completed and the</text>
+<text x="655.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">finish time; send</text>
+<text x="655.0" y="1376.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“kitchen:task_updated”</text>
+<rect x="307.0" y="1436.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1458.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Reload the queue; the</text>
+<text x="405.0" y="1473.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">finished dish drops off</text>
+<text x="405.0" y="1488.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">its card</text>
+<polygon points="405.0,1541.0 503.0,1581.0 405.0,1621.0 307.0,1581.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1578.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Any dish of this</text>
+<text x="405.0" y="1592.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">order left?</text>
+<rect x="307.0" y="1668.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1690.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">The order&#x27;s card leaves</text>
+<text x="405.0" y="1705.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the display</text>
+<rect x="57.0" y="1780.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="155.0" y="1802.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Call the order number</text>
+<text x="155.0" y="1817.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(outside the system)</text>
+<rect x="57.0" y="1896.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1921.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<text x="30" y="2017" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
+<rect x="30" y="2031" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
+<text x="82" y="2048" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
+<rect x="182.64" y="2031" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="234.64" y="2048" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
+<polygon points="363.52,2031 385.52,2044.0 363.52,2057 341.52,2044.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="393.52" y="2048" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
+<polygon points="483.44,2031 519.44,2031 511.44000000000005,2057 475.44,2057" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="527.44" y="2048" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
+<rect x="30" y="2069" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<line x1="36" y1="2069" x2="36" y2="2095" stroke="#222222"/><line x1="68" y1="2069" x2="68" y2="2095" stroke="#222222"/>
+<text x="82" y="2086" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
+<rect x="263.76" y="2069" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="315.76" y="2086" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
+<text x="30" y="2133" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="30" y="2153" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• PARTIAL: finishing every dish doesn&#x27;t change the order&#x27;s own status (the database has preparing, ready and</text>
+<text x="30" y="2170" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   completed, but the code never sets them), and nothing in the system tells the customer the order is ready; the</text>
+<text x="30" y="2187" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   receipt says “We&#x27;ll call your order number”.</text>
+<text x="30" y="2204" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress →</text>
+<text x="30" y="2221" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Completed.</text>
+<text x="30" y="2238" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing</text>
+<text x="30" y="2255" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   fails the display says so and tries again with the next update or within 30 seconds.</text>
 </svg>

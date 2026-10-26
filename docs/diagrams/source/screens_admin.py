@@ -670,6 +670,7 @@ def kitchen_page(empty):
                 f.btn(x + 26, ty + 56, cw - 52, 34, "Start preparing" if status == "pending" else "Mark done", kind="primary", r=17)
             ty += 108
     f.add_note("Only paid orders appear (a counter order after staff confirm it, an online order after the payment arrives), oldest first, one card per order with one row per dish. Updates live (order:created, kitchen:task_updated).")
+    f.add_note("On the kitchen's own device (opened once with ?printer=1, shown as “· Ticket printer on” after the order count) each order prints a kitchen ticket when it first appears: the order number and the dishes with special instructions, through print-service/. Each order prints once; a failed ticket shows “Couldn't print the kitchen ticket for ZK-XXXXXX …” and is tried again.")
     f.add_note("Each dish goes Pending → Start preparing → In Progress → Mark done. The queue only returns unfinished dishes, so a dish marked done drops off its card and the card goes when its last dish is done. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.")
     f.add_note("PARTIAL: finishing every dish doesn't change the order's own status (the database has preparing / ready / completed, but the code never sets them), and nothing tells the customer the order is ready.")
     return f

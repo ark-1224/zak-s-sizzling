@@ -142,8 +142,9 @@ def main():
         "- **Orders awaiting payment** doesn't refresh by itself when an order is placed or paid; the server sends `payment:confirmed`, but no page listens (19).",
         "- **Low-stock emails** need email set up for the worker (Resend or SMTP); without it alerts wait in the database (flow 07).",
         "- **No custom “page not found”**: staff pages on the kiosk site show Next.js's default 404, so it has no wireframe.",
-        "- **Receipt printing** works only on the kiosk's Raspberry Pi, through `print-service/` (opened once with `?printer=1`); "
-        "each order prints a customer receipt and a kitchen copy (08, flow 03). Phones opened from the QR code don't print.",
+        "- **Printing** needs `print-service/` running next to each printer, switched on once per device with `?printer=1`: "
+        "the kiosk's Raspberry Pi prints the customer receipt (08, flow 03), and the kitchen display's device prints a kitchen ticket "
+        "with the order number and dishes once the order is paid (18, flow 06). Phones opened from the QR code don't print.",
         "",
         "## Rebuilding",
         "",

@@ -129,10 +129,11 @@ def online_payment():
 def kitchen():
     f = Flow("kitchen-fulfilment", "06", "Kitchen fulfilment",
              ["Kitchen staff", "Kitchen display (web app)", "API server"],
-             W + "app/kitchen/page.tsx, " + API + "kitchen/routes.ts, " + API + "kitchen/service.ts, " + API + "orders/prepTime.ts (setEstimateOnReachingKitchen)",
+             W + "app/kitchen/page.tsx, " + W + "lib/receiptPrinter.ts, print-service/server.js, " + API + "kitchen/routes.ts, " + API + "kitchen/service.ts, " + API + "orders/prepTime.ts (setEstimateOnReachingKitchen)",
              notes=[
                  "PARTIAL: finishing every dish doesn't change the order's own status (the database has preparing, ready and completed, but the code never sets them), and nothing in the system tells the customer the order is ready; the receipt says “We'll call your order number”.",
                  "Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress → Completed.",
+                 "Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing fails the display says so and tries again with the next update or within 30 seconds.",
              ])
     S, K, A = f.lanes
     f.n("start", A, 0, "start", "Order is paid (Flow 04 or 05)")
@@ -140,22 +141,27 @@ def kitchen():
     f.n("notify", A, 2, "process", "Send “order:created” to every open kitchen display")
     f.n("reload", K, 3, "process", "Reload the queue: unfinished dishes only, grouped by order, oldest first")
     f.n("cards", K, 4, "io", "Show the order cards: number, DINE IN / TAKE OUT, ready-by time, dishes (18)")
-    f.n("which", S, 5, "decision", "Next dish: Pending or In Progress?")
-    f.n("startp", S, 6, "process", "Press Start preparing")
-    f.n("inprog", A, 6, "process", "Set In Progress and the start time; send “kitchen:task_updated”")
-    f.n("reload2", K, 7, "process", "Reload the queue; the dish shows In Progress")
-    f.n("donep", S, 8, "process", "Cook the dish; press Mark done")
-    f.n("complete", A, 8, "process", "Set Completed and the finish time; send “kitchen:task_updated”")
-    f.n("reload3", K, 9, "process", "Reload the queue; the finished dish drops off its card")
-    f.n("left", K, 10, "decision", "Any dish of this order left?")
-    f.n("gone", K, 11, "process", "The order's card leaves the display")
-    f.n("call", S, 12, "process", "Call the order number (outside the system)", partial=True)
-    f.n("end", S, 13, "end", "End")
+    f.n("printer", K, 5, "decision", "Kitchen printer here, ticket not printed yet?")
+    f.n("ticket", K, 6, "process", "Send the ticket to the print service: order number and dishes; it prints on the kitchen printer")
+    f.n("which", S, 7, "decision", "Next dish: Pending or In Progress?")
+    f.n("startp", S, 8, "process", "Press Start preparing")
+    f.n("inprog", A, 8, "process", "Set In Progress and the start time; send “kitchen:task_updated”")
+    f.n("reload2", K, 9, "process", "Reload the queue; the dish shows In Progress")
+    f.n("donep", S, 10, "process", "Cook the dish; press Mark done")
+    f.n("complete", A, 10, "process", "Set Completed and the finish time; send “kitchen:task_updated”")
+    f.n("reload3", K, 11, "process", "Reload the queue; the finished dish drops off its card")
+    f.n("left", K, 12, "decision", "Any dish of this order left?")
+    f.n("gone", K, 13, "process", "The order's card leaves the display")
+    f.n("call", S, 14, "process", "Call the order number (outside the system)", partial=True)
+    f.n("end", S, 15, "end", "End")
     f.e("start", "tasks")
     f.e("tasks", "notify")
     f.e("notify", "reload")
     f.e("reload", "cards")
-    f.e("cards", "which")
+    f.e("cards", "printer")
+    f.e("printer", "ticket", "Yes")
+    f.e("printer", "which", "No", exit="l", entry="r")
+    f.e("ticket", "which", exit="b", entry="t")
     f.e("which", "startp", "Pending")
     f.e("which", "donep", "In Progress", exit="l")
     f.e("startp", "inprog", exit="r", entry="l")

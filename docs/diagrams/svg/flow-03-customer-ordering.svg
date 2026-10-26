@@ -190,13 +190,13 @@
 <text x="405.0" y="2817.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">(opened once with</text>
 <text x="405.0" y="2831.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">?printer=1)?</text>
 <rect x="307.0" y="2885.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="2907.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send the order to the</text>
+<text x="405.0" y="2907.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send the receipt to the</text>
 <text x="405.0" y="2922.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">print service on the Pi;</text>
-<text x="405.0" y="2937.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it prints the receipt and</text>
-<text x="405.0" y="2952.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">a kitchen copy</text>
+<text x="405.0" y="2937.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it prints on the 58 mm</text>
+<text x="405.0" y="2952.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">printer</text>
 <polygon points="321.0,2997.0 503.0,2997.0 489.0,3077.0 307.0,3077.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="3019.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “Take both slips</text>
-<text x="405.0" y="3034.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">below …”, or “We</text>
+<text x="405.0" y="3019.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “Take your printed</text>
+<text x="405.0" y="3034.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">receipt below.”, or “We</text>
 <text x="405.0" y="3049.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">couldn&#x27;t print your</text>
 <text x="405.0" y="3064.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">receipt …” if it failed</text>
 <rect x="57.0" y="3124.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>

@@ -1,15 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1064" viewBox="0 0 1328 1064">
-<rect x="0" y="0" width="1328" height="1064" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1102" viewBox="0 0 1328 1102">
+<rect x="0" y="0" width="1328" height="1102" fill="#ffffff"/>
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">18  Kitchen display</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /kitchen   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/kitchen/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
 <text x="24" y="922" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Only paid orders appear (a counter order after staff confirm it, an online order after the payment arrives), oldest first, one card per order with one row per dish. Updates live</text>
 <text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   (order:created, kitchen:task_updated).</text>
-<text x="24" y="980" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Each dish goes Pending → Start preparing → In Progress → Mark done. The queue only returns unfinished dishes, so a dish marked done drops off its card and the card goes when its last</text>
-<text x="24" y="999" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   dish is done. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.</text>
-<text x="24" y="1018" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• PARTIAL: finishing every dish doesn&#x27;t change the order&#x27;s own status (the database has preparing / ready / completed, but the code never sets them), and nothing tells the customer the</text>
-<text x="24" y="1037" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   order is ready.</text>
+<text x="24" y="980" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• On the kitchen&#x27;s own device (opened once with ?printer=1, shown as “· Ticket printer on” after the order count) each order prints a kitchen ticket when it first appears: the order number</text>
+<text x="24" y="999" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   and the dishes with special instructions, through print-service/. Each order prints once; a failed ticket shows “Couldn&#x27;t print the kitchen ticket for ZK-XXXXXX …” and is tried again.</text>
+<text x="24" y="1018" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Each dish goes Pending → Start preparing → In Progress → Mark done. The queue only returns unfinished dishes, so a dish marked done drops off its card and the card goes when its last</text>
+<text x="24" y="1037" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   dish is done. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.</text>
+<text x="24" y="1056" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• PARTIAL: finishing every dish doesn&#x27;t change the order&#x27;s own status (the database has preparing / ready / completed, but the code never sets them), and nothing tells the customer the</text>
+<text x="24" y="1075" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   order is ready.</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="800"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>
 <rect x="0" y="0" width="1280" height="800" rx="0" fill="#f3f3f3" stroke="none"/>
 <rect x="0" y="0" width="256" height="800" rx="0" fill="#ffffff" stroke="none"/>

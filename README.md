@@ -15,8 +15,9 @@ apps/
   worker/   Scheduled jobs — nightly DB backup, hourly low-stock sweep (node-cron)
 packages/
   shared-types/   Types shared between web and api (entities, WS event map)
-print-service/    Runs on the kiosk's Raspberry Pi: prints the receipt and kitchen copy
-                  on the thermal printer (not an npm workspace; see its README)
+print-service/    Runs next to each thermal printer: the customer receipt on the kiosk's
+                  Raspberry Pi, the kitchen ticket on the kitchen display's device
+                  (not an npm workspace; see its README)
 ```
 
 ## Status
@@ -76,9 +77,10 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   storage (needed once this runs on Railway, whose filesystem is ephemeral) isn't
   implemented, since no object storage credentials are configured in this environment.
 
-All 5 sprints from the original plan are now built. Receipt printing runs through
-`print-service/` on the kiosk's Raspberry Pi (a customer receipt and a kitchen copy per
-order). Offline/PWA support was removed from scope.
+All 5 sprints from the original plan are now built. Printing runs through
+`print-service/`: the kiosk's Raspberry Pi prints the customer receipt, and a second
+printer at the kitchen display prints a kitchen ticket (order number and dishes) once the
+order is paid. Offline/PWA support was removed from scope.
 
 - **Railway deployment prep** — while setting up the actual Railway project (4
   services: `api`, `web`, `worker`, and a managed Postgres), found two things that
