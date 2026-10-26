@@ -1,0 +1,10 @@
+{
+  "LocalNetworkAccessAllowedForUrls": [
+    "https://web-production-ba868.up.railway.app",
+    "https://zaks-sizzling-hub-admin.up.railway.app"
+  ],
+  "LoopbackNetworkAllowedForUrls": [
+    "https://web-production-ba868.up.railway.app",
+    "https://zaks-sizzling-hub-admin.up.railway.app"
+  ]
+}

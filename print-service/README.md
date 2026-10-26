@@ -96,6 +96,43 @@ Settings, as environment variables (all optional):
 | `PORT` | `4000` | Port to listen on. If you change it, set `NEXT_PUBLIC_PRINT_SERVICE_URL` on the kiosk and admin sites to match |
 | `ALLOWED_ORIGINS` | `https://web-production-ba868.up.railway.app,https://zaks-sizzling-hub-admin.up.railway.app,http://localhost:3000` | Comma-separated sites allowed to print. Requests from any other site are refused (403), so another page open in the browser can't print. Set it if a site's address changes (for example a custom domain) |
 
+## Always allow the sites to use the printer (Chromium)
+
+The kiosk and kitchen pages reach the print service on the device itself (`127.0.0.1`), so
+Chromium asks for permission to access the local network ("local network access"). To
+allow the system's two sites permanently without a prompt, install the Chromium policy in
+[`chromium-policy.json`](chromium-policy.json) on each device:
+
+1. From this folder on the device, copy the policy into Chromium's policy folder:
+
+   ```bash
+   sudo mkdir -p /etc/chromium/policies/managed
+   ```
+
+   ```bash
+   sudo cp chromium-policy.json /etc/chromium/policies/managed/zaks-printer.json
+   ```
+
+2. Close Chromium completely so it reads the policy, then start it again as usual:
+
+   ```bash
+   pkill chromium
+   ```
+
+3. Open `chrome://policy` in Chromium. `LocalNetworkAccessAllowedForUrls` should be listed
+   with the two site addresses. If nothing is listed, the device's Chromium may read
+   `/etc/chromium-browser/policies/managed/` instead (some older Raspberry Pi OS
+   versions); copy the file there too and restart Chromium.
+
+`LocalNetworkAccessAllowedForUrls` covers current Chromium versions. From Chrome 146 the
+permission is split in two and `LoopbackNetworkAllowedForUrls` covers access to the device
+itself; older versions list it as unknown and ignore it. Only these two sites are allowed.
+Any other site still has to ask, and the print service refuses other sites anyway
+(`ALLOWED_ORIGINS`). If a site's address changes, update both lists and `ALLOWED_ORIGINS`.
+
+Without the policy, clicking **Allow** once also works: Chromium remembers it for the site,
+unless it starts with `--incognito` or a fresh profile on every boot.
+
 ## Start it when the device boots
 
 As a systemd service, change `User` and the paths to match the device, then save this as
