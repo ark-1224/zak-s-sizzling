@@ -5,7 +5,7 @@ category data are placeholders except the category names, which come from the se
 and lib/instructionChips.ts.
 """
 
-from wf import DARK, FILL2, FILL3, FILL4, INK, INK2, INK3, LINE, WHITE, Wireframe, text_width
+from wf import DARK, FILL2, FILL3, FILL4, INK, INK2, INK3, LINE, LINE_SOFT, WHITE, Wireframe, text_width
 
 W, H = 1024, 600
 SIZE = "1024 × 600 kiosk touchscreen, landscape"
@@ -385,7 +385,7 @@ def checkout():
     f.add_note("Left: the order with special instructions, Edit (back to the menu), and the estimated preparation time (only when POST /api/orders/estimate answers).")
     f.add_note("Right: payment method, total and Place order. Dine in / take out isn't asked here: it was chosen on 02 and goes with the order. Below 1024 px wide the right side drops under the order and Place order sits in a bar at the bottom.")
     f.add_note("QR Ph is the one online method (scan with any bank or e-wallet app, through PayMongo). It stays greyed out (“Not set up yet”) until online payment is set up (GET /api/payments/options); once set up it reads “Scan with any bank or e-wallet app”. PARTIAL: not yet tested with PayMongo.")
-    f.add_note("Place order sends the order; Pay at counter then shows the receipt (08). QR Ph opens PayMongo's payment page instead, showing the QR code. An error (e.g. a dish sold out) appears as a toast message.")
+    f.add_note("Place order sends the order; Pay at counter then shows the receipt (08). QR Ph shows the QR code on the kiosk instead (07c). An error (e.g. a dish sold out) appears as a toast message.")
     return f
 
 
@@ -399,6 +399,56 @@ def checkout_empty():
     f.btn(W / 2 - 100, 360, 200, 56, "Back to menu", kind="primary", r=28, size=18)
     f.add_note("Shown when /checkout is opened with nothing in the order.")
     f.add_note("An order saved on the device without a dine-in / take-out choice (left from before it was asked) doesn't open checkout: the page sends it back to the kiosk home page (01 → 02) to choose, keeping the dishes.")
+    return f
+
+
+def qr_page(f, expired):
+    f.rect(0, 0, W, H, fill=FILL2, stroke=None)
+    f.rect(0, 0, W, 60, fill=FILL4, stroke=None)
+    f.line(0, 60, W, 60, stroke=INK2, sw=2)
+    f.icon(32, 30, 11)
+    f.text(56, 38, "Scan to pay", size=22, bold=True)
+    f.text(W - 24, 37, "Order ZK-XXXXXX", size=15, anchor="end", fill=INK2)
+    f.rect(32, 140, 372, 372, fill=WHITE, stroke=LINE, r=28)
+    if expired:
+        f.rect(70, 178, 296, 296, fill=FILL2, stroke=LINE_SOFT, dash="5 4")
+        f.text(218, 300, "This code has expired", size=20, bold=True, anchor="middle")
+        f.btn(128, 322, 180, 52, "Get a new code", kind="primary", r=26, size=16)
+    else:
+        f.img(70, 178, 296, 296, label="QR Ph code (from PayMongo)")
+    x = 444
+    f.text(x, 130, "Amount to pay", size=14, fill=INK2)
+    f.text(x, 178, "₱000.00", size=44, bold=True)
+    for i, step in enumerate(["1. Open your bank or e-wallet app (GCash, Maya or any bank).",
+                              "2. Scan this QR code and confirm the payment.",
+                              "3. Stay here: your receipt appears once the payment is received."]):
+        f.wrap(x, 222 + i * 46, 450, step, size=16)
+    y = 360
+    if not expired:
+        f.rect(x, y, 446, 46, fill=FILL3, stroke=None, r=14)
+        f.circle(x + 20, y + 23, 6, fill=DARK, stroke=DARK)
+        f.text(x + 36, y + 28, "Waiting for your payment… code expires in 9:56", size=15, bold=True)
+        y += 66
+    f.btn(x, y, 446, 54, "Pay at the counter instead", kind="secondary", r=27, size=17)
+    if not expired:
+        f.text(x, y + 82, "PayMongo test mode: simulate this payment", size=13, fill=INK2)
+
+
+def qr_scan():
+    f = kiosk("07c", "QR Ph: scan to pay", "/checkout  (after Place order with QR Ph)",
+              K + "QrPaymentScreen.tsx, apps/web/src/app/checkout/page.tsx, apps/api/src/modules/payments/service.ts, apps/api/src/lib/paymongo.ts")
+    qr_page(f, expired=False)
+    f.add_note("Shown after Place order with QR Ph: the QR Ph code from PayMongo appears on the kiosk itself (no hand-off to PayMongo's page). The customer scans it with any bank or e-wallet app.")
+    f.add_note("Every 3 s the kiosk asks the API whether the payment has arrived (GET /api/payments/qrph/:orderId, which also asks PayMongo); once paid it shows “Payment received!” (08b) and, on the in-store kiosk, prints the receipt. The code expires after 10 minutes (07d). The idle reset is paused while the code can be scanned.")
+    f.add_note("“Pay at the counter instead” turns it into an ordinary counter order and shows the counter receipt (08). The test-mode link appears only with PayMongo test keys. On a phone a “Save QR image” button is added, since a phone can't scan its own screen.")
+    f.add_note("PARTIAL: not yet tested with PayMongo keys. If no code can be made, the order finishes as a counter order with a message.")
+    return f
+
+
+def qr_expired():
+    f = kiosk("07d", "QR Ph: code expired", "/checkout", K + "QrPaymentScreen.tsx, apps/web/src/app/checkout/page.tsx")
+    qr_page(f, expired=True)
+    f.add_note("After 10 minutes the code can no longer be paid. “Get a new code” asks PayMongo for a new one for the same order (07c); “Pay at the counter instead” finishes it as a counter order. The idle reset runs again, so an abandoned kiosk returns to the welcome screen.")
     return f
 
 
@@ -447,9 +497,9 @@ def receipt_counter():
 
 
 def receipt_paid():
-    f = kiosk("08b", "Receipt: paid online", "/checkout/success  (after PayMongo)", K + "ReceiptModal.tsx, apps/web/src/app/checkout/success/page.tsx")
+    f = kiosk("08b", "Receipt: paid online", "/checkout  (after the QR Ph payment)", K + "ReceiptModal.tsx, apps/web/src/app/checkout/page.tsx")
     receipt(f, paid=True)
-    f.add_note("PARTIAL: reached only after a QR Ph payment on PayMongo's page. This path hasn't yet been tested against the PayMongo sandbox.")
+    f.add_note("Shown when the QR Ph payment arrives while the “Scan to pay” screen (07c) is open; on the in-store kiosk the receipt also prints. PARTIAL: not yet tested with PayMongo keys.")
     f.add_note("A third wording exists for an order with no payment record: “We couldn't confirm payment yet — please check with staff.”")
     return f
 
@@ -457,8 +507,8 @@ def receipt_paid():
 def payment_return():
     f = kiosk("09", "Payment return: confirming", "/checkout/success?order=…", "apps/web/src/app/checkout/success/page.tsx")
     f.text(W / 2, 306, "Confirming your payment…", size=18, anchor="middle", fill=INK2)
-    f.add_note("PayMongo sends the customer back here. The page asks for the receipt up to 5 times, 1.5 s apart, until the payment shows as paid, then shows the receipt (08b).")
-    f.add_note("PARTIAL: depends on online payment, which isn't set up or live-tested yet.")
+    f.add_note("No longer reached: since QR Ph is shown on the kiosk itself (07c), PayMongo doesn't send customers to this page. It remains in the code from the earlier hosted-checkout flow.")
+    f.add_note("When reached, it asks for the receipt up to 5 times, 1.5 s apart, until the payment shows as paid, then shows the receipt (08b).")
     return f
 
 
@@ -467,17 +517,17 @@ def payment_return_error():
     f.rect(0, 0, W, H, fill=FILL2, stroke=None)
     f.text(W / 2, 280, "Could not load your order.", size=24, bold=True, anchor="middle")
     f.btn(W / 2 - 80, 304, 160, 48, "Back to menu", kind="primary", r=24, size=16)
-    f.add_note("Shown when the receipt request fails. With no ?order= in the address the heading reads “No order to show”.")
+    f.add_note("No longer reached in the current flow (see 09). Shown when the receipt request fails; with no ?order= in the address the heading reads “No order to show”.")
     return f
 
 
 SCREENS = [welcome, order_type, menu, menu_no_results, menu_loading, menu_error, item_sheet, order_review,
-           order_review_empty, idle, checkout, checkout_empty, receipt_counter, receipt_paid,
+           order_review_empty, idle, checkout, checkout_empty, qr_scan, qr_expired, receipt_counter, receipt_paid,
            payment_return, payment_return_error]
 
 SLUGS = {
     "01": "welcome", "02": "dine-in-take-out", "03": "menu", "03b": "menu-no-results", "03c": "menu-loading",
     "03d": "menu-load-error", "04": "item-details", "05": "order-review", "05b": "order-review-empty",
-    "06": "idle-popup", "07": "checkout", "07b": "checkout-empty",
+    "06": "idle-popup", "07": "checkout", "07b": "checkout-empty", "07c": "qrph-scan-to-pay", "07d": "qrph-code-expired",
     "08": "receipt-counter", "08b": "receipt-paid", "09": "payment-return", "09b": "payment-return-error",
 }

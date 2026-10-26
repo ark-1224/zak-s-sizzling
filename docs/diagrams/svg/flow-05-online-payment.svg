@@ -1,242 +1,203 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="2550" viewBox="0 0 1060 2550">
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="2070" viewBox="0 0 1060 2070">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="1060" height="2550" fill="#ffffff"/>
-<text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 05  Online payment with QR Ph (partial)</text>
+<rect x="0" y="0" width="1060" height="2070" fill="#ffffff"/>
+<text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 05  Online payment with QR Ph shown on the kiosk (partial)</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
-<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/checkout/page.tsx, apps/web/src/app/checkout/success/page.tsx, apps/api/src/modules/payments/routes.ts,</text>
-<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/payments/service.ts (createGatewayPaymentIntent, handleWebhook), apps/api/src/lib/paymongo.ts,</text>
-<text x="30" y="114" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/inventory/fulfillment.ts</text>
-<rect x="30" y="137" width="250" height="2070" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
-<rect x="30" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="155.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Customer</text>
-<rect x="280" y="137" width="250" height="2070" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
-<rect x="280" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="405.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kiosk (web app)</text>
-<rect x="530" y="137" width="250" height="2070" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
-<rect x="530" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
-<rect x="780" y="137" width="250" height="2070" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
-<rect x="780" y="137" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="905.0" y="164" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">PayMongo</text>
-<path d="M405.0 261.0 L405.0 316.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M503.0 349.0 L655.0 349.0 L655.0 415.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M557.0 461.0 L540.0 461.0 L540.0 635.0 L405.0 635.0 L405.0 645.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="542" y="483.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="545" y="495.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M655.0 507.0 L655.0 527.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="510.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="522.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
-<path d="M557.0 573.0 L496.0 573.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="532.89" y="555.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="551.0" y="567.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M314.0 573.0 L253.0 573.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 619.0 L655.0 645.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="622.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="634.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M557.0 685.0 L496.0 685.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="532.89" y="667.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="551.0" y="679.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M405.0 725.0 L405.0 772.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 725.0 L655.0 764.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="728.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="740.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M753.0 797.0 L807.0 797.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 829.5 L655.0 853.0 L405.0 853.0 L405.0 876.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 941.5 L405.0 965.0 L155.0 965.0 L155.0 988.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M246.0 1021.0 L905.0 1021.0 L905.0 1093.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M807.0 1133.0 L155.0 1133.0 L155.0 1205.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="704.23" y="1115.5" width="99.77" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="801.0" y="1127.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No (cancelled)</text>
-<path d="M905.0 1173.0 L905.0 1212.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="908.0" y="1176.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="911.0" y="1188.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M155.0 1285.0 L155.0 1336.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M807.0 1245.0 L405.0 1245.0 L405.0 1332.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="743.56" y="1227.5" width="60.44" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="801.0" y="1239.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">redirect</text>
-<path d="M905.0 1277.5 L905.0 1419.0 L655.0 1419.0 L655.0 1416.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="908.0" y="1281.0" width="53.885" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="911.0" y="1292.5" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">webhook</text>
-<path d="M405.0 1382.0 L405.0 1429.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M307.0 1469.0 L246.0 1469.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="282.89" y="1451.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="301.0" y="1463.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M405.0 1509.0 L405.0 1541.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="408.0" y="1512.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="411.0" y="1524.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M307.0 1581.0 L246.0 1581.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="282.89" y="1563.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="301.0" y="1575.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M405.0 1621.0 L405.0 1668.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="408.0" y="1624.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="411.0" y="1636.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M655.0 1522.0 L655.0 1535.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="1525.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="1537.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M753.0 1469.0 L905.0 1469.0 L905.0 1557.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="756.0" y="1451.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="759.0" y="1463.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
-<path d="M753.0 1581.0 L807.0 1581.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="756.0" y="1563.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="759.0" y="1575.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M655.0 1627.0 L655.0 1660.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="1630.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="1642.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
-<path d="M655.0 1725.5 L655.0 1759.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 1851.0 L655.0 1877.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="1854.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="1866.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M753.0 1805.0 L770.0 1805.0 L770.0 2091.0 L655.0 2091.0 L655.0 2108.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="772" y="1827.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="775" y="1839.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
-<path d="M655.0 1957.0 L655.0 1996.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M64.0 1469.0 L40.0 1469.0 L40.0 1693.0 L57.0 1693.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M155.0 1613.5 L155.0 1672.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 1718.0 L405.0 1781.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="307.0" y="213.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="234.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Order placed with QR Ph</text>
-<text x="405.0" y="249.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">(Flow 03)</text>
-<rect x="307.0" y="316.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="338.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Ask for a payment link</text>
-<text x="405.0" y="353.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(POST</text>
-<text x="405.0" y="368.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">/api/payments/intent)</text>
-<polygon points="655.0,415.0 753.0,461.0 655.0,507.0 557.0,461.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="451.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Too many payment</text>
-<text x="655.0" y="465.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">attempts from</text>
-<text x="655.0" y="479.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">this kiosk?</text>
-<polygon points="655.0,527.0 753.0,573.0 655.0,619.0 557.0,573.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="563.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Order exists,</text>
-<text x="655.0" y="577.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">unpaid and not</text>
-<text x="655.0" y="591.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">cancelled?</text>
-<polygon points="321.0,540.5 503.0,540.5 489.0,605.5 307.0,605.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="562.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the error as a</text>
-<text x="405.0" y="577.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">message; the order</text>
-<text x="405.0" y="592.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stays unpaid</text>
-<rect x="57.0" y="552.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="577.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<polygon points="655.0,645.0 753.0,685.0 655.0,725.0 557.0,685.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="689.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">PayMongo set up?</text>
-<polygon points="321.0,645.0 503.0,645.0 489.0,725.0 307.0,725.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="667.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Empty the order; show</text>
-<text x="405.0" y="682.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the receipt as a</text>
-<text x="405.0" y="697.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pay-at-counter order,</text>
-<text x="405.0" y="712.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">with a message (08)</text>
-<rect x="307.0" y="772.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<line x1="316.0" y1="772.0" x2="316.0" y2="822.0" stroke="#222222" stroke-width="1.2"/>
-<line x1="494.0" y1="772.0" x2="494.0" y2="822.0" stroke="#222222" stroke-width="1.2"/>
-<text x="405.0" y="794.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pays at the counter</text>
-<text x="405.0" y="809.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Flow 04)</text>
-<rect x="557.0" y="764.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="655.0" y="786.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Create a PayMongo checkout</text>
-<text x="655.0" y="801.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">session; save the pending</text>
-<text x="655.0" y="816.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment with its reference</text>
-<rect x="807.0" y="772.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="905.0" y="794.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Hosted payment page for</text>
-<text x="905.0" y="809.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">this order</text>
-<rect x="307.0" y="876.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="405.0" y="898.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Empty the order; send the</text>
-<text x="405.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">customer to PayMongo&#x27;s</text>
-<text x="405.0" y="928.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">page</text>
-<polygon points="71.0,988.5 253.0,988.5 239.0,1053.5 57.0,1053.5" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="155.0" y="1010.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Scans the QR code with</text>
-<text x="155.0" y="1025.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">a bank or e-wallet app</text>
-<text x="155.0" y="1040.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and pays</text>
-<polygon points="905.0,1093.0 1003.0,1133.0 905.0,1173.0 807.0,1133.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="905.0" y="1130.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Payment</text>
-<text x="905.0" y="1144.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">completed?</text>
-<polygon points="71.0,1205.0 253.0,1205.0 239.0,1285.0 57.0,1285.0" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="155.0" y="1227.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Returns to</text>
-<text x="155.0" y="1242.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">/checkout?…&amp;cancelled=1</text>
-<text x="155.0" y="1257.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and sees “Your order is</text>
-<text x="155.0" y="1272.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">empty”</text>
-<rect x="807.0" y="1212.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="905.0" y="1234.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Send the customer to</text>
-<text x="905.0" y="1249.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">/checkout/success; send a</text>
-<text x="905.0" y="1264.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“paid” webhook to the API</text>
-<rect x="57.0" y="1336.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<rect x="307.0" y="1332.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="405.0" y="1354.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Ask for the receipt up to</text>
-<text x="405.0" y="1369.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">5 times, 1.5 s apart (09)</text>
-<polygon points="655.0,1416.0 753.0,1469.0 655.0,1522.0 557.0,1469.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1452.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Signature valid;</text>
-<text x="655.0" y="1466.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">“paid” event;</text>
-<text x="655.0" y="1480.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">order and payment</text>
-<text x="655.0" y="1494.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">found?</text>
-<polygon points="405.0,1429.0 503.0,1469.0 405.0,1509.0 307.0,1469.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1473.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Receipt loaded?</text>
-<polygon points="71.0,1444.0 253.0,1444.0 239.0,1494.0 57.0,1494.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1466.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Sees “Could not load</text>
-<text x="155.0" y="1481.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">your order.” (09b)</text>
-<polygon points="655.0,1535.0 753.0,1581.0 655.0,1627.0 557.0,1581.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1571.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Already marked</text>
-<text x="655.0" y="1585.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">paid? (repeat</text>
-<text x="655.0" y="1599.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">delivery)</text>
-<polygon points="405.0,1541.0 503.0,1581.0 405.0,1621.0 307.0,1581.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1578.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Paid within the 5</text>
-<text x="405.0" y="1592.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">checks?</text>
-<polygon points="71.0,1548.5 253.0,1548.5 239.0,1613.5 57.0,1613.5" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="155.0" y="1570.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Sees the receipt with</text>
-<text x="155.0" y="1585.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the pay-at-counter</text>
-<text x="155.0" y="1600.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">wording</text>
-<polygon points="321.0,1668.0 503.0,1668.0 489.0,1718.0 307.0,1718.0" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="405.0" y="1690.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “Payment</text>
-<text x="405.0" y="1705.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">received!” (08b)</text>
-<rect x="557.0" y="1660.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1682.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Try, in one transaction:</text>
-<text x="655.0" y="1697.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">mark paid, deduct the</text>
-<text x="655.0" y="1712.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stock, confirm the order</text>
-<polygon points="655.0,1759.0 753.0,1805.0 655.0,1851.0 557.0,1805.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1795.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Stock short, or</text>
-<text x="655.0" y="1809.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">order cancelled</text>
-<text x="655.0" y="1823.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">meanwhile?</text>
-<rect x="557.0" y="1877.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1899.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Roll back; record the</text>
-<text x="655.0" y="1914.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment only; flag STOCK</text>
-<text x="655.0" y="1929.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">ISSUE; nothing goes to the</text>
-<text x="655.0" y="1944.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kitchen</text>
-<rect x="57.0" y="1672.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1697.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<rect x="307.0" y="1781.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1802.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Done returns to the</text>
-<text x="405.0" y="1817.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">welcome screen (01)</text>
-<rect x="557.0" y="1996.5" width="196" height="65" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<line x1="566.0" y1="1996.5" x2="566.0" y2="2061.5" stroke="#222222" stroke-width="1.2"/>
-<line x1="744.0" y1="1996.5" x2="744.0" y2="2061.5" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="2018.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Staff refund or</text>
-<text x="655.0" y="2033.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">substitute (Orders</text>
-<text x="655.0" y="2048.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">awaiting payment, 19)</text>
-<rect x="557.0" y="2108.5" width="196" height="65" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<line x1="566.0" y1="2108.5" x2="566.0" y2="2173.5" stroke="#222222" stroke-width="1.2"/>
-<line x1="744.0" y1="2108.5" x2="744.0" y2="2173.5" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="2130.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Update availability;</text>
-<text x="655.0" y="2145.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">create kitchen tasks</text>
-<text x="655.0" y="2160.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Flow 06)</text>
-<rect x="807.0" y="1557.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="905.0" y="1578.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End (webhook ignored or</text>
-<text x="905.0" y="1593.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">already handled)</text>
-<text x="30" y="2241" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
-<rect x="30" y="2255" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
-<text x="82" y="2272" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
-<rect x="182.64" y="2255" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="234.64" y="2272" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
-<polygon points="363.52,2255 385.52,2268.0 363.52,2281 341.52,2268.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="393.52" y="2272" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
-<polygon points="483.44,2255 519.44,2255 511.44000000000005,2281 475.44,2281" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="527.44" y="2272" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
-<rect x="646.8" y="2255" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<line x1="652.8" y1="2255" x2="652.8" y2="2281" stroke="#222222"/><line x1="684.8" y1="2255" x2="684.8" y2="2281" stroke="#222222"/>
-<text x="698.8" y="2272" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
-<rect x="30" y="2293" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="82" y="2310" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
-<text x="30" y="2357" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="30" y="2377" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• PARTIAL: this path is coded, but production has no PayMongo keys, so today every order takes the “not set up” branch and is paid at the counter. The</text>
-<text x="30" y="2394" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   success page&#x27;s code comment says it hasn&#x27;t been tested against a live PayMongo sandbox.</text>
-<text x="30" y="2411" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• UNCLEAR: a customer who cancels on PayMongo&#x27;s page is sent to /checkout?order=…&amp;cancelled=1, but the checkout page doesn&#x27;t read that address and the</text>
-<text x="30" y="2428" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   order was already emptied, so it shows “Your order is empty”. The unpaid order stays in Orders awaiting payment (19) until staff cancel it.</text>
-<text x="30" y="2445" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• UNCLEAR: if the payment isn&#x27;t confirmed within the 5 checks, the receipt shows the counter wording “Please pay at the counter to confirm your order.”</text>
-<text x="30" y="2462" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   although the customer paid online.</text>
-<text x="30" y="2479" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• When PayMongo isn&#x27;t set up (501) the server also saves the payment as Pay at counter. After too many attempts (429) the payment keeps its online</text>
-<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   method, and Orders awaiting payment shows it as “Counter (chose QR Ph, but online payment didn&#x27;t start)”.</text>
-<text x="30" y="2513" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• A webhook can arrive more than once; the paid check makes a repeat delivery do nothing.</text>
+<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/checkout/page.tsx, apps/web/src/components/kiosk/QrPaymentScreen.tsx, apps/api/src/modules/payments/routes.ts,</text>
+<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/payments/service.ts (createQrPhPayment, checkQrPhPayment, switchToCounterPayment, handleWebhook), apps/api/src/lib/paymongo.ts</text>
+<rect x="30" y="122" width="250" height="1622" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="30" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="155.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Customer</text>
+<rect x="280" y="122" width="250" height="1622" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
+<rect x="280" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="405.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Kiosk (web app)</text>
+<rect x="530" y="122" width="250" height="1622" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="530" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="655.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
+<rect x="780" y="122" width="250" height="1622" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
+<rect x="780" y="122" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="905.0" y="149" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">PayMongo</text>
+<path d="M405.0 246.0 L405.0 309.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M503.0 334.0 L655.0 334.0 L655.0 400.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 446.0 L540.0 446.0 L540.0 620.0 L405.0 620.0 L405.0 637.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="542" y="468.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="545" y="480.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M655.0 492.0 L655.0 512.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="495.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="507.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
+<path d="M557.0 558.0 L496.0 558.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="540.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="552.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M314.0 558.0 L253.0 558.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 604.0 L655.0 624.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="607.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="619.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M557.0 670.0 L496.0 670.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="652.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="664.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M405.0 702.5 L405.0 757.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 716.0 L655.0 734.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="719.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="731.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M753.0 782.0 L807.0 782.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M905.0 807.0 L905.0 834.2 L405.0 834.2 L405.0 861.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 926.5 L405.0 973.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M314.0 894.0 L155.0 894.0 L155.0 966.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M155.0 1046.0 L155.0 1085.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="158.0" y="1049.5" width="34.22" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="161.0" y="1061.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Scan</text>
+<path d="M57.0 1006.0 L40.0 1006.0 L40.0 1180.0 L155.0 1180.0 L155.0 1205.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="42" y="1028.5" width="53.885" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="45" y="1040.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Counter</text>
+<path d="M155.0 1255.0 L155.0 1309.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M246.0 1118.0 L270.0 1118.0 L270.0 1180.0 L905.0 1180.0 L905.0 1197.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M503.0 1006.0 L655.0 1006.0 L655.0 1058.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 1118.0 L520.0 1118.0 L520.0 1230.0 L503.0 1230.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="1100.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="1112.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M753.0 1118.0 L770.0 1118.0 L770.0 1454.0 L753.0 1454.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="772" y="1140.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="775" y="1152.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M307.0 1230.0 L290.0 1230.0 L290.0 1006.0 L307.0 1006.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="266.89" y="1212.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="285" y="1224.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M405.0 1270.0 L405.0 1309.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="408.0" y="1273.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="411.0" y="1285.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M314.0 1342.0 L296.0 1342.0 L296.0 334.0 L307.0 334.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M905.0 1262.5 L905.0 1279.2 L655.0 1279.2 L655.0 1296.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="908.0" y="1266.0" width="53.885" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="911.0" y="1277.5" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">webhook</text>
+<path d="M655.0 1388.0 L655.0 1406.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="1391.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="1403.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M753.0 1342.0 L905.0 1342.0 L905.0 1433.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="756.0" y="1324.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="759.0" y="1336.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
+<path d="M655.0 1501.5 L655.0 1513.8 L405.0 1513.8 L405.0 1526.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 1606.0 L405.0 1657.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="307.0" y="198.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="219.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Order placed with QR Ph</text>
+<text x="405.0" y="234.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">(Flow 03)</text>
+<rect x="307.0" y="309.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="331.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Ask for a QR code (POST</text>
+<text x="405.0" y="346.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">/api/payments/intent)</text>
+<polygon points="655.0,400.0 753.0,446.0 655.0,492.0 557.0,446.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="436.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Too many payment</text>
+<text x="655.0" y="450.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">attempts from</text>
+<text x="655.0" y="464.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">this kiosk?</text>
+<polygon points="655.0,512.0 753.0,558.0 655.0,604.0 557.0,558.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="548.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">This kiosk&#x27;s</text>
+<text x="655.0" y="562.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">order, unpaid and</text>
+<text x="655.0" y="576.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">not cancelled?</text>
+<polygon points="321.0,525.5 503.0,525.5 489.0,590.5 307.0,590.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="547.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the error as a</text>
+<text x="405.0" y="562.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">message; the order</text>
+<text x="405.0" y="577.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stays unpaid</text>
+<rect x="57.0" y="537.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="562.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<polygon points="655.0,624.0 753.0,670.0 655.0,716.0 557.0,670.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="660.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">PayMongo set up,</text>
+<text x="655.0" y="674.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">and the code</text>
+<text x="655.0" y="688.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">created?</text>
+<polygon points="321.0,637.5 503.0,637.5 489.0,702.5 307.0,702.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="659.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the receipt as a</text>
+<text x="405.0" y="674.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pay-at-counter order,</text>
+<text x="405.0" y="689.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">with a message (08)</text>
+<rect x="557.0" y="734.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="655.0" y="756.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Create a QR Ph payment</text>
+<text x="655.0" y="771.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">intent (order in metadata)</text>
+<text x="655.0" y="786.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and a 10-minute QR Ph</text>
+<text x="655.0" y="801.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">method; attach; store the</text>
+<text x="655.0" y="816.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">intent</text>
+<rect x="807.0" y="757.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="905.0" y="779.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Return the QR Ph code</text>
+<text x="905.0" y="794.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">image</text>
+<rect x="307.0" y="757.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<line x1="316.0" y1="757.0" x2="316.0" y2="807.0" stroke="#222222" stroke-width="1.2"/>
+<line x1="494.0" y1="757.0" x2="494.0" y2="807.0" stroke="#222222" stroke-width="1.2"/>
+<text x="405.0" y="779.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pays at the counter</text>
+<text x="405.0" y="794.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Flow 04)</text>
+<polygon points="321.0,861.5 503.0,861.5 489.0,926.5 307.0,926.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="883.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “Scan to pay”: QR</text>
+<text x="405.0" y="898.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">code, amount, countdown</text>
+<text x="405.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(07c)</text>
+<polygon points="155.0,966.0 253.0,1006.0 155.0,1046.0 57.0,1006.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1003.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Scan now, or pay</text>
+<text x="155.0" y="1017.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">at the counter?</text>
+<rect x="307.0" y="973.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="995.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Every 3 s: ask about the</text>
+<text x="405.0" y="1010.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment (GET</text>
+<text x="405.0" y="1025.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">/api/payments/qrph/:orderId)</text>
+<polygon points="71.0,1085.5 253.0,1085.5 239.0,1150.5 57.0,1150.5" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="155.0" y="1107.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Scans the code with a</text>
+<text x="155.0" y="1122.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">bank or e-wallet app</text>
+<text x="155.0" y="1137.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and pays</text>
+<polygon points="655.0,1058.0 753.0,1118.0 655.0,1178.0 557.0,1118.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1094.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Already paid, or</text>
+<text x="655.0" y="1108.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">PayMongo says the</text>
+<text x="655.0" y="1122.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">intent succeeded</text>
+<text x="655.0" y="1136.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">for the full</text>
+<text x="655.0" y="1150.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">total?</text>
+<polygon points="71.0,1205.0 253.0,1205.0 239.0,1255.0 57.0,1255.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1227.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Taps “Pay at the</text>
+<text x="155.0" y="1242.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">counter instead”</text>
+<polygon points="405.0,1190.0 503.0,1230.0 405.0,1270.0 307.0,1230.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1234.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Code expired?</text>
+<rect x="807.0" y="1197.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="905.0" y="1219.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Takes the payment; the</text>
+<text x="905.0" y="1234.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">intent succeeds; sends the</text>
+<text x="905.0" y="1249.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment.paid webhook</text>
+<rect x="57.0" y="1309.5" width="196" height="65" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<line x1="66.0" y1="1309.5" x2="66.0" y2="1374.5" stroke="#222222" stroke-width="1.2"/>
+<line x1="244.0" y1="1309.5" x2="244.0" y2="1374.5" stroke="#222222" stroke-width="1.2"/>
+<text x="155.0" y="1331.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">The order becomes a</text>
+<text x="155.0" y="1346.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">counter order; pays at</text>
+<text x="155.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the counter (Flow 04)</text>
+<polygon points="321.0,1309.5 503.0,1309.5 489.0,1374.5 307.0,1374.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1331.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “This code has</text>
+<text x="405.0" y="1346.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">expired” with Get a new</text>
+<text x="405.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">code (07d)</text>
+<polygon points="655.0,1296.0 753.0,1342.0 655.0,1388.0 557.0,1342.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1332.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Webhook:</text>
+<text x="655.0" y="1346.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">signature valid</text>
+<text x="655.0" y="1360.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">and order found?</text>
+<rect x="557.0" y="1406.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1428.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Record the payment: mark</text>
+<text x="655.0" y="1443.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">paid, deduct stock,</text>
+<text x="655.0" y="1458.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">confirm, send to the</text>
+<text x="655.0" y="1473.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kitchen (or flag STOCK</text>
+<text x="655.0" y="1488.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">ISSUE)</text>
+<rect x="807.0" y="1433.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="905.0" y="1458.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End (webhook ignored)</text>
+<polygon points="321.0,1526.0 503.0,1526.0 489.0,1606.0 307.0,1606.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1548.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “Payment</text>
+<text x="405.0" y="1563.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">received!” (08b); print</text>
+<text x="405.0" y="1578.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the receipt on the</text>
+<text x="405.0" y="1593.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">in-store kiosk</text>
+<rect x="307.0" y="1657.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1682.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<text x="30" y="1778" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
+<rect x="30" y="1792" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
+<text x="82" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
+<rect x="182.64" y="1792" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="234.64" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
+<polygon points="363.52,1792 385.52,1805.0 363.52,1818 341.52,1805.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="393.52" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
+<polygon points="483.44,1792 519.44,1792 511.44000000000005,1818 475.44,1818" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="527.44" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
+<rect x="646.8" y="1792" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<line x1="652.8" y1="1792" x2="652.8" y2="1818" stroke="#222222"/><line x1="684.8" y1="1792" x2="684.8" y2="1818" stroke="#222222"/>
+<text x="698.8" y="1809" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
+<rect x="30" y="1830" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="82" y="1847" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
+<text x="30" y="1894" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="30" y="1914" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• PARTIAL: coded and covered by automated tests with PayMongo simulated, but not yet run with PayMongo keys; production has none yet, so the order takes</text>
+<text x="30" y="1931" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   the “not set up” branch.</text>
+<text x="30" y="1948" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The payment is recorded by whichever comes first, the kiosk&#x27;s status check or PayMongo&#x27;s payment.paid webhook; the other then changes nothing.</text>
+<text x="30" y="1965" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Recording marks it paid, deducts stock and confirms the order in one transaction; if stock ran out or the order was cancelled meanwhile, the payment is</text>
+<text x="30" y="1982" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   recorded, nothing goes to the kitchen and the order is flagged STOCK ISSUE for staff.</text>
+<text x="30" y="1999" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• A succeeded intent is accepted only for the order&#x27;s exact total. The idle reset is paused while the code can still be scanned and resumes when it</text>
+<text x="30" y="2016" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   expires.</text>
+<text x="30" y="2033" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• In PayMongo test mode the screen offers a link to simulate the payment; test QR codes must not be scanned with a real banking app.</text>
 </svg>

@@ -616,7 +616,7 @@ These describe QR access correctly and need no edit:
 
 ### 7.3 Figure 2.2 description: "QR code-based payments", p. 60 [PDF 63]
 
-This is a different feature from QR code access. QR Ph payments go through PayMongo's checkout page, which shows the payment QR code; the system itself does not generate payment QR codes.
+This is a different feature from QR code access. For a QR Ph payment the kiosk shows a payment QR code that PayMongo generates for that order; the system itself does not create payment QR codes.
 
 OLD
 > The Payment Module for Kiosk provides multiple payment options, including counter payments, online transactions, and QR code-based payments.

@@ -370,24 +370,34 @@ npm run low-stock:alerts
 ## Payments (Sprint 3)
 
 Online payment is **QR Ph** through [PayMongo](https://paymongo.com), a PH payment
-aggregator: the customer scans the QR code on PayMongo's page with any bank or e-wallet
-app (GCash and Maya included). It is the one online method; it replaced separate GCash
-and Maya options on 26 October 2026. To test the real gateway path:
+aggregator. The kiosk shows the QR Ph code on its own "Scan to pay" screen and the
+customer scans it with any bank or e-wallet app (GCash and Maya included). It is the one
+online method; it replaced separate GCash and Maya options on 26 October 2026.
+
+How it works: `POST /api/payments/intent` creates a PayMongo Payment Intent that allows
+QR Ph (the order id in its metadata), creates a QR Ph Payment Method that expires in 10
+minutes, attaches it, and returns the QR image. The kiosk then asks
+`GET /api/payments/qrph/:orderId` every 3 seconds; that check also asks PayMongo whether
+the intent has succeeded. The payment is recorded by whichever comes first, that check or
+the `payment.paid` webhook. `POST /api/payments/qrph/:orderId/counter` switches the order
+to pay at the counter. To test the real gateway path:
 
 1. Create a PayMongo account and copy your **test** secret key (`sk_test_…`) from
    Developers → API keys. The public key isn't used.
 2. Register a webhook pointing at `https://<api address>/api/payments/webhook` (for local
    testing, a tunnel such as `ngrok http 4000`, since PayMongo can't reach `localhost`),
-   subscribed to `checkout_session.payment.paid`. If the dashboard has no webhook screen,
+   subscribed to `payment.paid`. If the dashboard has no webhook screen,
    create it with `POST https://api.paymongo.com/v1/webhooks` using the secret key; the
    response contains the webhook's signing secret (`whsk_…`).
 3. Set `PAYMONGO_SECRET_KEY` and `PAYMONGO_WEBHOOK_SECRET` in `apps/api/.env` (or on the
    Railway api service). `GET /api/payments/options` then reports `{"online":true}`.
-4. Run through checkout choosing QR Ph — you should land on PayMongo's hosted checkout
-   page, and completing a test payment there should redirect back to
-   `/checkout/success` and flip the order to `confirmed` once the webhook lands.
+4. Run through checkout choosing QR Ph — the "Scan to pay" screen shows the code. In test
+   mode **don't scan it with a real banking app** (PayMongo warns test codes are real);
+   use the "PayMongo test mode: simulate this payment" link under it. The kiosk should
+   then show "Payment received!" and the order flip to `confirmed`.
 
-The integration code (`apps/api/src/lib/paymongo.ts`) follows PayMongo's [Checkout
-Sessions API](https://developers.paymongo.com/reference/create-a-checkout-session) as
-documented, but hasn't been exercised against a live account — double check the request/
-response shapes there if PayMongo's API has moved on since this was written.
+The integration code (`apps/api/src/lib/paymongo.ts`) follows PayMongo's [QR Ph
+API](https://docs.paymongo.com/docs/payment-acceptance-qr-ph-api) as documented, but
+hasn't yet been exercised with real keys — double check the request/response shapes there
+if PayMongo's API has moved on since this was written. `/checkout/success`, the return
+page of the earlier hosted-checkout flow, is no longer reached.

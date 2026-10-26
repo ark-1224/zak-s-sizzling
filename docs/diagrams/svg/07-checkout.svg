@@ -10,8 +10,8 @@
 <text x="24" y="799" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   the right side drops under the order and Place order sits in a bar at the bottom.</text>
 <text x="24" y="818" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• QR Ph is the one online method (scan with any bank or e-wallet app, through PayMongo). It stays greyed out (“Not set up yet”) until online payment</text>
 <text x="24" y="837" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   is set up (GET /api/payments/options); once set up it reads “Scan with any bank or e-wallet app”. PARTIAL: not yet tested with PayMongo.</text>
-<text x="24" y="856" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Place order sends the order; Pay at counter then shows the receipt (08). QR Ph opens PayMongo&#x27;s payment page instead, showing the QR code. An error</text>
-<text x="24" y="875" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   (e.g. a dish sold out) appears as a toast message.</text>
+<text x="24" y="856" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Place order sends the order; Pay at counter then shows the receipt (08). QR Ph shows the QR code on the kiosk instead (07c). An error (e.g. a dish</text>
+<text x="24" y="875" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   sold out) appears as a toast message.</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
 <rect x="0" y="0" width="1024" height="600" rx="0" fill="#f3f3f3" stroke="none"/>
 <rect x="0" y="0" width="1024" height="64" rx="0" fill="#c9c9c9" stroke="none"/>

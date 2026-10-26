@@ -57,51 +57,43 @@ def overview():
 
 
 def online_payment():
-    f = Flow("online-payment", "05", "Online payment with QR Ph (partial)",
+    f = Flow("online-payment", "05", "Online payment with QR Ph shown on the kiosk (partial)",
              ["Customer", "Kiosk (web app)", "API server", "PayMongo"],
-             W + "app/checkout/page.tsx, " + W + "app/checkout/success/page.tsx, " + API + "payments/routes.ts, " + API
-             + "payments/service.ts (createGatewayPaymentIntent, handleWebhook), apps/api/src/lib/paymongo.ts, " + API + "inventory/fulfillment.ts",
+             W + "app/checkout/page.tsx, " + W + "components/kiosk/QrPaymentScreen.tsx, " + API + "payments/routes.ts, " + API
+             + "payments/service.ts (createQrPhPayment, checkQrPhPayment, switchToCounterPayment, handleWebhook), apps/api/src/lib/paymongo.ts",
              notes=[
-                 "PARTIAL: this path is coded, but production has no PayMongo keys, so today every order takes the “not set up” branch and is paid at the counter. The success page's code comment says it hasn't been tested against a live PayMongo sandbox.",
-                 "UNCLEAR: a customer who cancels on PayMongo's page is sent to /checkout?order=…&cancelled=1, but the checkout page doesn't read that address and the order was already emptied, so it shows “Your order is empty”. The unpaid order stays in Orders awaiting payment (19) until staff cancel it.",
-                 "UNCLEAR: if the payment isn't confirmed within the 5 checks, the receipt shows the counter wording “Please pay at the counter to confirm your order.” although the customer paid online.",
-                 "When PayMongo isn't set up (501) the server also saves the payment as Pay at counter. After too many attempts (429) the payment keeps its online method, and Orders awaiting payment shows it as “Counter (chose QR Ph, but online payment didn't start)”.",
-                 "A webhook can arrive more than once; the paid check makes a repeat delivery do nothing.",
+                 "PARTIAL: coded and covered by automated tests with PayMongo simulated, but not yet run with PayMongo keys; production has none yet, so the order takes the “not set up” branch.",
+                 "The payment is recorded by whichever comes first, the kiosk's status check or PayMongo's payment.paid webhook; the other then changes nothing. Recording marks it paid, deducts stock and confirms the order in one transaction; if stock ran out or the order was cancelled meanwhile, the payment is recorded, nothing goes to the kitchen and the order is flagged STOCK ISSUE for staff.",
+                 "A succeeded intent is accepted only for the order's exact total. The idle reset is paused while the code can still be scanned and resumes when it expires.",
+                 "In PayMongo test mode the screen offers a link to simulate the payment; test QR codes must not be scanned with a real banking app.",
              ])
     C, K, A, P = f.lanes
     f.n("start", K, 0, "start", "Order placed with QR Ph (Flow 03)")
-    f.n("intent", K, 1, "process", "Ask for a payment link (POST /api/payments/intent)")
+    f.n("intent", K, 1, "process", "Ask for a QR code (POST /api/payments/intent)")
     f.n("rate", A, 2, "decision", "Too many payment attempts from this kiosk?")
-    f.n("payable", A, 3, "decision", "Order exists, unpaid and not cancelled?")
+    f.n("payable", A, 3, "decision", "This kiosk's order, unpaid and not cancelled?")
     f.n("err", K, 3, "io", "Show the error as a message; the order stays unpaid")
     f.n("end0", C, 3, "end", "End")
-    f.n("setup", A, 4, "decision", "PayMongo set up?")
-    f.n("fallback", K, 4, "io", "Empty the order; show the receipt as a Pay-at-counter order, with a message (08)")
+    f.n("setup", A, 4, "decision", "PayMongo set up, and the code created?")
+    f.n("fallback", K, 4, "io", "Show the receipt as a Pay-at-counter order, with a message (08)")
+    f.n("create", A, 5, "process", "Create a QR Ph payment intent (order in metadata) and a 10-minute QR Ph method; attach; store the intent", partial=True)
+    f.n("qrimg", P, 5, "process", "Return the QR Ph code image", partial=True)
     f.n("flow4", K, 5, "sub", "Pays at the counter (Flow 04)")
-    f.n("session", A, 5, "process", "Create a PayMongo checkout session; save the pending payment with its reference", partial=True)
-    f.n("hosted", P, 5, "process", "Hosted payment page for this order", partial=True)
-    f.n("redirect", K, 6, "process", "Empty the order; send the customer to PayMongo's page", partial=True)
-    f.n("pays", C, 7, "io", "Scans the QR code with a bank or e-wallet app and pays", partial=True)
-    f.n("done", P, 8, "decision", "Payment completed?")
-    f.n("cancelled", C, 9, "io", "Returns to /checkout?…&cancelled=1 and sees “Your order is empty”", partial=True)
-    f.n("back", P, 9, "process", "Send the customer to /checkout/success; send a “paid” webhook to the API", partial=True)
-    f.n("end1", C, 10, "end", "End")
-    f.n("poll", K, 10, "process", "Ask for the receipt up to 5 times, 1.5 s apart (09)", partial=True)
-    f.n("valid", A, 11, "decision", "Signature valid; “paid” event; order and payment found?")
-    f.n("loaded", K, 11, "decision", "Receipt loaded?")
-    f.n("noload", C, 11, "io", "Sees “Could not load your order.” (09b)")
-    f.n("dup", A, 12, "decision", "Already marked paid? (repeat delivery)")
-    f.n("paid", K, 12, "decision", "Paid within the 5 checks?")
-    f.n("pending", C, 12, "io", "Sees the receipt with the pay-at-counter wording", partial=True)
-    f.n("ok", K, 13, "io", "Show “Payment received!” (08b)", partial=True)
-    f.n("txn", A, 13, "process", "Try, in one transaction: mark paid, deduct the stock, confirm the order")
-    f.n("short", A, 14, "decision", "Stock short, or order cancelled meanwhile?")
-    f.n("issue", A, 15, "process", "Roll back; record the payment only; flag STOCK ISSUE; nothing goes to the kitchen")
-    f.n("end3", C, 13, "end", "End")
-    f.n("end4", K, 14, "end", "Done returns to the welcome screen (01)")
-    f.n("staff", A, 16, "sub", "Staff refund or substitute (Orders awaiting payment, 19)")
-    f.n("kitchen", A, 17, "sub", "Update availability; create kitchen tasks (Flow 06)")
-    f.n("end2", P, 12, "end", "End (webhook ignored or already handled)")
+    f.n("show", K, 6, "io", "Show “Scan to pay”: QR code, amount, countdown (07c)")
+    f.n("choose", C, 7, "decision", "Scan now, or pay at the counter?")
+    f.n("poll", K, 7, "process", "Every 3 s: ask about the payment (GET /api/payments/qrph/:orderId)")
+    f.n("pays", C, 8, "io", "Scans the code with a bank or e-wallet app and pays", partial=True)
+    f.n("check", A, 8, "decision", "Already paid, or PayMongo says the intent succeeded for the full total?")
+    f.n("counter", C, 9, "io", "Taps “Pay at the counter instead”")
+    f.n("expired", K, 9, "decision", "Code expired?")
+    f.n("paid", P, 9, "process", "Takes the payment; the intent succeeds; sends the payment.paid webhook", partial=True)
+    f.n("flow4b", C, 10, "sub", "The order becomes a counter order; pays at the counter (Flow 04)")
+    f.n("expmsg", K, 10, "io", "Show “This code has expired” with Get a new code (07d)")
+    f.n("hook", A, 10, "decision", "Webhook: signature valid and order found?")
+    f.n("record", A, 11, "process", "Record the payment: mark paid, deduct stock, confirm, send to the kitchen (or flag STOCK ISSUE)")
+    f.n("end2", P, 11, "end", "End (webhook ignored)")
+    f.n("receipt", K, 12, "io", "Show “Payment received!” (08b); print the receipt on the in-store kiosk")
+    f.n("end1", K, 13, "end", "End")
     f.e("start", "intent")
     f.e("intent", "rate", exit="r")
     f.e("rate", "fallback", "Yes", exit="l")
@@ -111,32 +103,26 @@ def online_payment():
     f.e("payable", "setup", "Yes")
     f.e("setup", "fallback", "No", exit="l", entry="r")
     f.e("fallback", "flow4")
-    f.e("setup", "session", "Yes")
-    f.e("session", "hosted", exit="r", entry="l")
-    f.e("session", "redirect")
-    f.e("redirect", "pays")
-    f.e("pays", "done", exit="r")
-    f.e("done", "cancelled", "No (cancelled)", exit="l")
-    f.e("done", "back", "Yes")
-    f.e("cancelled", "end1")
-    f.e("back", "poll", "redirect", exit="l")
-    f.e("back", "valid", "webhook", exit="b")
-    f.e("poll", "loaded")
-    f.e("loaded", "noload", "No", exit="l", entry="r")
-    f.e("loaded", "paid", "Yes")
-    f.e("paid", "pending", "No", exit="l", entry="r")
-    f.e("paid", "ok", "Yes")
-    f.e("valid", "dup", "Yes")
-    f.e("valid", "end2", "No", exit="r")
-    f.e("dup", "end2", "Yes", exit="r", entry="l")
-    f.e("dup", "txn", "No")
-    f.e("txn", "short")
-    f.e("short", "issue", "Yes")
-    f.e("short", "kitchen", "No", exit="r")
-    f.e("issue", "staff")
-    f.e("noload", "end3", exit="l", entry="l")
-    f.e("pending", "end3")
-    f.e("ok", "end4")
+    f.e("setup", "create", "Yes")
+    f.e("create", "qrimg", exit="r", entry="l")
+    f.e("qrimg", "show", exit="b")
+    f.e("show", "poll")
+    f.e("show", "choose", exit="l")
+    f.e("choose", "pays", "Scan")
+    f.e("choose", "counter", "Counter", exit="l")
+    f.e("counter", "flow4b")
+    f.e("pays", "paid", exit="r")
+    f.e("poll", "check", exit="r")
+    f.e("check", "expired", "No", exit="l", entry="r")
+    f.e("check", "record", "Yes", exit="r", entry="r")
+    f.e("expired", "poll", "No", exit="l", entry="l")
+    f.e("expired", "expmsg", "Yes")
+    f.e("expmsg", "intent", exit="l", entry="l")
+    f.e("paid", "hook", "webhook", exit="b")
+    f.e("hook", "record", "Yes")
+    f.e("hook", "end2", "No", exit="r")
+    f.e("record", "receipt", exit="b")
+    f.e("receipt", "end1")
     return f
 
 

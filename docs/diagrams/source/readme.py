@@ -23,10 +23,12 @@ WIREFRAME_DESC = {
     "06": "“Still there?” popup shown after 60 seconds without a touch.",
     "07": "Review & pay: the order with the prep-time estimate, payment method, total and Place order.",
     "07b": "Review & pay with an empty order.",
+    "07c": "QR Ph shown on the kiosk: the code, amount, steps, countdown and Pay at the counter instead.",
+    "07d": "QR Ph code expired, with Get a new code.",
     "08": "Receipt for a pay-at-counter order: order number, order type, prep time, items, print status, Done.",
-    "08b": "Receipt after an online payment (partial: online payment isn't live).",
-    "09": "Return page from PayMongo while the payment is being confirmed (partial).",
-    "09b": "Return page when the order can't be loaded.",
+    "08b": "Receipt after a QR Ph payment (partial: not yet tested with PayMongo).",
+    "09": "Return page from PayMongo's hosted checkout; no longer reached since QR Ph is shown on the kiosk.",
+    "09b": "Return page when the order can't be loaded; no longer reached.",
     "10": "Staff & Admin sign-in form.",
     "10b": "Sign-in form showing the “Invalid email or password” message.",
     "11": "Admin's landing page: low-stock banner, four KPI tiles, stock level table.",
@@ -61,7 +63,7 @@ FLOW_DESC = {
     "02": "Kiosk-site block, saved-session check, sign-in checks (rate limit, active account, password), admin-only pages.",
     "03": "From walking up to the kiosk to a placed order: menu, dine in / take out, adding dishes, checkout, server checks.",
     "04": "Staff confirm a counter order (stock check and deduction in one transaction), collect payment, or cancel it.",
-    "05": "QR Ph through PayMongo: payment link, fallbacks, webhook, stock-issue flag (partial: not live).",
+    "05": "QR Ph shown on the kiosk through PayMongo: code, status check, webhook, new code, pay at the counter instead, stock-issue flag (partial: not yet tested with PayMongo).",
     "06": "Paid orders on the kitchen display: Start preparing, Mark done, card leaves when all dishes are done.",
     "07": "Manual adjustments and automatic deduction, live sold-out updates, low-stock alert queue and emails.",
     "08": "Admin adds or edits a product (web and server checks, photo upload) or deletes one.",
@@ -129,11 +131,9 @@ def main():
         "",
         "These are marked in the diagrams (dashed outlines or notes). They describe the code as found; nothing was changed.",
         "",
-        "- **Online payment (QR Ph)** is coded but not yet tested with PayMongo: QR Ph is the one online method (it replaced "
-        "GCash and Maya), and it shows “Not set up yet” until the PayMongo keys are set (08b, 09, flow 05).",
-        "- **Cancelling on PayMongo's page** returns to `/checkout?order=…&cancelled=1`, which the checkout page doesn't handle; the order was already "
-        "emptied, so the customer sees “Your order is empty” (flow 05).",
-        "- **A payment not confirmed within 5 checks** shows the receipt with the counter wording, although the customer paid online (flow 05).",
+        "- **Online payment (QR Ph)** is coded but not yet tested with PayMongo keys: the QR Ph code is shown on the kiosk itself "
+        "(07c), and QR Ph shows “Not set up yet” until the PayMongo keys are set (07c, 08b, flow 05).",
+        "- **The PayMongo return page** (`/checkout/success`, 09 and 09b) is no longer reached since QR Ph is shown on the kiosk; it remains in the code.",
         "- **Order status after cooking**: the database has `preparing`, `ready` and `completed`, but the code never sets them; an order stays "
         "`confirmed` after the kitchen finishes, and nothing tells the customer the order is ready (18, flow 06).",
         "- **Changing an order**: staff are told to change a short order with the customer, but no screen edits an existing order. The API has "

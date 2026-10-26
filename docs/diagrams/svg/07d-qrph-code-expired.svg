@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1072" height="788" viewBox="0 0 1072 788">
+<rect x="0" y="0" width="1072" height="788" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">07d  QR Ph: code expired</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /checkout   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/kiosk/QrPaymentScreen.tsx, apps/web/src/app/checkout/page.tsx</text>
+<text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• After 10 minutes the code can no longer be paid. “Get a new code” asks PayMongo for a new one for the same order (07c); “Pay at the counter instead”</text>
+<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   finishes it as a counter order. The idle reset runs again, so an abandoned kiosk returns to the welcome screen.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
+<rect x="0" y="0" width="1024" height="600" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="1024" height="60" rx="0" fill="#c9c9c9" stroke="none"/>
+<line x1="0" y1="60" x2="1024" y2="60" stroke="#555555" stroke-width="2"/>
+<circle cx="32" cy="30" r="11" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="38" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="start" fill="#222222">Scan to pay</text>
+<text x="1000" y="37" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="end" fill="#555555">Order ZK-XXXXXX</text>
+<rect x="32" y="140" width="372" height="372" rx="28" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="70" y="178" width="296" height="296" rx="0" fill="#f3f3f3" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="218" y="300" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle" fill="#222222">This code has expired</text>
+<rect x="128" y="322" width="180" height="52" rx="26" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="218.0" y="353.76" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff">Get a new code</text>
+<text x="444" y="130" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Amount to pay</text>
+<text x="444" y="178" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" text-anchor="start" fill="#222222">₱000.00</text>
+<text x="444" y="222" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#222222">1. Open your bank or e-wallet app (GCash, Maya or any</text>
+<text x="444" y="243.6" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#222222">bank).</text>
+<text x="444" y="268" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#222222">2. Scan this QR code and confirm the payment.</text>
+<text x="444" y="314" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#222222">3. Stay here: your receipt appears once the payment is</text>
+<text x="444" y="335.6" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="400" text-anchor="start" fill="#222222">received.</text>
+<rect x="444" y="360" width="446" height="54" rx="27" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="667.0" y="393.12" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="middle" fill="#555555">Pay at the counter instead</text>
+</g><rect x="0" y="0" width="1024" height="600" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>
