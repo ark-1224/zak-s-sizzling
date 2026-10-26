@@ -4,8 +4,8 @@
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /checkout  (after the QR Ph payment)   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/kiosk/ReceiptModal.tsx, apps/web/src/app/checkout/page.tsx</text>
 <text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Shown when the QR Ph payment arrives while the “Scan to pay” screen (07c) is open; on the in-store kiosk the receipt also prints. PARTIAL: not yet</text>
-<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   tested with PayMongo keys.</text>
+<text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Shown when the QR Ph payment arrives while the “Scan to pay” screen (07c) is open; on the in-store kiosk the receipt and kitchen copy also print,</text>
+<text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   marked PAID. PARTIAL: not yet tested with PayMongo keys.</text>
 <text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• A third wording exists for an order with no payment record: “We couldn&#x27;t confirm payment yet — please check with staff.”</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
 <rect x="0" y="0" width="1024" height="600" rx="0" fill="#8a8a8a" stroke="none"/>

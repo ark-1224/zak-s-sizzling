@@ -97,7 +97,7 @@ These are marked in the diagrams (dashed outlines or notes). They describe the c
 - **Orders awaiting payment** doesn't refresh by itself when an order is placed or paid; the server sends `payment:confirmed`, but no page listens (19).
 - **Low-stock emails** need email set up for the worker (Resend or SMTP); without it alerts wait in the database (flow 07).
 - **No custom “page not found”**: staff pages on the kiosk site show Next.js's default 404, so it has no wireframe.
-- **Receipt printing** works only through the print service on the kiosk's Raspberry Pi, whose code isn't in this repository; it currently prints the order number, date, items and total, always with “Please pay at the counter” (08, flow 03). Receipts after an online payment (08b) don't print yet.
+- **Receipt printing** works only on the kiosk's Raspberry Pi, through `print-service/` (opened once with `?printer=1`); each order prints a customer receipt and a kitchen copy (08, flow 03). Phones opened from the QR code don't print.
 
 ## Rebuilding
 
