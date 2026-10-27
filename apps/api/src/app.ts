@@ -12,6 +12,7 @@ import { inventoryRouter } from "./modules/inventory/routes";
 import { kitchenRouter } from "./modules/kitchen/routes";
 import { ordersRouter } from "./modules/orders/routes";
 import { paymentsRouter } from "./modules/payments/routes";
+import { nutritionRouter } from "./modules/nutrition/routes";
 import { productsRouter } from "./modules/products/routes";
 import { rawMaterialsRouter } from "./modules/raw-materials/routes";
 import { reportsRouter } from "./modules/reports/routes";
@@ -50,6 +51,7 @@ export function createApp() {
   app.use("/api/categories", categoriesRouter);
   app.use("/api/inventory", inventoryRouter);
   app.use("/api/kitchen", kitchenRouter);
+  app.use("/api/nutrition", nutritionRouter);
   app.use("/api/orders", ordersRouter);
   app.use("/api/payments", paymentsRouter);
   app.use("/api/products", productsRouter);

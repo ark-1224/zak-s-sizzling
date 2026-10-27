@@ -3,9 +3,12 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { isPaymongoConfigured } from "../../lib/paymongo";
 import { HttpError } from "../../middleware/errorHandler";
+import { emitOrdersChanged } from "../../websocket";
 import { assertStockForNewOrder, PRODUCT_STOCK_INCLUDE } from "../inventory/fulfillment";
 import { countOrdersInKitchen, estimatePrepMinutes } from "./prepTime";
-import type { OrderDTO } from "@zaks/shared-types";
+import type { OrderBoardDTO, OrderDTO, TransactionDTO, TransactionPageDTO } from "@zaks/shared-types";
+import type { z } from "zod";
+import type { transactionQuerySchema } from "./schema";
 
 type OrderWithRelations = Prisma.OrderGetPayload<{
   include: { items: { include: { product: true } }; payment: true };
@@ -124,6 +127,7 @@ export async function createOrder(input: CreateOrderInput) {
         },
         include: { items: { include: { product: true } }, payment: true },
       });
+      emitOrdersChanged();
       return toOrderDTO(order);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") continue;
@@ -152,6 +156,138 @@ export async function getOrderOwnerSessionId(id: string): Promise<string | null 
 }
 
 /** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */
+// Orders older than this drop off the board even if nobody pressed Handed over.
+const BOARD_WINDOW_MS = 12 * 60 * 60 * 1000;
+const BOARD_LIMIT = 30;
+
+/**
+ * The status board on the counter screen: order numbers of paid orders the kitchen is
+ * preparing, and of orders ready to collect. No login, so it returns order numbers only.
+ */
+export async function getOrderBoard(): Promise<OrderBoardDTO> {
+  const since = new Date(Date.now() - BOARD_WINDOW_MS);
+  const [preparing, ready] = await Promise.all([
+    prisma.order.findMany({
+      where: { status: { in: ["confirmed", "preparing"] }, createdAt: { gte: since } },
+      select: { orderNumber: true },
+      orderBy: { createdAt: "asc" },
+      take: BOARD_LIMIT,
+    }),
+    prisma.order.findMany({
+      where: { status: "ready", createdAt: { gte: since } },
+      select: { orderNumber: true },
+      orderBy: { updatedAt: "desc" },
+      take: BOARD_LIMIT,
+    }),
+  ]);
+  return { preparing: preparing.map((o) => o.orderNumber), ready: ready.map((o) => o.orderNumber) };
+}
+
+const PAID_STATUSES = ["confirmed", "preparing", "ready", "completed"] as const;
+
+/** Today's date in Manila (YYYY-MM-DD), where the restaurant is. */
+function manilaToday(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila" }).format(new Date());
+}
+
+/** From the start of `from` to the end of `to`, Manila time (UTC+8, no daylight saving). */
+function manilaRange(from: string, to: string) {
+  const start = new Date(`${from}T00:00:00+08:00`);
+  const end = new Date(new Date(`${to}T00:00:00+08:00`).getTime() + 24 * 60 * 60 * 1000);
+  return { gte: start, lt: end };
+}
+
+/** "zk ltly9n", "ZK-LTLY9N" and "ltly9n" all search for LTLY9N in the order number. */
+function orderNumberSearch(q: string | undefined): string | null {
+  const letters = (q ?? "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const code = letters.startsWith("ZK") ? letters.slice(2) : letters;
+  return code || null;
+}
+
+/**
+ * The transaction history for the Administrator: every order in a date range (today by
+ * default), newest first, filtered by status, payment method, paid or unpaid, and order
+ * number, a page at a time. Totals cover every matching order, not just the page; sales
+ * count paid orders only (confirmed to completed), as the analytics do.
+ */
+export async function listTransactions(query: z.infer<typeof transactionQuerySchema>): Promise<TransactionPageDTO> {
+  const today = manilaToday();
+  // Only a start date: up to today. Only an end date: that one day.
+  const from = query.from ?? query.to ?? today;
+  const to = query.to ?? (from > today ? from : today);
+  const code = orderNumberSearch(query.q);
+
+  const where: Prisma.OrderWhereInput = {
+    createdAt: manilaRange(from, to),
+    ...(query.status ? { status: query.status } : {}),
+    ...(code ? { orderNumber: { contains: code, mode: "insensitive" } } : {}),
+    AND: [
+      ...(query.method ? [{ payment: { method: query.method } }] : []),
+      ...(query.paid === "paid" ? [{ payment: { status: "paid" as const } }] : []),
+      ...(query.paid === "unpaid" ? [{ OR: [{ payment: null }, { payment: { status: { not: "paid" as const } } }] }] : []),
+    ],
+  };
+
+  const [total, paid, orders] = await Promise.all([
+    prisma.order.count({ where }),
+    prisma.order.aggregate({
+      where: { AND: [where, { status: { in: [...PAID_STATUSES] } }, { payment: { status: "paid" } }] },
+      _count: { _all: true },
+      _sum: { totalAmount: true },
+    }),
+    prisma.order.findMany({
+      where,
+      include: { items: { include: { product: true, kitchenTask: true } }, payment: true },
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+    }),
+  ]);
+
+  const sales = Number(paid._sum.totalAmount ?? 0);
+  const paidCount = paid._count._all;
+  return {
+    orders: orders.map(toTransactionDTO),
+    page: query.page,
+    pageSize: query.pageSize,
+    total,
+    paidCount,
+    sales,
+    averageOrderValue: paidCount > 0 ? Math.round((sales / paidCount) * 100) / 100 : null,
+    from,
+    to,
+  };
+}
+
+type OrderWithTasks = Prisma.OrderGetPayload<{
+  include: { items: { include: { product: true; kitchenTask: true } }; payment: true };
+}>;
+
+/**
+ * An order plus when it reached each step. Preparing and ready come from the kitchen's
+ * dish times; handed over and cancelled are the order's last change, since nothing
+ * changes an order after either.
+ */
+function toTransactionDTO(order: OrderWithTasks): TransactionDTO {
+  const tasks = order.items.flatMap((item) => (item.kitchenTask ? [item.kitchenTask] : []));
+  const times = (pick: (t: (typeof tasks)[number]) => Date | null) =>
+    tasks.map(pick).filter((d): d is Date => d !== null).map((d) => d.getTime());
+  const started = times((t) => t.startedAt);
+  const finished = times((t) => t.completedAt);
+  const reachedReady = order.status === "ready" || order.status === "completed";
+  return {
+    ...toOrderDTO(order),
+    timeline: {
+      placedAt: order.createdAt.toISOString(),
+      paidAt: order.payment?.paidAt?.toISOString() ?? null,
+      preparingAt: started.length > 0 ? new Date(Math.min(...started)).toISOString() : null,
+      readyAt: reachedReady && finished.length > 0 ? new Date(Math.max(...finished)).toISOString() : null,
+      handedOverAt: order.status === "completed" ? order.updatedAt.toISOString() : null,
+      cancelledAt: order.status === "cancelled" ? order.updatedAt.toISOString() : null,
+    },
+  };
+}
+
 export async function listOrders(filter: { unpaidCounterOnly?: boolean } = {}): Promise<OrderDTO[]> {
   const orders = await prisma.order.findMany({
     // Unpaid orders that weren't cancelled, plus paid orders flagged with a stock issue:
@@ -189,5 +325,6 @@ export async function cancelOrder(id: string): Promise<OrderDTO> {
     if (order.status === "cancelled") throw new HttpError(409, `${order.orderNumber} is already cancelled`);
     throw new HttpError(409, `${order.orderNumber} is already paid, so it can't be cancelled`);
   }
+  emitOrdersChanged();
   return (await getOrderById(id))!;
 }

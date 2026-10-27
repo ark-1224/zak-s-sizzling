@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { servingsAvailable } from "../inventory/fulfillment";
+import { averageOrderValue } from "./metrics";
 import type { InventoryMovementPoint, ProfitabilityPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
 
 // "Confirmed+" = payment succeeded and the order is real (excludes abandoned carts
@@ -43,7 +44,7 @@ export async function getSalesReport(range: "daily" | "weekly" | "monthly"): Pro
   }
 
   return Array.from(buckets.entries())
-    .map(([bucket, v]) => ({ bucket, ...v }))
+    .map(([bucket, v]) => ({ bucket, ...v, averageOrderValue: averageOrderValue(v.revenue, v.orderCount) ?? 0 }))
     .sort((a, b) => a.bucket.localeCompare(b.bucket));
 }
 

@@ -27,3 +27,13 @@ export function attachWebSocket(httpServer: HttpServer): IO {
 export function getIO(): IO | null {
   return ioInstance;
 }
+
+/**
+ * Tells open staff screens (the payment queue, and later the status board) that an order
+ * was placed, edited, cancelled, paid or changed status, so they reload. It carries no
+ * order data: kiosks receive it too, and the details come from the API, which checks
+ * who is asking.
+ */
+export function emitOrdersChanged() {
+  ioInstance?.emit("orders:changed");
+}

@@ -10,6 +10,7 @@ import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMes
 import { REASON_LABELS } from "@/components/admin/AdjustStockModal";
 import { RawMaterialAdjustModal } from "@/components/admin/RawMaterialAdjustModal";
 import { RawMaterialForm } from "@/components/admin/RawMaterialForm";
+import { RawMaterialNutritionModal } from "@/components/admin/RawMaterialNutritionModal";
 import type { RawMaterialDTO, RawMaterialMovementDTO } from "@zaks/shared-types";
 
 function formatTime(iso: string) {
@@ -38,6 +39,7 @@ export default function AdminRawMaterialsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [adjusting, setAdjusting] = useState<RawMaterialDTO | null>(null);
   const [editing, setEditing] = useState<RawMaterialDTO | "new" | null>(null);
+  const [nutritionOf, setNutritionOf] = useState<RawMaterialDTO | null>(null);
   const success = useSuccessMessage();
   const [isAdmin] = useState(() => getStoredUser()?.role === "admin");
 
@@ -92,6 +94,12 @@ export default function AdminRawMaterialsPage() {
   function handleAdjusted(updated: RawMaterialDTO) {
     success.show(`${updated.name}: ${formatMaterialQty(adjusting?.stockQty ?? 0, updated.unit)} → ${formatMaterialQty(updated.stockQty, updated.unit)}`);
     setAdjusting(null);
+    refresh();
+  }
+
+  function handleNutritionSaved(saved: RawMaterialDTO) {
+    success.show(saved.nutrition ? `${saved.name}: nutrition saved` : `${saved.name}: nutrition removed`);
+    setNutritionOf(null);
     refresh();
   }
 
@@ -165,6 +173,11 @@ export default function AdminRawMaterialsPage() {
                         Edit
                       </AdmButton>
                     )}
+                    {isAdmin && (
+                      <AdmButton variant="secondary" onClick={() => setNutritionOf(m)} aria-label={`Nutrition of ${m.name}`}>
+                        Nutrition{m.nutrition ? " ✓" : ""}
+                      </AdmButton>
+                    )}
                   </div>
                 </li>
               );
@@ -215,6 +228,17 @@ export default function AdminRawMaterialsPage() {
                           {isAdmin && (
                             <AdmButton variant="secondary" size="row" onClick={() => setEditing(m)} aria-label={`Edit ${m.name}`}>
                               Edit
+                            </AdmButton>
+                          )}
+                          {isAdmin && (
+                            <AdmButton
+                              variant="secondary"
+                              size="row"
+                              onClick={() => setNutritionOf(m)}
+                              aria-label={`Nutrition of ${m.name}`}
+                              title={m.nutrition ? `Per 100 g: ${m.nutrition.per100g.calories} kcal` : "No nutrition yet"}
+                            >
+                              Nutrition{m.nutrition ? " ✓" : ""}
                             </AdmButton>
                           )}
                         </div>
@@ -290,6 +314,7 @@ export default function AdminRawMaterialsPage() {
 
       {adjusting && <RawMaterialAdjustModal material={adjusting} onClose={() => setAdjusting(null)} onSaved={handleAdjusted} />}
       {editing && <RawMaterialForm material={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
+      {nutritionOf && <RawMaterialNutritionModal material={nutritionOf} onClose={() => setNutritionOf(null)} onSaved={handleNutritionSaved} />}
     </div>
   );
 }

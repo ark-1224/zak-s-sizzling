@@ -6,9 +6,10 @@ import { orderAddressLimit, orderPlacementLimit } from "../../middleware/rateLim
 import { HttpError } from "../../middleware/errorHandler";
 import { prisma } from "../../lib/prisma";
 import { parseId } from "../../lib/ids";
-import { createOrderSchema, estimateOrderSchema } from "./schema";
+import { emitOrdersChanged } from "../../websocket";
+import { createOrderSchema, estimateOrderSchema, transactionQuerySchema } from "./schema";
 import { estimateForCart } from "./prepTime";
-import { cancelOrder, createOrder, getOrderById, getOrderOwnerSessionId, listOrders } from "./service";
+import { cancelOrder, createOrder, getOrderBoard, getOrderById, getOrderOwnerSessionId, listOrders, listTransactions } from "./service";
 
 export const ordersRouter = Router();
 
@@ -37,6 +38,25 @@ ordersRouter.post("/estimate", authenticate, async (req, res, next) => {
 
 // Staff/admin order oversight — currently used by /staff/orders to find counter
 // payments awaiting confirmation. Full filtering/pagination is Sprint 5 scope.
+// The order status board on the counter screen. Public (no sign-in on that screen), so
+// it returns order numbers only. Declared before "/:id" so "board" isn't read as an id.
+ordersRouter.get("/board", async (_req, res, next) => {
+  try {
+    res.json(await getOrderBoard());
+  } catch (err) {
+    next(err);
+  }
+});
+
+// The transaction history screen (Administrator only): orders by date with filters.
+ordersRouter.get("/history", authenticate, authorize("admin"), async (req, res, next) => {
+  try {
+    res.json(await listTransactions(transactionQuerySchema.parse(req.query)));
+  } catch (err) {
+    next(err);
+  }
+});
+
 ordersRouter.get("/", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
     const orders = await listOrders({ unpaidCounterOnly: req.query.unpaid === "1" });
@@ -157,4 +177,5 @@ async function recomputeOrderTotal(orderId: string) {
   const items = await prisma.orderItem.findMany({ where: { orderId } });
   const total = items.reduce((sum, i) => sum.add(i.subtotal), new Prisma.Decimal(0));
   await prisma.order.update({ where: { id: orderId }, data: { totalAmount: total } });
+  emitOrdersChanged();
 }

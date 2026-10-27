@@ -20,6 +20,23 @@ export const createOrderSchema = z.object({
   orderType: z.enum(["dine_in", "take_out"]).optional(),
 });
 
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-10-28");
+
+// Filters for the transaction history (GET /api/orders/history). Dates are Manila days,
+// both included; without them it shows today.
+export const transactionQuerySchema = z
+  .object({
+    from: day.optional(),
+    to: day.optional(),
+    status: z.enum(["pending", "confirmed", "preparing", "ready", "completed", "cancelled"]).optional(),
+    method: z.enum(["counter", "qrph", "gcash", "maya"]).optional(),
+    paid: z.enum(["paid", "unpaid"]).optional(),
+    q: z.string().max(40).optional(),
+    page: z.coerce.number().int().min(1).max(10_000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  })
+  .refine((v) => !v.from || !v.to || v.from <= v.to, { message: "The start date must be on or before the end date", path: ["from"] });
+
 // The cart shown at checkout, for its estimated preparation time (prepTime.ts).
 export const estimateOrderSchema = z.object({
   items: z

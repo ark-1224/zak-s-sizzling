@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
+import { getSocket } from "@/lib/websocket";
 import { PageHeader, Card, AdmButton, StatusPill, admInputClass } from "@/components/admin/ui";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { formatDateTime, timeAgo } from "@/lib/time";
@@ -16,7 +17,10 @@ import type { OrderDTO } from "@zaks/shared-types";
 // stock ran out are listed too, flagged as a stock issue for staff to sort out.
 // Each order shows how long ago it was placed, and the list can be searched by order
 // number (the customer reads it off their receipt screen). An abandoned unpaid order
-// can be cancelled, after a second click to make sure (UI review #15).
+// can be cancelled, after a second click to make sure (UI review #15). The list reloads
+// by itself when an order is placed, paid, edited or cancelled (orders:changed), and an
+// order that arrives while the page is open is marked NEW for a minute.
+const NEW_FOR_MS = 60_000;
 const ONLINE_LABEL: Record<string, string> = { qrph: "QR Ph", gcash: "GCash", maya: "Maya" }; // GCash, Maya: older orders
 
 /**
@@ -56,6 +60,10 @@ export default function StaffOrdersPage() {
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [query, setQuery] = useState("");
   const [now, setNow] = useState(() => Date.now());
+  // When each order first appeared while the page was open; ones already there on the
+  // first load aren't new.
+  const [arrivedAt, setArrivedAt] = useState<Record<string, number>>({});
+  const knownIds = useRef<Set<string> | null>(null);
 
   // Keep "placed X min ago" current without refetching.
   useEffect(() => {
@@ -66,6 +74,13 @@ export default function StaffOrdersPage() {
   const load = useCallback(async () => {
     try {
       const result = await apiFetch<OrderDTO[]>("/api/orders?unpaid=1", { auth: "staff" });
+      const known = knownIds.current;
+      const fresh = known ? result.filter((o) => !known.has(o.id)).map((o) => o.id) : [];
+      knownIds.current = new Set([...(known ?? []), ...result.map((o) => o.id)]);
+      if (fresh.length > 0) {
+        const at = Date.now();
+        setArrivedAt((current) => ({ ...current, ...Object.fromEntries(fresh.map((id) => [id, at])) }));
+      }
       setOrders(result);
       setLoaded(true);
       setLoadError(null);
@@ -82,6 +97,15 @@ export default function StaffOrdersPage() {
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  // Live queue: reload whenever an order is placed, paid, edited or cancelled anywhere.
+  useEffect(() => {
+    const socket = getSocket();
+    socket.on("orders:changed", load);
+    return () => {
+      socket.off("orders:changed", load);
+    };
   }, [load]);
 
   // Letters and digits only, so "ltly9n", "ZK LTLY" and "zk-ltly9n" all find ZK-LTLY9N.
@@ -135,7 +159,7 @@ export default function StaffOrdersPage() {
       <div>
         <PageHeader eyebrow="Billing & payment" title="Orders awaiting payment" />
         <p className="text-base text-adm-ink-2 md:text-sm">
-          Counter orders show up here once placed. <strong>Confirm, then collect payment:</strong> confirming checks the stock
+          Counter orders show up here as soon as they are placed; the list updates by itself. <strong>Confirm, then collect payment:</strong> confirming checks the stock
           first, so if something has run out you can change the order before the customer pays. Cancel an order the customer
           never came back to pay for.
         </p>
@@ -184,6 +208,9 @@ export default function StaffOrdersPage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-adm-mono text-lg font-bold">{order.orderNumber}</span>
+                        {arrivedAt[order.id] !== undefined && now - arrivedAt[order.id] < NEW_FOR_MS && (
+                          <StatusPill tone="ok">NEW</StatusPill>
+                        )}
                         {order.stockIssue && <StatusPill tone="bad">STOCK ISSUE</StatusPill>}
                         {order.status === "cancelled" && <StatusPill tone="warn">CANCELLED</StatusPill>}
                       </div>

@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
-import { getIO } from "../../websocket";
+import { emitOrdersChanged, getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { setEstimateOnReachingKitchen } from "../orders/prepTime";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
@@ -17,6 +17,7 @@ function toTaskDTO(task: TaskWithRelations): KitchenTaskDTO {
     orderCreatedAt: task.orderItem.order.createdAt.toISOString(),
     orderEstimatedReadyAt: task.orderItem.order.estimatedReadyAt?.toISOString() ?? null,
     orderType: task.orderItem.order.orderType,
+    orderStatus: task.orderItem.order.status,
     productId: task.orderItem.productId,
     productName: task.orderItem.product.name,
     productIcon: task.orderItem.product.icon,
@@ -47,9 +48,14 @@ export async function createKitchenTasksForOrder(orderId: string): Promise<void>
   if (order) getIO()?.emit("order:created", { orderId: order.id, orderNumber: order.orderNumber });
 }
 
+/**
+ * The kitchen display's queue: every unfinished dish, plus the dishes of orders that are
+ * ready and waiting to be handed over, so a finished order stays on screen as READY until
+ * the kitchen presses Handed over.
+ */
 export async function listActiveTasks(): Promise<KitchenTaskDTO[]> {
   const tasks = await prisma.kitchenTask.findMany({
-    where: { status: { not: "completed" } },
+    where: { OR: [{ status: { not: "completed" } }, { orderItem: { order: { status: "ready" } } }] },
     include: { orderItem: { include: { product: true, order: true } } },
     orderBy: { createdAt: "asc" },
   });
@@ -60,8 +66,13 @@ export async function updateTaskStatus(
   taskId: string,
   status: "pending" | "in_progress" | "completed"
 ): Promise<KitchenTaskDTO> {
-  const existing = await prisma.kitchenTask.findUnique({ where: { id: taskId } });
+  const existing = await prisma.kitchenTask.findUnique({
+    where: { id: taskId },
+    include: { orderItem: { select: { order: { select: { orderNumber: true, status: true } } } } },
+  });
   if (!existing) throw new HttpError(404, "Kitchen task not found");
+  const order = existing.orderItem.order;
+  if (order.status === "completed") throw new HttpError(409, `${order.orderNumber} was already handed over`);
 
   const task = await prisma.kitchenTask.update({
     where: { id: taskId },
@@ -74,5 +85,42 @@ export async function updateTaskStatus(
   });
 
   getIO()?.emit("kitchen:task_updated", { taskId: task.id, orderId: task.orderItem.orderId, status: task.status });
+  await syncOrderStatus(task.orderItem.orderId);
   return toTaskDTO(task);
+}
+
+/**
+ * The order's status follows its dishes: preparing once any dish is started, ready once
+ * every dish is done (confirmed again if every dish went back to pending). Only orders in
+ * the kitchen change: never an unpaid, handed-over or cancelled one.
+ */
+async function syncOrderStatus(orderId: string) {
+  const tasks = await prisma.kitchenTask.findMany({ where: { orderItem: { orderId } }, select: { status: true } });
+  if (tasks.length === 0) return;
+  const next = tasks.every((t) => t.status === "completed")
+    ? "ready"
+    : tasks.some((t) => t.status !== "pending")
+      ? "preparing"
+      : "confirmed";
+  const result = await prisma.order.updateMany({
+    where: { id: orderId, status: { in: ["confirmed", "preparing", "ready"], not: next } },
+    data: { status: next },
+  });
+  if (result.count > 0) emitOrdersChanged();
+}
+
+/**
+ * The kitchen hands a ready order to the customer: ready → completed, and it leaves the
+ * kitchen display and the status board. One conditional update, so pressing it twice
+ * (or on an order that isn't ready) changes nothing and says why.
+ */
+export async function handOverOrder(orderId: string): Promise<void> {
+  const result = await prisma.order.updateMany({ where: { id: orderId, status: "ready" }, data: { status: "completed" } });
+  if (result.count === 0) {
+    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { orderNumber: true, status: true } });
+    if (!order) throw new HttpError(404, "Order not found");
+    if (order.status === "completed") throw new HttpError(409, `${order.orderNumber} was already handed over`);
+    throw new HttpError(409, `${order.orderNumber} isn't ready yet; finish every dish first`);
+  }
+  emitOrdersChanged();
 }

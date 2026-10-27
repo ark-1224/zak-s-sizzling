@@ -131,9 +131,11 @@ function PrepTime({ order, isPaid }: { order: OrderDTO; isPaid: boolean }) {
   let detail: string | null = null;
   if (isPaid && order.estimatedReadyAt) {
     headline = minutes === 0 ? "Ready right away" : `Ready at about ${clockTime(order.estimatedReadyAt)}`;
-    if (minutes > 0) detail = `In ${aboutMinutes(minutes)}. We'll call your order number.`;
+    // The order status board at the counter (/board) shows it under Ready for pickup.
+    detail = `${minutes > 0 ? `In ${aboutMinutes(minutes)}. ` : ""}Watch the screen at the counter for your order number.`;
   } else {
     headline = minutes === 0 ? "Ready as soon as you've paid" : `Ready ${aboutMinutes(minutes)} after you pay`;
+    detail = "Once you've paid, watch the screen at the counter for your order number.";
   }
 
   return (

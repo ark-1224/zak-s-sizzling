@@ -87,6 +87,8 @@ export default function AnalyticsPage() {
 
   const totalRevenue = sales.reduce((s, p) => s + p.revenue, 0);
   const totalOrders = sales.reduce((s, p) => s + p.orderCount, 0);
+  // Average order value over the whole period: revenue ÷ paid orders ("—" with no orders).
+  const averageOrder = totalOrders > 0 ? totalRevenue / totalOrders : null;
   const current = RANGES.find((r) => r.id === range)!;
   const top = topProducts[0];
 
@@ -150,9 +152,14 @@ export default function AnalyticsPage() {
         <span className="text-sm text-adm-ink-3">{current.period}, {current.buckets}</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <KpiTile label="Revenue" value={`₱${totalRevenue.toFixed(2)}`} sub={current.period} />
         <KpiTile label="Orders" value={String(totalOrders)} sub={`Paid orders · ${current.period.toLowerCase()}`} />
+        <KpiTile
+          label="Average order value"
+          value={averageOrder === null ? "—" : `₱${averageOrder.toFixed(2)}`}
+          sub={`Revenue ÷ paid orders · ${current.period.toLowerCase()}`}
+        />
         <KpiTile label="Top product" value={top?.productName ?? "—"} sub={top ? `All time · ${top.qtySold} sold` : "All time"} />
         <KpiTile
           label="Needs restock"
@@ -185,7 +192,15 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--adm-line)" />
                 <XAxis dataKey="bucket" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v) => `₱${Number(v).toFixed(2)}`} />
+                <Tooltip
+                  formatter={(v, _name, item) => {
+                    const point = item.payload as SalesReportPoint;
+                    return [
+                      `₱${Number(v).toFixed(2)} · ${point.orderCount} order${point.orderCount !== 1 ? "s" : ""} · avg ₱${point.averageOrderValue.toFixed(2)}`,
+                      "Revenue",
+                    ];
+                  }}
+                />
                 <Bar dataKey="revenue" fill="var(--adm-accent)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>

@@ -303,6 +303,16 @@ model RawMaterial {
   minStockThreshold Decimal               @default(0) @map("min_stock_threshold") @db.Decimal(12, 3)
   costPerUnit       Decimal?              @map("cost_per_unit") @db.Decimal(10, 4)
   isActive          Boolean               @default(true) @map("is_active")
+  // Nutrition per 100 g, from the USDA FoodData Central food it is linked to (fdcId),
+  // or typed in. Used to estimate a recipe dish's nutrition (modules/nutrition/calc.ts).
+  fdcId             Int?                  @map("fdc_id")
+  fdcDescription    String?               @map("fdc_description") @db.VarChar(200)
+  kcalPer100g       Decimal?              @map("kcal_per_100g") @db.Decimal(7, 2)
+  proteinPer100g    Decimal?              @map("protein_per_100g") @db.Decimal(6, 2)
+  carbsPer100g      Decimal?              @map("carbs_per_100g") @db.Decimal(6, 2)
+  sugarPer100g      Decimal?              @map("sugar_per_100g") @db.Decimal(6, 2)
+  // Grams in one piece (unit pc) or one ml (unit ml); not used for g.
+  gramsPerUnit      Decimal?              @map("grams_per_unit") @db.Decimal(8, 3)
   createdAt         DateTime              @default(now()) @map("created_at")
   updatedAt         DateTime              @updatedAt @map("updated_at")
   recipeItems       RecipeItem[]

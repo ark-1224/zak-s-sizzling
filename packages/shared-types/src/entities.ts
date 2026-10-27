@@ -6,6 +6,9 @@ export interface Category {
   icon: string | null;
   sortOrder: number;
   isNew: boolean;
+  /** How many products are in it (an empty category is the only kind that can be deleted).
+   *  Sent by GET /api/categories; not on the category inside a product. */
+  productCount?: number;
 }
 
 export interface Nutrition {
@@ -131,6 +134,47 @@ export interface OrderDTO {
 
 export type KitchenTaskStatus = "pending" | "in_progress" | "completed";
 
+/** When an order reached each step, for the transaction history (null = not reached). */
+export interface OrderTimeline {
+  placedAt: string;
+  paidAt: string | null;
+  /** The kitchen started the first dish. */
+  preparingAt: string | null;
+  /** The kitchen finished the last dish. */
+  readyAt: string | null;
+  handedOverAt: string | null;
+  cancelledAt: string | null;
+}
+
+export interface TransactionDTO extends OrderDTO {
+  timeline: OrderTimeline;
+}
+
+/** One page of the transaction history, with totals for every order the filters match. */
+export interface TransactionPageDTO {
+  orders: TransactionDTO[];
+  page: number;
+  pageSize: number;
+  /** Orders matching the filters (all pages). */
+  total: number;
+  /** Paid orders among them (confirmed to completed), and their sales, in pesos. */
+  paidCount: number;
+  sales: number;
+  /** sales ÷ paidCount, or null with no paid orders. */
+  averageOrderValue: number | null;
+  /** The dates used (YYYY-MM-DD, Manila), so the page can show the default range. */
+  from: string;
+  to: string;
+}
+
+/** The order status board at the counter: order numbers only (GET /api/orders/board). */
+export interface OrderBoardDTO {
+  /** Paid orders the kitchen is working on, oldest first. */
+  preparing: string[];
+  /** Orders waiting to be collected, most recently ready first. */
+  ready: string[];
+}
+
 export interface KitchenTaskDTO {
   id: string;
   orderId: string;
@@ -139,6 +183,8 @@ export interface KitchenTaskDTO {
   /** When the whole order should be ready (OrderDTO.estimatedReadyAt). */
   orderEstimatedReadyAt: string | null;
   orderType: OrderType;
+  /** confirmed → preparing (a dish started) → ready (every dish done) → completed (handed over). */
+  orderStatus: OrderStatus;
   productId: string;
   productName: string;
   productIcon: string | null;
@@ -153,6 +199,8 @@ export interface SalesReportPoint {
   bucket: string; // e.g. "2026-09-10" for daily, ISO week/month key for weekly/monthly
   orderCount: number;
   revenue: number;
+  /** Revenue ÷ paid orders in the bucket (a bucket only exists when it has orders). */
+  averageOrderValue: number;
 }
 
 export interface TopProductPoint {
@@ -260,6 +308,41 @@ export interface RawMaterialDTO {
   isLow: boolean;
   /** Dishes whose recipe uses this raw material. */
   usedBy: { productId: string; productName: string; qtyPerServing: number }[];
+  /** Nutrition per 100 g (from a USDA food, or typed in), or null if not set. */
+  nutrition: RawMaterialNutrition | null;
+  /** Grams in one piece (pc) or one ml (ml); null for g, or when not set. */
+  gramsPerUnit: number | null;
+}
+
+export interface NutritionPer100g {
+  calories: number;
+  protein: number;
+  carbs: number;
+  sugar: number;
+}
+
+export interface RawMaterialNutrition {
+  /** The USDA FoodData Central food it came from, or null if typed in. */
+  fdcId: number | null;
+  description: string | null;
+  per100g: NutritionPer100g;
+}
+
+/** One match from the USDA FoodData Central search (GET /api/nutrition/search). */
+export interface UsdaFoodMatch {
+  fdcId: number;
+  description: string;
+  dataType: string;
+  per100g: NutritionPer100g;
+}
+
+/** A recipe dish's estimated nutrition per serving (POST /api/nutrition/estimate). */
+export interface NutritionEstimate {
+  nutrition: Nutrition;
+  /** Raw materials left out because they have no nutrition, or no weight per piece. */
+  missing: string[];
+  /** Raw materials in ml without a weight, counted as 1 g per ml. */
+  assumedOneGramPerMl: string[];
 }
 
 export type RawMaterialMovementType = "sale" | "adjustment" | "restock";

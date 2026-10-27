@@ -35,6 +35,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "Dashboard", short: "Dashboard", icon: "dashboard" },
       { href: "/admin/products", label: "Products", short: "Products", icon: "products", adminOnly: true },
+      { href: "/admin/categories", label: "Categories", short: "Categories", icon: "categories", adminOnly: true },
       { href: "/admin/inventory", label: "Inventory", short: "Inventory", icon: "inventory" },
       { href: "/admin/raw-materials", label: "Raw materials", short: "Materials", icon: "materials" },
       { href: "/admin/barcode", label: "Barcode lookup", short: "Barcode", icon: "barcode" },
@@ -43,7 +44,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Sales",
-    items: [{ href: "/admin/analytics", label: "Analytics", short: "Analytics", icon: "analytics", adminOnly: true }],
+    items: [
+      { href: "/admin/analytics", label: "Analytics", short: "Analytics", icon: "analytics", adminOnly: true },
+      { href: "/admin/transactions", label: "Transactions", short: "History", icon: "history", adminOnly: true },
+    ],
   },
   {
     label: "Front of house",

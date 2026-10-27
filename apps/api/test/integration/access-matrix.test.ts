@@ -40,6 +40,7 @@ const MATRIX: Entry[] = [
   { method: "get", route: "/api/products/:id/image", path: `/api/products/${MISSING}/image`, expected: PUBLIC },
   { method: "post", route: "/api/auth/kiosk-session", path: "/api/auth/kiosk-session", expected: PUBLIC },
   { method: "get", route: "/api/payments/options", path: "/api/payments/options", expected: PUBLIC },
+  { method: "get", route: "/api/orders/board", path: "/api/orders/board", expected: PUBLIC },
 
   // Any signed-in caller, including an anonymous kiosk session
   { method: "post", route: "/api/orders/", path: "/api/orders", body: {}, expected: SIGNED_IN },
@@ -53,12 +54,20 @@ const MATRIX: Entry[] = [
 
   // Staff and Administrator: daily operations
   { method: "get", route: "/api/orders/", path: "/api/orders", expected: STAFF },
+  { method: "get", route: "/api/orders/history", path: "/api/orders/history", expected: ADMIN },
+  { method: "post", route: "/api/categories/", path: "/api/categories", body: {}, expected: ADMIN },
+  { method: "put", route: "/api/categories/order", path: "/api/categories/order", body: {}, expected: ADMIN },
+  { method: "put", route: "/api/categories/:id", path: "/api/categories/999999", body: {}, expected: ADMIN },
+  { method: "delete", route: "/api/categories/:id", path: "/api/categories/999999", expected: ADMIN },
+  { method: "get", route: "/api/nutrition/search", path: "/api/nutrition/search?q=rice", expected: ADMIN },
+  { method: "post", route: "/api/nutrition/estimate", path: "/api/nutrition/estimate", body: {}, expected: ADMIN },
   { method: "patch", route: "/api/orders/:id/items/:itemId", path: `/api/orders/${MISSING}/items/${MISSING}`, body: {}, expected: STAFF },
   { method: "delete", route: "/api/orders/:id/items/:itemId", path: `/api/orders/${MISSING}/items/${MISSING}`, expected: STAFF },
   { method: "post", route: "/api/orders/:id/cancel", path: `/api/orders/${MISSING}/cancel`, expected: STAFF },
   { method: "post", route: "/api/payments/counter/:orderId/confirm", path: `/api/payments/counter/${MISSING}/confirm`, expected: STAFF },
   { method: "get", route: "/api/kitchen/tasks", path: "/api/kitchen/tasks", expected: STAFF },
   { method: "patch", route: "/api/kitchen/tasks/:id", path: `/api/kitchen/tasks/${MISSING}`, body: {}, expected: STAFF },
+  { method: "post", route: "/api/kitchen/orders/:id/handed-over", path: `/api/kitchen/orders/${MISSING}/handed-over`, expected: STAFF },
   { method: "get", route: "/api/inventory/low-stock", path: "/api/inventory/low-stock", expected: STAFF },
   { method: "get", route: "/api/inventory/adjustments", path: "/api/inventory/adjustments", expected: STAFF },
   { method: "patch", route: "/api/inventory/:productId", path: `/api/inventory/${MISSING}`, body: {}, expected: STAFF },

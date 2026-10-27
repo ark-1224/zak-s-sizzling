@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { createQrPhCode, getPaymentIntent, isPaymongoConfigured, parseWebhookEvent, PaymongoNotConfiguredError, verifyWebhookSignature } from "../../lib/paymongo";
-import { getIO } from "../../websocket";
+import { emitOrdersChanged, getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
 import { deductStockForOrder, refreshAvailability, StockShortageError } from "../inventory/fulfillment";
@@ -41,6 +41,7 @@ function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSes
     orderNumber: order.orderNumber,
     kioskSessionId: order.kioskSessionId,
   });
+  emitOrdersChanged();
 }
 
 /**
@@ -58,6 +59,7 @@ export async function createQrPhPayment(orderId: string) {
       update: { method: "counter" },
       create: { orderId: order.id, method: "counter", status: "pending", amount: order.totalAmount },
     });
+    emitOrdersChanged();
     throw new PaymongoNotConfiguredError();
   }
 
@@ -68,6 +70,7 @@ export async function createQrPhPayment(orderId: string) {
     update: { method: "qrph", status: "pending", amount: order.totalAmount, reference: code.paymentIntentId },
     create: { orderId: order.id, method: "qrph", status: "pending", amount: order.totalAmount, reference: code.paymentIntentId },
   });
+  emitOrdersChanged();
 
   return { imageUrl: code.imageUrl, expiresAt: code.expiresAt, testUrl: code.testUrl };
 }
@@ -102,6 +105,7 @@ export async function switchToCounterPayment(orderId: string) {
     where: { orderId: order.id, status: { not: "paid" } },
     data: { method: "counter", reference: null },
   });
+  emitOrdersChanged();
   return getOrderById(order.id);
 }
 
@@ -219,6 +223,7 @@ async function recordOnlinePayment(
         where: { id: order.id },
         data: { stockIssue: true, stockIssueNote: "Paid online after this order was cancelled. Refund the customer, or place the order again." },
       });
+      emitOrdersChanged();
       console.warn(`[payments] order ${order.orderNumber} was paid online after it was cancelled`);
       return;
     }
@@ -233,6 +238,7 @@ async function recordOnlinePayment(
       where: { id: order.id },
       data: { stockIssue: true, stockIssueNote: err.message.slice(0, 300) },
     });
+    emitOrdersChanged();
     console.warn(`[payments] order ${order.orderNumber} paid online but stock is short: ${err.message}`);
   }
 }

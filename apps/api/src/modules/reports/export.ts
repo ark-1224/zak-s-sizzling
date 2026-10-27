@@ -88,8 +88,9 @@ export async function buildReportTable(type: ReportType, range: Range): Promise<
       { header: "Period", kind: "text" },
       { header: "Orders", kind: "count" },
       { header: "Revenue (PHP)", kind: "money" },
+      { header: "Average order value (PHP)", kind: "money" },
     ],
-    rows: rows.map((r) => [r.bucket, r.orderCount, r.revenue]),
+    rows: rows.map((r) => [r.bucket, r.orderCount, r.revenue, r.averageOrderValue]),
   };
 }
 

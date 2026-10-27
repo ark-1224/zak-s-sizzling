@@ -29,6 +29,11 @@ export interface ServerToClientEvents {
   "payment:confirmed": (payload: PaymentConfirmedEvent) => void;
   "order:created": (payload: OrderCreatedEvent) => void;
   "kitchen:task_updated": (payload: KitchenTaskUpdatedEvent) => void;
+  /** An order was placed, edited, cancelled, paid or changed status; staff screens reload.
+   *  Carries nothing on purpose: every connected screen receives it, kiosks included. */
+  "orders:changed": () => void;
+  /** A category was added, edited, deleted or reordered; kiosks reload their category rail. */
+  "categories:changed": () => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

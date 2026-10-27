@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ProductDetailsFields, type NutritionText } from "@/components/admin/ProductDetailsFields";
 import { apiFetch, apiUrl, ApiError } from "@/lib/api-client";
 import { ImageResizeError, resizeProductPhoto, type ResizedImage } from "@/lib/imageResize";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
@@ -64,6 +65,14 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
     product?.recipe?.map((r) => ({ rawMaterialId: r.rawMaterialId, qty: String(r.qtyPerServing) })) ?? []
   );
   const [materials, setMaterials] = useState<RawMaterialDTO[]>([]);
+  const [ingredients, setIngredients] = useState<string[]>(product?.ingredients ?? []);
+  const [allergens, setAllergens] = useState<string[]>(product?.allergens ?? []);
+  const [nutrition, setNutrition] = useState<NutritionText>({
+    calories: product?.nutrition.calories?.toString() ?? "",
+    protein: product?.nutrition.protein?.toString() ?? "",
+    carbs: product?.nutrition.carbs?.toString() ?? "",
+    sugar: product?.nutrition.sugar?.toString() ?? "",
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -191,6 +200,15 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
         ...(tracking === "unit"
           ? { stockQty: Number(stockQty), minStockThreshold: Number(minStockThreshold) }
           : { recipe: recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) }),
+        ingredients,
+        allergens,
+        // Blank = not known (the kiosk shows a dash).
+        nutrition: {
+          calories: nutrition.calories === "" ? null : Math.round(Number(nutrition.calories)),
+          protein: nutrition.protein === "" ? null : Number(nutrition.protein),
+          carbs: nutrition.carbs === "" ? null : Number(nutrition.carbs),
+          sugar: nutrition.sugar === "" ? null : Number(nutrition.sugar),
+        },
       };
       let saved = savedProduct
         ? await apiFetch<Product>(`/api/products/${savedProduct.id}`, { method: "PUT", auth: "staff", body: JSON.stringify(body) })
@@ -521,6 +539,20 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
             className={`h-20 resize-none py-2 ${admInputClass}`}
           />
         </Field>
+
+        <ProductDetailsFields
+          ingredients={ingredients}
+          onIngredientsChange={setIngredients}
+          allergens={allergens}
+          onAllergensChange={setAllergens}
+          nutrition={nutrition}
+          onNutritionChange={setNutrition}
+          productName={name}
+          recipeNames={tracking === "recipe" ? recipe.flatMap((r) => materialById.get(r.rawMaterialId)?.name ?? []) : null}
+          recipe={
+            tracking === "recipe" && recipeValid ? recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) : null
+          }
+        />
 
         {error && (
           <p role="alert" className="mb-3 text-base text-adm-bad md:text-sm">

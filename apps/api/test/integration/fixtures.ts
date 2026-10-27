@@ -97,6 +97,17 @@ export const PRODUCTS = {
     tracking: "unit",
     recipe: [],
   },
+  // Used only by the order lifecycle tests (live-orders, order-status, transactions).
+  coffee: {
+    id: "88888888-8888-4888-8888-888888888888",
+    name: "Test Brewed Coffee",
+    price: "35.00",
+    barcode: null,
+    stockQty: 100,
+    isAvailable: true,
+    tracking: "unit",
+    recipe: [],
+  },
   // Used only by qrph-payment.test.ts.
   juice: {
     id: "77777777-7777-4777-8777-777777777777",

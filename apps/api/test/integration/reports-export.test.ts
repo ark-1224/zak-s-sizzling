@@ -55,6 +55,24 @@ describe("the CSV file", () => {
 
     expect(res.text.split("\n")[0]).toBe("Product,Qty sold,Revenue (PHP)");
   });
+
+  it("gives the sales report an average order value column", async () => {
+    const res = await request(app).get("/api/reports/export?type=sales&format=csv").set("Authorization", `Bearer ${admin}`);
+
+    expect(res.text.split("\n")[0]).toBe("Period,Orders,Revenue (PHP),Average order value (PHP)");
+  });
+});
+
+describe("average order value", () => {
+  it("is each period's revenue divided by its paid orders", async () => {
+    const res = await request(app).get("/api/reports/sales?range=monthly").set("Authorization", `Bearer ${admin}`);
+
+    expect(res.status).toBe(200);
+    for (const point of res.body as { orderCount: number; revenue: number; averageOrderValue: number }[]) {
+      expect(point.orderCount).toBeGreaterThan(0);
+      expect(point.averageOrderValue).toBeCloseTo(point.revenue / point.orderCount, 2);
+    }
+  });
 });
 
 describe("the Excel file", () => {

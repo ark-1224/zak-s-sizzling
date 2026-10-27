@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-import type { Product, UserRole } from "@zaks/shared-types";
+import type { Nutrition, Product, UserRole } from "@zaks/shared-types";
 import { Prisma, type StockTracking } from "@prisma/client";
 import { applyStockChange } from "../inventory/service";
 import { refreshAvailability, servingsAvailable } from "../inventory/fulfillment";
@@ -113,6 +113,9 @@ export interface ProductInput {
   tracking?: StockTracking;
   recipe?: RecipeInput[];
   prepMinutes?: number;
+  ingredients?: string[];
+  allergens?: string[];
+  nutrition?: Nutrition;
 }
 
 /** Checks a recipe against the tracking mode it will be saved with. */
@@ -139,6 +142,22 @@ function rethrowDuplicateBarcode(err: unknown): never {
   throw err;
 }
 
+/** Ingredients, allergens and nutrition per serving, when the form sends them. */
+function detailColumns(input: Partial<ProductInput>) {
+  return {
+    ingredients: input.ingredients,
+    allergens: input.allergens,
+    ...(input.nutrition
+      ? {
+          calories: input.nutrition.calories,
+          proteinG: input.nutrition.protein,
+          carbsG: input.nutrition.carbs,
+          sugarG: input.nutrition.sugar,
+        }
+      : {}),
+  };
+}
+
 const recipeRows = (recipe: RecipeInput[]) => recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: r.qtyPerServing }));
 
 async function getProductDTO(id: string): Promise<Product> {
@@ -160,6 +179,7 @@ export async function createProduct(input: ProductInput): Promise<Product> {
         icon: input.icon,
         tracking,
         prepMinutes: input.prepMinutes,
+        ...detailColumns(input),
         // Recipe products keep an inventory row for consistency, but their stock comes
         // from the raw materials, so their own count stays 0.
         inventory: { create: { stockQty: tracking === "recipe" ? 0 : input.stockQty, minStockThreshold: input.minStockThreshold } },
@@ -193,6 +213,7 @@ export async function updateProduct(id: string, input: Partial<ProductInput> & {
         isAvailable: input.isAvailable,
         tracking,
         prepMinutes: input.prepMinutes,
+        ...detailColumns(input),
       },
     });
     // Switching to unit tracking drops the recipe; saving a recipe replaces the old one.

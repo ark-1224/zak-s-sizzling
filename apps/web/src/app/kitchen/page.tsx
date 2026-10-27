@@ -12,12 +12,14 @@ import {
 } from "@/lib/receiptPrinter";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { clockTime, dueIn } from "@/lib/prepTime";
-import type { KitchenTaskDTO, OrderType } from "@zaks/shared-types";
+import type { KitchenTaskDTO, OrderStatus, OrderType } from "@zaks/shared-types";
 
 // Kitchen Display System — real-time order queue per the manuscript's Kitchen Display
 // Module wireframe: order ID/date, food items, and serving status. KitchenTask is
 // per-order-item (see the ERD), so each order card lists its items with their own
-// Pending → In-Progress → Completed control.
+// Pending → In-Progress → Completed control. The order follows its dishes (preparing,
+// then ready); a ready order stays as a READY card until the kitchen presses Handed over,
+// which completes it and takes it off the counter's status board.
 const STATUS_LABEL = { pending: "Pending", in_progress: "In Progress", completed: "Completed" } as const;
 const NEXT_STATUS = { pending: "in_progress", in_progress: "completed" } as const;
 const TICKET_FAILED = "Couldn't print the kitchen ticket for";
@@ -72,9 +74,11 @@ export default function KitchenPage() {
     const socket = getSocket();
     socket.on("order:created", load);
     socket.on("kitchen:task_updated", load);
+    socket.on("orders:changed", load);
     return () => {
       socket.off("order:created", load);
       socket.off("kitchen:task_updated", load);
+      socket.off("orders:changed", load);
     };
   }, [load]);
 
@@ -93,10 +97,30 @@ export default function KitchenPage() {
     }
   }
 
+  const [handingOver, setHandingOver] = useState<string | null>(null);
+  async function handOver(orderId: string) {
+    setHandingOver(orderId);
+    try {
+      await apiFetch(`/api/kitchen/orders/${orderId}/handed-over`, { method: "POST", auth: "staff" });
+      // orders:changed reloads the queue, and the card leaves.
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : "Could not mark the order as handed over.");
+    } finally {
+      setHandingOver(null);
+    }
+  }
+
   const orders = useMemo(() => {
     const byOrder = new Map<
       string,
-      { orderNumber: string; createdAt: string; readyAt: string | null; orderType: OrderType; tasks: KitchenTaskDTO[] }
+      {
+        orderNumber: string;
+        createdAt: string;
+        readyAt: string | null;
+        orderType: OrderType;
+        status: OrderStatus;
+        tasks: KitchenTaskDTO[];
+      }
     >();
     for (const t of tasks) {
       const entry = byOrder.get(t.orderId) ?? {
@@ -104,6 +128,7 @@ export default function KitchenPage() {
         createdAt: t.orderCreatedAt,
         readyAt: t.orderEstimatedReadyAt,
         orderType: t.orderType,
+        status: t.orderStatus,
         tasks: [],
       };
       entry.tasks.push(t);
@@ -111,7 +136,8 @@ export default function KitchenPage() {
     }
     return Array.from(byOrder.entries())
       .map(([orderId, v]) => ({ orderId, ...v }))
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      // Ready orders first, waiting to be handed over; then the rest, oldest first.
+      .sort((a, b) => Number(b.status === "ready") - Number(a.status === "ready") || a.createdAt.localeCompare(b.createdAt));
   }, [tasks]);
 
   // Kitchen tickets: on the device with the kitchen printer (this page opened once with
@@ -147,11 +173,14 @@ export default function KitchenPage() {
     }
   }, [ticketPrinter, loaded, orders, now]);
 
+  const readyCount = orders.filter((order) => order.status === "ready").length;
+
   return (
     <div className="rounded-[6px] bg-ink p-4 text-cream md:p-6">
       <h1 className="font-display mb-1 text-2xl font-semibold">Kitchen Display</h1>
       <p className="mb-4 text-base text-cream/70 md:mb-6 md:text-sm">
         {loaded ? `${orders.length} active order${orders.length !== 1 ? "s" : ""}` : "\u00a0"}
+        {readyCount > 0 && ` \u00b7 ${readyCount} ready to hand over`}
         {ticketPrinter && " \u00b7 Ticket printer on"}
       </p>
 
@@ -172,7 +201,10 @@ export default function KitchenPage() {
         // of columns adapts to the space that's actually available, not the viewport.
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-3 md:gap-4">
           {orders.map((order) => (
-            <div key={order.orderId} className="min-w-0 rounded-card bg-white/8 p-4">
+            <div
+              key={order.orderId}
+              className={`min-w-0 rounded-card p-4 ${order.status === "ready" ? "bg-available/15 ring-2 ring-available" : "bg-white/8"}`}
+            >
               <div className="mb-3 border-b border-white/15 pb-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex min-w-0 flex-wrap items-center gap-2">
@@ -188,7 +220,11 @@ export default function KitchenPage() {
                   </span>
                   <span className="shrink-0 text-sm text-cream/60">{clockTime(order.createdAt)}</span>
                 </div>
-                {order.readyAt && <DueTime readyAt={order.readyAt} now={now} />}
+                {order.status === "ready" ? (
+                  <div className="mt-1 text-base font-bold text-available md:text-sm">READY · waiting for pickup</div>
+                ) : (
+                  order.readyAt && <DueTime readyAt={order.readyAt} now={now} />
+                )}
               </div>
               <div className="space-y-2.5">
                 {order.tasks.map((task) => (
@@ -217,6 +253,15 @@ export default function KitchenPage() {
                   </div>
                 ))}
               </div>
+              {order.status === "ready" && (
+                <button
+                  onClick={() => handOver(order.orderId)}
+                  disabled={handingOver === order.orderId}
+                  className="mt-3 min-h-12 w-full rounded-full bg-available text-base font-bold text-cream disabled:opacity-60"
+                >
+                  {handingOver === order.orderId ? "Handing over…" : "Handed over"}
+                </button>
+              )}
             </div>
           ))}
         </div>

@@ -26,7 +26,9 @@ export type IconName =
   | "takeOut"
   | "restart"
   | "cash"
-  | "phone";
+  | "phone"
+  | "history"
+  | "categories";
 
 const SHAPES: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -155,6 +157,21 @@ const SHAPES: Record<IconName, React.ReactNode> = {
     <>
       <rect x="6.5" y="2.5" width="11" height="19" rx="2" />
       <path d="M10.5 18.5h3" />
+    </>
+  ),
+  history: (
+    <>
+      <path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" />
+      <path d="M4 4v3.5h3.5" />
+      <path d="M12 8v4.5l3 2" />
+    </>
+  ),
+  categories: (
+    <>
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+      <path d="M14 17h6M17 14v6" />
     </>
   ),
 };

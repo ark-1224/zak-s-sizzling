@@ -44,9 +44,17 @@ export function useCatalog() {
         )
       );
     }
+    // The Administrator added, renamed, reordered or deleted a category: reload the rail.
+    function handleCategoriesChanged() {
+      apiFetch<Category[]>("/api/categories")
+        .then(setCategories)
+        .catch(() => {}); // keep the current rail; the next change or a reload tries again
+    }
     socket.on("inventory:updated", handleInventoryUpdate);
+    socket.on("categories:changed", handleCategoriesChanged);
     return () => {
       socket.off("inventory:updated", handleInventoryUpdate);
+      socket.off("categories:changed", handleCategoriesChanged);
     };
   }, []);
 

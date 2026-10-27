@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import type { AdjustmentReason, RawMaterialDTO, RawMaterialMovementDTO, UserRole } from "@zaks/shared-types";
+import type { AdjustmentReason, RawMaterialDTO, RawMaterialMovementDTO, RawMaterialNutrition, UserRole } from "@zaks/shared-types";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
 import { refreshAvailability } from "../inventory/fulfillment";
@@ -26,6 +26,20 @@ function toRawMaterialDTO(m: RawMaterialWithRecipes): RawMaterialDTO {
     isActive: m.isActive,
     isLow: m.stockQty.lte(m.minStockThreshold),
     usedBy: m.recipeItems.map((r) => ({ productId: r.product.id, productName: r.product.name, qtyPerServing: Number(r.qtyPerServing) })),
+    nutrition:
+      m.kcalPer100g === null
+        ? null
+        : {
+            fdcId: m.fdcId,
+            description: m.fdcDescription,
+            per100g: {
+              calories: Number(m.kcalPer100g),
+              protein: Number(m.proteinPer100g ?? 0),
+              carbs: Number(m.carbsPer100g ?? 0),
+              sugar: Number(m.sugarPer100g ?? 0),
+            },
+          },
+    gramsPerUnit: m.gramsPerUnit === null ? null : Number(m.gramsPerUnit),
   };
 }
 
@@ -100,6 +114,24 @@ export interface UpdateRawMaterialInput {
   minStockThreshold?: number;
   costPerUnit?: number | null;
   isActive?: boolean;
+  nutrition?: RawMaterialNutrition | null;
+  gramsPerUnit?: number | null;
+}
+
+/** The nutrition columns for a link to a USDA food (or typed-in values), or clearing it. */
+function nutritionColumns(nutrition: RawMaterialNutrition | null | undefined) {
+  if (nutrition === undefined) return {};
+  if (nutrition === null) {
+    return { fdcId: null, fdcDescription: null, kcalPer100g: null, proteinPer100g: null, carbsPer100g: null, sugarPer100g: null };
+  }
+  return {
+    fdcId: nutrition.fdcId,
+    fdcDescription: nutrition.description,
+    kcalPer100g: nutrition.per100g.calories,
+    proteinPer100g: nutrition.per100g.protein,
+    carbsPer100g: nutrition.per100g.carbs,
+    sugarPer100g: nutrition.per100g.sugar,
+  };
 }
 
 export async function updateRawMaterial(id: string, input: UpdateRawMaterialInput): Promise<RawMaterialDTO> {
@@ -113,6 +145,8 @@ export async function updateRawMaterial(id: string, input: UpdateRawMaterialInpu
         minStockThreshold: input.minStockThreshold === undefined ? undefined : decimal(input.minStockThreshold),
         costPerUnit: input.costPerUnit,
         isActive: input.isActive,
+        ...nutritionColumns(input.nutrition),
+        gramsPerUnit: input.gramsPerUnit,
       },
     });
   } catch (err) {
