@@ -25,9 +25,11 @@
 <rect x="392" y="252" width="96" height="90" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <line x1="392" y1="252" x2="488" y2="342" stroke="#c9c9c9" stroke-width="1"/>
 <line x1="488" y1="252" x2="392" y2="342" stroke="#c9c9c9" stroke-width="1"/>
-<rect x="92" y="368" width="406" height="64" rx="12" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="92" y="368" width="406" height="108" rx="12" fill="#f3f3f3" stroke="#9a9a9a" stroke-width="1"/>
 <text x="108" y="392" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Estimated preparation time</text>
 <text x="108" y="418" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="start" fill="#222222">Ready about 15 min after you pay</text>
+<text x="108" y="440" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Once you&#x27;ve paid, watch the screen at the counter for</text>
+<text x="108" y="457.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">your order number.</text>
 <rect x="534" y="128" width="398" height="220" rx="12" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <text x="552" y="162" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#222222">1 × Dish name</text>
 <text x="914" y="162" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="end" fill="#222222">₱000.00</text>

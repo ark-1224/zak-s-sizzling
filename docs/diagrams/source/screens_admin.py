@@ -1,4 +1,4 @@
-"""Back-office wireframes (10-21), drawn at a 1280 px wide desktop. Pages are drawn at
+"""Back-office wireframes (10-24), drawn at a 1280 px wide desktop. Pages are drawn at
 their full length, so content below the fold is shown too.
 
 Layout, labels, fields and buttons follow the files named in each header. Row data are
@@ -16,16 +16,17 @@ A = "apps/web/src/app/"
 C = "apps/web/src/components/admin/"
 
 NAV = [
-    ("Operations", [("Dashboard", "/admin", False), ("Products", "/admin/products", True), ("Inventory", "/admin/inventory", False),
-                    ("Raw materials", "/admin/raw-materials", False), ("Barcode lookup", "/admin/barcode", False),
-                    ("Bulk import", "/admin/import", True)]),
-    ("Sales", [("Analytics", "/admin/analytics", True)]),
+    ("Operations", [("Dashboard", "/admin", False), ("Products", "/admin/products", True), ("Categories", "/admin/categories", True),
+                    ("Inventory", "/admin/inventory", False), ("Raw materials", "/admin/raw-materials", False),
+                    ("Barcode lookup", "/admin/barcode", False), ("Bulk import", "/admin/import", True)]),
+    ("Sales", [("Analytics", "/admin/analytics", True), ("Transactions", "/admin/transactions", True)]),
     ("Front of house", [("Kitchen display", "/kitchen", False), ("Orders awaiting payment", "/staff/orders", False)]),
     ("Administration", [("Users & roles", "/admin/users", True), ("Kiosk QR code", "/admin/kiosk-qr", True)]),
 ]
 
 
 def admin_page(number, name, route, files, h=800, access=BOTH, role="admin", active=None):
+    h = max(h, 900)  # room for the whole sidebar menu above the signed-in box
     f = Wireframe(number, name, route, files + ", " + C + "AdminShell.tsx", W, h, SIZE, access)
     f.rect(0, 0, W, h, fill=FILL2, stroke=None)
     sidebar(f, role, active or route)
@@ -315,27 +316,76 @@ def product_form_fields(f, x, y, w, recipe):
         y += 242
     f.textarea(x, y + 18, w, 64, label="Description")
     y += 104
+    y = details_fields(f, x, y, w, recipe)
     f.btn_row(x + w, y, [("Cancel", "secondary"), ("Save changes" if recipe else "Add product", "primary")], h=38)
     return y + 38
 
 
+def details_fields(f, x, y, w, recipe):
+    """Ingredients, allergens and nutrition per serving (ProductDetailsFields.tsx)."""
+    top = y
+    h = 408 if recipe else 386
+    f.rect(x, y, w, h, fill=FILL2, stroke=LINE, r=6)
+    f.text(x + 12, y + 20, "Ingredients, allergens and nutrition", size=12, bold=True, fill=INK2)
+    y += 40
+    f.text(x + 12, y, "Ingredients", size=12, bold=True, fill=INK2)
+    cx = x + 12
+    for name in ["Ingredient", "Ingredient", "Soy sauce"]:
+        cw = text_width(name, 12) + 34
+        f.rect(cx, y + 8, cw, 26, fill=WHITE, stroke=LINE, r=13)
+        f.text(cx + 10, y + 25, name + "  ×", size=12)
+        cx += cw + 6
+    y += 42
+    f.inp(x + 12, y, w - 100, 34, placeholder="Type an ingredient, then Enter", size=12)
+    f.btn(x + w - 80, y, 68, 34, "Add", size=12)
+    y += 40
+    if recipe:
+        f.text(x + 12, y + 10, "Add the recipe's raw materials as ingredients", size=12, fill=INK2)
+        y += 22
+    f.text(x + 12, y + 14, "Allergens", size=12, bold=True, fill=INK2)
+    y += 22
+    allergens = ["Milk", "Egg", "Fish", "Shellfish", "Peanuts", "Tree nuts", "Gluten", "Soy", "Sesame"]
+    col = (w - 24) / 3
+    for i, a in enumerate(allergens):
+        ax, ay = x + 12 + (i % 3) * col, y + (i // 3) * 22
+        f.checkbox(ax, ay, checked=a == "Egg", size=14)
+        f.text(ax + 20, ay + 12, a, size=12)
+    y += 84
+    f.text(x + 12, y, "Suggested from the ingredients:", size=12, fill=INK2)
+    f.btn(x + 206, y - 16, 136, 24, "+ Soy (Soy sauce)", size=11)
+    y += 18
+    f.text(x + 12, y + 14, "Nutrition per serving", size=12, bold=True, fill=INK2)
+    y += 40
+    nw = (w - 24 - 18) / 4
+    for i, label in enumerate(["Calories (kcal)", "Protein (g)", "Carbs (g)", "Sugar (g)"]):
+        f.inp(x + 12 + i * (nw + 6), y, nw, 32, label=label, value=["420", "26", "8", "2"][i], size=12)
+    y += 46
+    f.btn(x + 12, y, 176, 28, "Look up the dish (USDA)", size=11)
+    if recipe:
+        f.btn(x + 196, y, 150, 28, "Calculate from recipe", size=11)
+    f.text(x + 12, top + h - 10, "The kiosk shows these as estimated values. Leave a value blank if it isn't known.", size=11, fill=INK3)
+    return top + h + 18
+
+
 def product_form():
-    f = admin_page("12b", "Product form: add (count units)", "/admin/products  (popup)", C + "ProductForm.tsx", h=1040, access=ADMIN)
+    f = admin_page("12b", "Product form: add (count units)", "/admin/products  (popup)", C + "ProductForm.tsx, " + C + "ProductDetailsFields.tsx", h=1450, access=ADMIN)
     products_base(f)
-    x, y, w = modal(f, 512, 960, y=40)
+    x, y, w = modal(f, 512, 1370, y=40)
     product_form_fields(f, x, y, w, recipe=False)
     f.add_note("The same form is used for Add and Edit, and opens from Barcode lookup (15b) with the scanned barcode filled in. A scan with a barcode reader while the form is open fills the Barcode field (“Barcode — scanned!”).")
     f.add_note("On shorter screens the popup scrolls. The photo is uploaded after the product is saved; if only the photo fails, the form stays open and says so.")
+    f.add_note("Ingredients are tags (Enter or Add; × removes). Allergens are a checklist of nine common allergens; words in the ingredients suggest some (e.g. soy sauce → Soy), which the Admin confirms with +. Nutrition per serving can be typed, or looked up for the whole dish in USDA FoodData Central (“Look up the dish (USDA)”: search, enter the serving size in grams, pick a match; values are scaled from per 100 g). Without USDA_API_KEY the lookup says it isn't set up.")
     return f
 
 
 def product_form_recipe():
-    f = admin_page("12c", "Product form: edit (use a recipe), with a field error", "/admin/products  (popup)", C + "ProductForm.tsx", h=1210, access=ADMIN)
+    f = admin_page("12c", "Product form: edit (use a recipe), with a field error", "/admin/products  (popup)", C + "ProductForm.tsx, " + C + "ProductDetailsFields.tsx", h=1640, access=ADMIN)
     products_base(f)
-    x, y, w = modal(f, 512, 1140, y=30)
+    x, y, w = modal(f, 512, 1570, y=30)
     product_form_fields(f, x, y, w, recipe=True)
     f.add_note("“Use a recipe” replaces Stock qty / Minimum level with the recipe rows (raw material, amount per serving, unit, remove). Each raw material can be used once per recipe.")
     f.add_note("Checks on Save, each shown under its field and focusing the first problem: name required; price ₱0.00 or more; cost blank or ₱0.00 or more; prep time whole minutes 0–120; stock and minimum whole numbers; a recipe needs at least one complete row. A barcode already in use comes back from the API (409) under Barcode.")
+    f.add_note("A recipe dish also has “Add the recipe's raw materials as ingredients” and “Calculate from recipe” (POST /api/nutrition/estimate): each raw material's grams per serving ÷ 100 × its values per 100 g (set in 14d), added up. Raw materials without nutrition, or pieces without a weight, are left out and named; ml without a weight counts as 1 g per ml.")
     return f
 
 
@@ -415,9 +465,9 @@ def raw_base(f, role="admin"):
     status = ["OK", "LOW", "OK", "OUT", "LOW", "OK"]
     rows = [["Raw material", ["5 kg", "1.2 kg", "24 pc", "0 g", "800 g", "3 L"][i], ["1 kg", "2 kg", "10 pc", "500 g", "1 kg", "1 L"][i],
              P(f, status[i]), "Dish name (150 g), Dish name (100 g)" if i in (0, 4) else "—",
-             B(f, "Adjust", "Edit") if admin else B(f, "Adjust")] for i in range(6)]
-    f.table(CX, top, CW, [("Raw material", 0.17, "left"), ("On hand", 0.1, "right"), ("Min", 0.09, "right"), ("Status", 0.1, "left"),
-                          ("Used in", 0.36, "left"), ("Actions", 0.18, "right")], rows, rowh=44)
+             B(f, "Adjust", "Edit", "Nutrition ✓" if i in (0, 2) else "Nutrition") if admin else B(f, "Adjust")] for i in range(6)]
+    f.table(CX, top, CW, [("Raw material", 0.15, "left"), ("On hand", 0.09, "right"), ("Min", 0.08, "right"), ("Status", 0.08, "left"),
+                          ("Used in", 0.3, "left"), ("Actions", 0.3, "right")], rows, rowh=44)
     y = top + 30 + 6 * 44 + 18
     top = card(f, CX, y, CW, f.h - y - 24, "Stock movements", select_action(f, "All raw materials"))
     rows = [["Oct 21, 3:15 PM", "Raw material", "−150 g  (2 kg→1.85 kg)", "Sale · ZK-XXXXXX", "—", "Kiosk sale"],
@@ -430,7 +480,7 @@ def raw_base(f, role="admin"):
 def raw_materials():
     f = admin_page("14", "Raw materials", "/admin/raw-materials", A + "admin/raw-materials/page.tsx", h=860)
     raw_base(f)
-    f.add_note("Admin and Staff can Adjust (14b). Only an Admin sees + Add raw material and Edit (14c). A material marked not in use is dimmed with “(not in use)”.")
+    f.add_note("Admin and Staff can Adjust (14b). Only an Admin sees + Add raw material and Edit (14c), and Nutrition (14d; “✓” when the material has nutrition per 100 g). A material marked not in use is dimmed with “(not in use)”.")
     f.add_note("Stock movements lists sales (deducted automatically when an order is paid) and manual changes, filterable by raw material, refreshing live. Empty states: “No raw materials yet.” and “No stock movements recorded yet.”")
     return f
 
@@ -450,6 +500,40 @@ def raw_adjust():
     f.btn_row(x + w, y + 406, [("Cancel", "secondary"), ("Save change", "disabled")], h=38)
     f.add_note("Amounts are in the material's base unit (g, ml or pc). Save change needs an amount that changes the stock, a reason, and a result of 0 or more (“Only 1.2 kg is in stock.”). Damaged goods and Spoilage are disabled while Add is chosen.")
     f.add_note("A change updates the kiosk's sold-out state for every dish that uses this material.")
+    return f
+
+
+def raw_nutrition():
+    f = admin_page("14d", "Raw material nutrition (popup)", "/admin/raw-materials  (popup)",
+                   C + "RawMaterialNutritionModal.tsx, " + C + "UsdaFoodSearch.tsx", h=900, access=ADMIN)
+    raw_base(f)
+    x, y, w = modal(f, 640, 660, y=60)
+    f.text(x, y + 12, "NUTRITION PER 100 G", size=11, fill=INK3, bold=True)
+    f.text(x, y + 38, "Raw material", size=18, bold=True)
+    f.text(x, y + 60, "Used to calculate a recipe dish's nutrition. Values are for the raw ingredient.", size=12, fill=INK3)
+    y += 80
+    f.rect(x, y, w, 220, fill=WHITE, stroke=LINE, r=6)
+    f.inp(x + 12, y + 12, w - 120, 36, value="Raw material")
+    f.btn(x + w - 98, y + 12, 86, 36, "Search")
+    ry = y + 60
+    for i in range(3):
+        f.text(x + 12, ry + 16, "USDA food description, raw", size=12, bold=True)
+        f.text(x + 12, ry + 34, "Per 100 g: 000 kcal · protein 0.0 g · carbs 0 g · sugar 0 g · SR Legacy", size=11, fill=INK3)
+        f.btn(x + w - 62, ry + 8, 50, 28, "Use", size=12)
+        ry += 44
+    f.text(x + 12, y + 208, "Source: U.S. Department of Agriculture, FoodData Central (public domain).", size=10, fill=INK3)
+    y += 256
+    fw = (w - 36) / 4
+    for i, label in enumerate(["Calories (kcal)", "Protein (g)", "Carbs (g)", "Sugar (g)"]):
+        f.inp(x + i * (fw + 12), y, fw, 36, label=label, value="")
+    y += 64
+    f.inp(x, y, 180, 36, label="Grams in one piece", placeholder="e.g. 50 for an egg")
+    f.text(x, y + 54, "Needed: without it, this raw material is left out of the calculation.", size=11, fill=INK3)
+    y += 80
+    f.btn_row(x + w, y, [("Cancel", "secondary"), ("Save", "primary")], h=38)
+    f.add_note("Admin only. Search sends the name to GET /api/nutrition/search (USDA FoodData Central; the API keeps the key). “Use” fills the four values per 100 g; they can also be typed from a label. Saving PUTs them to /api/raw-materials/:id.")
+    f.add_note("Pieces (pc) need a weight per piece; ml may have grams per ml (blank = 1 g per ml; oil is about 0.92). When nutrition is already set, the popup shows “Linked to USDA food: …” with Change, and a Remove nutrition button.")
+    f.add_note("Without USDA_API_KEY the search answers “Nutrition lookup isn't set up: add USDA_API_KEY to the API's environment”. Over USDA's hourly limit: “USDA's lookup limit was reached. Try again in an hour.”")
     return f
 
 
@@ -609,17 +693,19 @@ def bars(f, x, y, w, h, n, horizontal=False):
 
 
 def analytics():
-    f = admin_page("17", "Analytics", "/admin/analytics", A + "admin/analytics/page.tsx", h=1280, access=ADMIN)
+    f = admin_page("17", "Analytics", "/admin/analytics", A + "admin/analytics/page.tsx", h=1414, access=ADMIN)
     y = page_header(f, "Visual analytics & reports", "Performance")
     f.text(CX, y + 25, "Sales period", size=13, bold=True, fill=INK2)
     f.segmented(CX + 96, y, 300, 40, ["Daily", "Weekly", "Monthly"], 0)
     f.text(CX + 412, y + 25, "Last 14 days, by day", size=13, fill=INK3)
     y += 58
-    tw = (CW - 42) / 4
-    for i, (label, value, sub) in enumerate([("Revenue", "₱0,000.00", "Last 14 days"), ("Orders", "00", "Paid orders · last 14 days"),
-                                             ("Top product", "Product name", "All time · 00 sold"), ("Needs restock", "5", "Right now · at or below minimum")]):
-        kpi(f, CX + i * (tw + 14), y, tw, label, value, sub)
-    y += 134
+    tw = (CW - 28) / 3
+    tiles = [("Revenue", "₱0,000.00", "Last 14 days"), ("Orders", "00", "Paid orders · last 14 days"),
+             ("Average order value", "₱000.00", "Revenue ÷ paid orders · last 14 days"),
+             ("Top product", "Product name", "All time · 00 sold"), ("Needs restock", "5", "Right now · at or below minimum")]
+    for i, (label, value, sub) in enumerate(tiles):
+        kpi(f, CX + (i % 3) * (tw + 14), y + (i // 3) * 134, tw, label, value, sub)
+    y += 268
     top = card(f, CX, y, CW, 320, "Sales · last 14 days, by day", export_buttons(f))
     bars(f, CX + 50, top + 20, CW - 80, 230, 14)
     y += 338
@@ -630,10 +716,11 @@ def analytics():
     f.table(CX + half + 18, top, half, [("Item", 0.36, "left"), ("Cost", 0.16, "right"), ("Price", 0.16, "right"), ("Margin", 0.16, "right"), ("Gross", 0.16, "right")],
             [["Product name", "₱00.00", "₱000.00", "00.0%", "₱0,000"] for _ in range(6)], rowh=38)
     y += 378
-    top = card(f, CX, y, CW, 1280 - y - 24, "Inventory movement · sold all time, stock now", export_buttons(f))
+    top = card(f, CX, y, CW, f.h - y - 24, "Inventory movement · sold all time, stock now", export_buttons(f))
     f.table(CX, top, CW, [("Product", 0.6, "left"), ("Units sold", 0.2, "right"), ("Current stock", 0.2, "right")],
             [["Product name", "00", "00"] for _ in range(4)], rowh=38)
-    f.add_note("Daily / Weekly / Monthly changes the sales chart and the Revenue and Orders tiles (last 14 days / 8 weeks / 6 months). Top products, profitability and movement are all-time; Needs restock is right now.")
+    f.add_note("Daily / Weekly / Monthly changes the sales chart and the Revenue, Orders and Average order value tiles (last 14 days / 8 weeks / 6 months). Average order value = revenue ÷ paid orders (“—” with none); the chart's hover shows each period's revenue, orders and average. Top products, profitability and movement are all-time; Needs restock is right now.")
+    f.add_note("The sales export (CSV, Excel, PDF) has an Average order value column.")
     f.add_note("Each card exports its report as CSV, Excel or PDF (GET /api/reports/export). Empty states: “No sales in this period” (with “Try a longer period above.”), “No sales yet”, and “No products have a cost recorded yet — add one in Products to see margins here.”")
     return f
 
@@ -644,20 +731,25 @@ def kitchen_page(empty):
                    A + "kitchen/page.tsx", h=800, active="/kitchen")
     f.rect(CX, 24, CW, 752, fill=FILL4, stroke=None, r=6)
     f.text(CX + 24, 66, "Kitchen Display", size=24, bold=True)
-    f.text(CX + 24, 90, "0 active orders" if empty else "3 active orders", size=13, fill=INK2)
+    f.text(CX + 24, 90, "0 active orders" if empty else "3 active orders · 1 ready to hand over", size=13, fill=INK2)
     if empty:
         f.text(CX + 24, 138, "No active orders — the kitchen is caught up.", size=15, fill=INK2)
         f.add_note("Shown only after a successful load. If the queue can't load, an alert “Couldn't load the kitchen queue.” with Retry appears instead, so a failure never looks like an empty kitchen.")
         return f
     cw = (CW - 48 - 32) / 3
-    orders = [("DINE IN", "in 6 min", ["in_progress", "pending"]), ("TAKE OUT", "2 min late", ["in_progress", "pending", "pending"]), ("DINE IN", "in 14 min", ["pending"])]
+    orders = [("TAKE OUT", "ready", ["completed", "completed"]), ("DINE IN", "in 6 min", ["in_progress", "pending"]), ("DINE IN", "2 min late", ["pending"])]
     for i, (otype, due, tasks) in enumerate(orders):
         x, y = CX + 24 + i * (cw + 16), 112
-        f.rect(x, y, cw, 90 + len(tasks) * 112, fill=FILL3, stroke=LINE, r=12)
+        ready = due == "ready"
+        f.rect(x, y, cw, 90 + len(tasks) * 112 + (58 if ready else 0), fill=FILL3, stroke=INK if ready else LINE, r=12, sw=2.5 if ready else 1)
         f.text(x + 16, y + 30, "ZK-XXXXXX", size=17, bold=True)
         f.pill(x + 120, y + 15, otype, size=10, filled=otype == "TAKE OUT", r=10)
         f.text(x + cw - 16, y + 30, "12:30 PM", size=12, anchor="end", fill=INK2)
-        f.text(x + 16, y + 54, f"Ready by 12:45 PM · {due}", size=13, bold="late" in due, fill=INK2)
+        if ready:
+            f.text(x + 16, y + 54, "READY · waiting for pickup", size=13, bold=True)
+            f.btn(x + 12, y + 80 + len(tasks) * 108 + 6, cw - 24, 40, "Handed over", kind="primary", r=20)
+        else:
+            f.text(x + 16, y + 54, f"Ready by 12:45 PM · {due}", size=13, bold="late" in due, fill=INK2)
         f.line(x + 16, y + 68, x + cw - 16, y + 68, stroke=LINE)
         ty = y + 80
         for j, status in enumerate(tasks):
@@ -671,8 +763,8 @@ def kitchen_page(empty):
             ty += 108
     f.add_note("Only paid orders appear (a counter order after staff confirm it, an online order after the payment arrives), oldest first, one card per order with one row per dish. Updates live (order:created, kitchen:task_updated).")
     f.add_note("On the kitchen's own device (opened once with ?printer=1, shown as “· Ticket printer on” after the order count) each order prints a kitchen ticket when it first appears: the order number and the dishes with special instructions, through print-service/. Each order prints once; a failed ticket shows “Couldn't print the kitchen ticket for ZK-XXXXXX …” and is tried again.")
-    f.add_note("Each dish goes Pending → Start preparing → In Progress → Mark done. The queue only returns unfinished dishes, so a dish marked done drops off its card and the card goes when its last dish is done. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.")
-    f.add_note("PARTIAL: finishing every dish doesn't change the order's own status (the database has preparing / ready / completed, but the code never sets them), and nothing tells the customer the order is ready.")
+    f.add_note("Each dish goes Pending → Start preparing → In Progress → Mark done. While an order is being prepared, a dish marked done drops off its card. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.")
+    f.add_note("The order follows its dishes: preparing when the first dish is started, ready when the last is done. A ready order stays first, outlined, as “READY · waiting for pickup” with its dishes, until the kitchen presses Handed over (POST /api/kitchen/orders/:id/handed-over): the order is completed and leaves this display and the counter's status board (24), where it was shown under Ready for pickup.")
     return f
 
 
@@ -689,21 +781,22 @@ def orders_page(empty):
     f = admin_page("19b" if empty else "19", "Orders awaiting payment" + (": nothing waiting" if empty else ""), "/staff/orders",
                    A + "staff/orders/page.tsx", h=800, active="/staff/orders")
     y = page_header(f, "Billing & payment", "Orders awaiting payment")
-    y = f.wrap(CX, y, CW, "Counter orders show up here once placed. Confirm, then collect payment: confirming checks the stock first, so if something has run out you can change the order before the customer pays. Cancel an order the customer never came back to pay for.", size=13, fill=INK2)
+    y = f.wrap(CX, y, CW, "Counter orders show up here as soon as they are placed; the list updates by itself. Confirm, then collect payment: confirming checks the stock first, so if something has run out you can change the order before the customer pays. Cancel an order the customer never came back to pay for.", size=13, fill=INK2)
     y += 8
     if empty:
         f.text(CX, y + 16, "Nothing awaiting payment right now.", size=14, fill=INK3)
         f.add_note("Shown only after a successful load. If loading fails, an alert “Couldn't load the orders.” with Retry appears instead.")
-        f.add_note("The list loads when the page opens; it doesn't refresh by itself when a new order is placed (there is no live update on this page).")
+        f.add_note("The list reloads by itself (orders:changed) when an order is placed, paid, edited or cancelled anywhere.")
         return f
     f.text(CX, y + 14, "ZK-XXXXXX confirmed and sent to the kitchen. Collect ₱000.00 from the customer. Tell the customer it will be ready at about 12:45 PM.", size=13)
     y += 32
     f.inp(CX, y, 320, 38, placeholder="Search order number")
     f.text(CX + 334, y + 24, "3 orders waiting", size=13, fill=INK3)
     y += 54
-    card(f, CX, y, CW, 800 - y - 24)
-    # row 1: normal
+    card(f, CX, y, CW, f.h - y - 24)
+    # row 1: normal, just arrived
     f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
+    f.pill(CX + 128, y + 17, "NEW", size=10)
     f.text(CX + 18, y + 54, "2× Dish name, 1× Dish name", size=13, fill=INK2)
     f.text(CX + 18, y + 74, "Dine in · Counter · ₱000.00 · placed 3 min ago · ready about 15 min after confirming", size=12, fill=INK3)
     f.btn_row(CX + CW - 18, y + 30, [("Cancel order", "secondary"), ("Confirm order", "primary")], h=38)
@@ -729,6 +822,7 @@ def orders_page(empty):
     f.text(CX + 30, y + 128, "(stock-issue note from the server)", size=12, fill=INK2, italic=True)
     f.text(CX + 30, y + 148, "Talk to the customer about a substitute or a refund.", size=12, fill=INK2)
     f.add_note("Lists unpaid, not-cancelled orders plus paid orders flagged with a stock issue (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago it was placed come from the order.")
+    f.add_note("Live: the list reloads by itself (orders:changed, an event with no order data) whenever an order is placed, paid, edited or cancelled; an order that arrives while the page is open is marked NEW for a minute (first row).")
     f.add_note("Confirm order (“Checking stock…”) marks it paid, deducts stock and sends it to the kitchen in one step; if stock is short nothing changes and an error tells staff to change the order with the customer. Cancel asks first (second row).")
     f.add_note("A stock-issue order (third row) has no buttons: it was paid online when stock had run out, or after it was cancelled; staff refund or substitute outside the system. PARTIAL: this case only arises with online payment.")
     return f
@@ -867,15 +961,132 @@ def kiosk_qr_invalid():
     return qr_page(True)
 
 
+# --- 22 categories ------------------------------------------------------------------------
+def categories():
+    f = admin_page("22", "Categories", "/admin/categories", A + "admin/categories/page.tsx", h=900, access=ADMIN)
+    y = page_header(f, "Product management", "Categories")
+    y = f.wrap(CX, y, CW, "The order below is the order of the kiosk's category rail. Kiosks update as soon as you save.", size=13, fill=INK2)
+    y += 10
+    top = card(f, CX, y, CW, 186, "New category")
+    f.inp(CX + 18, top + 30, 520, 38, label="Name", value="Category name")
+    f.inp(CX + 552, top + 30, 128, 38, label="Icon (emoji)", value="(emoji)")
+    f.checkbox(CX + 698, top + 41, checked=True)
+    f.text(CX + 722, top + 54, "Mark as new", size=13)
+    f.text(CX + 18, top + 104, "One emoji, shown on the kiosk's category tile. On Windows, press Win + . to pick one.", size=12, fill=INK3)
+    f.btn_row(CX + CW - 18, top + 84, [("Add category", "primary"), ("Cancel", "secondary")], h=38)
+    y += 204
+    rows = 7
+    card(f, CX, y, CW, rows * 64 + 8)
+    for i in range(rows):
+        ry = y + 8 + i * 64
+        if i:
+            f.line(CX, ry, CX + CW, ry, stroke=LINE_SOFT)
+        f.text(CX + 34, ry + 36, str(i + 1), size=13, anchor="end", fill=INK3)
+        f.rect(CX + 48, ry + 12, 40, 40, fill=FILL3, stroke=None, r=6)
+        f.text(CX + 104, ry + 30, "Category name", size=14, bold=True)
+        if i == 5:
+            f.pill(CX + 220, ry + 16, "NEW", size=10)
+        f.text(CX + 104, ry + 50, "0 products" if i == 6 else f"{[5, 4, 2, 2, 3, 2][i]} products", size=12, fill=INK3)
+        if i == 6:
+            bx = CX + CW - 18 - 360
+            f.text(bx, ry + 37, "Delete “Category name”?", size=13)
+            f.btn_row(CX + CW - 18, ry + 15, [("Yes, delete", "danger"), ("Keep it", "secondary")], h=34, size=12)
+        else:
+            f.btn_row(CX + CW - 18, ry + 15, [("↑", "secondary"), ("↓", "secondary"), ("Edit", "secondary"), ("Delete", "danger")], h=34, size=12)
+    f.add_note("Admin only. Uses the manuscript's category fields: name (unique, whatever the capitals), icon (one emoji), sort order and “new” (a NEW badge on the kiosk's category tile). Add category opens the form above; Edit turns a row into the same form.")
+    f.add_note("↑ / ↓ change the kiosk rail's order (PUT /api/categories/order). Only an empty category can be deleted, after “Yes, delete” (last row); one with products says “… still has N products. Move them to another category on the Products page first.”")
+    f.add_note("Every change is sent to open kiosks (categories:changed), which reload their category rail at once.")
+    return f
+
+
+# --- 23 transactions ----------------------------------------------------------------------
+def transactions():
+    f = admin_page("23", "Transactions", "/admin/transactions", A + "admin/transactions/page.tsx", h=1000, access=ADMIN)
+    y = page_header(f, "Sales", "Transactions")
+    y = f.wrap(CX, y, CW, "Every order with its payment and status. Open an order to see its items and when it reached each step.", size=13, fill=INK2)
+    y += 10
+    card(f, CX, y, CW, 170)
+    fw = (CW - 36 - 24) / 3
+    fields = [("From", "10/28/2026"), ("To", "10/28/2026"), ("Status", "Any status"), ("Payment method", "Any method"),
+              ("Payment", "Paid or unpaid"), ("Order number", "")]
+    for i, (label, value) in enumerate(fields):
+        fx, fy = CX + 18 + (i % 3) * (fw + 12), y + 34 + (i // 3) * 68
+        f.inp(fx, fy, fw, 36, label=label, value=value, placeholder="e.g. ZK-LTLY9N" if not value else "", select=i in (2, 3, 4))
+    y += 188
+    f.text(CX, y + 14, "4 orders · 2026-10-28", size=13, fill=INK2)
+    f.text(CX + 180, y + 14, "Sales ₱000.00 from 2 paid orders", size=13, fill=INK2)
+    f.text(CX + 430, y + 14, "Average order value ₱000.00", size=13, fill=INK2)
+    y += 30
+    rows = [("UNPAID", "Dine in · Counter · unpaid"), ("CONFIRMED", "Take out · Counter · paid"),
+            ("HANDED OVER", "Take out · QR Ph · paid"), ("CANCELLED", "Dine in · Counter · unpaid")]
+    top = y
+    card(f, CX, y, CW, 4 * 66 + 150)
+    for i, (status, meta) in enumerate(rows):
+        f.text(CX + 18, y + 28, "ZK-XXXXXX", size=15, bold=True)
+        f.pill(CX + 116, y + 13, status, size=10)
+        f.text(CX + 18, y + 50, "2× Dish name, 1× Dish name", size=13, fill=INK2)
+        f.text(CX + CW - 18, y + 28, "₱000.00", size=15, bold=True, anchor="end")
+        f.text(CX + CW - 18, y + 50, "Oct 28, 2:26 AM · " + meta, size=12, fill=INK3, anchor="end")
+        y += 66
+        if i == 2:
+            f.rect(CX + 1, y, CW - 2, 150, fill=FILL2, stroke=None)
+            f.text(CX + 18, y + 22, "ITEMS", size=11, fill=INK3, bold=True)
+            f.text(CX + 18, y + 44, "2× Dish name", size=13)
+            f.text(CX + 18, y + 62, "“Extra rice”", size=12, fill=INK3, italic=True)
+            f.text(CX + CW / 2 - 24, y + 44, "₱000.00", size=13, anchor="end")
+            tx = CX + CW / 2
+            f.text(tx, y + 22, "TIMELINE", size=11, fill=INK3, bold=True)
+            for j, step in enumerate(["Placed", "Paid", "Preparing", "Ready", "Handed over"]):
+                f.text(tx, y + 44 + j * 20, step, size=12)
+                f.text(CX + CW - 18, y + 44 + j * 20, "Oct 28, 2:2" + str(6 + j // 3) + " AM", size=12, anchor="end", fill=INK2)
+            y += 150
+        if i < 3:
+            f.line(CX, y, CX + CW, y, stroke=LINE_SOFT)
+    f.add_note("Admin only. GET /api/orders/history: the orders in the date range (Manila days, today by default), newest first, 25 a page (Previous / Next with “Page 1 of N”). Filters: status (Unpaid, Confirmed, Preparing, Ready, Handed over, Cancelled), payment method, paid or unpaid, and order number (ignores spaces and dashes).")
+    f.add_note("The totals cover every matching order: how many, sales from the paid ones (confirmed to handed over, as in Analytics) and their average order value. Clicking a row opens its items, instructions, timeline (placed, paid, preparing, ready, handed over or cancelled) and the PayMongo reference for QR Ph.")
+    f.add_note("Reloads by itself when an order changes (orders:changed). Empty: “No orders match these filters.”")
+    return f
+
+
+# --- 24 order status board ------------------------------------------------------------------
+def status_board():
+    bw, bh = 1280, 720
+    f = Wireframe("24", "Order status board (screen at the counter)", "/board", A + "board/page.tsx",
+                  bw, bh, "1280 × 720 screen at the counter (TV or monitor), landscape", "Anyone (no login; kiosk or admin site)")
+    f.rect(0, 0, bw, bh, fill=DARK, stroke=None)
+    f.text(40, 52, "Order status", size=34, bold=True, fill=WHITE)
+    f.text(290, 50, "Zak's Sizzling Hub", size=16, fill=FILL3)
+    f.btn(bw - 260, 24, 220, 40, "Tap to turn on sound", size=13)
+    f.line(0, 84, bw, 84, stroke=FILL3, sw=2)
+    f.text(40, 136, "Preparing", size=26, bold=True, fill=WHITE)
+    for i in range(5):
+        x, y = 40 + (i % 2) * 220, 160 + (i // 2) * 70
+        f.rect(x, y, 204, 56, fill=DARK, stroke=FILL3, r=10, sw=1.5)
+        f.text(x + 102, y + 37, "ZK-XXXXXX", size=22, bold=True, anchor="middle", fill=WHITE)
+    rx, rw = 520, 720
+    f.rect(rx, 110, rw, 570, fill=WHITE, stroke=None, r=18)
+    f.text(rx + 32, 160, "Ready for pickup", size=34, bold=True)
+    f.text(rx + 32, 192, "Please collect your order at the counter.", size=16, fill=INK2)
+    for i in range(3):
+        x, y = rx + 32 + (i % 2) * 336, 226 + (i // 2) * 116
+        f.rect(x, y, 320, 96, fill=INK if i == 0 else WHITE, stroke=None if i == 0 else LINE, r=12, sw=1.5)
+        f.text(x + 160, y + 62, "ZK-XXXXXX", size=40, bold=True, anchor="middle", fill=WHITE if i == 0 else INK)
+    f.add_note("The customer's ready notice. Paid orders show under Preparing while the kitchen works on them (oldest first), then move to Ready for pickup when their last dish is done (newest first, highlighted for 15 seconds, with a two-note chime). They leave when the kitchen presses Handed over (18).")
+    f.add_note("No sign-in: GET /api/orders/board returns order numbers only, from the last 12 hours. It updates live (orders:changed), re-checks every minute, and shows “Reconnecting…” if the server can't be reached. Empty columns say “No orders being prepared.” / “Nothing waiting right now.”")
+    f.add_note("Browsers play sound only after a tap, hence “Tap to turn on sound” (hidden once sound is on); a kiosk browser can be started with --autoplay-policy=no-user-gesture-required instead. Text is larger on a TV-sized screen.")
+    return f
+
+
 SCREENS = [login, login_error, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_delete,
            inventory, adjust_stock, raw_materials, raw_adjust, raw_form, barcode_found, barcode_not_found, bulk_import,
            bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, users, invite_user, confirm_change,
-           kiosk_qr, kiosk_qr_invalid]
+           kiosk_qr, kiosk_qr_invalid, raw_nutrition, categories, transactions, status_board]
 
 SLUGS = {
     "10": "login", "10b": "login-error", "11": "dashboard", "11b": "dashboard-staff", "12": "products",
     "12b": "product-form-add", "12c": "product-form-recipe", "12d": "product-delete", "13": "inventory",
     "13b": "adjust-stock", "14": "raw-materials", "14b": "raw-material-adjust", "14c": "raw-material-form",
+    "14d": "raw-material-nutrition", "22": "categories", "23": "transactions", "24": "order-status-board",
     "15": "barcode-found", "15b": "barcode-not-found", "16": "bulk-import-preview", "16b": "bulk-import-result",
     "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty", "19": "orders-awaiting-payment",
     "19b": "orders-awaiting-payment-empty", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",

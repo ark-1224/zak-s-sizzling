@@ -235,6 +235,23 @@ order is paid. Offline/PWA support was removed from scope.
   1024×600 and 375px: a cart's estimate (17 min) matched the formula through checkout,
   receipt, counter confirmation and the kitchen display.
 
+- **Functional gaps closed (28 October 2026)** — order status now follows the kitchen
+  (confirmed → preparing → ready, then completed when the kitchen presses **Handed
+  over** on the READY card), with a public order status board for the screen at the
+  counter (`/board`, `GET /api/orders/board`, order numbers only). Admin-only
+  **Categories** (`/admin/categories`: add, rename, emoji icon, NEW badge, reorder the
+  kiosk rail, delete when empty) and **Transactions** (`/admin/transactions`,
+  `GET /api/orders/history`: date range, status, payment and order-number filters,
+  totals, a timeline per order). Analytics shows the **average order value** (also in the
+  sales export). Orders awaiting payment reloads live on `orders:changed`. The product
+  form sets ingredients, allergens (checklist with suggestions) and nutrition, looked up
+  in USDA FoodData Central (`GET /api/nutrition/search`, needs `USDA_API_KEY`) or
+  calculated from the recipe (`POST /api/nutrition/estimate`, from each raw material's
+  values per 100 g; migration `raw_material_nutrition`). Verified with new integration
+  tests (live-orders, order-status, transactions, categories, nutrition) and unit tests,
+  and in the browser. Known limitation: the ready notice is the counter screen; a phone
+  receipt doesn't update by itself.
+
 ## Prerequisites
 
 - Node.js 20+ and npm

@@ -268,7 +268,7 @@ def item_sheet():
     f.line(x, y + h - 80, x + w, y + h - 80, stroke=LINE)
     qty_stepper(f, x + 28, y + h - 64)
     f.btn(x + 188, y + h - 68, w - 216, 56, "Add to order · ₱000.00", kind="primary", r=28, size=17)
-    f.add_note("The middle scrolls; the quantity stepper and Add to order stay fixed at the bottom. Below the note box (scrolled out of view here): the typed count “Sent to the kitchen display with your order · 11/140” and a collapsed “Ingredients & nutrition” section (ingredient tags and calories / protein / carbs / sugar).")
+    f.add_note("The middle scrolls; the quantity stepper and Add to order stay fixed at the bottom. Below the note box (scrolled out of view here): the typed count “Sent to the kitchen display with your order · 11/140” and a collapsed “Ingredients & nutrition” section (ingredient tags, and calories / protein / carbs / sugar marked “Estimated values per serving.”).")
     f.add_note("Instruction chips depend on the category (Sizzling Plates shown); opposite chips (Extra spicy / Not spicy) turn each other off. Chips and note together are limited to 140 characters.")
     f.add_note("If the dish sells out while open: the pill reads “Currently unavailable”, instructions are hidden and the button reads “Unavailable” (disabled). Close: ×, a tap outside, or Esc.")
     return f
@@ -466,11 +466,11 @@ def receipt(f, paid):
     f.icon(lx + 38, y + 220, 7)
     f.text(lx + 52, y + 225, "Dine in", size=14, bold=True)
     f.img(lx + 300, y + 152, 96, 90, r=6)
-    f.rect(lx, y + 268, 406, 84 if paid else 64, fill=FILL2, stroke=LINE, r=12)
+    f.rect(lx, y + 268, 406, 108, fill=FILL2, stroke=LINE, r=12)
     f.text(lx + 16, y + 292, "Estimated preparation time", size=13, fill=INK2)
     f.text(lx + 16, y + 318, "Ready at about 12:45 PM" if paid else "Ready about 15 min after you pay", size=18, bold=True)
-    if paid:
-        f.text(lx + 16, y + 340, "In about 15 min. We'll call your order number.", size=13, fill=INK2)
+    f.wrap(lx + 16, y + 340, 374, "In about 15 min. Watch the screen at the counter for your order number." if paid
+           else "Once you've paid, watch the screen at the counter for your order number.", size=13, fill=INK2)
     rx, rw = x + 470, 398
     f.rect(rx, y + 28, rw, 220, fill=WHITE, stroke=LINE, r=12)
     for i in range(3):

@@ -153,7 +153,7 @@ def counter_payment():
              notes=[
                  "Staff confirm first and collect the money after: confirming checks and deducts the stock, so a shortage is found before any money changes hands. Marking paid, deducting and confirming happen in one database transaction; a shortage rolls all of it back.",
                  "PARTIAL: the message asks staff to change the order with the customer, but no screen edits an existing order (the API has endpoints to change or remove order items, unused by the web app). In practice the order is cancelled and placed again.",
-                 "The list loads when the page opens and after each action; it does not refresh by itself when a new order arrives.",
+                 "The list reloads by itself when an order is placed, paid, edited or cancelled (orders:changed); a new order is marked NEW for a minute.",
              ])
     C, S, A = f.lanes
     f.n("start", C, 0, "start", "Brings the order number from the receipt (08) to the counter")
@@ -175,7 +175,7 @@ def counter_payment():
     f.n("kitchen", A, 10, "sub", "Kitchen fulfilment (Flow 06)")
     f.n("done", S, 11, "io", "Show “ZK-… confirmed and sent to the kitchen. Collect ₱… Ready at about …”")
     f.n("collect", S, 12, "process", "Collect cash or card payment (outside the system)")
-    f.n("wait", C, 13, "io", "Pays; waits for the order number to be called")
+    f.n("wait", C, 13, "io", "Pays; watches the screen at the counter for the order number (24)")
     f.n("end3", C, 14, "end", "End")
     f.n("cancel", S, 15, "process", "Press Cancel order, then “Yes, cancel order”")
     f.n("cancelok", A, 16, "decision", "Still pending and unpaid?")

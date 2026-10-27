@@ -26,7 +26,7 @@ def overview():
     f.n("x4", X, 4, "process", "Every minute: email waiting low-stock alerts")
     f.n("s5", S, 5, "sub", "Prepare the dishes on the kitchen display (Flow 06)")
     f.n("x5", X, 5, "end", "End")
-    f.n("c6", C, 6, "end", "Collects the order when the number is called")
+    f.n("c6", C, 6, "end", "Collects the order when its number shows under Ready for pickup")
     f.n("s7", S, 7, "start", "Staff signs in (Flow 02)")
     f.n("a7", Ad, 7, "start", "Admin signs in (Flow 02)")
     f.n("s8", S, 8, "sub", "Adjust stock; look up barcodes (Flows 07, 11)")
@@ -129,9 +129,9 @@ def online_payment():
 def kitchen():
     f = Flow("kitchen-fulfilment", "06", "Kitchen fulfilment",
              ["Kitchen staff", "Kitchen display (web app)", "API server"],
-             W + "app/kitchen/page.tsx, " + W + "lib/receiptPrinter.ts, print-service/server.js, " + API + "kitchen/routes.ts, " + API + "kitchen/service.ts, " + API + "orders/prepTime.ts (setEstimateOnReachingKitchen)",
+             W + "app/kitchen/page.tsx, " + W + "app/board/page.tsx, " + W + "lib/receiptPrinter.ts, print-service/server.js, " + API + "kitchen/routes.ts, " + API + "kitchen/service.ts, " + API + "orders/prepTime.ts (setEstimateOnReachingKitchen)",
              notes=[
-                 "PARTIAL: finishing every dish doesn't change the order's own status (the database has preparing, ready and completed, but the code never sets them), and nothing in the system tells the customer the order is ready; the receipt says “We'll call your order number”.",
+                 "The order's status follows its dishes (confirmed → preparing → ready), and Handed over completes it. The counter's status board (24) is the customer's ready notice; a QR customer's phone receipt doesn't update by itself (a limitation).",
                  "Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress → Completed.",
                  "Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing fails the display says so and tries again with the next update or within 30 seconds.",
              ])
@@ -145,15 +145,17 @@ def kitchen():
     f.n("ticket", K, 6, "process", "Send the ticket to the print service: order number and dishes; it prints on the kitchen printer")
     f.n("which", S, 7, "decision", "Next dish: Pending or In Progress?")
     f.n("startp", S, 8, "process", "Press Start preparing")
-    f.n("inprog", A, 8, "process", "Set In Progress and the start time; send “kitchen:task_updated”")
+    f.n("inprog", A, 8, "process", "Set In Progress and the start time; the order becomes preparing; send “kitchen:task_updated”")
     f.n("reload2", K, 9, "process", "Reload the queue; the dish shows In Progress")
     f.n("donep", S, 10, "process", "Cook the dish; press Mark done")
     f.n("complete", A, 10, "process", "Set Completed and the finish time; send “kitchen:task_updated”")
     f.n("reload3", K, 11, "process", "Reload the queue; the finished dish drops off its card")
     f.n("left", K, 12, "decision", "Any dish of this order left?")
-    f.n("gone", K, 13, "process", "The order's card leaves the display")
-    f.n("call", S, 14, "process", "Call the order number (outside the system)", partial=True)
-    f.n("end", S, 15, "end", "End")
+    f.n("readycard", K, 13, "io", "The order is ready: its card shows first as “READY · waiting for pickup”; the board moves it to Ready for pickup (24)")
+    f.n("hand", S, 14, "process", "Hand the food to the customer; press Handed over")
+    f.n("completed", A, 15, "process", "Set the order completed; send “orders:changed”")
+    f.n("gone", K, 16, "process", "The card leaves the display and the number leaves the board")
+    f.n("end", S, 17, "end", "End")
     f.e("start", "tasks")
     f.e("tasks", "notify")
     f.e("notify", "reload")
@@ -171,9 +173,11 @@ def kitchen():
     f.e("complete", "reload3")
     f.e("reload3", "left")
     f.e("left", "which", "Yes", exit="l", entry="r")
-    f.e("left", "gone", "No")
-    f.e("gone", "call")
-    f.e("call", "end")
+    f.e("left", "readycard", "No")
+    f.e("readycard", "hand", exit="l", entry="t")
+    f.e("hand", "completed", exit="b", entry="l")
+    f.e("completed", "gone", exit="b", entry="r")
+    f.e("gone", "end", exit="b", entry="r")
     return f
 
 
@@ -234,17 +238,17 @@ def stock():
 def products():
     f = Flow("product-management", "08", "Adding, editing and deleting products (Admin)",
              ["Admin", "Web app", "API server"],
-             W + "app/admin/products/page.tsx, " + W + "components/admin/ProductForm.tsx, " + W + "lib/imageResize.ts, " + API + "products/routes.ts, "
-             + API + "products/service.ts, " + API + "products/image.ts",
+             W + "app/admin/products/page.tsx, " + W + "components/admin/ProductForm.tsx, " + W + "components/admin/ProductDetailsFields.tsx, " + W + "lib/imageResize.ts, "
+             + API + "products/routes.ts, " + API + "products/service.ts, " + API + "products/image.ts, " + API + "nutrition/routes.ts",
              notes=[
                  "Form checks (web), each shown under its field: name required; price ₱0.00 or more; cost blank or ₱0.00 or more; preparation time whole minutes 0–120; stock and minimum whole numbers, or a recipe with at least one complete row.",
                  "Only an Admin can open Products; the API refuses product changes from Staff (authorize(\"admin\")).",
-                 "Cancel in the form or the delete dialog closes it without changes. Ingredients, allergens and nutrition have no fields here (database only).",
+                 "Cancel in the form or the delete dialog closes it without changes. The form also sets ingredients, allergens (a checklist, with suggestions from the ingredients) and nutrition per serving, typed, looked up in USDA FoodData Central, or calculated from the recipe (12b, 12c, 14d).",
              ])
     Ad, Wb, A = f.lanes
     f.n("start", Ad, 0, "start", "Open Products (12)")
     f.n("what", Ad, 1, "decision", "Add or edit, or delete?")
-    f.n("fill", Ad, 2, "io", "Fill in the product form and press Save (12b, 12c)")
+    f.n("fill", Ad, 2, "io", "Fill in the product form, with ingredients, allergens and nutrition, and press Save (12b, 12c)")
     f.n("check", Wb, 3, "decision", "Every field valid?")
     f.n("send", Wb, 4, "process", "Save (POST /api/products or PUT /api/products/:id)")
     f.n("valid", A, 5, "decision", "Category and raw materials exist; barcode not used by another product?")
@@ -448,7 +452,7 @@ def reports():
              ["Admin", "Web app", "API server"],
              W + "app/admin/analytics/page.tsx, " + W + "lib/download.ts, " + API + "reports/routes.ts, " + API + "reports/service.ts, " + API + "reports/export.ts",
              notes=[
-                 "Sales and order counts cover the last 14 days (daily), 8 weeks (weekly) or 6 months (monthly). Top products, profitability and inventory movement are all-time. Only orders that are confirmed or later count as paid.",
+                 "Sales and order counts cover the last 14 days (daily), 8 weeks (weekly) or 6 months (monthly). Top products, profitability and inventory movement are all-time. Only orders that are confirmed or later count as paid. Average order value = revenue ÷ paid orders.",
                  "Empty states: “No sales in this period”, “No sales yet”, “No products have a cost recorded yet”.",
              ])
     Ad, Wb, A = f.lanes
@@ -458,7 +462,7 @@ def reports():
     f.n("sum", A, 2, "process", "Add up the paid orders for the period, and all time for the rankings")
     f.n("ok", Wb, 3, "decision", "Loaded?")
     f.n("fail", Ad, 3, "io", "Sees “Could not load analytics.”")
-    f.n("show", Wb, 4, "io", "Show the tiles, charts and tables (or the empty-state messages)")
+    f.n("show", Wb, 4, "io", "Show the tiles (revenue, orders, average order value…), charts and tables, or the empty states")
     f.n("end0", Ad, 4, "end", "End")
     f.n("export", Ad, 5, "decision", "Download a report?")
     f.n("press", Ad, 6, "io", "Press CSV, Excel or PDF on a card")

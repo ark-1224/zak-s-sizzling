@@ -12,7 +12,7 @@ This file lists every change needed to align the manuscript with the system as b
 4. The ERD matches the current database schema.
 5. The limitation that contradicts the diagrams is rewritten (approved).
 
-Sections 7 (QR code access) and 8 (low-stock notifications) record features completed after the review, so the manuscript's text can be checked against them.
+Sections 7 (QR code access), 8 (low-stock notifications) and 9 (the functional gaps closed on 28 October 2026) record features completed after the review, so the manuscript's text can be checked against them.
 
 Items the code does not support, and which were not covered by these decisions, are listed at the end under **Needs decision**. They are not rewritten here.
 
@@ -657,6 +657,70 @@ These describe the alerts correctly and need no edit:
 - Product Backlog example "Real-time stock deduction and alerts", p. 37 [PDF 40]
 - ERD description, as rewritten in section 3.3 ("flag products whose stock falls to the minimum threshold"), pp. 61–62 [PDF 64–65]
 - Sprint execution, "Stock adjustment tools and low-stock alerts supported effective inventory management", p. 67 [PDF 70]
+
+## 9. Functional gaps closed (28 October 2026)
+
+Six gaps listed in the progress report were closed on 28 October 2026. They follow the manuscript's existing fields and screens where it describes them; where the manuscript says nothing, the text below can be used. Every new API route is in the access matrix test, and the whole suite passes (595 test cases: 591 passed, 4 skipped).
+
+### 9.1 Order status progression and the ready notice
+
+An order's status now follows the kitchen: **confirmed** when paid, **preparing** when the kitchen starts its first dish, **ready** when the last dish is done, and **completed** when the kitchen presses **Handed over** on the order's READY card. Cancelled orders stay cancelled, and an unpaid order never reaches the kitchen. The customer's ready notice is an **order status board** on a screen at the counter (`/board`), which shows paid orders under *Preparing* and *Ready for pickup* by order number, updates live and plays a chime when a number becomes ready. The receipt now says "Watch the screen at the counter for your order number." instead of "We'll call your order number."
+
+**Evidence:** `apps/api/src/modules/kitchen/service.ts` (`syncOrderStatus`, `handOverOrder`), `POST /api/kitchen/orders/:id/handed-over`, `GET /api/orders/board` (public, order numbers only), `apps/web/src/app/kitchen/page.tsx`, `apps/web/src/app/board/page.tsx`; tests `apps/api/test/integration/order-status.test.ts`. The data dictionary already lists these statuses (`orders.status`), so it needs no change.
+
+**Section 5.1 "Dependence on Human Oversight"** should use this NEW text instead of the one in 5.1:
+
+NEW
+> Dependence on Human Oversight – Although the system automates cart management, payment recording, and stock deductions, administrators and staff must still record exceptions such as spoilage, returns, and manual corrections through stock adjustments. Staff update the preparation status of each ordered item on the kitchen display (Pending, In Progress, Completed); the order's status follows automatically (Preparing, then Ready), and staff mark it Handed over when the customer collects it. The accuracy of order tracking therefore depends on staff updating these statuses as they work. The system supports, but does not replace, staff judgment in daily operations.
+
+**New limitation** (Chapter 1, Limitations of the System), to add:
+
+NEW
+> Ready Notice Limited to the Counter Screen – Customers learn that their order is ready from the order status board on the screen at the counter. Customers who ordered on their own phone through the QR code are not notified on the phone itself; the receipt on the phone does not update when the order becomes ready. Notifying customers on their phones is left for future development.
+
+### 9.2 Category management
+
+The Administrator manages the menu's categories on a new **Categories** page: add, rename, change the icon (one emoji), mark as new (the NEW badge on the kiosk's category tile), and reorder them, which sets the order of the kiosk's category rail. Only an empty category can be deleted. Open kiosks update at once.
+
+**Evidence:** `apps/api/src/modules/categories/` (`POST`, `PUT /:id`, `PUT /order`, `DELETE /:id`, Administrator only), `apps/web/src/app/admin/categories/page.tsx`; tests `apps/api/test/integration/categories.test.ts`. It uses only the fields already in the data dictionary (`id`, `name`, `icon`, `sort_order`, `is_new`), so the dictionary needs no change.
+
+### 9.3 Ingredients, allergens and nutrition
+
+The product form now sets a dish's **ingredients** (tags), **allergens** (a checklist of nine common allergens: Milk, Egg, Fish, Shellfish, Peanuts, Tree nuts, Gluten, Soy, Sesame, with suggestions from the ingredients that the Administrator confirms) and **nutrition per serving** (calories, protein, carbohydrates, sugar). Nutrition can be typed, looked up in the U.S. Department of Agriculture's **FoodData Central** (public-domain data, through a free data.gov key kept on the server), or **calculated from the dish's recipe**: each raw material is linked once to a FoodData Central food, and the dish's values are the sum of each ingredient's grams per serving ÷ 100 × its values per 100 g. The kiosk labels the values "Estimated values per serving."
+
+**Evidence:** `apps/api/src/modules/nutrition/` (`usda.ts`, `calc.ts`; `GET /api/nutrition/search`, `POST /api/nutrition/estimate`, Administrator only), `apps/web/src/components/admin/ProductDetailsFields.tsx`, `RawMaterialNutritionModal.tsx`; tests `apps/api/test/unit/nutrition.test.ts`, `apps/api/test/integration/nutrition.test.ts`. Migration `20261028090000_raw_material_nutrition`.
+
+**Data dictionary.** When the `raw_materials` table is added to section 3 (Needs decision item 9), include these columns:
+
+> | Column | Type | Key | Description |
+> |---|---|---|---|
+> | fdc_id | integer | | USDA FoodData Central food the nutrition came from (optional) |
+> | fdc_description | varchar(200) | | That food's description (optional) |
+> | kcal_per_100g | decimal(7,2) | | Calories per 100 g (optional) |
+> | protein_per_100g | decimal(6,2) | | Protein in grams per 100 g (optional) |
+> | carbs_per_100g | decimal(6,2) | | Carbohydrates in grams per 100 g (optional) |
+> | sugar_per_100g | decimal(6,2) | | Sugar in grams per 100 g (optional) |
+> | grams_per_unit | decimal(8,3) | | Grams in one piece (pc) or one ml (ml), to convert recipe amounts (optional) |
+
+**Third-Party Integrations** may add: "USDA FoodData Central API – used by the Administrator to look up nutrition values for dishes and raw materials; the values are stored in the system's database, so the kiosk does not depend on it."
+
+### 9.4 Transaction history
+
+A new **Transactions** page (Administrator only) lists every order in a date range (today by default), newest first, with filters for status, payment method, paid or unpaid, and order number. Its totals cover every matching order (count, sales from paid orders, and their average order value), and each order opens to show its items and when it was placed, paid, started, ready and handed over (or cancelled).
+
+**Evidence:** `GET /api/orders/history` (`apps/api/src/modules/orders/service.ts`, `listTransactions`), `apps/web/src/app/admin/transactions/page.tsx`; tests `apps/api/test/integration/transactions.test.ts`.
+
+### 9.5 Average order value
+
+Analytics now shows **Average order value** (revenue ÷ paid orders) for the selected period, each period's average in the sales chart, and an Average order value column in the sales export (CSV, Excel, PDF).
+
+**Evidence:** `apps/api/src/modules/reports/metrics.ts`, `service.ts`, `export.ts`, `apps/web/src/app/admin/analytics/page.tsx`; tests `apps/api/test/unit/report-metrics.test.ts`, `apps/api/test/integration/reports-export.test.ts`.
+
+### 9.6 Live refresh of the payment queue
+
+**Orders awaiting payment** now updates by itself when an order is placed, paid, edited or cancelled, and marks a newly arrived order NEW for a minute. The live event carries no order data; the page loads the details through the API, which requires staff sign-in.
+
+**Evidence:** `orders:changed` (`apps/api/src/websocket/index.ts`, `packages/shared-types/src/events.ts`), `apps/web/src/app/staff/orders/page.tsx`; tests `apps/api/test/integration/live-orders.test.ts`.
 
 ## Needs decision
 

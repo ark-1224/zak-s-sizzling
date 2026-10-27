@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="1537" viewBox="0 0 810 1537">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="1554" viewBox="0 0 810 1554">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="1537" fill="#ffffff"/>
+<rect x="0" y="0" width="810" height="1554" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 12  Analytics and report export (Admin)</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
 <text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/admin/analytics/page.tsx, apps/web/src/lib/download.ts,</text>
@@ -21,10 +21,10 @@
 <path d="M307.0 558.0 L246.0 558.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="282.89" y="540.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
 <text x="301.0" y="552.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M405.0 598.0 L405.0 637.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 598.0 L405.0 622.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="408.0" y="601.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
 <text x="411.0" y="613.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M405.0 702.5 L405.0 722.2 L155.0 722.2 L155.0 742.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 717.5 L405.0 729.8 L155.0 729.8 L155.0 742.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <path d="M155.0 822.0 L155.0 869.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="158.0" y="825.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
 <text x="161.0" y="837.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
@@ -63,10 +63,12 @@
 <polygon points="71.0,533.0 253.0,533.0 239.0,583.0 57.0,583.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="155.0" y="555.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Sees “Could not load</text>
 <text x="155.0" y="570.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">analytics.”</text>
-<polygon points="321.0,637.5 503.0,637.5 489.0,702.5 307.0,702.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="659.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the tiles, charts</text>
-<text x="405.0" y="674.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and tables (or the</text>
-<text x="405.0" y="689.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">empty-state messages)</text>
+<polygon points="321.0,622.5 503.0,622.5 489.0,717.5 307.0,717.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="644.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the tiles</text>
+<text x="405.0" y="659.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(revenue, orders,</text>
+<text x="405.0" y="674.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">average order value…),</text>
+<text x="405.0" y="689.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">charts and tables, or</text>
+<text x="405.0" y="704.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the empty states</text>
 <rect x="57.0" y="649.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
 <text x="155.0" y="674.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
 <polygon points="155.0,742.0 253.0,782.0 155.0,822.0 57.0,782.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
@@ -109,5 +111,6 @@
 <text x="30" y="1446" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="30" y="1466" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Sales and order counts cover the last 14 days (daily), 8 weeks (weekly) or 6 months (monthly). Top products,</text>
 <text x="30" y="1483" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   profitability and inventory movement are all-time. Only orders that are confirmed or later count as paid.</text>
-<text x="30" y="1500" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Empty states: “No sales in this period”, “No sales yet”, “No products have a cost recorded yet”.</text>
+<text x="30" y="1500" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Average order value = revenue ÷ paid orders.</text>
+<text x="30" y="1517" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Empty states: “No sales in this period”, “No sales yet”, “No products have a cost recorded yet”.</text>
 </svg>
