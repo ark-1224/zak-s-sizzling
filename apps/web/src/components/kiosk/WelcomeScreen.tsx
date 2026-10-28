@@ -1,21 +1,19 @@
 "use client";
 
-import { apiUrl } from "@/lib/api-client";
 import { Icon } from "@/components/Icon";
 import { SizzlingPlate } from "./SizzlingPlate";
 
 // The kiosk's attract screen: what the kiosk shows between customers, and where the idle
 // reset returns to. The whole screen is one big button, so a tap anywhere starts an
-// order. Until dish photos are uploaded, the drawn sizzling plate is the picture; once a
-// product has a photo, the first one takes its place.
+// order. The picture is always the drawn sizzling plate with rising steam: it stays sharp
+// at any size and keeps moving, which draws people over (dish photos are on the menu).
 interface WelcomeScreenProps {
   onStart: () => void;
   /** Online payment (QR Ph) is set up; null while still checking. */
   onlinePayments: boolean | null;
-  featuredPhoto: { imageUrl: string; name: string } | null;
 }
 
-export function WelcomeScreen({ onStart, onlinePayments, featuredPhoto }: WelcomeScreenProps) {
+export function WelcomeScreen({ onStart, onlinePayments }: WelcomeScreenProps) {
   return (
     <button
       type="button"
@@ -36,21 +34,12 @@ export function WelcomeScreen({ onStart, onlinePayments, featuredPhoto }: Welcom
             <span className="block text-honey">Order here.</span>
           </h1>
           <p className="mt-4 max-w-sm text-lg text-cream/80">
-            Pick your plates, pay your way, and we&apos;ll call your number when it&apos;s ready.
+            Pick your plates, pay your way, and watch the screen at the counter for your order number.
           </p>
         </div>
 
         <div className="relative flex min-h-0 w-full flex-1 items-center justify-center lg:h-full lg:w-[54%]">
-          {featuredPhoto ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={apiUrl(featuredPhoto.imageUrl)}
-              alt=""
-              className="aspect-[4/3] max-h-full w-full max-w-md rounded-[28px] object-cover shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)] lg:max-w-none"
-            />
-          ) : (
-            <SizzlingPlate steam className="h-auto max-h-full w-full max-w-sm lg:max-w-none" />
-          )}
+          <SizzlingPlate steam className="h-auto max-h-full w-full max-w-sm lg:max-w-none" />
         </div>
       </div>
 

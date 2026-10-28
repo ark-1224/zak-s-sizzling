@@ -93,11 +93,6 @@ export default function KioskHomePage() {
     [categories, products, priceRange]
   );
 
-  const featuredPhoto = useMemo(() => {
-    const withPhoto = products.find((p) => p.imageUrl && p.isAvailable);
-    return withPhoto?.imageUrl ? { imageUrl: withPhoto.imageUrl, name: withPhoto.name } : null;
-  }, [products]);
-
   const scrollGridToTop = () => gridRef.current?.scrollTo({ top: 0 });
 
   function selectCategory(id: number) {
@@ -154,7 +149,7 @@ export default function KioskHomePage() {
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-char">
-      {stage === "welcome" && <WelcomeScreen onStart={() => setStarted(true)} onlinePayments={onlinePayments} featuredPhoto={featuredPhoto} />}
+      {stage === "welcome" && <WelcomeScreen onStart={() => setStarted(true)} onlinePayments={onlinePayments} />}
       {stage === "choose" && <OrderTypeScreen onChoose={chooseOrderType} onStartOver={startOver} />}
 
       <TopBar
