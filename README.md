@@ -277,8 +277,11 @@ npm run db:seed -w apps/api
 The seed script creates 3 roles, one admin user, and Zak's real menu: the twelve
 sizzling plates and prices from the owner's menu poster, each with a photo cut from that
 poster (`apps/api/prisma/seed-images/`), plus sample raw materials and recipes for Pork
-Sisig and Chicken Teriyaki. The poster has no ingredients, allergens or nutrition, so
-those start empty, and the preparation times are estimates. It prints the seeded admin's email/password on success —
+Sisig and Chicken Teriyaki. The poster lists only names and prices, so each dish's
+description, ingredients, allergens and nutrition are estimates from typical recipes and
+USDA FoodData Central, to be confirmed with the owner (sources and portions in
+`docs/design/menu-nutrition.md`); the preparation times are estimates too. It prints the
+seeded admin's email/password on success —
 **rotate that password before any real deployment.**
 
 ## Running locally
