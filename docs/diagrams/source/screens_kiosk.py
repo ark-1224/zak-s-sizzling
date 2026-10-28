@@ -140,8 +140,8 @@ def welcome():
     f.img(44, 96, 96, 96, r=40, label="Logo")
     f.text(44, 268, "Sizzling hot.", size=62, bold=True)
     f.text(44, 332, "Order here.", size=62, bold=True, fill=INK2)
-    f.wrap(44, 372, 390, "Pick your plates, pay your way, and we'll call your number when it's ready.", size=18, fill=INK)
-    f.img(500, 60, 480, 420, r=24, label="Sizzling plate illustration, or the first dish photo")
+    f.wrap(44, 372, 390, "Pick your plates, pay your way, and watch the screen at the counter for your order number.", size=18, fill=INK)
+    f.img(500, 60, 480, 420, r=24, label="Sizzling plate illustration, with rising steam")
     f.line(0, 514, W, 514, stroke=INK2)
     f.circle(66, 557, 22, fill=WHITE, stroke=INK2)
     f.text(66, 563, "›", size=22, anchor="middle", bold=True)
@@ -152,7 +152,7 @@ def welcome():
     f.text(888, 562, "QR Ph", size=15)
     f.add_note("The whole screen is one button: a tap anywhere opens 02 (Dine in / Take out).")
     f.add_note("“QR Ph” only appears when online payment is set up (GET /api/payments/options); it is not set up in production yet.")
-    f.add_note("Once a product has a photo, the first available dish photo replaces the illustration.")
+    f.add_note("The plate is always shown, never a dish photo: it stays sharp at any size, and its steam keeps moving.")
     f.add_note("The kiosk returns here after “Start over” and after the idle reset (06).")
     return f
 

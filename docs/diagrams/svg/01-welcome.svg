@@ -6,7 +6,7 @@
 <text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The whole screen is one button: a tap anywhere opens 02 (Dine in / Take out).</text>
 <text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• “QR Ph” only appears when online payment is set up (GET /api/payments/options); it is not set up in production yet.</text>
-<text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Once a product has a photo, the first available dish photo replaces the illustration.</text>
+<text x="24" y="780" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The plate is always shown, never a dish photo: it stays sharp at any size, and its steam keeps moving.</text>
 <text x="24" y="799" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The kiosk returns here after “Start over” and after the idle reset (06).</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1024" height="600"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1024" height="600" fill="#ffffff"/>
 <rect x="0" y="0" width="1024" height="600" rx="0" fill="#c9c9c9" stroke="none"/>
@@ -17,13 +17,14 @@
 <text x="92.0" y="148.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Logo</text>
 <text x="44" y="268" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="700" text-anchor="start" fill="#222222">Sizzling hot.</text>
 <text x="44" y="332" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="700" text-anchor="start" fill="#555555">Order here.</text>
-<text x="44" y="372" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#222222">Pick your plates, pay your way, and we&#x27;ll</text>
-<text x="44" y="396.3" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#222222">call your number when it&#x27;s ready.</text>
+<text x="44" y="372" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#222222">Pick your plates, pay your way, and watch</text>
+<text x="44" y="396.3" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#222222">the screen at the counter for your order</text>
+<text x="44" y="420.6" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" text-anchor="start" fill="#222222">number.</text>
 <rect x="500" y="60" width="480" height="420" rx="24" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <line x1="500" y1="60" x2="980" y2="480" stroke="#c9c9c9" stroke-width="1"/>
 <line x1="980" y1="60" x2="500" y2="480" stroke="#c9c9c9" stroke-width="1"/>
-<rect x="559.24" y="257.0" width="361.52000000000004" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
-<text x="740.0" y="274.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Sizzling plate illustration, or the first dish photo</text>
+<rect x="579.52" y="257.0" width="320.96000000000004" height="22.099999999999998" rx="3" fill="#ffffff" stroke="none" stroke-width="1"/>
+<text x="740.0" y="274.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="middle" fill="#555555">Sizzling plate illustration, with rising steam</text>
 <line x1="0" y1="514" x2="1024" y2="514" stroke="#555555" stroke-width="1"/>
 <circle cx="66" cy="557" r="22" fill="#ffffff" stroke="#555555" stroke-width="1"/>
 <text x="66" y="563" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" text-anchor="middle" fill="#222222">›</text>
