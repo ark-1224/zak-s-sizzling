@@ -11,7 +11,7 @@ import { PrismaClient, type MaterialUnit } from "@prisma/client";
 
 const MATERIALS: { name: string; unit: MaterialUnit; stockQty: number; minStockThreshold: number; costPerUnit: number }[] = [
   { name: "Pork (sisig cut)", unit: "g", stockQty: 5000, minStockThreshold: 1000, costPerUnit: 0.32 },
-  { name: "Beef sirloin", unit: "g", stockQty: 4000, minStockThreshold: 800, costPerUnit: 0.55 },
+  { name: "Chicken (boneless)", unit: "g", stockQty: 4000, minStockThreshold: 800, costPerUnit: 0.24 },
   { name: "Onion", unit: "g", stockQty: 3000, minStockThreshold: 500, costPerUnit: 0.12 },
   { name: "Garlic", unit: "g", stockQty: 1000, minStockThreshold: 200, costPerUnit: 0.18 },
   { name: "Egg", unit: "pc", stockQty: 60, minStockThreshold: 12, costPerUnit: 9 },
@@ -20,11 +20,10 @@ const MATERIALS: { name: string; unit: MaterialUnit; stockQty: number; minStockT
   { name: "Cooking oil", unit: "ml", stockQty: 3000, minStockThreshold: 500, costPerUnit: 0.09 },
 ];
 
+// Each plate comes with a serving of rice (unli rice: only the first serving is counted).
 const RECIPES: Record<string, [material: string, qtyPerServing: number][]> = {
-  "Sizzling Sisig": [["Pork (sisig cut)", 150], ["Onion", 30], ["Egg", 1], ["Soy sauce", 10], ["Cooking oil", 10]],
-  "Sizzling Beef Bulgogi": [["Beef sirloin", 150], ["Onion", 30], ["Garlic", 5], ["Soy sauce", 20], ["Cooking oil", 10]],
-  "Garlic Fried Rice": [["Rice (uncooked)", 100], ["Garlic", 10], ["Cooking oil", 10]],
-  "Plain Rice": [["Rice (uncooked)", 100]],
+  "Pork Sisig": [["Pork (sisig cut)", 150], ["Onion", 30], ["Egg", 1], ["Soy sauce", 10], ["Cooking oil", 10], ["Rice (uncooked)", 100]],
+  "Chicken Teriyaki": [["Chicken (boneless)", 180], ["Garlic", 5], ["Soy sauce", 20], ["Cooking oil", 10], ["Rice (uncooked)", 100]],
 };
 
 export async function seedRawMaterials(prisma: PrismaClient) {
