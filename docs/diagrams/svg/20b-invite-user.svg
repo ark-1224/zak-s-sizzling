@@ -74,65 +74,85 @@
 <line x1="280" y1="256" x2="1256" y2="256" stroke="#9a9a9a" stroke-width="1"/>
 <rect x="280" y="256" width="976" height="30" rx="0" fill="#f3f3f3" stroke="none" stroke-width="1"/>
 <text x="292" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">USER</text>
-<text x="731.2" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">ROLE</text>
-<text x="926.4000000000001" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">STATUS</text>
-<text x="1244.0000000000002" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">ACTIONS</text>
+<text x="643.36" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">ROLE</text>
+<text x="809.28" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">STATUS</text>
+<text x="1244.0" y="275.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">ACTIONS</text>
 <line x1="280" y1="286" x2="1256" y2="286" stroke="#cfcfcf" stroke-width="1"/>
 <circle cx="308" cy="312.0" r="14" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <text x="332" y="310.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
 <rect x="408" y="295.0" width="35.39" height="18" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
 <text x="425.695" y="307.24" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" text-anchor="middle" fill="#555555">YOU</text>
 <text x="332" y="327.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">name@example.com</text>
-<rect x="731.2" y="297.0" width="110" height="30" rx="4" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
-<text x="741.2" y="317.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
-<rect x="926.4000000000001" y="302.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="953.5000000000001" y="315.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
-<rect x="1138.0000000000002" y="297.0" width="104" height="30" rx="4" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
-<text x="1190.0000000000002" y="316.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#8a8a8a">Suspend</text>
+<rect x="643.36" y="297.0" width="110" height="30" rx="4" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="653.36" y="317.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="809.28" y="302.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="836.38" y="315.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
+<rect x="1146.0" y="297.0" width="96" height="30" rx="4" fill="#e2e2e2" stroke="#cfcfcf" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="1194.0" y="316.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#8a8a8a">Suspend</text>
+<rect x="1042.0" y="297.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1090.0" y="316.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Test email</text>
+<rect x="978.0" y="297.0" width="56" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1006.0" y="316.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Edit</text>
 <line x1="280" y1="338" x2="1256" y2="338" stroke="#cfcfcf" stroke-width="1"/>
 <circle cx="308" cy="364.0" r="14" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <text x="332" y="362.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
 <text x="332" y="379.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">name@example.com</text>
-<rect x="731.2" y="349.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="741.2" y="368.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Admin</text>
-<text x="825.2" y="368.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
-<rect x="926.4000000000001" y="354.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="953.5000000000001" y="367.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
-<rect x="1138.0000000000002" y="349.0" width="104" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="1190.0000000000002" y="368.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Suspend</text>
+<rect x="643.36" y="349.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="653.36" y="368.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Admin</text>
+<text x="737.36" y="368.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="809.28" y="354.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="836.38" y="367.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
+<rect x="1146.0" y="349.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1194.0" y="368.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Suspend</text>
+<rect x="1042.0" y="349.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1090.0" y="368.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Test email</text>
+<rect x="978.0" y="349.0" width="56" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1006.0" y="368.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Edit</text>
 <line x1="280" y1="390" x2="1256" y2="390" stroke="#cfcfcf" stroke-width="1"/>
 <circle cx="308" cy="416.0" r="14" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <text x="332" y="414.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
 <text x="332" y="431.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">name@example.com</text>
-<rect x="731.2" y="401.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="741.2" y="420.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Staff</text>
-<text x="825.2" y="420.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
-<rect x="926.4000000000001" y="406.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="953.5000000000001" y="419.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
-<rect x="1138.0000000000002" y="401.0" width="104" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="1190.0000000000002" y="420.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Suspend</text>
+<rect x="643.36" y="401.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="653.36" y="420.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Staff</text>
+<text x="737.36" y="420.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="809.28" y="406.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="836.38" y="419.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
+<rect x="1146.0" y="401.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1194.0" y="420.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Suspend</text>
+<rect x="1042.0" y="401.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1090.0" y="420.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Test email</text>
+<rect x="978.0" y="401.0" width="56" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1006.0" y="420.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Edit</text>
 <line x1="280" y1="442" x2="1256" y2="442" stroke="#cfcfcf" stroke-width="1"/>
 <circle cx="308" cy="468.0" r="14" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <text x="332" y="466.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
 <text x="332" y="483.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">name@example.com</text>
-<rect x="731.2" y="453.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="741.2" y="472.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Staff</text>
-<text x="825.2" y="472.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
-<rect x="926.4000000000001" y="458.0" width="71.3" height="19" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
-<text x="962.0500000000001" y="471.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">SUSPENDED</text>
-<rect x="1138.0000000000002" y="453.0" width="104" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="1190.0000000000002" y="472.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Reactivate</text>
+<rect x="643.36" y="453.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="653.36" y="472.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Staff</text>
+<text x="737.36" y="472.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="809.28" y="458.0" width="71.3" height="19" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<text x="844.93" y="471.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">SUSPENDED</text>
+<rect x="1146.0" y="453.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1194.0" y="472.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Reactivate</text>
+<rect x="1042.0" y="453.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1090.0" y="472.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Test email</text>
+<rect x="978.0" y="453.0" width="56" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1006.0" y="472.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Edit</text>
 <line x1="280" y1="494" x2="1256" y2="494" stroke="#cfcfcf" stroke-width="1"/>
 <circle cx="308" cy="520.0" r="14" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <text x="332" y="518.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
 <text x="332" y="535.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">name@example.com</text>
-<rect x="731.2" y="505.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="741.2" y="524.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Staff</text>
-<text x="825.2" y="524.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
-<rect x="926.4000000000001" y="510.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="953.5000000000001" y="523.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
-<rect x="1138.0000000000002" y="505.0" width="104" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="1190.0000000000002" y="524.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Suspend</text>
+<rect x="643.36" y="505.0" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="653.36" y="524.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Staff</text>
+<text x="737.36" y="524.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="809.28" y="510.0" width="54.199999999999996" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="836.38" y="523.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">ACTIVE</text>
+<rect x="1146.0" y="505.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1194.0" y="524.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Suspend</text>
+<rect x="1042.0" y="505.0" width="96" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1090.0" y="524.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Test email</text>
+<rect x="978.0" y="505.0" width="56" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1006.0" y="524.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Edit</text>
 <rect x="0" y="0" width="1280" height="900" rx="0" fill="#000000" stroke="none" stroke-width="1" fill-opacity="0.45"/>
 <rect x="448.0" y="240.0" width="384" height="420" rx="8" fill="#ffffff" stroke="#555555" stroke-width="2"/>
 <text x="476.0" y="288.0" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="start" fill="#222222">Invite a new user</text>

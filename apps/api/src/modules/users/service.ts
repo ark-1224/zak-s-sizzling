@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
+import { LoginMailError, sendLoginEmail, testEmail } from "../../lib/loginMail";
 import type { UserAccountDTO } from "@zaks/shared-types";
 
 type UserWithRole = Prisma.UserGetPayload<{ include: { role: true } }>;
@@ -57,14 +58,14 @@ export async function createStaffUser(input: {
 
 export async function updateStaffUser(
   id: string,
-  input: { name?: string; role?: "admin" | "staff"; isActive?: boolean; password?: string },
+  input: { name?: string; email?: string; role?: "admin" | "staff"; isActive?: boolean; password?: string },
   actingUserId: string
 ): Promise<UserAccountDTO> {
   if (id === actingUserId && (input.isActive === false || input.role === "staff")) {
     throw new HttpError(400, "You can't deactivate or demote your own account");
   }
 
-  const data: Prisma.UserUpdateInput = { name: input.name, isActive: input.isActive };
+  const data: Prisma.UserUpdateInput = { name: input.name, email: input.email?.toLowerCase(), isActive: input.isActive };
   if (input.role) {
     const role = await prisma.role.findUnique({ where: { name: input.role } });
     if (!role) throw new HttpError(500, `Role "${input.role}" is not seeded`);
@@ -74,10 +75,35 @@ export async function updateStaffUser(
 
   try {
     const user = await prisma.user.update({ where: { id }, data, include: { role: true } });
+    // A sign-in code already emailed stops working once the password or address changes.
+    if (input.password || input.email) {
+      await prisma.loginCode.updateMany({ where: { userId: id, usedAt: null, expiresAt: { gt: new Date() } }, data: { expiresAt: new Date() } });
+    }
     return toUserDTO(user);
   } catch (err) {
     // A well-formed id that matches no user (D-05).
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") throw new HttpError(404, "User not found");
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      throw new HttpError(409, "A user with that email already exists");
+    }
+    throw err;
+  }
+}
+
+/**
+ * Emails an account a test message, so an admin can check the address receives mail
+ * before sign-in codes depend on it. Unlike a failed sign-in, the reason is shown:
+ * only admins can call this.
+ */
+export async function sendTestEmail(id: string): Promise<{ sentTo: string; delivered: boolean }> {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new HttpError(404, "User not found");
+  try {
+    // delivered: false when Brevo isn't set up on a laptop and the email was only logged.
+    const result = await sendLoginEmail(testEmail({ email: user.email, name: user.name }));
+    return { sentTo: user.email, delivered: result === "sent" };
+  } catch (err) {
+    if (err instanceof LoginMailError) throw new HttpError(503, err.message);
     throw err;
   }
 }

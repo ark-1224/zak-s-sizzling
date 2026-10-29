@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1026" viewBox="0 0 1328 1026">
+<rect x="0" y="0" width="1328" height="1026" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">10c  Staff &amp; Admin Login: emailed code</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /login   ·   Screen: 1280 px wide desktop browser   ·   Access: Anyone on the admin site (signs in Staff and Admin)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/login/page.tsx (CodeStep), apps/web/src/lib/auth.ts</text>
+<text x="24" y="922" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Shown after a correct password (10). The code arrives by email (Brevo) and is checked as soon as six digits are typed or pasted; spaces or a dash are ignored. A wrong code shows how many</text>
+<text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   of the 5 tries are left.</text>
+<text x="24" y="980" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• “Send a new code” is available 60 seconds after each email, at most 3 times. An expired code, 5 wrong tries or the most codes go back to the password with the reason. If the email can&#x27;t</text>
+<text x="24" y="999" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   be sent the password step says “We couldn&#x27;t send your sign-in code”. Use a different account goes back to 10.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="800"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="800" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="448" y="196" width="384" height="418" rx="16" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="480" y="248" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" text-anchor="start" fill="#222222">Check your email</text>
+<text x="480" y="276" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">We sent a 6-digit code to</text>
+<text x="480" y="296.25" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="400" text-anchor="start" fill="#555555">ma•••@gmail.com. It works for 10 minutes.</text>
+<text x="480" y="349" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Sign-in code</text>
+<rect x="480" y="356" width="320" height="56" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="490" y="393.36" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="400" text-anchor="start" fill="#222222">0 4 2 7 1 9</text>
+<text x="480" y="434" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">Not there? Check the spam folder.</text>
+<text x="480" y="466" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" text-anchor="start" fill="#222222">That code isn&#x27;t right. 4 tries left.</text>
+<rect x="480" y="486" width="320" height="48" rx="24" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="640.0" y="515.76" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="700" text-anchor="middle" fill="#ffffff">Sign in</text>
+<text x="480" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#8a8a8a">Send a new code in 42s</text>
+<text x="800" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="end" fill="#555555">Use a different account</text>
+</g><rect x="0" y="0" width="1280" height="800" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

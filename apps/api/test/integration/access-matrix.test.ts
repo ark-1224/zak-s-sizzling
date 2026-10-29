@@ -95,11 +95,19 @@ const MATRIX: Entry[] = [
   { method: "get", route: "/api/users/", path: "/api/users", expected: ADMIN },
   { method: "post", route: "/api/users/", path: "/api/users", body: {}, expected: ADMIN },
   { method: "patch", route: "/api/users/:id", path: `/api/users/${MISSING}`, body: { role: "superuser" }, expected: ADMIN },
+  { method: "post", route: "/api/users/:id/test-email", path: `/api/users/${MISSING}/test-email`, expected: ADMIN },
 ];
 
-// Not decided by role: signing in and out (auth.test.ts) and PayMongo's webhook, which
-// is checked by its signature instead (online-payment.test.ts).
-const NOT_ROLE_BASED = ["POST /api/auth/login", "POST /api/auth/refresh", "POST /api/auth/logout", "POST /api/payments/webhook"];
+// Not decided by role: signing in and out (auth.test.ts, login-codes.test.ts) and
+// PayMongo's webhook, which is checked by its signature instead (online-payment.test.ts).
+const NOT_ROLE_BASED = [
+  "POST /api/auth/login",
+  "POST /api/auth/login/verify",
+  "POST /api/auth/login/resend",
+  "POST /api/auth/refresh",
+  "POST /api/auth/logout",
+  "POST /api/payments/webhook",
+];
 
 const tokens: Partial<Record<Caller, string>> = {};
 

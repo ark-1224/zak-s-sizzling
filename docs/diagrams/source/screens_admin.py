@@ -189,7 +189,7 @@ def login_page(error):
     if error:
         f.add_note("The API answers 401 “Invalid email or password” for an unknown email, a suspended account or a wrong password (the same message for all three). Too many failed attempts are rate limited: “Too many failed sign-in attempts. Try again in …”.")
     else:
-        f.add_note("Both fields are required. On success the access token and user are stored on the device and the dashboard (11) opens; a background refresh keeps the session alive and re-checks the account.")
+        f.add_note("Both fields are required. A correct password emails a 6-digit code to the account and opens the code step (10c); only the code starts the session (with LOGIN_CODES=off the password alone does, and the dashboard (11) opens).")
         f.add_note("Staff pages (/admin, /staff, /kitchen) send anyone not signed in back here, and after signing in return them to that page with its address (e.g. /kitchen?printer=1); signing in directly opens the dashboard. On the kiosk site this page doesn't exist (page not found).")
     return f
 
@@ -200,6 +200,25 @@ def login():
 
 def login_error():
     return login_page(True)
+
+
+def login_code():
+    f = Wireframe("10c", "Staff & Admin Login: emailed code", "/login",
+                  A + "login/page.tsx (CodeStep), apps/web/src/lib/auth.ts", W, 800, SIZE, "Anyone on the admin site (signs in Staff and Admin)")
+    f.rect(0, 0, W, 800, fill=FILL2, stroke=None)
+    x, y, w, h = 448, 196, 384, 418
+    f.rect(x, y, w, h, fill=WHITE, stroke=LINE, r=16)
+    f.text(x + 32, y + 52, "Check your email", size=24, bold=True)
+    f.wrap(x + 32, y + 80, w - 64, "We sent a 6-digit code to ma•••@gmail.com. It works for 10 minutes.", size=15, fill=INK2)
+    f.inp(x + 32, y + 160, w - 64, 56, label="Sign-in code", value="0 4 2 7 1 9", size=26, mono=True)
+    f.text(x + 32, y + 238, "Not there? Check the spam folder.", size=13, fill=INK3)
+    f.text(x + 32, y + 270, "That code isn't right. 4 tries left.", size=15, bold=True)
+    f.btn(x + 32, y + 290, w - 64, 48, "Sign in", kind="primary", r=24, size=16)
+    f.text(x + 32, y + 376, "Send a new code in 42s", size=14, fill=INK3)
+    f.text(x + w - 32, y + 376, "Use a different account", size=14, fill=INK2, anchor="end")
+    f.add_note("Shown after a correct password (10). The code arrives by email (Brevo) and is checked as soon as six digits are typed or pasted; spaces or a dash are ignored. A wrong code shows how many of the 5 tries are left.")
+    f.add_note("“Send a new code” is available 60 seconds after each email, at most 3 times. An expired code, 5 wrong tries or the most codes go back to the password with the reason. If the email can't be sent the password step says “We couldn't send your sign-in code”. Use a different account goes back to 10.")
+    return f
 
 
 # --- 11 dashboard ------------------------------------------------------------------------
@@ -868,10 +887,10 @@ def users_base(f):
 
     def action(label, me):
         def draw(x, yy, w, h):
-            if me:
-                f.btn(x + w - 14 - 104, yy + h / 2 - 15, 104, 30, label, kind="disabled", size=12)
-            else:
-                f.btn(x + w - 14 - 104, yy + h / 2 - 15, 104, 30, label, size=12)
+            right = x + w - 14
+            f.btn(right - 96, yy + h / 2 - 15, 96, 30, label, kind="disabled" if me else "secondary", size=12)
+            f.btn(right - 96 - 8 - 96, yy + h / 2 - 15, 96, 30, "Test email", size=12)
+            f.btn(right - 2 * (96 + 8) - 56, yy + h / 2 - 15, 56, 30, "Edit", size=12)
         return draw
 
     rows = [[user(True), role("Admin", True), P(f, "ACTIVE"), action("Suspend", True)],
@@ -879,7 +898,7 @@ def users_base(f):
             [user(False), role("Staff", False), P(f, "ACTIVE"), action("Suspend", False)],
             [user(False), role("Staff", False), P(f, "SUSPENDED", filled=True), action("Reactivate", False)],
             [user(False), role("Staff", False), P(f, "ACTIVE"), action("Suspend", False)]]
-    f.table(CX, top, CW, [("User", 0.45, "left"), ("Role", 0.2, "left"), ("Status", 0.15, "left"), ("Actions", 0.2, "right")], rows, rowh=52)
+    f.table(CX, top, CW, [("User", 0.36, "left"), ("Role", 0.17, "left"), ("Status", 0.13, "left"), ("Actions", 0.34, "right")], rows, rowh=52)
 
 
 def users():
@@ -887,6 +906,22 @@ def users():
     users_base(f)
     f.add_note("The signed-in admin's own row (YOU) has its role and Suspend disabled: “You can't suspend your own account or change its role. Another admin can.” The API refuses it too.")
     f.add_note("Changing a role or suspending asks first (20c); Reactivate happens straight away. A suspended user can't sign in and loses access within 15 minutes. + Invite user opens 20b.")
+    f.add_note("Edit (20d) changes the name, email or password. Test email sends the account a test message, so its address is known to work before sign-in codes (10c) rely on it; the message says when it was sent, or why Brevo refused it.")
+    return f
+
+
+def edit_user():
+    f = admin_page("20d", "Users: edit an account (popup)", "/admin/users  (popup)", A + "admin/users/page.tsx (EditUserModal)", h=800, access=ADMIN)
+    users_base(f)
+    x, y, w = modal(f, 384, 400)
+    f.text(x, y + 20, "Edit Full name", size=18, bold=True)
+    f.inp(x, y + 70, w, 38, label="Name", value="Full name")
+    f.inp(x, y + 138, w, 38, label="Email", value="name@gmail.com")
+    f.wrap(x, y + 190, w, "Sign-in codes go here, so use a real inbox. Send a test email after changing it.", size=12, fill=INK3)
+    f.inp(x, y + 252, w, 38, label="New password", placeholder="Leave empty to keep the current one", mono=True)
+    f.btn_row(x + w, y + 312, [("Cancel", "secondary"), ("Save", "primary")], h=38)
+    f.add_note("Only what changed is sent (PATCH /api/users/:id). The email is saved in lowercase and must not belong to another account (“A user with that email already exists”); a new password needs at least 8 characters.")
+    f.add_note("A sign-in code already emailed stops working when the email or password changes. An admin can edit their own account too.")
     return f
 
 
@@ -1077,18 +1112,19 @@ def status_board():
     return f
 
 
-SCREENS = [login, login_error, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_delete,
+SCREENS = [login, login_error, login_code, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_delete,
            inventory, adjust_stock, raw_materials, raw_adjust, raw_form, barcode_found, barcode_not_found, bulk_import,
-           bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, users, invite_user, confirm_change,
+           bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, users, invite_user, confirm_change, edit_user,
            kiosk_qr, kiosk_qr_invalid, raw_nutrition, categories, transactions, status_board]
 
 SLUGS = {
-    "10": "login", "10b": "login-error", "11": "dashboard", "11b": "dashboard-staff", "12": "products",
+    "10": "login", "10b": "login-error", "10c": "login-code", "11": "dashboard", "11b": "dashboard-staff", "12": "products",
     "12b": "product-form-add", "12c": "product-form-recipe", "12d": "product-delete", "13": "inventory",
     "13b": "adjust-stock", "14": "raw-materials", "14b": "raw-material-adjust", "14c": "raw-material-form",
     "14d": "raw-material-nutrition", "22": "categories", "23": "transactions", "24": "order-status-board",
     "15": "barcode-found", "15b": "barcode-not-found", "16": "bulk-import-preview", "16b": "bulk-import-result",
     "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty", "19": "orders-awaiting-payment",
     "19b": "orders-awaiting-payment-empty", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",
+    "20d": "edit-user",
     "21": "kiosk-qr", "21b": "kiosk-qr-invalid",
 }

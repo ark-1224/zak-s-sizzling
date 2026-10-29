@@ -1,4 +1,4 @@
-import type { AuthUser } from "@zaks/shared-types";
+import type { AuthUser, LoginCodeChallenge } from "@zaks/shared-types";
 
 const STAFF_TOKEN_KEY = "zaks.staff.accessToken";
 const STAFF_USER_KEY = "zaks.staff.user";
@@ -35,21 +35,46 @@ export function clearStaffSession() {
   clearScheduledRefresh();
 }
 
-export async function login(email: string, password: string): Promise<AuthUser> {
-  const res = await fetch(`${API_URL}/api/auth/login`, {
+/** The sign-in can't continue (code expired, too many wrong codes...): go back to the password. */
+export class LoginStartOverError extends Error {}
+
+async function authPost<T>(path: string, body: object): Promise<T> {
+  const res = await fetch(`${API_URL}/api/auth/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include", // accepts the httpOnly refresh cookie the API sets
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "Login failed" }));
-    throw new Error(body.error ?? "Login failed");
+    const data = await res.json().catch(() => ({}));
+    const message: string = data.error === "Validation failed" ? "Check what you typed and try again." : (data.error ?? "Login failed");
+    throw res.status === 410 ? new LoginStartOverError(message) : new Error(message);
   }
-  const data = (await res.json()) as { accessToken: string; user: AuthUser };
+  return (await res.json()) as T;
+}
+
+function startSession(data: { accessToken: string; user: AuthUser }): AuthUser {
   storeStaffSession(data.accessToken, data.user);
   scheduleTokenRefresh();
   return data.user;
+}
+
+/**
+ * Step one: the password. Returns the signed-in user, or, with sign-in codes on (the
+ * API's default), where the emailed code went; then call verifyLoginCode.
+ */
+export async function login(email: string, password: string): Promise<AuthUser | LoginCodeChallenge> {
+  const data = await authPost<{ accessToken: string; user: AuthUser } | LoginCodeChallenge>("login", { email, password });
+  return "codeRequired" in data ? data : startSession(data);
+}
+
+/** Step two: the 6-digit code from the email. */
+export async function verifyLoginCode(challengeId: string, code: string): Promise<AuthUser> {
+  return startSession(await authPost<{ accessToken: string; user: AuthUser }>("login/verify", { challengeId, code }));
+}
+
+export async function resendLoginCode(challengeId: string): Promise<LoginCodeChallenge> {
+  return authPost<LoginCodeChallenge>("login/resend", { challengeId });
 }
 
 /** The login page, set to come back to the current page (address and query, e.g. the

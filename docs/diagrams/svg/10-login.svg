@@ -4,8 +4,8 @@
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /login   ·   Screen: 1280 px wide desktop browser   ·   Access: Anyone on the admin site (signs in Staff and Admin)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/login/page.tsx, apps/web/src/lib/auth.ts</text>
 <text x="24" y="922" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Both fields are required. On success the access token and user are stored on the device and the dashboard (11) opens; a background refresh keeps the session alive and re-checks the</text>
-<text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   account.</text>
+<text x="24" y="942" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Both fields are required. A correct password emails a 6-digit code to the account and opens the code step (10c); only the code starts the session (with LOGIN_CODES=off the password alone</text>
+<text x="24" y="961" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   does, and the dashboard (11) opens).</text>
 <text x="24" y="980" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Staff pages (/admin, /staff, /kitchen) send anyone not signed in back here, and after signing in return them to that page with its address (e.g. /kitchen?printer=1); signing in directly</text>
 <text x="24" y="999" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   opens the dashboard. On the kiosk site this page doesn&#x27;t exist (page not found).</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="800"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="800" fill="#ffffff"/>

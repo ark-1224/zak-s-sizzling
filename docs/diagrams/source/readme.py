@@ -31,6 +31,7 @@ WIREFRAME_DESC = {
     "09b": "Return page when the order can't be loaded; no longer reached.",
     "10": "Staff & Admin sign-in form.",
     "10b": "Sign-in form showing the “Invalid email or password” message.",
+    "10c": "Second sign-in step: the 6-digit code emailed to the account, a wrong-code message, Send a new code.",
     "11": "Admin's landing page: low-stock banner, four KPI tiles, stock level table.",
     "11b": "The same dashboard as Staff see it: no inventory value tile, admin-only menu items hidden.",
     "12": "Product list with search, category filter, Edit and Delete.",
@@ -52,9 +53,10 @@ WIREFRAME_DESC = {
     "18b": "Kitchen display with no active orders.",
     "19": "Counter payment queue (updates live): a new order, a cancel confirmation and a stock-issue order.",
     "19b": "Counter payment queue with nothing waiting.",
-    "20": "User accounts with role cards, role selectors and Suspend / Reactivate.",
+    "20": "User accounts with role cards, role selectors, Edit, Test email and Suspend / Reactivate.",
     "20b": "Invite-a-new-user popup.",
     "20c": "Confirmation before suspending an account (also used for role changes).",
+    "20d": "Edit-account popup: name, email (where sign-in codes go) and a new password.",
     "21": "Kiosk QR code page with the printable poster.",
     "21b": "Kiosk QR code page with an invalid address.",
     "22": "Categories (Admin): add form, the rail's order with ↑ ↓, Edit and Delete with confirmation.",
@@ -64,7 +66,7 @@ WIREFRAME_DESC = {
 
 FLOW_DESC = {
     "01": "How the customer, staff, admin, API and worker parts fit together; each box points to a detailed flow.",
-    "02": "Kiosk-site block, saved-session check, sign-in checks (rate limit, active account, password), admin-only pages.",
+    "02": "Kiosk-site block, saved-session check, sign-in checks (rate limit, active account, password), the emailed code, admin-only pages.",
     "03": "From walking up to the kiosk to a placed order: menu, dine in / take out, adding dishes, checkout, server checks.",
     "04": "Staff confirm a counter order (stock check and deduction in one transaction), collect payment, or cancel it.",
     "05": "QR Ph shown on the kiosk through PayMongo: code, status check, webhook, new code, pay at the counter instead, stock-issue flag (partial: not yet tested with PayMongo).",

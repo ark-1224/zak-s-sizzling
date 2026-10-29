@@ -57,7 +57,9 @@ export default defineConfig({
           environment: "node",
           include: ["test/integration/**/*.test.ts"],
           globalSetup: ["./test/integration/global-setup.ts"],
-          env: { NODE_ENV: "test", ...(testDatabaseUrl ? { DATABASE_URL: testDatabaseUrl } : {}) },
+          // Sign-in codes are off so every file can sign in with just the password;
+          // login-codes.test.ts turns them on for its own tests.
+          env: { NODE_ENV: "test", LOGIN_CODES: "off", ...(testDatabaseUrl ? { DATABASE_URL: testDatabaseUrl } : {}) },
           // Every file shares one seeded database, so run files one at a time.
           fileParallelism: false,
           hookTimeout: 120_000,

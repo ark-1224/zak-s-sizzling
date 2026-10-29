@@ -3,7 +3,7 @@ import { authenticate, type AuthenticatedRequest } from "../../middleware/authen
 import { authorize } from "../../middleware/authorize";
 import { parseId } from "../../lib/ids";
 import { createUserSchema, updateUserSchema } from "./schema";
-import { createStaffUser, listStaffUsers, updateStaffUser } from "./service";
+import { createStaffUser, listStaffUsers, sendTestEmail, updateStaffUser } from "./service";
 
 export const usersRouter = Router();
 
@@ -34,6 +34,15 @@ usersRouter.patch("/:id", authenticate, authorize("admin"), async (req: Authenti
   try {
     const body = updateUserSchema.parse(req.body);
     res.json(await updateStaffUser(parseId(req.params.id, "User not found"), body, req.user!.id));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Checks that an account's address receives email before sign-in codes rely on it.
+usersRouter.post("/:id/test-email", authenticate, authorize("admin"), async (req, res, next) => {
+  try {
+    res.json(await sendTestEmail(parseId(req.params.id, "User not found")));
   } catch (err) {
     next(err);
   }

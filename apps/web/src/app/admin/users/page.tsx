@@ -26,6 +26,10 @@ import type { UserAccountDTO } from "@zaks/shared-types";
 //
 // The signed-in admin's own row can't be suspended or have its role changed (the API
 // refuses it too), and changing a role or suspending someone asks first (UI review #14).
+//
+// Sign-in codes are emailed to each account's address (apps/api/src/modules/auth/
+// loginCodes.ts), so Edit can change the email (and set a new password), and "Test
+// email" checks the address really receives mail before anyone depends on it.
 type PendingChange = { user: UserAccountDTO; kind: "role"; role: "admin" | "staff" } | { user: UserAccountDTO; kind: "suspend" };
 
 export default function UsersPage() {
@@ -37,6 +41,8 @@ export default function UsersPage() {
   const [creating, setCreating] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingChange | null>(null);
+  const [editing, setEditing] = useState<UserAccountDTO | null>(null);
+  const [testing, setTesting] = useState<string | null>(null);
   const success = useSuccessMessage();
 
   useEffect(() => {
@@ -91,6 +97,26 @@ export default function UsersPage() {
     if (role !== user.role) setPending({ user, kind: "role", role });
   }
 
+  async function sendTestEmail(user: UserAccountDTO) {
+    setMessage(null);
+    setTesting(user.id);
+    try {
+      const { sentTo, delivered } = await apiFetch<{ sentTo: string; delivered: boolean }>(`/api/users/${user.id}/test-email`, {
+        method: "POST",
+        auth: "staff",
+      });
+      success.show(
+        delivered
+          ? `Test email sent to ${sentTo}. Ask ${user.name} to check the inbox and the spam folder.`
+          : `Email isn't set up on this computer, so the test email was only printed in the API log.`
+      );
+    } catch (err) {
+      setMessage(err instanceof ApiError ? err.message : "Could not send the test email.");
+    } finally {
+      setTesting(null);
+    }
+  }
+
   async function confirmPending() {
     if (!pending) return;
     await saveChange(pending.user, pending.kind === "role" ? { role: pending.role } : { isActive: false });
@@ -126,7 +152,7 @@ export default function UsersPage() {
         <div className="text-adm-ink-3">Loading…</div>
       ) : (
         <Card title="Accounts">
-          <ul className="divide-y divide-adm-line-soft md:hidden">
+          <ul className="divide-y divide-adm-line-soft lg:hidden">
             {users.map((u) => (
               <li key={u.id} className="flex flex-col gap-3 px-4 py-3.5">
                 <div className="flex items-start justify-between gap-3">
@@ -162,12 +188,23 @@ export default function UsersPage() {
                   >
                     {u.isActive ? "Suspend" : "Reactivate"}
                   </AdmButton>
+                  <AdmButton variant="secondary" onClick={() => setEditing(u)} aria-label={`Edit ${u.name}`}>
+                    Edit
+                  </AdmButton>
+                  <AdmButton
+                    variant="secondary"
+                    onClick={() => sendTestEmail(u)}
+                    disabled={testing === u.id}
+                    aria-label={`Send a test email to ${u.name}`}
+                  >
+                    {testing === u.id ? "Sending…" : "Test email"}
+                  </AdmButton>
                 </div>
                 {u.id === meId && <p className="text-sm text-adm-ink-3">{SELF_NOTE}</p>}
               </li>
             ))}
           </ul>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
@@ -209,17 +246,31 @@ export default function UsersPage() {
                     <td className="px-3 py-3">
                       <StatusPill tone={u.isActive ? "ok" : "bad"}>{u.isActive ? "ACTIVE" : "SUSPENDED"}</StatusPill>
                     </td>
-                    <td className="px-4.5 py-2 text-right">
-                      <AdmButton
-                        variant="secondary"
-                        size="row"
-                        onClick={() => toggleActive(u)}
-                        disabled={u.id === meId}
-                        title={u.id === meId ? SELF_NOTE : undefined}
-                        aria-label={`${u.isActive ? "Suspend" : "Reactivate"} ${u.name}`}
-                      >
-                        {u.isActive ? "Suspend" : "Reactivate"}
-                      </AdmButton>
+                    <td className="px-4.5 py-2">
+                      <div className="flex justify-end gap-1.5 *:whitespace-nowrap">
+                        <AdmButton variant="secondary" size="row" onClick={() => setEditing(u)} aria-label={`Edit ${u.name}`}>
+                          Edit
+                        </AdmButton>
+                        <AdmButton
+                          variant="secondary"
+                          size="row"
+                          onClick={() => sendTestEmail(u)}
+                          disabled={testing === u.id}
+                          aria-label={`Send a test email to ${u.name}`}
+                        >
+                          {testing === u.id ? "Sending…" : "Test email"}
+                        </AdmButton>
+                        <AdmButton
+                          variant="secondary"
+                          size="row"
+                          onClick={() => toggleActive(u)}
+                          disabled={u.id === meId}
+                          title={u.id === meId ? SELF_NOTE : undefined}
+                          aria-label={`${u.isActive ? "Suspend" : "Reactivate"} ${u.name}`}
+                        >
+                          {u.isActive ? "Suspend" : "Reactivate"}
+                        </AdmButton>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -227,6 +278,18 @@ export default function UsersPage() {
             </table>
           </div>
         </Card>
+      )}
+
+      {editing && (
+        <EditUserModal
+          user={editing}
+          onClose={() => setEditing(null)}
+          onSaved={(saved) => {
+            setEditing(null);
+            success.show(`${saved.name}'s account saved`);
+            load();
+          }}
+        />
       )}
 
       {pending && <ConfirmChangeModal change={pending} onCancel={() => setPending(null)} onConfirm={confirmPending} />}
@@ -355,6 +418,76 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           </AdmButton>
           <AdmButton type="submit" variant="primary" disabled={saving}>
             {saving ? "Creating…" : "Create account"}
+          </AdmButton>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function EditUserModal({ user, onClose, onSaved }: { user: UserAccountDTO; onClose: () => void; onSaved: (saved: UserAccountDTO) => void }) {
+  const [name, setName] = useState(user.name);
+  const [email, setEmail] = useState(user.email);
+  const [password, setPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // Only what changed is sent; an empty password keeps the current one.
+    const change: { name?: string; email?: string; password?: string } = {};
+    if (name.trim() !== user.name) change.name = name.trim();
+    if (email.trim().toLowerCase() !== user.email) change.email = email.trim();
+    if (password) change.password = password;
+    if (Object.keys(change).length === 0) return onClose();
+
+    setSaving(true);
+    setError(null);
+    try {
+      onSaved(await apiFetch<UserAccountDTO>(`/api/users/${user.id}`, { method: "PATCH", auth: "staff", body: JSON.stringify(change) }));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not save the account.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={admModalBackdropClass}>
+      <form onSubmit={handleSubmit} className={`${admModalPanelClass} max-w-sm`}>
+        <h2 className="mb-5 text-lg font-semibold tracking-tight">Edit {user.name}</h2>
+
+        <label className="mb-3 block">
+          <span className={admLabelClass}>Name</span>
+          <input required value={name} onChange={(e) => setName(e.target.value)} className={admInputClass} />
+        </label>
+        <label className="mb-3 block">
+          <span className={admLabelClass}>Email</span>
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={admInputClass} />
+          <span className="mt-1 block text-sm text-adm-ink-3">Sign-in codes go here, so use a real inbox. Send a test email after changing it.</span>
+        </label>
+        <label className="mb-4 block">
+          <span className={admLabelClass}>New password</span>
+          <input
+            type="text"
+            minLength={8}
+            maxLength={72}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            className={`font-adm-mono ${admInputClass}`}
+            placeholder="Leave empty to keep the current one"
+          />
+        </label>
+
+        {error && <p className="mb-3 text-base text-adm-bad md:text-sm">{error}</p>}
+
+        <div className={admModalActionsClass}>
+          <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
+            Cancel
+          </AdmButton>
+          <AdmButton type="submit" variant="primary" disabled={saving}>
+            {saving ? "Saving…" : "Save"}
           </AdmButton>
         </div>
       </form>

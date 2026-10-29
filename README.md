@@ -252,6 +252,17 @@ order is paid. Offline/PWA support was removed from scope.
   and in the browser. Known limitation: the ready notice is the counter screen; a phone
   receipt doesn't update by itself.
 
+- **Emailed sign-in codes (29 October 2026)** — staff and admin sign-in has a second
+  step: after a correct password the API emails a 6-digit code to the account's address
+  through Brevo, and only that code starts the session (`apps/api/src/modules/auth/
+  loginCodes.ts`, `POST /api/auth/login/verify` and `/login/resend`, migration
+  `login_codes`). See "Sign-in codes" below. The Users page can now change an account's
+  email and password (Edit) and send it a test email. Verified with integration tests
+  (`login-codes.test.ts`: right, wrong, expired, reused and simultaneous codes, the
+  resend wait and limits, Brevo refusing, account changes mid-sign-in) and unit tests,
+  and in the browser: wrong code (4 tries left), then the right code pasted with a space
+  signed in and returned to the requested page.
+
 ## Prerequisites
 
 - Node.js 20+ and npm
@@ -345,6 +356,49 @@ kiosk link. Locally, with no `SITE_ROLE`, both sides are served from one address
 | web (kiosk) | `SITE_ROLE=kiosk` |
 | admin | `SITE_ROLE=admin`, `KIOSK_SITE_URL` = the kiosk link, `NEXT_PUBLIC_KIOSK_URL` = the kiosk link (build time, for the Kiosk QR code page), plus the same `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` as web |
 | api | `WEB_ORIGIN` = both links, comma-separated, kiosk first (online payments return customers to the first) |
+
+### Sign-in codes
+
+Every staff and admin sign-in, including the kitchen display's, asks for a 6-digit code
+emailed to the account after the password is accepted. A code works for 10 minutes and
+allows 5 wrong tries; "Send a new code" waits 60 seconds, at most 3 times per sign-in,
+and an account gets at most 10 codes an hour. Only a hash of the code is stored, and a
+code stops working once used, when the account signs in again, or when its password or
+email changes. A wrong password still answers "Invalid email or password" and sends
+nothing. Sessions last 7 days after that, as before, so the code is asked only when
+signing in with the password.
+
+The API sends the codes through **Brevo** over HTTPS (`apps/api/src/lib/loginMail.ts`),
+because Railway's Hobby plan blocks SMTP. Set these on the **api** service:
+
+| Variable | Value |
+|---|---|
+| `BREVO_API_KEY` | Brevo → SMTP & API → API keys |
+| `LOGIN_CODE_FROM` | a sender address verified in Brevo (Senders, domains & IPs), e.g. the shop's Gmail |
+| `LOGIN_CODES` | leave unset (on); `off` turns the codes off, the emergency switch |
+
+Brevo API keys can't be limited to sending, so use a Brevo account kept only for this.
+In Brevo, turn off IP blocking (Security → Authorised IPs): Railway Hobby has no fixed
+outgoing address, and Brevo would start refusing the API once it saw a new one. Mail sent
+"from" a Gmail address through Brevo can land in spam, so tell staff to check there.
+
+Turning it on without locking anyone out: set the three variables with `LOGIN_CODES=off`,
+deploy, change each account's email to a real inbox (Users → Edit), press **Test email**
+for each one and check it arrived, then remove `LOGIN_CODES` (or set it to `on`).
+
+If the email can't be sent, sign-in stops with "We couldn't send your sign-in code", and
+the API log says why. On a laptop without `BREVO_API_KEY` the code is printed in the
+API's log instead of emailed. If nobody can sign in (a forgotten password, or codes that
+can't be emailed), set a new password straight in the database:
+
+```bash
+npm run admin:reset-password
+```
+
+It asks for the database URL (Enter uses `apps/api/.env`; for the live site paste
+Railway → Postgres → Variables → `DATABASE_PUBLIC_URL`), the account's email and the new
+password; the URL and password aren't shown. If the emails are the problem, also set
+`LOGIN_CODES=off` until they're fixed.
 
 ### Email alerts (optional)
 

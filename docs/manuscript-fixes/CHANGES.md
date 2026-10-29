@@ -722,6 +722,40 @@ Analytics now shows **Average order value** (revenue ÷ paid orders) for the sel
 
 **Evidence:** `orders:changed` (`apps/api/src/websocket/index.ts`, `packages/shared-types/src/events.ts`), `apps/web/src/app/staff/orders/page.tsx`; tests `apps/api/test/integration/live-orders.test.ts`.
 
+## 10. Emailed sign-in codes (29 October 2026)
+
+Staff and Administrator sign-in now has a second step. After the password is accepted, the system emails a 6-digit code to the account's email address, and the account is signed in only when that code is entered. A code works for 10 minutes and allows 5 wrong tries; a new code can be requested after 60 seconds, at most 3 times per sign-in, and an account receives at most 10 codes an hour. Only a hash of each code is stored, and a code stops working once it is used, when the account signs in again, or when its password or email changes. Customers at the kiosk do not sign in, so nothing changes for them.
+
+**Evidence:** `apps/api/src/modules/auth/loginCodes.ts`, `POST /api/auth/login/verify` and `POST /api/auth/login/resend`, the email sender `apps/api/src/lib/loginMail.ts` (Brevo, over HTTPS), migration `20261029153535_login_codes`, the sign-in page `apps/web/src/app/login/page.tsx`. The Users page can now change an account's email and password and send it a test email (`POST /api/users/:id/test-email`, Administrator only). Tests: `apps/api/test/integration/login-codes.test.ts` and `apps/api/test/unit/login-codes.test.ts` (the ninth testing session).
+
+### 10.1 Scope of the System: "Authentication and Authorization", p. 9 [PDF 12]
+
+Add one paragraph after the NEW text in section 2.3 (b):
+
+> Signing in to the staff and administrator side takes two steps. After the password is accepted, the system emails a one-time six-digit code to the account's registered email address, and the account is signed in only after that code is entered. A code expires after ten minutes, works only once, and is cancelled after five wrong attempts, so a stolen password alone is not enough to sign in.
+
+### 10.2 Data dictionary
+
+When the new tables are added to section 3 (Needs decision item 9), include `login_codes`:
+
+| Column | Type | Key | Description |
+|---|---|---|---|
+| id | uuid | PK | One sign-in attempt that is waiting for its code |
+| user_id | uuid | FK → users | The account signing in |
+| code_hash | text | | bcrypt hash of the emailed code (the code itself is never stored) |
+| attempts | integer | | Wrong codes entered so far (at most 5) |
+| sends | integer | | Emails sent for this sign-in: the first plus any resends (at most 4) |
+| sent_at | timestamp | | When the latest code was emailed |
+| expires_at | timestamp | | When the code stops working (10 minutes after it was sent) |
+| used_at | timestamp | | When the right code was entered; empty until then |
+| created_at | timestamp | | When the sign-in started |
+
+### 10.3 Diagrams
+
+New wireframe 10c (the code step) and 20d (Users: edit an account); wireframe 20 shows Edit and Test email, and flow 02 (staff and admin sign-in) shows the emailed code (`docs/diagrams/`). In the manuscript, Figure 1.1's Login box can stay as corrected in section 6; add "with an emailed code" if the figure is redrawn.
+
+**Still to do before the defense:** on Railway, change each live account's email to a real inbox, send each a test email from Users, then switch the codes on (see "Sign-in codes" in the README).
+
 ## Needs decision
 
 The manuscript claims each item below, but the code does not support it (or supports it only in part). The adviser decisions above did not cover them, so they are listed here and not rewritten.

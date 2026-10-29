@@ -1,8 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { HttpError } from "../../middleware/errorHandler";
 import { kioskSessionLimit, loginAddressLimit, loginAttemptLimit, sessionRefreshLimit } from "../../middleware/rateLimit";
-import { loginSchema } from "./schema";
-import { createKioskSession, loginWithPassword, refreshAccessToken } from "./service";
+import { challengeSchema, loginSchema, verifyCodeSchema } from "./schema";
+import { createKioskSession, finishLoginWithCode, loginWithPassword, refreshAccessToken, resendLoginCode } from "./service";
 
 export const authRouter = Router();
 
@@ -22,14 +22,39 @@ function setRefreshCookie(res: Response, token: string) {
 }
 
 // Staff/Admin login — Sprint 1. Failed attempts are rate limited (middleware/rateLimit.ts);
-// a successful sign-in clears that email's count from this address.
+// a correct password clears that email's count from this address. With sign-in codes on,
+// a correct password answers { codeRequired, challengeId, ... } and nothing else: the
+// session starts at /login/verify.
 authRouter.post("/login", loginAddressLimit, loginAttemptLimit, async (req, res, next) => {
   try {
     const { email, password } = loginSchema.parse(req.body);
-    const { accessToken, refreshToken, user } = await loginWithPassword(email, password);
+    const result = await loginWithPassword(email, password);
     loginAttemptLimit.reset(req);
+    if (result.codeRequired) return res.json(result);
+    setRefreshCookie(res, result.refreshToken);
+    res.json({ accessToken: result.accessToken, user: result.user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// The emailed code (auth/loginCodes.ts). Each sign-in allows 5 wrong codes, and wrong
+// codes also count towards this address's limit of rejected sign-ins.
+authRouter.post("/login/verify", loginAddressLimit, async (req, res, next) => {
+  try {
+    const { challengeId, code } = verifyCodeSchema.parse(req.body);
+    const { accessToken, refreshToken, user } = await finishLoginWithCode(challengeId, code);
     setRefreshCookie(res, refreshToken);
     res.json({ accessToken, user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+authRouter.post("/login/resend", loginAddressLimit, async (req, res, next) => {
+  try {
+    const { challengeId } = challengeSchema.parse(req.body);
+    res.json(await resendLoginCode(challengeId));
   } catch (err) {
     next(err);
   }

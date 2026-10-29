@@ -62,6 +62,17 @@ export interface AuthUser {
   role: UserRole;
 }
 
+/** POST /api/auth/login's answer to a correct password while sign-in codes are on. */
+export interface LoginCodeChallenge {
+  codeRequired: true;
+  challengeId: string;
+  /** The account's email, partly hidden: "ma•••@gmail.com". */
+  sentTo: string;
+  expiresInSeconds: number;
+  /** How long until "Send a new code" may be used. */
+  resendInSeconds: number;
+}
+
 export interface CreateOrderItemInput {
   productId: string;
   qty: number;

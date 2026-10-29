@@ -12,8 +12,9 @@ def login():
     f = Flow("staff-admin-login", "02", "Staff and admin sign-in and page access",
              ["Staff / Admin", "Web app (admin site)", "API server"],
              W + "proxy.ts, " + W + "components/StaffGuard.tsx, " + W + "components/admin/AdminRouteGuard.tsx, " + W + "app/login/page.tsx, "
-             + W + "lib/auth.ts, " + API + "auth/routes.ts, " + API + "auth/service.ts, apps/api/src/middleware/rateLimit.ts, authorize.ts",
+             + W + "lib/auth.ts, " + API + "auth/routes.ts, " + API + "auth/service.ts, " + API + "auth/loginCodes.ts, apps/api/src/lib/loginMail.ts, apps/api/src/middleware/rateLimit.ts, authorize.ts",
              notes=[
+                 "The code works for 10 minutes and allows 5 wrong tries; Send a new code waits 60 seconds, at most 3 times per sign-in and 10 emails an hour per account. Only a hash of the code is stored, and it works once. If the email can't be sent, sign-in stops with “We couldn't send your sign-in code”.",
                  "Every API request is checked again on the server (authorize(\"admin\") or authorize(\"admin\", \"staff\")), so the page checks only decide what is shown.",
                  "The access token lasts 15 minutes and is renewed in the background with the 7-day refresh cookie. Each renewal re-reads the account, so a suspended or demoted user loses access at the next renewal. If renewal fails, the next request sends the user back to the login page.",
                  "Log out clears the saved token and the refresh cookie and opens the login page.",
@@ -29,11 +30,17 @@ def login():
     f.n("err", Wb, 6, "io", "Show the message, e.g. “Invalid email or password” (10b)")
     f.n("active", A, 6, "decision", "Active account with this email?")
     f.n("pw", A, 7, "decision", "Password matches?")
-    f.n("token", A, 8, "process", "Issue a 15-minute access token and a 7-day refresh cookie")
-    f.n("store", Wb, 9, "process", "Save the token and user on this device; return to the page first opened, or the dashboard (11)")
-    f.n("adminonly", Wb, 10, "decision", "Admin-only page and the user is Staff?")
-    f.n("redirect", Wb, 11, "process", "Send to the dashboard (11) instead")
-    f.n("page", U, 11, "end", "Sees the page; the sidebar hides admin-only items for Staff")
+    f.n("codeson", A, 8, "decision", "Sign-in codes on? (LOGIN_CODES isn't off)")
+    f.n("email", A, 9, "process", "Email a 6-digit code to the account (Brevo); keep only its hash")
+    f.n("codepage", Wb, 10, "process", "Show the code step (10c) with where the code went")
+    f.n("entercode", U, 11, "io", "Enter the code from the email (or Send a new code)")
+    f.n("codeok", A, 12, "decision", "Right code, not expired, fewer than 5 wrong tries?")
+    f.n("wrongcode", Wb, 13, "io", "Show “That code isn't right. N tries left”; back to 10 when it can't be used any more")
+    f.n("token", A, 14, "process", "Issue a 15-minute access token and a 7-day refresh cookie")
+    f.n("store", Wb, 15, "process", "Save the token and user on this device; return to the page first opened, or the dashboard (11)")
+    f.n("adminonly", Wb, 16, "decision", "Admin-only page and the user is Staff?")
+    f.n("redirect", Wb, 17, "process", "Send to the dashboard (11) instead")
+    f.n("page", U, 17, "end", "Sees the page; the sidebar hides admin-only items for Staff")
     f.e("start", "kiosk")
     f.e("kiosk", "404", "Yes", exit="l", entry="r")
     f.e("kiosk", "saved", "No")
@@ -46,7 +53,15 @@ def login():
     f.e("active", "err", "No", exit="l", entry="r")
     f.e("active", "pw", "Yes")
     f.e("pw", "err", "No", exit="l", entry="b")
-    f.e("pw", "token", "Yes")
+    f.e("pw", "codeson", "Yes")
+    f.e("codeson", "email", "Yes")
+    f.e("codeson", "token", "No", exit="r", entry="r")
+    f.e("email", "codepage", exit="l", entry="r")
+    f.e("codepage", "entercode", exit="l", entry="r")
+    f.e("entercode", "codeok", exit="r", entry="l")
+    f.e("codeok", "wrongcode", "No", exit="l", entry="r")
+    f.e("wrongcode", "entercode", exit="l", entry="b")
+    f.e("codeok", "token", "Yes")
     f.e("err", "creds", exit="l", entry="r")
     f.e("token", "store")
     f.e("store", "adminonly")

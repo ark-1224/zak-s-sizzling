@@ -11,6 +11,8 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z.object({
   name: z.string().min(1).max(120).optional(),
+  // Sign-in codes go to this address (auth/loginCodes.ts), so it must be a real inbox.
+  email: z.string().email().max(160).optional(),
   role: z.enum(["admin", "staff"]).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).max(72).optional(),
