@@ -14,6 +14,10 @@ import { HttpError } from "../../middleware/errorHandler";
  *   an account gets at most 10 emails an hour (so nobody can flood an inbox, and the
  *   Brevo free plan's daily limit is safe).
  * - Only a bcrypt hash of the code is stored, and a code works once.
+ * - A sign-in ended on purpose (a newer sign-in, a new password or email, a suspension)
+ *   gets revokedAt, which nothing clears. Every update that uses a sign-in requires it
+ *   to be unset and unexpired in the same statement, so a sign-in ended while a request
+ *   is in progress can't be used or revived by that request.
  */
 export const CODE_MINUTES = 10;
 export const MAX_WRONG_CODES = 5;
@@ -58,6 +62,14 @@ async function sendsInLastHour(userId: string, now: Date): Promise<number> {
   return _sum.sends ?? 0;
 }
 
+/** Ends an account's sign-ins that are still waiting for their code. */
+export async function revokePendingCodes(userId: string) {
+  await prisma.loginCode.updateMany({ where: { userId, usedAt: null, revokedAt: null }, data: { revokedAt: new Date() } });
+}
+
+/** The conditions under which a sign-in can still be used, checked inside each update. */
+const usable = () => ({ usedAt: null, revokedAt: null, expiresAt: { gt: new Date() } });
+
 const tooManyThisHour = () =>
   new HttpError(429, "Too many sign-in codes were sent to this account in the last hour. Try again later.");
 
@@ -67,7 +79,7 @@ export async function startCodeChallenge(user: { id: string; email: string; name
   if ((await sendsInLastHour(user.id, now)) >= MAX_SENDS_PER_HOUR) throw tooManyThisHour();
 
   // Only the newest code for an account works, and day-old rows aren't needed any more.
-  await prisma.loginCode.updateMany({ where: { userId: user.id, usedAt: null, expiresAt: { gt: now } }, data: { expiresAt: now } });
+  await revokePendingCodes(user.id);
   await prisma.loginCode.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } } });
 
   const code = generateCode();
@@ -101,7 +113,7 @@ const startOver = (why: string) => new HttpError(410, `${why} Sign in again to g
 /** A pending challenge, or the reason it can no longer be used. */
 async function pendingChallenge(challengeId: string, now: Date) {
   const challenge = await prisma.loginCode.findUnique({ where: { id: challengeId }, include: { user: { include: { role: true } } } });
-  if (!challenge || challenge.usedAt) throw startOver("This sign-in has ended.");
+  if (!challenge || challenge.usedAt || challenge.revokedAt) throw startOver("This sign-in has ended.");
   if (challenge.expiresAt <= now) throw startOver("The code has expired.");
   if (challenge.attempts >= MAX_WRONG_CODES) throw startOver("Too many wrong codes.");
   if (!challenge.user.isActive) throw startOver("This sign-in has ended.");
@@ -116,10 +128,10 @@ export async function verifyCode(challengeId: string, code: string) {
   // Take a try before comparing, in one statement, so codes sent at the same moment
   // can't get more than MAX_WRONG_CODES tries between them.
   const took = await prisma.loginCode.updateMany({
-    where: { id: challenge.id, usedAt: null, attempts: { lt: MAX_WRONG_CODES } },
+    where: { id: challenge.id, ...usable(), attempts: { lt: MAX_WRONG_CODES } },
     data: { attempts: { increment: 1 } },
   });
-  if (took.count === 0) throw startOver("Too many wrong codes.");
+  if (took.count === 0) throw startOver("This sign-in has ended.");
 
   if (!(await bcrypt.compare(code, challenge.codeHash))) {
     const left = MAX_WRONG_CODES - (challenge.attempts + 1);
@@ -128,7 +140,7 @@ export async function verifyCode(challengeId: string, code: string) {
   }
 
   // A code works once, even if the same right code arrives twice at the same moment.
-  const used = await prisma.loginCode.updateMany({ where: { id: challenge.id, usedAt: null }, data: { usedAt: now } });
+  const used = await prisma.loginCode.updateMany({ where: { id: challenge.id, ...usable() }, data: { usedAt: now } });
   if (used.count === 0) throw startOver("This sign-in has ended.");
   return challenge.user;
 }
@@ -147,13 +159,15 @@ export async function resendCode(challengeId: string): Promise<CodeChallenge> {
   if ((await sendsInLastHour(challenge.userId, now)) >= MAX_SENDS_PER_HOUR) throw tooManyThisHour();
 
   const code = generateCode();
+  const codeHash = await bcrypt.hash(code, 10);
   const expiresAt = new Date(now.getTime() + CODE_MINUTES * 60 * 1000);
-  // Claim the resend first (it fails if another resend just happened), then send.
+  // Claim the resend first, then send. The claim fails if another resend just happened,
+  // or if the sign-in ended after the checks above: it can't bring an ended one back.
   const claimed = await prisma.loginCode.updateMany({
-    where: { id: challenge.id, usedAt: null, sends: challenge.sends },
-    data: { codeHash: await bcrypt.hash(code, 10), sends: { increment: 1 }, sentAt: now, expiresAt },
+    where: { id: challenge.id, ...usable(), attempts: { lt: MAX_WRONG_CODES }, sends: challenge.sends },
+    data: { codeHash, sends: { increment: 1 }, sentAt: now, expiresAt },
   });
-  if (claimed.count === 0) throw new HttpError(429, `Wait ${RESEND_WAIT_SECONDS} seconds before asking for a new code.`);
+  if (claimed.count === 0) throw startOver("This sign-in has ended.");
 
   await emailCode(challenge.user, code);
   return {

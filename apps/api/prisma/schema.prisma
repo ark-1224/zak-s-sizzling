@@ -139,6 +139,9 @@ model LoginCode {
   sentAt    DateTime  @default(now()) @map("sent_at")
   expiresAt DateTime  @map("expires_at")
   usedAt    DateTime? @map("used_at")
+  /// Set when the sign-in is ended on purpose (a newer sign-in, a new password or email,
+  /// a suspension). Unlike expiresAt, nothing ever clears it, so a resend can't revive it.
+  revokedAt DateTime? @map("revoked_at")
   createdAt DateTime  @default(now()) @map("created_at")
 
   @@index([userId, createdAt])

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
 import { LoginMailError, sendLoginEmail, testEmail } from "../../lib/loginMail";
+import { revokePendingCodes } from "../auth/loginCodes";
 import type { UserAccountDTO } from "@zaks/shared-types";
 
 type UserWithRole = Prisma.UserGetPayload<{ include: { role: true } }>;
@@ -75,10 +76,9 @@ export async function updateStaffUser(
 
   try {
     const user = await prisma.user.update({ where: { id }, data, include: { role: true } });
-    // A sign-in code already emailed stops working once the password or address changes.
-    if (input.password || input.email) {
-      await prisma.loginCode.updateMany({ where: { userId: id, usedAt: null, expiresAt: { gt: new Date() } }, data: { expiresAt: new Date() } });
-    }
+    // A sign-in code already emailed stops working once the password or address changes,
+    // or the account is suspended.
+    if (input.password || input.email || input.isActive === false) await revokePendingCodes(id);
     return toUserDTO(user);
   } catch (err) {
     // A well-formed id that matches no user (D-05).

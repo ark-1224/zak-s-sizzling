@@ -921,7 +921,7 @@ def edit_user():
     f.inp(x, y + 252, w, 38, label="New password", placeholder="Leave empty to keep the current one", mono=True)
     f.btn_row(x + w, y + 312, [("Cancel", "secondary"), ("Save", "primary")], h=38)
     f.add_note("Only what changed is sent (PATCH /api/users/:id). The email is saved in lowercase and must not belong to another account (“A user with that email already exists”); a new password needs at least 8 characters.")
-    f.add_note("A sign-in code already emailed stops working when the email or password changes. An admin can edit their own account too.")
+    f.add_note("A sign-in code already emailed stops working when the email or password changes (or the account is suspended). An admin can edit their own account too.")
     return f
 
 

@@ -724,9 +724,9 @@ Analytics now shows **Average order value** (revenue ÷ paid orders) for the sel
 
 ## 10. Emailed sign-in codes (29 October 2026)
 
-Staff and Administrator sign-in now has a second step. After the password is accepted, the system emails a 6-digit code to the account's email address, and the account is signed in only when that code is entered. A code works for 10 minutes and allows 5 wrong tries; a new code can be requested after 60 seconds, at most 3 times per sign-in, and an account receives at most 10 codes an hour. Only a hash of each code is stored, and a code stops working once it is used, when the account signs in again, or when its password or email changes. Customers at the kiosk do not sign in, so nothing changes for them.
+Staff and Administrator sign-in now has a second step. After the password is accepted, the system emails a 6-digit code to the account's email address, and the account is signed in only when that code is entered. A code works for 10 minutes and allows 5 wrong tries; a new code can be requested after 60 seconds, at most 3 times per sign-in, and an account receives at most 10 codes an hour. Only a hash of each code is stored, and a code stops working once it is used, when the account signs in again, when its password or email changes, or when the account is suspended. Customers at the kiosk do not sign in, so nothing changes for them.
 
-**Evidence:** `apps/api/src/modules/auth/loginCodes.ts`, `POST /api/auth/login/verify` and `POST /api/auth/login/resend`, the email sender `apps/api/src/lib/loginMail.ts` (Brevo, over HTTPS), migration `20261029153535_login_codes`, the sign-in page `apps/web/src/app/login/page.tsx`. The Users page can now change an account's email and password and send it a test email (`POST /api/users/:id/test-email`, Administrator only). Tests: `apps/api/test/integration/login-codes.test.ts` and `apps/api/test/unit/login-codes.test.ts` (the ninth testing session).
+**Evidence:** `apps/api/src/modules/auth/loginCodes.ts`, `POST /api/auth/login/verify` and `POST /api/auth/login/resend`, the email sender `apps/api/src/lib/loginMail.ts` (Brevo, over HTTPS), migrations `20261029153535_login_codes` and `20261029161028_login_codes_revoked`, the sign-in page `apps/web/src/app/login/page.tsx`. The Users page can now change an account's email and password and send it a test email (`POST /api/users/:id/test-email`, Administrator only). Tests: `apps/api/test/integration/login-codes.test.ts` and `apps/api/test/unit/login-codes.test.ts` (the ninth testing session).
 
 ### 10.1 Scope of the System: "Authentication and Authorization", p. 9 [PDF 12]
 
@@ -748,6 +748,7 @@ When the new tables are added to section 3 (Needs decision item 9), include `log
 | sent_at | timestamp | | When the latest code was emailed |
 | expires_at | timestamp | | When the code stops working (10 minutes after it was sent) |
 | used_at | timestamp | | When the right code was entered; empty until then |
+| revoked_at | timestamp | | When the sign-in was ended by a newer sign-in, a new password or email, or a suspension; empty otherwise |
 | created_at | timestamp | | When the sign-in started |
 
 ### 10.3 Diagrams

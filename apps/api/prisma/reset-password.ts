@@ -61,7 +61,7 @@ async function main() {
     }
     await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await bcrypt.hash(password, 10) } });
     // A sign-in code already emailed with the old password stops working.
-    await prisma.loginCode.updateMany({ where: { userId: user.id, usedAt: null, expiresAt: { gt: new Date() } }, data: { expiresAt: new Date() } });
+    await prisma.loginCode.updateMany({ where: { userId: user.id, usedAt: null, revokedAt: null }, data: { revokedAt: new Date() } });
     console.log(`Password changed.${user.isActive ? "" : " The account is suspended: reactivate it in Users, or sign in with another admin."}`);
   } finally {
     await prisma.$disconnect();

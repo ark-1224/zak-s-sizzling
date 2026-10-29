@@ -363,8 +363,8 @@ Every staff and admin sign-in, including the kitchen display's, asks for a 6-dig
 emailed to the account after the password is accepted. A code works for 10 minutes and
 allows 5 wrong tries; "Send a new code" waits 60 seconds, at most 3 times per sign-in,
 and an account gets at most 10 codes an hour. Only a hash of the code is stored, and a
-code stops working once used, when the account signs in again, or when its password or
-email changes. A wrong password still answers "Invalid email or password" and sends
+code stops working once used, when the account signs in again, when its password or
+email changes, or when it is suspended. A wrong password still answers "Invalid email or password" and sends
 nothing. Sessions last 7 days after that, as before, so the code is asked only when
 signing in with the password.
 

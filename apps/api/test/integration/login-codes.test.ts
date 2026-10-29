@@ -205,6 +205,12 @@ describe("signing in with an emailed code", () => {
     const second = await signIn(USERS.staff.email);
 
     expect((await verify(first.body.challengeId, firstCode)).status).toBe(410);
+    // Nor can a new code bring the first sign-in back: it stays ended, and no email is sent.
+    await sentAgo(first.body.challengeId, 61);
+    expect((await resend(first.body.challengeId)).status).toBe(410);
+    expect((await prisma.loginCode.findUniqueOrThrow({ where: { id: first.body.challengeId } })).revokedAt).not.toBeNull();
+    expect(sent).toHaveLength(2);
+
     expect((await verify(second.body.challengeId, lastCode())).status).toBe(200);
   });
 
