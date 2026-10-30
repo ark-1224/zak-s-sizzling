@@ -37,7 +37,8 @@ export default function AdminProductsPage() {
   }, []);
 
   useEffect(() => {
-    load();
+    const first = setTimeout(load, 0);
+    return () => clearTimeout(first);
   }, [load]);
 
   // Asked in the page's own dialog rather than the browser's confirm() box (UI review #17).

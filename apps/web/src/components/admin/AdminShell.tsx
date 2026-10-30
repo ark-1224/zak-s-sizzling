@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { getStoredUser, logout } from "@/lib/auth";
+import { logout } from "@/lib/auth";
+import { useStoredUser } from "@/hooks/useStoredSession";
 import { Icon, type IconName } from "@/components/Icon";
 import type { AuthUser } from "@zaks/shared-types";
 
@@ -94,12 +96,8 @@ const MODE = {
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const user = useStoredUser() ?? null;
   const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    setUser(getStoredUser());
-  }, []);
 
   useEffect(() => {
     if (!expanded) return;
@@ -172,7 +170,7 @@ function SidebarContent({
   return (
     <div className={`flex flex-1 flex-col gap-4 py-3 md:gap-5 md:py-5 ${m.content}`}>
       <div className="flex items-center justify-center gap-2.5 md:justify-start md:px-1.5">
-        <img src="/logo.jpg" alt="Zak's Sizzling Hub" className="h-8 w-8 rounded-md object-cover" />
+        <Image src="/logo.jpg" alt="Zak's Sizzling Hub" width={32} height={32} className="h-8 w-8 rounded-md object-cover" />
         <div className={`min-w-0 flex-1 ${m.text}`}>
           <div className="truncate text-sm leading-tight font-semibold tracking-tight">Zak&apos;s Sizzling Hub</div>
           <div className="font-adm-mono mt-0.5 text-xs text-adm-ink-3">STOCK INVENTORY</div>

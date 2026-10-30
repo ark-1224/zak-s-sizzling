@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api-client";
-import { getStoredUser } from "@/lib/auth";
+import { useStoredUser } from "@/hooks/useStoredSession";
 import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
@@ -34,26 +34,23 @@ type PendingChange = { user: UserAccountDTO; kind: "role"; role: "admin" | "staf
 
 export default function UsersPage() {
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
   const [users, setUsers] = useState<UserAccountDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [meId, setMeId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingChange | null>(null);
   const [editing, setEditing] = useState<UserAccountDTO | null>(null);
   const [testing, setTesting] = useState<string | null>(null);
   const success = useSuccessMessage();
 
+  const me = useStoredUser();
+  const checked = me?.role === "admin";
+  const meId = me?.id ?? null;
+
   useEffect(() => {
-    const me = getStoredUser();
-    if (me?.role !== "admin") {
-      router.replace("/admin");
-      return;
-    }
-    setMeId(me.id);
-    setChecked(true);
-  }, [router]);
+    // undefined: not read yet. Anyone but an admin goes back to the dashboard.
+    if (me !== undefined && me?.role !== "admin") router.replace("/admin");
+  }, [me, router]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -67,7 +64,9 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    if (checked) load();
+    if (!checked) return;
+    const first = setTimeout(load, 0);
+    return () => clearTimeout(first);
   }, [checked, load]);
 
   async function saveChange(user: UserAccountDTO, change: { isActive?: boolean; role?: "admin" | "staff" }) {

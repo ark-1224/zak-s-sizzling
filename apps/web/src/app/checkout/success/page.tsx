@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api-client";
+import { resetKiosk } from "@/lib/resetKiosk";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ReceiptModal } from "@/components/kiosk/ReceiptModal";
 import { IdleTimeoutOverlay } from "@/components/kiosk/IdleTimeoutOverlay";
@@ -23,9 +24,7 @@ function CheckoutSuccessContent() {
   // same underlying gap as /checkout. Cart's already empty by this point, so reset is
   // just "go home."
   const { showWarning, stayActive } = useIdleTimer({
-    onReset: () => {
-      window.location.href = "/";
-    },
+    onReset: resetKiosk,
   });
 
   useEffect(() => {
@@ -80,7 +79,7 @@ function CheckoutSuccessContent() {
 
   return (
     <>
-      <ReceiptModal order={order} onDone={() => (window.location.href = "/")} />
+      <ReceiptModal order={order} onDone={resetKiosk} />
       <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
     </>
   );

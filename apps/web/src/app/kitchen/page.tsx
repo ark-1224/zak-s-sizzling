@@ -65,7 +65,8 @@ export default function KitchenPage() {
   }
 
   useEffect(() => {
-    load();
+    const first = setTimeout(load, 0);
+    return () => clearTimeout(first);
   }, [load]);
 
   // A full refetch on either event is simple and correct at this scale — no need for

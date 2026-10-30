@@ -50,7 +50,8 @@ export default function AdminDashboardPage() {
   }, []);
 
   useEffect(() => {
-    load();
+    const first = setTimeout(load, 0);
+    return () => clearTimeout(first);
   }, [load]);
 
   const categoryCount = new Set(products.map((p) => p.categoryId)).size;

@@ -48,23 +48,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [orderType, setOrderType] = useState<OrderType | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage once on mount (cart persists across a page refresh).
+  // Hydrate from localStorage once on mount (cart persists across a page refresh), on the
+  // next tick like the pages' first loads, so it isn't a state update inside the effect.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as CartLine[];
-        setLines(parsed);
-        const maxId = parsed.reduce((max, l) => Math.max(max, Number(l.cartId.slice(1)) || 0), 0);
-        cartIdSeq = maxId + 1;
+    const first = setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as CartLine[];
+          setLines(parsed);
+          const maxId = parsed.reduce((max, l) => Math.max(max, Number(l.cartId.slice(1)) || 0), 0);
+          cartIdSeq = maxId + 1;
+        }
+        const savedType = window.localStorage.getItem(ORDER_TYPE_KEY);
+        if (savedType === "dine_in" || savedType === "take_out") setOrderType(savedType);
+      } catch {
+        // corrupted localStorage — start with an empty cart rather than crashing the kiosk
+      } finally {
+        setHydrated(true);
       }
-      const savedType = window.localStorage.getItem(ORDER_TYPE_KEY);
-      if (savedType === "dine_in" || savedType === "take_out") setOrderType(savedType);
-    } catch {
-      // corrupted localStorage — start with an empty cart rather than crashing the kiosk
-    } finally {
-      setHydrated(true);
-    }
+    }, 0);
+    return () => clearTimeout(first);
   }, []);
 
   useEffect(() => {

@@ -83,12 +83,14 @@ export default function AdminInventoryPage() {
   }, []);
 
   useEffect(() => {
-    load();
-    loadLog("all");
-  }, [load, loadLog]);
+    const first = setTimeout(load, 0);
+    return () => clearTimeout(first);
+  }, [load]);
 
+  // Also loads the log the first time (logProductId starts as "all").
   useEffect(() => {
-    loadLog(logProductId);
+    const first = setTimeout(() => loadLog(logProductId), 0);
+    return () => clearTimeout(first);
   }, [logProductId, loadLog]);
 
   // Live-refresh the log if another admin/staff session adjusts stock — reuses the

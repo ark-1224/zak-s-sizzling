@@ -19,6 +19,7 @@ import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
 import { SizzlingPlate } from "@/components/kiosk/SizzlingPlate";
 import type { OrderDTO, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
 import { aboutMinutes } from "@/lib/prepTime";
+import { resetKiosk } from "@/lib/resetKiosk";
 
 const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string }[] = [
   { id: "counter", label: "Pay at counter", icon: "cash", blurb: "Cash or card with staff" },
@@ -124,7 +125,7 @@ export default function CheckoutPage() {
   const { showWarning, stayActive } = useIdleTimer({
     onReset: () => {
       clearCart();
-      window.location.href = "/";
+      resetKiosk();
     },
     paused: qrPayment !== null && !qrExpired,
   });
@@ -250,7 +251,7 @@ export default function CheckoutPage() {
   if (placedOrder) {
     return (
       <>
-        <ReceiptModal order={placedOrder} printStatus={printStatus} onDone={() => (window.location.href = "/")} />
+        <ReceiptModal order={placedOrder} printStatus={printStatus} onDone={resetKiosk} />
         <IdleTimeoutOverlay show={showWarning} onStayActive={stayActive} />
       </>
     );
