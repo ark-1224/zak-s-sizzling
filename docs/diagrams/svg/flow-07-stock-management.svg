@@ -45,13 +45,13 @@
 <path d="M655.0 1305.0 L655.0 1324.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="658.0" y="1308.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
 <text x="661.0" y="1320.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M753.0 1357.0 L905.0 1357.0 L905.0 1429.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M753.0 1357.0 L905.0 1357.0 L905.0 1423.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <path d="M807.0 1469.0 L753.0 1469.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="782.89" y="1451.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
 <text x="801.0" y="1463.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M905.0 1509.0 L905.0 1556.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="908.0" y="1512.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="911.0" y="1524.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M905.0 1515.0 L905.0 1556.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="908.0" y="1518.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="911.0" y="1530.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
 <path d="M905.0 1606.0 L905.0 1672.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <path d="M655.0 1494.0 L655.0 1560.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
 <rect x="57.0" y="205.5" width="196" height="63" rx="31.5" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
@@ -117,9 +117,10 @@
 <text x="655.0" y="1346.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Queue one low-stock alert</text>
 <text x="655.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(not again until restocked</text>
 <text x="655.0" y="1376.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">above the minimum)</text>
-<polygon points="905.0,1429.0 1003.0,1469.0 905.0,1509.0 807.0,1469.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="905.0" y="1466.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Email set up?</text>
-<text x="905.0" y="1480.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">(Resend or SMTP)</text>
+<polygon points="905.0,1423.0 1003.0,1469.0 905.0,1515.0 807.0,1469.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="905.0" y="1459.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Email set up?</text>
+<text x="905.0" y="1473.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">(Brevo, Resend or</text>
+<text x="905.0" y="1487.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">SMTP)</text>
 <rect x="557.0" y="1444.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="655.0" y="1466.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">The alert waits in the</text>
 <text x="655.0" y="1481.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">database</text>

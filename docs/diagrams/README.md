@@ -100,7 +100,7 @@ These are marked in the diagrams (dashed outlines or notes). They describe the c
 - **Ready notice on the phone**: the counter's status board (24) tells customers their order is ready; the receipt on a phone opened from the QR code does not update by itself (a limitation; could be added later).
 - **Changing an order**: staff are told to change a short order with the customer, but no screen edits an existing order. The API has `PATCH`/`DELETE /api/orders/:id/items/:itemId` for staff, unused by the web app (19, flow 04).
 - **Nutrition lookup** needs `USDA_API_KEY` (a free data.gov key) on the API; without it the USDA search says it isn't set up (12b, 14d). Values are estimates: “Calculate from recipe” uses raw ingredients and doesn't count cooking.
-- **Low-stock emails** need email set up for the worker (Resend or SMTP); without it alerts wait in the database (flow 07).
+- **Low-stock emails** need email set up for the worker (Brevo, Resend or SMTP); without it alerts wait in the database (flow 07).
 - **No custom “page not found”**: staff pages on the kiosk site show Next.js's default 404, so it has no wireframe.
 - **Printing** needs `print-service/` running next to each printer, switched on once per device with `?printer=1`: the kiosk's Raspberry Pi prints the customer receipt (08, flow 03), and the kitchen display's device prints a kitchen ticket with the order number and dishes once the order is paid (18, flow 06). Phones opened from the QR code don't print.
 

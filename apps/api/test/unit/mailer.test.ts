@@ -4,6 +4,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 // The worker's email sender (Low-stock notifications 1/3), tested here like the worker's
 // low-stock job is: from the api's test projects, since the worker has none of its own.
 import {
+  BrevoError,
+  createBrevoMailer,
   createMailer,
   createResendMailer,
   describeMailConfig,
@@ -23,7 +25,7 @@ describe("reading the email settings", () => {
 
     expect(config).toEqual({ ok: false, missing: ["SMTP_USER", "SMTP_PASS", "ALERT_EMAIL_TO"], problems: [] });
     expect(describeMailConfig(config)).toBe(
-      "email alerts off (set SMTP_USER, SMTP_PASS, ALERT_EMAIL_TO, or set RESEND_API_KEY and ALERT_EMAIL_TO; see .env.example)"
+      "email alerts off (set SMTP_USER, SMTP_PASS, ALERT_EMAIL_TO, or set BREVO_API_KEY, ALERT_EMAIL_FROM and ALERT_EMAIL_TO; see .env.example)"
     );
     expect(mailerFromEnv({})).toBeNull();
   });
@@ -206,5 +208,86 @@ describe("sending through Resend", () => {
     expect(describeMailError(await send(fakeFetch(403, { name: "invalid_api_key", message: "API key is invalid" })))).toMatch(/RESEND_API_KEY/);
     expect(describeMailError(await send(fakeFetch(429, { name: "rate_limit_exceeded", message: "Too many requests" })))).toMatch(/tried again/);
     expect(describeMailError(await send(offline))).toBe("Could not reach Resend. Check that this machine is online.");
+  });
+});
+
+describe("sending through Brevo", () => {
+  const BREVO = { BREVO_API_KEY: "xkeysib-test-key", ALERT_EMAIL_FROM: "zaks.alerts@gmail.com", ALERT_EMAIL_TO: "owner@example.com" };
+
+  type Call = { url: string; init: RequestInit };
+  function fakeFetch(status: number, body: object): typeof fetch & { calls: Call[] } {
+    const calls: Call[] = [];
+    const fn = (async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), init: init ?? {} });
+      return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+    }) as typeof fetch & { calls: Call[] };
+    fn.calls = calls;
+    return fn;
+  }
+  const settings = { apiKey: "xkeysib-test-key", from: "zaks.alerts@gmail.com", to: ["owner@example.com"] };
+
+  it("is chosen when BREVO_API_KEY is set, even with Resend and SMTP settings too", () => {
+    const config = readMailSettings({ ...GMAIL, RESEND_API_KEY: "re_test_key", ...BREVO });
+
+    expect(config).toEqual({ ok: true, via: "brevo", settings });
+    expect(describeMailConfig(config)).toBe("email alerts on: 1 recipient(s) via Brevo");
+  });
+
+  it("needs a verified sender and a recipient besides the key", () => {
+    expect(readMailSettings({ BREVO_API_KEY: "xkeysib-test-key" })).toEqual({
+      ok: false,
+      missing: ["ALERT_EMAIL_FROM", "ALERT_EMAIL_TO"],
+      problems: [],
+    });
+    expect(readMailSettings({ ...BREVO, ALERT_EMAIL_FROM: "Zak's alerts" })).toMatchObject({
+      ok: false,
+      problems: [expect.stringMatching(/^ALERT_EMAIL_FROM must be an email address verified in Brevo/)],
+    });
+  });
+
+  it("posts the message to Brevo's API with the key, the sender's name and address, and returns its id", async () => {
+    const fetch = fakeFetch(201, { messageId: "<202610300100.12345@smtp-relay.mailin.fr>" });
+    const mailer = createBrevoMailer({ ...settings, from: `"Zak's Alerts" <zaks.alerts@gmail.com>`, to: ["owner@example.com", "manager@example.com"] }, fetch);
+
+    const info = await mailer.send({ subject: "Low stock", text: "Rice is low.", html: "<p>Rice is low.</p>" });
+
+    expect(info).toEqual({ messageId: "<202610300100.12345@smtp-relay.mailin.fr>", accepted: ["owner@example.com", "manager@example.com"] });
+    expect(fetch.calls).toHaveLength(1);
+    const [{ url, init }] = fetch.calls;
+    expect(url).toBe("https://api.brevo.com/v3/smtp/email");
+    expect(init.method).toBe("POST");
+    expect(init.headers).toMatchObject({ "api-key": "xkeysib-test-key", "Content-Type": "application/json" });
+    expect(JSON.parse(String(init.body))).toEqual({
+      sender: { name: "Zak's Alerts", email: "zaks.alerts@gmail.com" },
+      to: [{ email: "owner@example.com" }, { email: "manager@example.com" }],
+      subject: "Low stock",
+      textContent: "Rice is low.",
+      htmlContent: "<p>Rice is low.</p>",
+    });
+  });
+
+  it("sends as Zak's Sizzling Hub when ALERT_EMAIL_FROM is just an address", async () => {
+    const fetch = fakeFetch(201, { messageId: "<1@brevo>" });
+
+    await createBrevoMailer(settings, fetch).send({ subject: "Low stock", text: "Rice is low." });
+
+    expect(JSON.parse(String(fetch.calls[0].init.body)).sender).toEqual({ name: "Zak's Sizzling Hub", email: "zaks.alerts@gmail.com" });
+  });
+
+  it("explains a refused key, a blocked IP address, an unverified sender, the sending limit, and a network failure", async () => {
+    const send = (fetch: typeof globalThis.fetch) => createBrevoMailer(settings, fetch).send({ subject: "x", text: "x" }).catch((e: unknown) => e);
+    const offline = (async () => {
+      throw new TypeError("fetch failed");
+    }) as unknown as typeof fetch;
+
+    const refused = await send(fakeFetch(401, { code: "unauthorized", message: "Key not found" }));
+    expect(refused).toBeInstanceOf(BrevoError);
+    expect(describeMailError(refused)).toMatch(/BREVO_API_KEY/);
+    expect(
+      describeMailError(await send(fakeFetch(401, { code: "unauthorized", message: "We have detected you are using an unrecognised IP address 203.0.113.9" })))
+    ).toMatch(/Authorised IPs/);
+    expect(describeMailError(await send(fakeFetch(400, { code: "invalid_parameter", message: "Sender is not valid" })))).toMatch(/ALERT_EMAIL_FROM/);
+    expect(describeMailError(await send(fakeFetch(429, { code: "too_many_requests", message: "Too many requests" })))).toMatch(/tried again/);
+    expect(describeMailError(await send(offline))).toBe("Could not reach Brevo. Check that this machine is online.");
   });
 });

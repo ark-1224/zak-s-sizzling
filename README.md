@@ -402,12 +402,18 @@ password; the URL and password aren't shown. If the emails are the problem, also
 
 ### Email alerts (optional)
 
-The worker sends email one of two ways (`apps/worker/src/lib/mailer.ts`); put the
+The worker sends email one of three ways (`apps/worker/src/lib/mailer.ts`); put the
 settings in `apps/worker/.env`, and in the worker service's variables on Railway, and never
 commit them:
 
+- **Brevo** (HTTPS): set `BREVO_API_KEY` (the same key as the API's sign-in codes),
+  `ALERT_EMAIL_FROM` (a sender verified in Brevo, e.g. the API's `LOGIN_CODE_FROM`) and
+  `ALERT_EMAIL_TO`. This is the one the deployed worker uses: Railway's Trial and Hobby
+  plans block outgoing SMTP, and Brevo delivers to any address without a domain. On
+  Railway the worker can reuse the API's values as variable references: in the worker's
+  variable editor type `${{` and pick the api service's `BREVO_API_KEY` (and
+  `LOGIN_CODE_FROM` for `ALERT_EMAIL_FROM`).
 - **Resend** (HTTPS): set `RESEND_API_KEY` (resend.com → API Keys) and `ALERT_EMAIL_TO`.
-  This is the one to use on Railway, whose Trial and Hobby plans block outgoing SMTP.
   Without a verified domain, Resend sends from `onboarding@resend.dev` and only to the
   address the Resend account was created with.
 - **Gmail** (or any SMTP server, with `nodemailer`): set `SMTP_USER`, `SMTP_PASS` and
@@ -415,7 +421,7 @@ commit them:
   Password (Google Account → Security → 2-Step Verification → App passwords), and use
   that as `SMTP_PASS`. Works locally, and on Railway's Pro plan.
 
-If both are set, Resend is used. Then check the settings:
+Brevo wins over Resend, which wins over SMTP. Then check the settings:
 
 ```bash
 npm run mail:test

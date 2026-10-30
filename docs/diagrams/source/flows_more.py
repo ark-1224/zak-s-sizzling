@@ -207,7 +207,7 @@ def stock():
     f.n("crossed", A, 9, "decision", "Did the item just reach its minimum? (database trigger)")
     f.n("end0", Wb, 9, "end", "End")
     f.n("queue", A, 10, "process", "Queue one low-stock alert (not again until restocked above the minimum)")
-    f.n("email", X, 11, "decision", "Email set up? (Resend or SMTP)")
+    f.n("email", X, 11, "decision", "Email set up? (Brevo, Resend or SMTP)")
     f.n("wait", A, 11, "process", "The alert waits in the database")
     f.n("send_mail", X, 12, "process", "Every minute: email the waiting alerts")
     f.n("end2", A, 12, "end", "End")

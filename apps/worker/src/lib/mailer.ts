@@ -1,12 +1,15 @@
 import nodemailer, { type Transporter } from "nodemailer";
 
 /**
- * Outgoing email for the worker's alerts, sent one of two ways:
+ * Outgoing email for the worker's alerts, sent one of three ways:
  *
- * - Resend (https://resend.com), over HTTPS, when RESEND_API_KEY is set. Railway's
- *   Trial and Hobby plans block outgoing SMTP, so this is the way the deployed worker
- *   can send. Without a verified domain, Resend only delivers to the address the
- *   account was created with, from its test sender onboarding@resend.dev.
+ * - Brevo (https://brevo.com), over HTTPS, when BREVO_API_KEY is set. Railway's Trial
+ *   and Hobby plans block outgoing SMTP, so the deployed worker sends this way, with the
+ *   same Brevo account the API uses for sign-in codes. ALERT_EMAIL_FROM must be a sender
+ *   verified in Brevo (Senders); it then delivers to any address, no domain needed.
+ * - Resend (https://resend.com), over HTTPS, when RESEND_API_KEY is set. Without a
+ *   verified domain, Resend only delivers to the address the account was created with,
+ *   from its test sender onboarding@resend.dev.
  * - SMTP with nodemailer otherwise. Gmail is the default: set SMTP_USER to the Gmail
  *   address and SMTP_PASS to an App Password for it (Google Account → Security →
  *   2-Step Verification → App passwords), never the normal password. Any other SMTP
@@ -36,6 +39,7 @@ export interface ResendSettings {
 export type MailConfig =
   | { ok: true; via: "smtp"; settings: MailSettings }
   | { ok: true; via: "resend"; settings: ResendSettings }
+  | { ok: true; via: "brevo"; settings: ResendSettings }
   /** `missing` lists unset variables; `problems` describes ones set to something unusable. */
   | { ok: false; missing: string[]; problems: string[] };
 
@@ -56,23 +60,29 @@ export interface Mailer {
 const GMAIL_HOST = "smtp.gmail.com";
 const EMAIL = /^[^\s@<>,]+@[^\s@<>,]+\.[^\s@<>,]+$/;
 const RESEND_URL = "https://api.resend.com/emails";
+const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 /** Resend's shared test sender, usable before a domain is verified. */
 export const RESEND_TEST_SENDER = "Zak's Sizzling Hub <onboarding@resend.dev>";
 
 /**
  * Reads the email settings from the environment, reporting what's missing or wrong.
- * RESEND_API_KEY, when set, wins over the SMTP settings.
+ * BREVO_API_KEY, when set, wins over RESEND_API_KEY, which wins over the SMTP settings.
  */
 export function readMailSettings(env: NodeJS.ProcessEnv = process.env): MailConfig {
   const value = (name: string) => env[name]?.trim() ?? "";
-  const viaResend = Boolean(value("RESEND_API_KEY"));
-  const required = viaResend ? ["ALERT_EMAIL_TO"] : ["SMTP_USER", "SMTP_PASS", "ALERT_EMAIL_TO"];
+  const viaBrevo = Boolean(value("BREVO_API_KEY"));
+  const viaResend = !viaBrevo && Boolean(value("RESEND_API_KEY"));
+  const required = viaBrevo
+    ? ["ALERT_EMAIL_FROM", "ALERT_EMAIL_TO"]
+    : viaResend
+      ? ["ALERT_EMAIL_TO"]
+      : ["SMTP_USER", "SMTP_PASS", "ALERT_EMAIL_TO"];
   const missing = required.filter((name) => !value(name));
   const problems: string[] = [];
 
   const host = value("SMTP_HOST") || GMAIL_HOST;
   const port = value("SMTP_PORT") ? Number(value("SMTP_PORT")) : 465;
-  if (!viaResend && (!Number.isInteger(port) || port < 1 || port > 65535)) {
+  if (!viaBrevo && !viaResend && (!Number.isInteger(port) || port < 1 || port > 65535)) {
     problems.push(`SMTP_PORT must be a port number, such as 465 or 587`);
   }
 
@@ -82,9 +92,15 @@ export function readMailSettings(env: NodeJS.ProcessEnv = process.env): MailConf
     .filter(Boolean);
   const badAddresses = to.filter((address) => !EMAIL.test(address));
   if (badAddresses.length > 0) problems.push(`ALERT_EMAIL_TO has an address that isn't valid: ${badAddresses.join(", ")}`);
+  if (viaBrevo && value("ALERT_EMAIL_FROM") && !EMAIL.test(senderAddress(value("ALERT_EMAIL_FROM")))) {
+    problems.push(`ALERT_EMAIL_FROM must be an email address verified in Brevo, such as alerts@gmail.com or "Zak's" <alerts@gmail.com>`);
+  }
 
   if (missing.length > 0 || problems.length > 0) return { ok: false, missing, problems };
 
+  if (viaBrevo) {
+    return { ok: true, via: "brevo", settings: { apiKey: value("BREVO_API_KEY"), from: value("ALERT_EMAIL_FROM"), to } };
+  }
   if (viaResend) {
     return { ok: true, via: "resend", settings: { apiKey: value("RESEND_API_KEY"), from: value("ALERT_EMAIL_FROM") || RESEND_TEST_SENDER, to } };
   }
@@ -179,9 +195,65 @@ export function createResendMailer(settings: ResendSettings, fetchImpl: typeof f
   };
 }
 
+/** Thrown when Brevo answers with an error; `status` is the HTTP status. */
+export class BrevoError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = "BrevoError";
+  }
+}
+
+/** The address in "Name <address>", or the whole value when it's just an address. */
+function senderAddress(from: string): string {
+  return from.match(/<([^>]+)>\s*$/)?.[1].trim() ?? from;
+}
+
+/** The name in "Name <address>" (quotes removed), or the shop's name. */
+function senderName(from: string): string {
+  const name = from.match(/^(.*)<[^>]+>\s*$/)?.[1].trim().replace(/^"(.*)"$/, "$1");
+  return name || "Zak's Sizzling Hub";
+}
+
+/** Sends through Brevo's HTTPS API. `fetchImpl` replaces the network, for tests. */
+export function createBrevoMailer(settings: ResendSettings, fetchImpl: typeof fetch = fetch): Mailer {
+  return {
+    to: settings.to,
+    // Like Resend, nothing to sign in to; the test email (npm run mail:test) is the check.
+    async verify() {},
+    async send(message) {
+      let res: Response;
+      try {
+        res = await fetchImpl(BREVO_URL, {
+          method: "POST",
+          headers: { "api-key": settings.apiKey, "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            sender: { name: senderName(settings.from), email: senderAddress(settings.from) },
+            to: settings.to.map((email) => ({ email })),
+            subject: message.subject,
+            textContent: message.text,
+            ...(message.html ? { htmlContent: message.html } : {}),
+          }),
+          signal: AbortSignal.timeout(20_000),
+        });
+      } catch (err) {
+        throw Object.assign(new Error(`Could not reach Brevo: ${err instanceof Error ? err.message : String(err)}`), {
+          code: "EBREVOUNREACHABLE",
+        });
+      }
+      const body = (await res.json().catch(() => ({}))) as { messageId?: unknown; message?: unknown };
+      if (!res.ok) throw new BrevoError(res.status, typeof body.message === "string" ? body.message : res.statusText);
+      return { messageId: String(body.messageId ?? ""), accepted: settings.to };
+    },
+  };
+}
+
 /** The mailer for these settings, or null when email isn't set up. */
 export function mailerFromConfig(config: MailConfig): Mailer | null {
   if (!config.ok) return null;
+  if (config.via === "brevo") return createBrevoMailer(config.settings);
   return config.via === "resend" ? createResendMailer(config.settings) : createMailer(config.settings);
 }
 
@@ -193,6 +265,7 @@ export function mailerFromEnv(env: NodeJS.ProcessEnv = process.env): Mailer | nu
 /** One line on why email isn't set up, for the worker's log. */
 export function describeMailConfig(config: MailConfig): string {
   if (config.ok) {
+    if (config.via === "brevo") return `email alerts on: ${config.settings.to.length} recipient(s) via Brevo`;
     if (config.via === "resend") return `email alerts on: ${config.settings.to.length} recipient(s) via Resend`;
     const { host, port, to } = config.settings;
     return `email alerts on: ${to.length} recipient(s) via ${host}:${port}`;
@@ -200,11 +273,23 @@ export function describeMailConfig(config: MailConfig): string {
   const parts = [];
   if (config.missing.length > 0) parts.push(`set ${config.missing.join(", ")}`);
   parts.push(...config.problems);
-  return `email alerts off (${parts.join("; ")}, or set RESEND_API_KEY and ALERT_EMAIL_TO; see .env.example)`;
+  return `email alerts off (${parts.join("; ")}, or set BREVO_API_KEY, ALERT_EMAIL_FROM and ALERT_EMAIL_TO; see .env.example)`;
 }
 
-/** Turns Resend's and nodemailer's errors into something a person setting this up can act on. */
+/** Turns Brevo's, Resend's and nodemailer's errors into something a person setting this up can act on. */
 export function describeMailError(err: unknown): string {
+  if (err instanceof BrevoError) {
+    // Before the 401 check: Brevo answers 401 for an unknown IP address too.
+    if (/\bIP\b/i.test(err.message) && /(unrecogni[sz]ed|authori[sz]ed|blocked)/i.test(err.message)) {
+      return "Brevo blocked this machine's IP address. Turn off IP blocking in Brevo (Security → Authorised IPs).";
+    }
+    if (err.status === 401) return "Brevo refused the API key. Check BREVO_API_KEY (Brevo → SMTP & API → API keys).";
+    if (/sender/i.test(err.message)) {
+      return "Brevo refused the sender. ALERT_EMAIL_FROM must be a sender verified in Brevo (Senders, domains & IPs).";
+    }
+    if (err.status === 429) return "Brevo's sending limit was reached. The alerts wait and are tried again on the next run.";
+    return `Brevo refused the email (${err.status}): ${err.message}`;
+  }
   if (err instanceof ResendError) {
     if (/testing emails|own email address|verify a domain/i.test(err.message)) {
       return (
@@ -219,6 +304,7 @@ export function describeMailError(err: unknown): string {
   }
   const code = (err as { code?: string } | null)?.code;
   if (code === "ERESENDUNREACHABLE") return "Could not reach Resend. Check that this machine is online.";
+  if (code === "EBREVOUNREACHABLE") return "Could not reach Brevo. Check that this machine is online.";
   switch (code) {
     case "EAUTH":
       return (

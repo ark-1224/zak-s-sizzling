@@ -146,7 +146,7 @@ def main():
         "`PATCH`/`DELETE /api/orders/:id/items/:itemId` for staff, unused by the web app (19, flow 04).",
         "- **Nutrition lookup** needs `USDA_API_KEY` (a free data.gov key) on the API; without it the USDA search says it isn't set up (12b, 14d). "
         "Values are estimates: “Calculate from recipe” uses raw ingredients and doesn't count cooking.",
-        "- **Low-stock emails** need email set up for the worker (Resend or SMTP); without it alerts wait in the database (flow 07).",
+        "- **Low-stock emails** need email set up for the worker (Brevo, Resend or SMTP); without it alerts wait in the database (flow 07).",
         "- **No custom “page not found”**: staff pages on the kiosk site show Next.js's default 404, so it has no wireframe.",
         "- **Printing** needs `print-service/` running next to each printer, switched on once per device with `?printer=1`: "
         "the kiosk's Raspberry Pi prints the customer receipt (08, flow 03), and the kitchen display's device prints a kitchen ticket "
