@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import request from "supertest";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { prisma } from "../../src/lib/prisma";
 import { PRODUCTS } from "./fixtures";
 import { app, kioskToken, loginAs } from "./helpers";
@@ -32,14 +32,26 @@ const sodaStock = async () => (await prisma.inventory.findUniqueOrThrow({ where:
 // The API only checks that a PayMongo key is present before offering QR Ph;
 // PayMongo itself is never called with it.
 const FAKE_SECRET_KEY = "sk_test_not_a_real_key";
+
+// Counts finished tests, so a request still running after its test timed out can
+// tell that it no longer owns the key.
+let finishedTests = 0;
+
+// Every test starts with the real key (or none), even when the one before it timed
+// out while a request was still running with the fake key.
+afterEach(() => {
+  finishedTests++;
+  vi.unstubAllEnvs();
+});
+
 async function withPaymongoKey<T>(fn: () => Promise<T>): Promise<T> {
-  const before = process.env.PAYMONGO_SECRET_KEY;
-  process.env.PAYMONGO_SECRET_KEY = before ?? FAKE_SECRET_KEY;
+  const test = finishedTests;
+  vi.stubEnv("PAYMONGO_SECRET_KEY", process.env.PAYMONGO_SECRET_KEY ?? FAKE_SECRET_KEY);
   try {
     return await fn();
   } finally {
-    if (before === undefined) delete process.env.PAYMONGO_SECRET_KEY;
-    else process.env.PAYMONGO_SECRET_KEY = before;
+    // Late finishers leave alone whatever the test now running has stubbed.
+    if (test === finishedTests) vi.unstubAllEnvs();
   }
 }
 
