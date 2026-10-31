@@ -761,7 +761,7 @@ New wireframe 10c (the code step) and 20d (Users: edit an account); wireframe 20
 A code review of the QR Ph, kitchen and printing changes (23 to 28 October) found cases where the system recorded something wrong without telling anyone. They are fixed:
 
 - **A second payment** (an earlier QR code paid after the kiosk showed a new one or switched to the counter, or after staff took the money at the counter) is no longer ignored silently.
-- **A payment of the wrong amount** is no longer confirmed: the kiosk's check and PayMongo's webhook follow the same rule.
+- **A payment of the wrong amount** is no longer confirmed: the kiosk's check and PayMongo's webhook follow the same rule. When a webhook event doesn't say the amount, the API asks PayMongo for it, and an event with no way to know it is never confirmed (found by an automated security review the same day).
 - **While a QR code is out for an order, its items can't be changed**, so the code always matches the total.
 
 Each such order, and the earlier cases (paid after the stock ran out, or after the order was cancelled), shows in the payment queue as **NEEDS ATTENTION**, with a note saying what happened and what to do. Staff press **Mark as sorted out** once they have refunded, substituted or collected the difference; the order leaves the queue and its note stays in the transaction history.

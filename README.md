@@ -474,7 +474,8 @@ customer was told.
 Payments staff must sort out are never confirmed silently. The order is marked **NEEDS
 ATTENTION** in the payment queue, with a note saying what happened and what to do:
 paid online after the stock ran out or after the order was cancelled, an amount that isn't
-the order's total, or a second payment (an earlier QR code, which stays payable at PayMongo
+the order's total (when PayMongo's event doesn't say the amount, the API asks PayMongo for
+it, and an event with no way to know it is never confirmed), or a second payment (an earlier QR code, which stays payable at PayMongo
 after a new code is shown or the order switches to the counter, paid as well). Staff press
 **Mark as sorted out** (`POST /api/orders/:id/sorted-out`) once they have refunded,
 substituted or collected the difference; the note stays in the transaction history. While
