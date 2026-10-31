@@ -63,7 +63,7 @@ def online_payment():
              + "payments/service.ts (createQrPhPayment, checkQrPhPayment, switchToCounterPayment, handleWebhook), apps/api/src/lib/paymongo.ts",
              notes=[
                  "PARTIAL: coded and covered by automated tests with PayMongo simulated, but not yet run with PayMongo keys; production has none yet, so the order takes the “not set up” branch.",
-                 "The payment is recorded by whichever comes first, the kiosk's status check or PayMongo's payment.paid webhook; the other then changes nothing. Recording marks it paid, deducts stock and confirms the order in one transaction; if stock ran out or the order was cancelled meanwhile, the payment is recorded, nothing goes to the kitchen and the order is flagged STOCK ISSUE for staff.",
+                 "The payment is recorded by whichever comes first, the kiosk's status check or PayMongo's payment.paid webhook; the other then changes nothing. Recording marks it paid, deducts stock and confirms the order in one transaction; if stock ran out or the order was cancelled meanwhile, the payment is recorded, nothing goes to the kitchen and the order is flagged NEEDS ATTENTION for staff, as is a payment of the wrong amount or a second payment.",
                  "A succeeded intent is accepted only for the order's exact total. The idle reset is paused while the code can still be scanned and resumes when it expires.",
                  "In PayMongo test mode the screen offers a link to simulate the payment; test QR codes must not be scanned with a real banking app.",
              ])
@@ -90,7 +90,7 @@ def online_payment():
     f.n("flow4b", C, 10, "sub", "The order becomes a counter order; pays at the counter (Flow 04)")
     f.n("expmsg", K, 10, "io", "Show “This code has expired” with Get a new code (07d)")
     f.n("hook", A, 10, "decision", "Webhook: signature valid and order found?")
-    f.n("record", A, 11, "process", "Record the payment: mark paid, deduct stock, confirm, send to the kitchen (or flag STOCK ISSUE)")
+    f.n("record", A, 11, "process", "Record the payment: mark paid, deduct stock, confirm, send to the kitchen (or flag NEEDS ATTENTION)")
     f.n("end2", P, 11, "end", "End (webhook ignored)")
     f.n("receipt", K, 12, "io", "Show “Payment received!” (08b); print the receipt on the in-store kiosk")
     f.n("end1", K, 13, "end", "End")

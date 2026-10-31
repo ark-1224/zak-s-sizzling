@@ -5,15 +5,20 @@ on two devices, each with its own printer:
 
 | Device | Printer prints | Sent by |
 |---|---|---|
-| The in-store kiosk's Raspberry Pi | **Customer receipt** (`POST /print`) once an order is placed, or once a QR Ph payment arrives: restaurant name, order number, dine in / take out, date and time, items with prices, total, "PAID - QR Ph" or "Please pay at the counter", and the estimated preparation time | The kiosk page (`apps/web/src/lib/receiptPrinter.ts`) |
+| The in-store kiosk's Raspberry Pi | **Customer receipt** (`POST /print`) once an order is placed, or once a QR Ph payment arrives: restaurant name, order number, dine in / take out, date and time, items with prices, total, how it was paid ("PAID - QR Ph", "PAID at the counter") or "Please pay at the counter", and the estimated preparation time | The kiosk page (`apps/web/src/lib/receiptPrinter.ts`) |
 | The device in the kitchen that shows the kitchen display (`/kitchen`) | **Kitchen ticket** (`POST /print/kitchen`): a large order number and the dishes with their quantities and special instructions, nothing else | The kitchen display (`apps/web/src/app/kitchen/page.tsx`) |
 
 The kitchen ticket prints when an order first appears on the kitchen display, which is
 once it is paid (a counter order after staff confirm it, a QR Ph order once the payment
 arrives), so the kitchen never gets a ticket for an unpaid order. Each order prints once:
 the kitchen display remembers on its device which tickets have printed, so reloading the
-page doesn't print them again. If a ticket can't print, the display says so and tries
-again with the next update or within 30 seconds.
+page doesn't print them again. Tickets go one at a time, oldest first. If a ticket can't
+print, the display says so and tries again with the next update or within 30 seconds.
+
+The service prints one job at a time, in the order they arrive, so two jobs sent together
+can't mix their lines on the paper. A printer that doesn't answer within 10 seconds (a
+paper jam, a loose cable) fails that job instead of holding up the rest, and a job whose
+page stopped waiting (after 8 seconds) is skipped, since the page sends it again later.
 
 The service listens on the device itself (127.0.0.1) only, so phones that open the kiosk
 from the QR code, and other computers, can't reach it. It is deliberately not an npm
@@ -30,12 +35,14 @@ Customer receipt, `POST /print`:
   "total": 240,
   "orderType": "dine_in",
   "paid": false,
+  "paymentMethod": "counter",
   "estimatedPrepMinutes": 15,
   "createdAt": "2026-10-26T04:30:00.000Z"
 }
 ```
 
-`price` is the line's amount (qty × unit price).
+`price` is the line's amount (qty × unit price). `paymentMethod` (`qrph` or `counter`)
+only matters when `paid` is true: it picks the "PAID" line.
 
 Kitchen ticket, `POST /print/kitchen`:
 

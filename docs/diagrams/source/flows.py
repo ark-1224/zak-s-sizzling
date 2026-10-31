@@ -173,7 +173,7 @@ def counter_payment():
     C, S, A = f.lanes
     f.n("start", C, 0, "start", "Brings the order number from the receipt (08) to the counter")
     f.n("open", S, 1, "process", "Open Orders awaiting payment (19)")
-    f.n("list", A, 1, "process", "List unpaid, not-cancelled orders (and paid orders with a stock issue), newest first")
+    f.n("list", A, 1, "process", "List unpaid, not-cancelled orders (and orders flagged for attention), newest first")
     f.n("find", S, 2, "io", "Find the order by its number")
     f.n("pays", S, 3, "decision", "Customer pays for this order?")
     f.n("confirm", S, 4, "process", "Press Confirm order (“Checking stock…”)")

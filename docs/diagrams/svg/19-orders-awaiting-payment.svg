@@ -1,17 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1202" viewBox="0 0 1328 1202">
-<rect x="0" y="0" width="1328" height="1202" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1221" viewBox="0 0 1328 1221">
+<rect x="0" y="0" width="1328" height="1221" fill="#ffffff"/>
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">19  Orders awaiting payment</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /staff/orders   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/staff/orders/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
 <text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Lists unpaid, not-cancelled orders plus paid orders flagged with a stock issue (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago</text>
-<text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   it was placed come from the order.</text>
+<text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Lists unpaid, not-cancelled orders plus orders flagged for attention (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago it was</text>
+<text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   placed come from the order.</text>
 <text x="24" y="1080" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Live: the list reloads by itself (orders:changed, an event with no order data) whenever an order is placed, paid, edited or cancelled; an order that arrives while the page is open is</text>
 <text x="24" y="1099" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   marked NEW for a minute (first row).</text>
 <text x="24" y="1118" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Confirm order (“Checking stock…”) marks it paid, deducts stock and sends it to the kitchen in one step; if stock is short nothing changes and an error tells staff to change the order</text>
 <text x="24" y="1137" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   with the customer. Cancel asks first (second row).</text>
-<text x="24" y="1156" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• A stock-issue order (third row) has no buttons: it was paid online when stock had run out, or after it was cancelled; staff refund or substitute outside the system. PARTIAL: this case</text>
-<text x="24" y="1175" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   only arises with online payment.</text>
+<text x="24" y="1156" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• NEEDS ATTENTION (third row) marks an online payment staff must sort out, with the server&#x27;s note on what happened and what to do: paid after the stock ran out or after the order was</text>
+<text x="24" y="1175" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   cancelled, a wrong amount, or paid twice. Once staff have refunded, substituted or collected the difference, Mark as sorted out takes it off the list (the note stays in the transaction</text>
+<text x="24" y="1194" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   history); an unpaid one also keeps Cancel and Confirm. PARTIAL: this only arises with online payment.</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="900"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="900" fill="#ffffff"/>
 <rect x="0" y="0" width="1280" height="900" rx="0" fill="#f3f3f3" stroke="none"/>
 <rect x="0" y="0" width="256" height="900" rx="0" fill="#ffffff" stroke="none"/>
@@ -92,13 +93,15 @@
 <text x="1041.46" y="404.42" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#222222">Yes, cancel order</text>
 <line x1="280" y1="439.1" x2="1256" y2="439.1" stroke="#cfcfcf" stroke-width="1"/>
 <text x="298" y="471.1" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
-<rect x="408" y="456.1" width="82.69999999999999" height="19" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
-<text x="449.35" y="469.20000000000005" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">STOCK ISSUE</text>
+<rect x="408" y="456.1" width="105.49999999999999" height="19" rx="3" fill="#e2e2e2" stroke="#555555" stroke-width="1"/>
+<text x="460.75" y="469.20000000000005" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">NEEDS ATTENTION</text>
 <text x="298" y="493.1" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">1× Dish name</text>
 <text x="298" y="513.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · QR Ph · ₱000.00 · paid · placed 8 min ago</text>
-<rect x="298" y="525.1" width="616" height="84" rx="5" fill="#ffffff" stroke="#222222" stroke-width="1.5"/>
-<text x="310" y="547.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Paid online, but the stock ran out before the payment arrived, so nothing was sent to the kitchen.</text>
-<text x="310" y="567.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">(stock-issue note from the server)</text>
-<text x="310" y="587.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">Talk to the customer about a substitute or a refund.</text>
+<rect x="298" y="525.1" width="616" height="128" rx="5" fill="#ffffff" stroke="#222222" stroke-width="1.5"/>
+<text x="310" y="547.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Paid online, but the stock ran out, so nothing was sent to the kitchen.</text>
+<text x="310" y="567.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555" font-style="italic">(what ran short, from the server)</text>
+<text x="310" y="587.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Offer the customer a substitute or a refund.</text>
+<rect x="324.88" y="603.1" width="155.12" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="402.44" y="622.4200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Mark as sorted out</text>
 </g><rect x="0" y="0" width="1280" height="900" fill="none" stroke="#222222" stroke-width="2"/></g>
 </svg>

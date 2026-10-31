@@ -66,9 +66,9 @@
 <text x="405.0" y="376.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment (19)</text>
 <rect x="557.0" y="324.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="655.0" y="346.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">List unpaid, not-cancelled</text>
-<text x="655.0" y="361.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">orders (and paid orders</text>
-<text x="655.0" y="376.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">with a stock issue),</text>
-<text x="655.0" y="391.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">newest first</text>
+<text x="655.0" y="361.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">orders (and orders flagged</text>
+<text x="655.0" y="376.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">for attention), newest</text>
+<text x="655.0" y="391.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">first</text>
 <polygon points="321.0,451.0 503.0,451.0 489.0,501.0 307.0,501.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="405.0" y="473.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Find the order by its</text>
 <text x="405.0" y="488.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number</text>

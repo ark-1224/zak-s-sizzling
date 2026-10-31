@@ -166,8 +166,8 @@
 <text x="655.0" y="1428.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Record the payment: mark</text>
 <text x="655.0" y="1443.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">paid, deduct stock,</text>
 <text x="655.0" y="1458.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">confirm, send to the</text>
-<text x="655.0" y="1473.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kitchen (or flag STOCK</text>
-<text x="655.0" y="1488.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">ISSUE)</text>
+<text x="655.0" y="1473.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kitchen (or flag NEEDS</text>
+<text x="655.0" y="1488.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">ATTENTION)</text>
 <rect x="807.0" y="1433.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
 <text x="905.0" y="1458.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End (webhook ignored)</text>
 <polygon points="321.0,1526.0 503.0,1526.0 489.0,1606.0 307.0,1606.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
@@ -196,7 +196,7 @@
 <text x="30" y="1931" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   the “not set up” branch.</text>
 <text x="30" y="1948" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The payment is recorded by whichever comes first, the kiosk&#x27;s status check or PayMongo&#x27;s payment.paid webhook; the other then changes nothing.</text>
 <text x="30" y="1965" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Recording marks it paid, deducts stock and confirms the order in one transaction; if stock ran out or the order was cancelled meanwhile, the payment is</text>
-<text x="30" y="1982" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   recorded, nothing goes to the kitchen and the order is flagged STOCK ISSUE for staff.</text>
+<text x="30" y="1982" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   recorded, nothing goes to the kitchen and the order is flagged NEEDS ATTENTION for staff, as is a payment of the wrong amount or a second payment.</text>
 <text x="30" y="1999" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• A succeeded intent is accepted only for the order&#x27;s exact total. The idle reset is paused while the code can still be scanned and resumes when it</text>
 <text x="30" y="2016" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   expires.</text>
 <text x="30" y="2033" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• In PayMongo test mode the screen offers a link to simulate the payment; test QR codes must not be scanned with a real banking app.</text>

@@ -467,7 +467,19 @@ minutes, attaches it, and returns the QR image. The kiosk then asks
 `GET /api/payments/qrph/:orderId` every 3 seconds; that check also asks PayMongo whether
 the intent has succeeded. The payment is recorded by whichever comes first, that check or
 the `payment.paid` webhook. `POST /api/payments/qrph/:orderId/counter` switches the order
-to pay at the counter. To test the real gateway path:
+to pay at the counter; the kiosk also calls it whenever it falls back to the counter (no
+online payment set up, too many attempts, PayMongo unreachable), so staff see what the
+customer was told.
+
+Payments staff must sort out are never confirmed silently. The order is marked **NEEDS
+ATTENTION** in the payment queue, with a note saying what happened and what to do:
+paid online after the stock ran out or after the order was cancelled, an amount that isn't
+the order's total, or a second payment (an earlier QR code, which stays payable at PayMongo
+after a new code is shown or the order switches to the counter, paid as well). Staff press
+**Mark as sorted out** (`POST /api/orders/:id/sorted-out`) once they have refunded,
+substituted or collected the difference; the note stays in the transaction history. While
+a QR code is out for an order, its items can't be changed, so the code always matches the
+total. To test the real gateway path:
 
 1. Create a PayMongo account and copy your **test** secret key (`sk_test_…`) from
    Developers → API keys. The public key isn't used.

@@ -831,19 +831,20 @@ def orders_page(empty):
     f.btn_row(bx + 288, y + 64, [("Yes, cancel order", "danger"), ("Keep order", "secondary")], h=30, size=12)
     y += 118
     f.line(CX, y, CX + CW, y, stroke=LINE_SOFT)
-    # row 3: stock issue
+    # row 3: needs attention
     f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
-    f.pill(CX + 128, y + 17, "STOCK ISSUE", size=10, filled=True)
+    f.pill(CX + 128, y + 17, "NEEDS ATTENTION", size=10, filled=True)
     f.text(CX + 18, y + 54, "1× Dish name", size=13, fill=INK2)
     f.text(CX + 18, y + 74, "Take out · QR Ph · ₱000.00 · paid · placed 8 min ago", size=12, fill=INK3)
-    f.rect(CX + 18, y + 86, CW - 360, 84, fill=WHITE, stroke=INK, r=5, sw=1.5)
-    f.text(CX + 30, y + 108, "Paid online, but the stock ran out before the payment arrived, so nothing was sent to the kitchen.", size=12)
-    f.text(CX + 30, y + 128, "(stock-issue note from the server)", size=12, fill=INK2, italic=True)
-    f.text(CX + 30, y + 148, "Talk to the customer about a substitute or a refund.", size=12, fill=INK2)
-    f.add_note("Lists unpaid, not-cancelled orders plus paid orders flagged with a stock issue (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago it was placed come from the order.")
+    f.rect(CX + 18, y + 86, CW - 360, 128, fill=WHITE, stroke=INK, r=5, sw=1.5)
+    f.text(CX + 30, y + 108, "Paid online, but the stock ran out, so nothing was sent to the kitchen.", size=12)
+    f.text(CX + 30, y + 128, "(what ran short, from the server)", size=12, fill=INK2, italic=True)
+    f.text(CX + 30, y + 148, "Offer the customer a substitute or a refund.", size=12)
+    f.btn_row(CX + 30 + 170, y + 164, [("Mark as sorted out", "secondary")], h=30, size=12)
+    f.add_note("Lists unpaid, not-cancelled orders plus orders flagged for attention (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago it was placed come from the order.")
     f.add_note("Live: the list reloads by itself (orders:changed, an event with no order data) whenever an order is placed, paid, edited or cancelled; an order that arrives while the page is open is marked NEW for a minute (first row).")
     f.add_note("Confirm order (“Checking stock…”) marks it paid, deducts stock and sends it to the kitchen in one step; if stock is short nothing changes and an error tells staff to change the order with the customer. Cancel asks first (second row).")
-    f.add_note("A stock-issue order (third row) has no buttons: it was paid online when stock had run out, or after it was cancelled; staff refund or substitute outside the system. PARTIAL: this case only arises with online payment.")
+    f.add_note("NEEDS ATTENTION (third row) marks an online payment staff must sort out, with the server's note on what happened and what to do: paid after the stock ran out or after the order was cancelled, a wrong amount, or paid twice. Once staff have refunded, substituted or collected the difference, Mark as sorted out takes it off the list (the note stays in the transaction history); an unpaid one also keeps Cancel and Confirm. PARTIAL: this only arises with online payment.")
     return f
 
 

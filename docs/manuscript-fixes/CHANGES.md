@@ -756,6 +756,36 @@ New wireframe 10c (the code step) and 20d (Users: edit an account); wireframe 20
 
 **Still to do before the defense:** on Railway, change each live account's email to a real inbox, send each a test email from Users, then switch the codes on (see "Sign-in codes" in the README).
 
+## 11. Online payments that need staff (31 October 2026)
+
+A code review of the QR Ph, kitchen and printing changes (23 to 28 October) found cases where the system recorded something wrong without telling anyone. They are fixed:
+
+- **A second payment** (an earlier QR code paid after the kiosk showed a new one or switched to the counter, or after staff took the money at the counter) is no longer ignored silently.
+- **A payment of the wrong amount** is no longer confirmed: the kiosk's check and PayMongo's webhook follow the same rule.
+- **While a QR code is out for an order, its items can't be changed**, so the code always matches the total.
+
+Each such order, and the earlier cases (paid after the stock ran out, or after the order was cancelled), shows in the payment queue as **NEEDS ATTENTION**, with a note saying what happened and what to do. Staff press **Mark as sorted out** once they have refunded, substituted or collected the difference; the order leaves the queue and its note stays in the transaction history.
+
+Also changed:
+
+- Kitchen tickets print one at a time, and the print service queues jobs and gives up on a printer that stops answering.
+- The receipt says how a paid order was paid.
+- Ready orders leave the kitchen display after 12 hours, like the counter board.
+- The transaction history records when an order was handed over or cancelled, instead of using its last change.
+
+**Evidence:** `apps/api/src/modules/payments/service.ts` (`recordOnlinePayment`, `handleWebhook`, `flagForStaff`), `POST /api/orders/:id/sorted-out`, `apps/web/src/app/staff/orders/page.tsx`, `print-service/server.js`, migration `20261031134537_order_handover_cancel_times`. Tests: `apps/api/test/integration/qrph-payment.test.ts`, `online-payment.test.ts`, `order-status.test.ts`. Wireframe 19 and flows 04 and 05 are redrawn.
+
+### 11.1 Data dictionary
+
+When `orders` is updated in section 3, add:
+
+| Column | Type | Key | Description |
+|---|---|---|---|
+| handed_over_at | timestamp | | When the kitchen handed the order to the customer; empty until then |
+| cancelled_at | timestamp | | When staff cancelled the order; empty otherwise |
+
+`stock_issue` and `stock_issue_note` now mean "needs attention" and "what staff should do", for any of the four reasons above, not only a stock shortage.
+
 ## Needs decision
 
 The manuscript claims each item below, but the code does not support it (or supports it only in part). The adviser decisions above did not cover them, so they are listed here and not rewritten.
@@ -769,7 +799,7 @@ The manuscript claims each item below, but the code does not support it (or supp
 7. **Excel bulk import** (Scope, Product Management, p. 10). Resolved: the Bulk import page accepts Excel (.xlsx) files as well as CSV (`apps/api/src/modules/products/xlsxImport.ts`, `POST /api/products/import-xlsx`, using `exceljs`). The sheet is turned into the same CSV the page previews, so both kinds of file get the same row checks, and there is an Excel template with a category dropdown (`GET /api/products/import-template?format=xlsx`).
 8. **Local and cloud backups** (Scope, Database Backup, p. 11; Deployment, p. 43). Resolved for the cloud copy: the worker backs up the whole database every night at 2:00 AM (Manila time) with `pg_dump`, compresses it, and uploads it to a Cloudflare R2 bucket (`apps/worker/src/jobs/backupDatabase.ts`, `apps/worker/src/lib/storage.ts`). On October 15, 2026 the first production backup was downloaded from R2 and restored into an empty database (`npm run backup:restore-check`), and its products and categories matched the live system. Still to decide: the Scope says backups are stored "both locally and in cloud-based storage". On a local computer the worker keeps a copy in `apps/worker/backups` as well, but the deployed worker keeps only the cloud copy, because Railway's container disk is cleared on every redeploy. Either attach a Railway volume to the worker for a server-side copy, or reword the sentence to "stored in cloud-based storage, with a local copy when the system runs on the store's own computer".
 9. **Deduction of raw materials** (Objective 3, p. 6). Resolved: dishes can use a recipe of raw materials, which are deducted when payment is confirmed (`raw_materials`, `recipe_items`, `raw_material_movements`; design in `docs/design/raw-material-stock.md`). Items sold as they are, such as bottled drinks, still count units. The ERD and data dictionary in section 3 do not show the three new tables yet.
-10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Resolved: when a product or raw material reaches its minimum stock level, the worker emails the owner, once until the item is restocked (section 8). The deployed worker sends through Brevo over HTTPS (Railway's Hobby plan blocks SMTP); still to do: set its Brevo variables on Railway (section 8).
+10. **Automatic low-stock notifications** (Scope, Realtime Stock Tracking, p. 10; Objective 4). Resolved: when a product or raw material reaches its minimum stock level, the worker emails the owner, once until the item is restocked (section 8). The deployed worker sends through Brevo over HTTPS (Railway's Hobby plan blocks SMTP); switched on in production on 30 October 2026 (section 8).
 11. **Unit and integration testing** (Methodology, Testing and Quality Assurance, p. 38). Resolved: 405 automated unit, integration, and security tests (`apps/api/test/`), documented session by session (seven sessions so far) in `Automated-Testing-Results.docx`.
 12. **Staff and Administrator permissions.** Resolved: the code now matches the earlier drafts. Product, price, bulk import, and report functions, and product costs, are limited to the Administrator; Staff keep payments, the kitchen display, stock, barcode lookup, and orders. The role table in 2.2 describes this split. The removed "Customer Assistance" and "System Maintenance Supervision" items (2.4(f)) have no matching function in the code.
 13. **Product images** (Scope, Product Catalog and Display, p. 7; Product Catalog Management, p. 10). Resolved: the Administrator uploads a photo in the product form; the browser shrinks it to a small WebP before uploading, and it is stored in the database (new table `product_images`, so the nightly backup includes it) and served at `GET /api/products/:id/image`. The kiosk shows the photo on the menu, the item sheet, the basket and checkout, and the icon for products without one. On October 28, 2026 the owner sent the menu poster; each dish's photo was cut from it and added to the seed data (`apps/api/prisma/seed-images/`). Still to do: the client's original, full-size food photos, which will look sharper on the kiosk screen.
