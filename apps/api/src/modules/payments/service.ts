@@ -230,12 +230,12 @@ type OrderWithPayment = Prisma.OrderGetPayload<{ include: { payment: true } }>;
  */
 async function recordOnlinePayment(
   order: OrderWithPayment,
-  paidCentavos: number | null,
+  paidCentavos: number,
   paymentUpdate: Omit<Prisma.PaymentUpdateManyMutationInput, "status">,
   paymentCreate: Omit<Prisma.PaymentUncheckedCreateInput, "orderId" | "status" | "amount">
 ) {
   // The QR Ph code was made for the order's total.
-  if (paidCentavos !== null && paidCentavos !== totalCentavos(order)) {
+  if (paidCentavos !== totalCentavos(order)) {
     await flagForStaff(order, wrongAmountNote(paidCentavos, order));
     return;
   }
@@ -314,13 +314,29 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     return;
   }
 
+  // The amount paid must match the order's total before anything is confirmed. A payment.paid
+  // event carries it; if one doesn't, PayMongo is asked for the Payment Intent. An event with
+  // no way to know the amount (the hosted checkout of earlier versions) is never confirmed.
+  let paidCentavos = event.amountCentavos;
+  if (paidCentavos === null && event.paymentIntentId && isPaymongoConfigured()) {
+    const intent = await getPaymentIntent(event.paymentIntentId);
+    if (intent.status === "succeeded") paidCentavos = intent.amountCentavos;
+  }
+  if (paidCentavos === null) {
+    await flagForStaff(
+      order,
+      "PayMongo reported a payment without its amount, so it wasn't confirmed. Check the amount in PayMongo's dashboard, then confirm the order at the counter or refund the customer."
+    );
+    return;
+  }
+
   // A QR Ph payment records which code paid and that it was QR Ph, even if the kiosk had
   // switched the order to the counter meanwhile. Other events leave `method` as it is: the
   // row already has the right value.
   const qrPh = event.type === "payment.paid" && event.paymentIntentId ? { method: "qrph" as const, reference: event.paymentIntentId } : {};
   await recordOnlinePayment(
     order,
-    event.amountCentavos,
+    paidCentavos,
     { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")), ...qrPh },
     { method: order.payment.method, paidAt: new Date() }
   );

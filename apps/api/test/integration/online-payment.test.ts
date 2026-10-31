@@ -60,9 +60,13 @@ const postOrder = (qty: number) =>
 /** A customer chose QR Ph while online payment was set up. */
 const placeQrphOrder = async (qty: number) => (await withPaymongoKey(() => postOrder(qty))).body;
 
-function paidEvent(orderId: string, type = "checkout_session.payment.paid") {
-  return JSON.stringify({ data: { attributes: { type, data: { attributes: { reference_number: orderId } } } } });
+/** A PayMongo event naming the order, with the amount paid in centavos when given. */
+function paidEvent(orderId: string, { type = "payment.paid", amount }: { type?: string; amount?: number } = {}) {
+  const attributes = { metadata: { order_id: orderId }, ...(amount === undefined ? {} : { amount }) };
+  return JSON.stringify({ data: { attributes: { type, data: { attributes } } } });
 }
+/** The order's total paid in full. */
+const paidInFull = (order: { id: string; totalAmount: number }) => paidEvent(order.id, { amount: Math.round(order.totalAmount * 100) });
 
 // PayMongo puts the signature in `li` for live-mode events and in `te` for test-mode
 // events, leaving the other field empty (docs.paymongo.com, "Securing a webhook").
@@ -142,7 +146,7 @@ describe("PayMongo webhook security", () => {
   // which used to make the check compare against "" and reject every sandbox webhook.
   it("accepts a test-mode (sandbox) signature", async () => {
     const order = await placeQrphOrder(1);
-    const body = paidEvent(order.id, "checkout_session.expired"); // accepted but changes nothing
+    const body = paidEvent(order.id, { type: "checkout_session.expired" }); // accepted but changes nothing
 
     const res = await postWebhook(body, sign(body, { mode: "test" }));
 
@@ -153,21 +157,21 @@ describe("PayMongo webhook security", () => {
     const order = await placeQrphOrder(1);
     const signature = sign(paidEvent(order.id));
 
-    const res = await postWebhook(paidEvent(order.id, "checkout_session.payment.failed"), signature);
+    const res = await postWebhook(paidEvent(order.id, { type: "payment.failed" }), signature);
 
     expect(res.status).toBe(401);
   });
 });
 
 describe("a paid online order", () => {
-  let order: { id: string };
+  let order: { id: string; totalAmount: number };
 
   beforeAll(async () => {
     order = await placeQrphOrder(2);
   });
 
   it("ignores events that are not payments", async () => {
-    const body = paidEvent(order.id, "checkout_session.expired");
+    const body = paidEvent(order.id, { type: "checkout_session.expired" });
 
     const res = await postWebhook(body, sign(body));
 
@@ -177,7 +181,7 @@ describe("a paid online order", () => {
 
   it("marks the payment paid, confirms the order, deducts stock, and sends it to the kitchen", async () => {
     const before = await sodaStock();
-    const body = paidEvent(order.id);
+    const body = paidInFull(order);
 
     const res = await postWebhook(body, sign(body));
 
@@ -191,7 +195,7 @@ describe("a paid online order", () => {
 
   it("processes a repeated delivery of the same payment only once", async () => {
     const before = await sodaStock();
-    const body = paidEvent(order.id);
+    const body = paidInFull(order);
 
     const res = await postWebhook(body, sign(body));
 
@@ -201,8 +205,24 @@ describe("a paid online order", () => {
   });
 });
 
+describe("a payment event that doesn't say the amount", () => {
+  it("isn't confirmed, and the order is marked for staff to check the amount", async () => {
+    const order = await placeQrphOrder(1);
+    // The hosted checkout of earlier versions sent no amount in its paid event.
+    const body = paidEvent(order.id, { type: "checkout_session.payment.paid" });
+
+    const res = await postWebhook(body, sign(body));
+
+    expect(res.status).toBe(200);
+    const saved = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(saved).toMatchObject({ status: "pending", stockIssue: true });
+    expect(saved.payment?.status).toBe("pending");
+    expect(saved.stockIssueNote).toMatch(/without its amount, so it wasn't confirmed/);
+  });
+});
+
 describe("an online order paid after stock ran out", () => {
-  let order: { id: string };
+  let order: { id: string; totalAmount: number };
 
   beforeAll(async () => {
     await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 3 } });
@@ -212,7 +232,7 @@ describe("an online order paid after stock ran out", () => {
   });
 
   it("records the payment but deducts nothing and flags the order for staff", async () => {
-    const body = paidEvent(order.id);
+    const body = paidInFull(order);
 
     const res = await postWebhook(body, sign(body));
 
@@ -235,7 +255,7 @@ describe("an online order paid after stock ran out", () => {
 });
 
 describe("an online order cancelled before the payment arrived", () => {
-  let order: { id: string };
+  let order: { id: string; totalAmount: number };
 
   beforeAll(async () => {
     await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 5 } });
@@ -245,7 +265,7 @@ describe("an online order cancelled before the payment arrived", () => {
   });
 
   it("records the payment, deducts nothing, and flags the order so staff refund the customer", async () => {
-    const body = paidEvent(order.id);
+    const body = paidInFull(order);
 
     const res = await postWebhook(body, sign(body));
 

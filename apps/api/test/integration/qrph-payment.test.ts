@@ -201,19 +201,31 @@ describe("the payment.paid webhook", () => {
     const order = await placeOrder();
     await startQr(order.id);
 
-    const res = await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, metadata: { order_id: order.id } });
+    const res = await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } });
 
     expect(res.status).toBe(200);
     expect(await paymentOf(order.id)).toMatchObject({ method: "qrph", status: "paid" });
   });
 
-  it("finds the order by its payment intent when there is no metadata", async () => {
+  it("finds the order by its payment intent, and asks PayMongo for the amount when the event doesn't say", async () => {
     const order = await placeOrder();
     await startQr(order.id);
+    const reference = (await paymentOf(order.id)).reference!;
+    intents.get(reference)!.status = "succeeded"; // for its 55.00 total
 
-    await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference });
+    await postEvent({ payment_intent_id: reference });
 
     expect((await paymentOf(order.id)).status).toBe("paid");
+  });
+
+  it("doesn't confirm an event without an amount whose payment PayMongo hasn't completed", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+
+    await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, metadata: { order_id: order.id } });
+
+    expect((await paymentOf(order.id)).status).toBe("pending");
+    expect((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).stockIssueNote).toMatch(/without its amount/);
   });
 
   const orderOf = (orderId: string) => prisma.order.findUniqueOrThrow({ where: { id: orderId } });
