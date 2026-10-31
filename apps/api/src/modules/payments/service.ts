@@ -1,6 +1,14 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
-import { createQrPhCode, getPaymentIntent, isPaymongoConfigured, parseWebhookEvent, PaymongoNotConfiguredError, verifyWebhookSignature } from "../../lib/paymongo";
+import {
+  createQrPhCode,
+  getPaymentIntent,
+  isPaymongoConfigured,
+  parseWebhookEvent,
+  PaymongoNotConfiguredError,
+  toCentavos,
+  verifyWebhookSignature,
+} from "../../lib/paymongo";
 import { emitOrdersChanged, getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
@@ -33,6 +41,32 @@ async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string
     data: { status: "confirmed", stockIssue: false, stockIssueNote: null },
   });
   if (result.count === 0) throw new OrderCancelledError();
+}
+
+/**
+ * Puts a note on the order for staff to act on: it shows in the payment queue with a
+ * NEEDS ATTENTION badge. The note says what happened and what to do (refund, collect the
+ * difference, offer a substitute), since the screens show it as written.
+ */
+async function flagForStaff(order: { id: string; orderNumber: string }, note: string) {
+  const text = note.slice(0, 300);
+  // Only when the note is new: a repeated delivery of the same event leaves the order,
+  // and every open screen, alone.
+  const { count } = await prisma.order.updateMany({
+    where: { id: order.id, OR: [{ stockIssue: false }, { stockIssueNote: null }, { stockIssueNote: { not: text } }] },
+    data: { stockIssue: true, stockIssueNote: text },
+  });
+  if (count === 0) return;
+  emitOrdersChanged();
+  console.warn(`[payments] order ${order.orderNumber}: ${note}`);
+}
+
+const pesos = (centavos: number) => `₱${(centavos / 100).toFixed(2)}`;
+const totalCentavos = (order: { totalAmount: Prisma.Decimal }) => toCentavos(Number(order.totalAmount));
+
+/** A paid amount that isn't the order's total: recorded for staff, never confirmed. */
+function wrongAmountNote(paidCentavos: number, order: { totalAmount: Prisma.Decimal }) {
+  return `${pesos(paidCentavos)} was paid online, but the order total is ${pesos(totalCentavos(order))}. Refund it, or collect the difference, before confirming.`;
 }
 
 function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSessionId: string | null }) {
@@ -85,11 +119,11 @@ export async function checkQrPhPayment(orderId: string) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { payment: true } });
   if (!order) throw new HttpError(404, "Order not found");
   const payment = order.payment;
-  if (payment && payment.status !== "paid" && payment.method === "qrph" && payment.reference && isPaymongoConfigured()) {
+  // Once the order is flagged for staff (a wrong amount was paid), PayMongo isn't asked again.
+  if (payment && payment.status !== "paid" && payment.method === "qrph" && payment.reference && !order.stockIssue && isPaymongoConfigured()) {
     const intent = await getPaymentIntent(payment.reference);
-    const expected = Math.round(Number(order.totalAmount) * 100);
-    if (intent.status === "succeeded" && intent.amountCentavos === expected) {
-      await recordOnlinePayment(order, { paidAt: new Date() }, { method: "qrph", paidAt: new Date() });
+    if (intent.status === "succeeded") {
+      await recordOnlinePayment(order, intent.amountCentavos, { paidAt: new Date() }, { method: "qrph", paidAt: new Date() });
     }
   }
   return getOrderById(orderId);
@@ -190,14 +224,22 @@ type OrderWithPayment = Prisma.OrderGetPayload<{ include: { payment: true } }>;
  * Records a payment PayMongo has taken: marks it paid, deducts the stock, confirms the
  * order and sends it to the kitchen, all or nothing. Shared by the webhook and the
  * kiosk's status check, so whichever arrives first does the work and the other changes
- * nothing. When the order was cancelled meanwhile, or stock ran out, the money is
- * recorded but nothing goes to the kitchen, and the order is flagged for staff.
+ * nothing. A paid amount that isn't the order's total confirms nothing and is left to
+ * staff. When the order was cancelled meanwhile, or stock ran out, the money is recorded
+ * but nothing goes to the kitchen, and the order is flagged for staff.
  */
 async function recordOnlinePayment(
   order: OrderWithPayment,
+  paidCentavos: number | null,
   paymentUpdate: Omit<Prisma.PaymentUpdateManyMutationInput, "status">,
   paymentCreate: Omit<Prisma.PaymentUncheckedCreateInput, "orderId" | "status" | "amount">
 ) {
+  // The QR Ph code was made for the order's total.
+  if (paidCentavos !== null && paidCentavos !== totalCentavos(order)) {
+    await flagForStaff(order, wrongAmountNote(paidCentavos, order));
+    return;
+  }
+
   try {
     const touched = await prisma.$transaction(async (tx) => {
       const applied = await markPaymentPaidIfNotAlready(tx, order, paymentUpdate, paymentCreate);
@@ -213,33 +255,18 @@ async function recordOnlinePayment(
     await createKitchenTasksForOrder(order.id);
     emitPaymentConfirmed(order);
   } catch (err) {
-    if (err instanceof OrderCancelledError) {
-      // Staff cancelled the order while the customer was paying. The money was taken, so
-      // record it, deduct nothing, and flag the order so staff refund the customer (it
-      // shows in the payment queue with a stock-issue badge).
-      const applied = await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate);
-      if (!applied) return;
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { stockIssue: true, stockIssueNote: "Paid online after this order was cancelled. Refund the customer, or place the order again." },
-      });
-      emitOrdersChanged();
-      console.warn(`[payments] order ${order.orderNumber} was paid online after it was cancelled`);
-      return;
-    }
-    if (!(err instanceof StockShortageError)) throw err;
-
-    // The customer already paid, so this can't be refused like a counter order. Record the
+    // The money was taken, so this can't be refused like a counter order: record the
     // payment, deduct nothing (stock never goes negative), create no kitchen tasks, and
-    // flag the order so staff substitute or refund.
-    const applied = await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate);
-    if (!applied) return;
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { stockIssue: true, stockIssueNote: err.message.slice(0, 300) },
-    });
-    emitOrdersChanged();
-    console.warn(`[payments] order ${order.orderNumber} paid online but stock is short: ${err.message}`);
+    // flag the order so staff refund the customer or substitute. A cancellation means
+    // staff cancelled the order while the customer was paying.
+    const note =
+      err instanceof OrderCancelledError
+        ? "Paid online after this order was cancelled. Refund the customer, or place the order again."
+        : err instanceof StockShortageError
+          ? `Paid online, but the stock ran out, so nothing was sent to the kitchen. ${err.message} Offer the customer a substitute or a refund.`
+          : null;
+    if (note === null) throw err;
+    if (await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate)) await flagForStaff(order, note);
   }
 }
 
@@ -274,10 +301,27 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     return;
   }
 
-  // Deliberately doesn't touch `method` on update: the row already has the right value.
+  // An earlier QR Ph code stays payable at PayMongo after the kiosk shows a new one or
+  // switches to paying at the counter (a phone may have saved it). If the order is already
+  // paid by another means or another code, this is a second payment: flag it for a refund.
+  // A repeat of the event that paid the order (same QR Ph code) changes nothing.
+  if (order.payment.status === "paid") {
+    const sameCode = order.payment.method === "qrph" && order.payment.reference === event.paymentIntentId;
+    if (event.paymentIntentId && !sameCode) {
+      const amount = event.amountCentavos === null ? "A second payment" : `A second payment of ${pesos(event.amountCentavos)}`;
+      await flagForStaff(order, `${amount} arrived online after this order was already paid. Refund the customer.`);
+    }
+    return;
+  }
+
+  // A QR Ph payment records which code paid and that it was QR Ph, even if the kiosk had
+  // switched the order to the counter meanwhile. Other events leave `method` as it is: the
+  // row already has the right value.
+  const qrPh = event.type === "payment.paid" && event.paymentIntentId ? { method: "qrph" as const, reference: event.paymentIntentId } : {};
   await recordOnlinePayment(
     order,
-    { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")) },
+    event.amountCentavos,
+    { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")), ...qrPh },
     { method: order.payment.method, paidAt: new Date() }
   );
 }

@@ -3,6 +3,7 @@ import { prisma } from "../../lib/prisma";
 import { emitOrdersChanged, getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { setEstimateOnReachingKitchen } from "../orders/prepTime";
+import { BOARD_WINDOW_MS } from "../orders/service";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
 
 type TaskWithRelations = Prisma.KitchenTaskGetPayload<{
@@ -55,7 +56,13 @@ export async function createKitchenTasksForOrder(orderId: string): Promise<void>
  */
 export async function listActiveTasks(): Promise<KitchenTaskDTO[]> {
   const tasks = await prisma.kitchenTask.findMany({
-    where: { OR: [{ status: { not: "completed" } }, { orderItem: { order: { status: "ready" } } }] },
+    where: {
+      OR: [
+        { status: { not: "completed" } },
+        // Ready orders leave with the counter board's window, even if never handed over.
+        { orderItem: { order: { status: "ready", createdAt: { gte: new Date(Date.now() - BOARD_WINDOW_MS) } } } },
+      ],
+    },
     include: { orderItem: { include: { product: true, order: true } } },
     orderBy: { createdAt: "asc" },
   });
@@ -115,7 +122,10 @@ async function syncOrderStatus(orderId: string) {
  * (or on an order that isn't ready) changes nothing and says why.
  */
 export async function handOverOrder(orderId: string): Promise<void> {
-  const result = await prisma.order.updateMany({ where: { id: orderId, status: "ready" }, data: { status: "completed" } });
+  const result = await prisma.order.updateMany({
+    where: { id: orderId, status: "ready" },
+    data: { status: "completed", handedOverAt: new Date() },
+  });
   if (result.count === 0) {
     const order = await prisma.order.findUnique({ where: { id: orderId }, select: { orderNumber: true, status: true } });
     if (!order) throw new HttpError(404, "Order not found");

@@ -155,9 +155,9 @@ export async function getOrderOwnerSessionId(id: string): Promise<string | null 
   return order?.kioskSessionId;
 }
 
-/** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */
-// Orders older than this drop off the board even if nobody pressed Handed over.
-const BOARD_WINDOW_MS = 12 * 60 * 60 * 1000;
+// Orders older than this drop off the board, and ready ones off the kitchen display
+// (kitchen/service.ts), even if nobody pressed Handed over.
+export const BOARD_WINDOW_MS = 12 * 60 * 60 * 1000;
 const BOARD_LIMIT = 30;
 
 /**
@@ -265,8 +265,7 @@ type OrderWithTasks = Prisma.OrderGetPayload<{
 
 /**
  * An order plus when it reached each step. Preparing and ready come from the kitchen's
- * dish times; handed over and cancelled are the order's last change, since nothing
- * changes an order after either.
+ * dish times; handed over and cancelled are recorded when they happen.
  */
 function toTransactionDTO(order: OrderWithTasks): TransactionDTO {
   const tasks = order.items.flatMap((item) => (item.kitchenTask ? [item.kitchenTask] : []));
@@ -282,12 +281,14 @@ function toTransactionDTO(order: OrderWithTasks): TransactionDTO {
       paidAt: order.payment?.paidAt?.toISOString() ?? null,
       preparingAt: started.length > 0 ? new Date(Math.min(...started)).toISOString() : null,
       readyAt: reachedReady && finished.length > 0 ? new Date(Math.max(...finished)).toISOString() : null,
-      handedOverAt: order.status === "completed" ? order.updatedAt.toISOString() : null,
-      cancelledAt: order.status === "cancelled" ? order.updatedAt.toISOString() : null,
+      // Orders from before these times were recorded fall back to their last change.
+      handedOverAt: order.status === "completed" ? (order.handedOverAt ?? order.updatedAt).toISOString() : null,
+      cancelledAt: order.status === "cancelled" ? (order.cancelledAt ?? order.updatedAt).toISOString() : null,
     },
   };
 }
 
+/** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */
 export async function listOrders(filter: { unpaidCounterOnly?: boolean } = {}): Promise<OrderDTO[]> {
   const orders = await prisma.order.findMany({
     // Unpaid orders that weren't cancelled, plus paid orders flagged with a stock issue:
@@ -317,13 +318,29 @@ export async function listOrders(filter: { unpaidCounterOnly?: boolean } = {}): 
 export async function cancelOrder(id: string): Promise<OrderDTO> {
   const result = await prisma.order.updateMany({
     where: { id, status: "pending", OR: [{ payment: null }, { payment: { status: { not: "paid" } } }] },
-    data: { status: "cancelled" },
+    data: { status: "cancelled", cancelledAt: new Date() },
   });
   if (result.count === 0) {
     const order = await prisma.order.findUnique({ where: { id }, select: { orderNumber: true, status: true } });
     if (!order) throw new HttpError(404, "Order not found");
     if (order.status === "cancelled") throw new HttpError(409, `${order.orderNumber} is already cancelled`);
     throw new HttpError(409, `${order.orderNumber} is already paid, so it can't be cancelled`);
+  }
+  emitOrdersChanged();
+  return (await getOrderById(id))!;
+}
+
+/**
+ * Staff have dealt with an order that needed attention (refunded, substituted, collected
+ * the difference): it leaves the payment queue. The note stays, so the transaction
+ * history still shows what happened. One conditional update, so a second click says so.
+ */
+export async function markAttentionSortedOut(id: string): Promise<OrderDTO> {
+  const result = await prisma.order.updateMany({ where: { id, stockIssue: true }, data: { stockIssue: false } });
+  if (result.count === 0) {
+    const order = await prisma.order.findUnique({ where: { id }, select: { orderNumber: true } });
+    if (!order) throw new HttpError(404, "Order not found");
+    throw new HttpError(409, `${order.orderNumber} doesn't need attention any more`);
   }
   emitOrdersChanged();
   return (await getOrderById(id))!;

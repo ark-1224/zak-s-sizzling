@@ -251,14 +251,20 @@ model Order {
   status               OrderStatus           @default(pending)
   orderType            OrderType             @default(dine_in) @map("order_type")
   totalAmount          Decimal               @default(0) @map("total_amount") @db.Decimal(10, 2)
-  // Set when an online payment arrived but stock ran short, so nothing was deducted
-  // and staff must substitute or refund (design section 3.3).
+  // Set when staff must sort out an online payment, with a note saying what to do: stock
+  // ran short so nothing was deducted (design section 3.3), it was paid after the order
+  // was cancelled, the amount wasn't the total, or it was paid twice. The name is the
+  // first of these; screens show it as NEEDS ATTENTION.
   stockIssue           Boolean               @default(false) @map("stock_issue")
   stockIssueNote       String?               @map("stock_issue_note") @db.VarChar(300)
   // Estimated preparation time (orders/prepTime.ts): worked out when the order is placed,
   // and again when it reaches the kitchen, which also sets when it should be ready.
   estimatedPrepMinutes Int?                  @map("estimated_prep_minutes")
   estimatedReadyAt     DateTime?             @map("estimated_ready_at")
+  // When the kitchen handed the order over, and when staff cancelled it, for the
+  // transaction history (updatedAt moves on with any later change, e.g. a refund flag).
+  handedOverAt         DateTime?             @map("handed_over_at")
+  cancelledAt          DateTime?             @map("cancelled_at")
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
   items                OrderItem[]

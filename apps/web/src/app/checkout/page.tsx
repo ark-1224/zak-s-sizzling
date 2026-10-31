@@ -141,10 +141,13 @@ export default function CheckoutPage() {
     setQrPayment({ order, qr });
   }
 
-  /** Online payment can't go ahead: finish as a counter order, with a message. */
-  function finishAsCounterOrder(order: OrderDTO, message: string) {
+  /** Online payment can't go ahead: finish as a counter order, with a message. The server
+   *  records the switch too, so staff see the counter order the customer was told about
+   *  (and an earlier code's payment, if one still arrives, is flagged for a refund). */
+  async function finishAsCounterOrder(order: OrderDTO, message: string) {
+    const switched = await apiFetch<OrderDTO>(`/api/payments/qrph/${order.id}/counter`, { method: "POST", auth: "kiosk" }).catch(() => null);
     setQrPayment(null);
-    setPlacedOrder(order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order);
+    setPlacedOrder(switched ?? (order.payment ? { ...order, payment: { ...order.payment, method: "counter" } } : order));
     showToast(message);
   }
 
@@ -159,7 +162,7 @@ export default function CheckoutPage() {
     try {
       await requestQrCode(qrPayment.order);
     } catch (err) {
-      if (err instanceof ApiError && (err.status === 501 || err.status === 429)) finishAsCounterOrder(qrPayment.order, err.message);
+      if (err instanceof ApiError && (err.status === 501 || err.status === 429)) await finishAsCounterOrder(qrPayment.order, err.message);
       else showToast(err instanceof ApiError ? err.message : "Couldn't get a new code. Please try again, or pay at the counter.");
     }
   }
@@ -213,15 +216,15 @@ export default function CheckoutPage() {
         if (err instanceof ApiError && err.status === 501) {
           // PayMongo isn't configured yet. The server has recorded the order as a counter
           // order, so show it as one and the kiosk flow doesn't dead-end.
-          finishAsCounterOrder(order, "Online payment isn't set up yet — please pay at the counter.");
+          await finishAsCounterOrder(order, "Online payment isn't set up yet — please pay at the counter.");
         } else if (err instanceof ApiError && err.status === 429) {
           // Too many payment attempts from this kiosk for now; finish as a counter order
           // rather than inviting a second order.
-          finishAsCounterOrder(order, err.message);
+          await finishAsCounterOrder(order, err.message);
         } else {
           // Any other failure (PayMongo unreachable, an error from it): the order is placed
           // and unpaid, so the customer pays at the counter.
-          finishAsCounterOrder(order, "We couldn't show a QR code — please pay at the counter.");
+          await finishAsCounterOrder(order, "We couldn't show a QR code — please pay at the counter.");
         }
       }
     } catch (err) {

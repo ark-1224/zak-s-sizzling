@@ -38,6 +38,9 @@ app.use(cors({ origin: (origin, callback) => callback(null, isAllowedOrigin(orig
 app.use(express.json());
 
 const ORDER_TYPE = { dine_in: "DINE IN", take_out: "TAKE OUT" };
+// How a paid order was paid, as printed on the receipt (GCash and Maya: older orders).
+const PAID_LINE = { qrph: "PAID - QR Ph", counter: "PAID at the counter", gcash: "PAID - GCash", maya: "PAID - Maya" };
+const paidLine = (method) => (Object.hasOwn(PAID_LINE, method) ? PAID_LINE[method] : "PAID");
 const peso = (n) => (Number(n) || 0).toFixed(2);
 const count = (n) => Math.max(0, Math.floor(Number(n) || 0));
 // Text that reaches the printer must not carry control characters: ESC/POS commands are
@@ -81,7 +84,7 @@ function customerReceipt(printer, order) {
   printer.leftRight("TOTAL", peso(order.total));
   printer.bold(false);
   printer.alignCenter();
-  printer.println(order.paid ? "PAID - QR Ph" : "Please pay at the counter");
+  printer.println(order.paid ? paidLine(order.paymentMethod) : "Please pay at the counter");
   if (order.estimatedPrepMinutes) printer.println(`Ready in about ${order.estimatedPrepMinutes} min`);
   printer.println("Thank you!");
 }
@@ -109,12 +112,31 @@ function hasOrder(body) {
   return !!body?.orderNumber && Array.isArray(body.items) && body.items.length > 0;
 }
 
-async function print(res, layout) {
+// One printer, one job at a time: jobs that arrive together (two kitchen tickets, or two
+// pages open on the device) would otherwise interleave their bytes on the USB device.
+let printQueue = Promise.resolve();
+function print(res, layout) {
+  const job = printQueue.then(() => printNow(res, layout));
+  printQueue = job;
+  return job;
+}
+
+// A printer that stops answering (paper jam, unplugged mid-job) mustn't hold up the
+// queue: the page that asked gives up after 8 s and sends the job again later.
+const PRINT_TIMEOUT_MS = 10_000;
+const timeout = (ms) =>
+  new Promise((_, reject) => setTimeout(() => reject(new Error(`the printer didn't answer within ${ms / 1000} s`)), ms).unref());
+
+// Never rejects: errors are answered as a 500, so the queue keeps going.
+async function printNow(res, layout) {
+  // The page stopped waiting while this job queued; it will send the job again, so
+  // printing it now would print it twice.
+  if (res.req.destroyed) return;
   try {
     const printer = newPrinter();
     layout(printer);
     endSlip(printer);
-    await printer.execute();
+    await Promise.race([printer.execute(), timeout(PRINT_TIMEOUT_MS)]);
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -124,8 +146,8 @@ async function print(res, layout) {
 
 app.post("/print", async (req, res) => {
   if (!hasOrder(req.body)) return res.status(400).json({ ok: false, error: "orderNumber and at least one item are required" });
-  const { orderNumber, items, total = 0, orderType, paid = false, estimatedPrepMinutes, createdAt } = req.body;
-  const order = { orderNumber, items, total, orderType, paid: paid === true, estimatedPrepMinutes, createdAt };
+  const { orderNumber, items, total = 0, orderType, paid = false, paymentMethod, estimatedPrepMinutes, createdAt } = req.body;
+  const order = { orderNumber, items, total, orderType, paid: paid === true, paymentMethod, estimatedPrepMinutes, createdAt };
   await print(res, (printer) => customerReceipt(printer, order));
 });
 

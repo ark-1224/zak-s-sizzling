@@ -13,8 +13,10 @@ import type { OrderDTO } from "@zaks/shared-types";
 // confirm them, per the manuscript's "Billing and Payment Processing" staff requirement.
 // Staff confirm first and collect the money after: confirming checks and deducts the
 // stock, so a short order is caught before any money changes hands
-// (docs/design/raw-material-stock.md 3.2). Online orders that were paid after their
-// stock ran out are listed too, flagged as a stock issue for staff to sort out.
+// (docs/design/raw-material-stock.md 3.2). Online payments staff must sort out are
+// listed too, marked NEEDS ATTENTION with the server's note on what happened and what to
+// do: paid after the stock ran out or after the order was cancelled, a wrong amount, or
+// paid twice. Once staff have dealt with it, Mark as sorted out takes it off the list.
 // Each order shows how long ago it was placed, and the list can be searched by order
 // number (the customer reads it off their receipt screen). An abandoned unpaid order
 // can be cancelled, after a second click to make sure (UI review #15). The list reloads
@@ -57,6 +59,7 @@ export default function StaffOrdersPage() {
   // The order whose "Cancel order" was clicked once and now asks to be sure.
   const [cancelAskId, setCancelAskId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [sortingOutId, setSortingOutId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; error: boolean } | null>(null);
   const [query, setQuery] = useState("");
   const [now, setNow] = useState(() => Date.now());
@@ -136,6 +139,22 @@ export default function StaffOrdersPage() {
     }
   }
 
+  async function handleSortedOut(order: OrderDTO) {
+    setSortingOutId(order.id);
+    try {
+      await apiFetch(`/api/orders/${order.id}/sorted-out`, { method: "POST", auth: "staff" });
+      setMessage({ text: `${order.orderNumber} was marked as sorted out. Its note stays in the transaction history.`, error: false });
+      await load();
+    } catch (err) {
+      // A 409 means someone else marked it a moment ago; the refreshed list shows it gone.
+      const text = err instanceof ApiError ? err.message : "Could not mark the order as sorted out.";
+      setMessage({ text: `${order.orderNumber}: ${text}`, error: true });
+      await load();
+    } finally {
+      setSortingOutId(null);
+    }
+  }
+
   async function handleCancel(order: OrderDTO) {
     setCancellingId(order.id);
     try {
@@ -203,98 +222,105 @@ export default function StaffOrdersPage() {
           ) : (
             <Card>
               <ul className="divide-y divide-adm-line-soft">
-                {shown.map((order) => (
-                  <li key={order.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-adm-mono text-lg font-bold">{order.orderNumber}</span>
-                        {arrivedAt[order.id] !== undefined && now - arrivedAt[order.id] < NEW_FOR_MS && (
-                          <StatusPill tone="ok">NEW</StatusPill>
-                        )}
-                        {order.stockIssue && <StatusPill tone="bad">STOCK ISSUE</StatusPill>}
-                        {order.status === "cancelled" && <StatusPill tone="warn">CANCELLED</StatusPill>}
-                      </div>
-                      <div className="text-base break-words text-adm-ink-2 md:text-sm">
-                        {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
-                      </div>
-                      <div className="mt-1 text-sm text-adm-ink-3">
-                        {order.orderType === "take_out" ? "Take out" : "Dine in"} · <PaymentMethodText order={order} /> · ₱
-                        {order.totalAmount.toFixed(2)}
-                        {order.payment?.status === "paid" && " · paid"} ·{" "}
-                        <time dateTime={order.createdAt} title={formatDateTime(order.createdAt)}>
-                          placed {timeAgo(order.createdAt, now)}
-                        </time>
-                        {order.estimatedPrepMinutes !== null && !order.stockIssue && order.payment?.status !== "paid" && (
-                          <> · ready {order.estimatedPrepMinutes === 0 ? "right away" : `${aboutMinutes(order.estimatedPrepMinutes)} after confirming`}</>
-                        )}
-                      </div>
-                      {order.stockIssue && (
-                        <div className="mt-2 rounded-[5px] border border-adm-bad bg-adm-bad-soft p-2.5 text-base text-adm-ink md:text-sm">
-                          {order.status === "cancelled"
-                            ? "Paid online after this order was cancelled, so nothing was sent to the kitchen."
-                            : "Paid online, but the stock ran out before the payment arrived, so nothing was sent to the kitchen."}
-                          {order.stockIssueNote && <span className="mt-1 block text-adm-ink-2">{order.stockIssueNote}</span>}
-                          <span className="mt-1 block text-adm-ink-2">
-                            {order.status === "cancelled"
-                              ? "Refund the customer, or place the order again for them."
-                              : "Talk to the customer about a substitute or a refund."}
-                          </span>
+                {shown.map((order) => {
+                  // Still to be confirmed and paid at the counter, even when it needs attention
+                  // (a wrong amount paid online: collect the difference, or refund and cancel).
+                  const awaitingPayment = order.payment?.status !== "paid" && order.status !== "cancelled";
+                  return (
+                    <li key={order.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-adm-mono text-lg font-bold">{order.orderNumber}</span>
+                          {arrivedAt[order.id] !== undefined && now - arrivedAt[order.id] < NEW_FOR_MS && (
+                            <StatusPill tone="ok">NEW</StatusPill>
+                          )}
+                          {order.stockIssue && <StatusPill tone="bad">NEEDS ATTENTION</StatusPill>}
+                          {order.status === "cancelled" && <StatusPill tone="warn">CANCELLED</StatusPill>}
                         </div>
-                      )}
-                    </div>
-                    {!order.stockIssue &&
-                      (cancelAskId === order.id ? (
-                        <div
-                          role="group"
-                          aria-label={`Cancel ${order.orderNumber}?`}
-                          className="flex shrink-0 flex-col gap-2 rounded-[6px] border border-adm-bad bg-adm-bad-soft p-3 sm:max-w-72"
-                        >
-                          <span className="text-base text-adm-ink md:text-sm">
-                            Cancel <strong className="font-adm-mono">{order.orderNumber}</strong>? It leaves the queue and can&apos;t be
-                            paid any more.
-                          </span>
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <AdmButton
-                              variant="danger"
-                              size="compact"
-                              className="bg-adm-surface"
-                              disabled={cancellingId === order.id}
-                              onClick={() => handleCancel(order)}
-                            >
-                              {cancellingId === order.id ? "Cancelling…" : "Yes, cancel order"}
-                            </AdmButton>
+                        <div className="text-base break-words text-adm-ink-2 md:text-sm">
+                          {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
+                        </div>
+                        <div className="mt-1 text-sm text-adm-ink-3">
+                          {order.orderType === "take_out" ? "Take out" : "Dine in"} · <PaymentMethodText order={order} /> · ₱
+                          {order.totalAmount.toFixed(2)}
+                          {order.payment?.status === "paid" && " · paid"} ·{" "}
+                          <time dateTime={order.createdAt} title={formatDateTime(order.createdAt)}>
+                            placed {timeAgo(order.createdAt, now)}
+                          </time>
+                          {order.estimatedPrepMinutes !== null && awaitingPayment && (
+                            <> · ready {order.estimatedPrepMinutes === 0 ? "right away" : `${aboutMinutes(order.estimatedPrepMinutes)} after confirming`}</>
+                          )}
+                        </div>
+                        {order.stockIssue && (
+                          <div className="mt-2 rounded-[5px] border border-adm-bad bg-adm-bad-soft p-2.5 text-base text-adm-ink md:text-sm">
+                            {order.stockIssueNote ?? "Something went wrong with this order's online payment. Check it with the customer."}
+                            {/* Once staff have refunded, substituted or collected the difference. */}
                             <AdmButton
                               variant="secondary"
                               size="compact"
-                              disabled={cancellingId === order.id}
-                              onClick={() => setCancelAskId(null)}
+                              className="mt-2 block bg-adm-surface"
+                              disabled={sortingOutId === order.id}
+                              onClick={() => handleSortedOut(order)}
                             >
-                              Keep order
+                              {sortingOutId === order.id ? "Saving…" : "Mark as sorted out"}
                             </AdmButton>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                          <AdmButton
-                            variant="secondary"
-                            className="w-full sm:w-auto"
-                            disabled={confirmingId === order.id}
-                            onClick={() => setCancelAskId(order.id)}
+                        )}
+                      </div>
+                      {awaitingPayment &&
+                        (cancelAskId === order.id ? (
+                          <div
+                            role="group"
+                            aria-label={`Cancel ${order.orderNumber}?`}
+                            className="flex shrink-0 flex-col gap-2 rounded-[6px] border border-adm-bad bg-adm-bad-soft p-3 sm:max-w-72"
                           >
-                            Cancel order
-                          </AdmButton>
-                          <AdmButton
-                            variant="primary"
-                            className="w-full sm:w-auto"
-                            disabled={confirmingId === order.id}
-                            onClick={() => handleConfirm(order)}
-                          >
-                            {confirmingId === order.id ? "Checking stock…" : "Confirm order"}
-                          </AdmButton>
-                        </div>
-                      ))}
-                  </li>
-                ))}
+                            <span className="text-base text-adm-ink md:text-sm">
+                              Cancel <strong className="font-adm-mono">{order.orderNumber}</strong>? It leaves the queue and can&apos;t be
+                              paid any more.
+                            </span>
+                            <div className="flex flex-col gap-2 sm:flex-row">
+                              <AdmButton
+                                variant="danger"
+                                size="compact"
+                                className="bg-adm-surface"
+                                disabled={cancellingId === order.id}
+                                onClick={() => handleCancel(order)}
+                              >
+                                {cancellingId === order.id ? "Cancelling…" : "Yes, cancel order"}
+                              </AdmButton>
+                              <AdmButton
+                                variant="secondary"
+                                size="compact"
+                                disabled={cancellingId === order.id}
+                                onClick={() => setCancelAskId(null)}
+                              >
+                                Keep order
+                              </AdmButton>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                            <AdmButton
+                              variant="secondary"
+                              className="w-full sm:w-auto"
+                              disabled={confirmingId === order.id}
+                              onClick={() => setCancelAskId(order.id)}
+                            >
+                              Cancel order
+                            </AdmButton>
+                            <AdmButton
+                              variant="primary"
+                              className="w-full sm:w-auto"
+                              disabled={confirmingId === order.id}
+                              onClick={() => handleConfirm(order)}
+                            >
+                              {confirmingId === order.id ? "Checking stock…" : "Confirm order"}
+                            </AdmButton>
+                          </div>
+                        ))}
+                    </li>
+                  );
+                })}
               </ul>
             </Card>
           )}

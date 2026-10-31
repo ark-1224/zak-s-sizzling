@@ -22,6 +22,9 @@ function authHeader(): string {
 /** How long a QR Ph code can be scanned before it expires (PayMongo allows 60-9000 s). */
 export const QRPH_EXPIRY_SECONDS = 10 * 60;
 
+/** PayMongo amounts are in centavos: the amount put on a QR code, and checked when it's paid. */
+export const toCentavos = (pesos: number) => Math.round(pesos * 100);
+
 export interface QrPhCode {
   paymentIntentId: string;
   /** The QR code image as a data: URL, ready for an <img>. */
@@ -71,7 +74,7 @@ export async function createQrPhCode(input: { orderId: string; orderNumber: stri
   const intent = await paymongo<Resource>("/payment_intents", {
     method: "POST",
     attributes: {
-      amount: Math.round(input.amountPhp * 100), // centavos
+      amount: toCentavos(input.amountPhp),
       currency: "PHP",
       payment_method_allowed: ["qrph"],
       description: `Zak's Sizzling Hub order ${input.orderNumber}`,
@@ -148,6 +151,8 @@ export interface PaymongoWebhookEvent {
   orderId: string | null;
   /** The Payment Intent the event is about, when it says (payment.paid carries payment_intent_id). */
   paymentIntentId: string | null;
+  /** The amount paid in centavos, when the event says (a payment.paid's payment carries it). */
+  amountCentavos: number | null;
 }
 
 export function parseWebhookEvent(rawBody: Buffer): PaymongoWebhookEvent {
@@ -155,7 +160,9 @@ export function parseWebhookEvent(rawBody: Buffer): PaymongoWebhookEvent {
     data: {
       attributes: {
         type: string;
-        data?: { attributes?: { reference_number?: string; payment_intent_id?: string; metadata?: Record<string, unknown> | null } };
+        data?: {
+          attributes?: { reference_number?: string; payment_intent_id?: string; amount?: unknown; metadata?: Record<string, unknown> | null };
+        };
       };
     };
   };
@@ -165,5 +172,6 @@ export function parseWebhookEvent(rawBody: Buffer): PaymongoWebhookEvent {
     type: json.data.attributes.type,
     orderId: (typeof metadataOrderId === "string" ? metadataOrderId : null) ?? resource.reference_number ?? null,
     paymentIntentId: resource.payment_intent_id ?? null,
+    amountCentavos: typeof resource.amount === "number" ? resource.amount : null,
   };
 }

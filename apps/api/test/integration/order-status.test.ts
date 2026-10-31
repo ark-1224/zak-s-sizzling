@@ -1,6 +1,7 @@
 import request from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../../src/lib/prisma";
+import { BOARD_WINDOW_MS } from "../../src/modules/orders/service";
 import { PRODUCTS } from "./fixtures";
 import { app, kioskToken, loginAs } from "./helpers";
 
@@ -77,6 +78,28 @@ describe("order status follows the kitchen", () => {
     expect(after.ready).not.toContain(order.orderNumber);
     const queueAfter = await request(app).get("/api/kitchen/tasks").set(auth(staff));
     expect((queueAfter.body as { orderId: string }[]).some((t) => t.orderId === order.id)).toBe(false);
+  });
+
+  it("records when the order was handed over", async () => {
+    const order = await paidOrder();
+    for (const id of order.taskIds) await setTask(id, "completed");
+    const before = Date.now();
+
+    await handOver(order.id);
+
+    const saved = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    expect(saved.handedOverAt!.getTime()).toBeGreaterThanOrEqual(before - 1000);
+  });
+
+  it("drops a ready order from the kitchen display once it leaves the board", async () => {
+    const order = await paidOrder();
+    for (const id of order.taskIds) await setTask(id, "completed");
+    await prisma.order.update({ where: { id: order.id }, data: { createdAt: new Date(Date.now() - BOARD_WINDOW_MS - 60 * 60 * 1000) } });
+
+    const queue = await request(app).get("/api/kitchen/tasks").set(auth(staff));
+
+    expect((queue.body as { orderId: string }[]).some((t) => t.orderId === order.id)).toBe(false);
+    expect((await board()).ready).not.toContain(order.orderNumber);
   });
 
   it("refuses Handed over before every dish is done, and a second time", async () => {

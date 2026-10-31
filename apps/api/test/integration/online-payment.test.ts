@@ -263,6 +263,22 @@ describe("an online order cancelled before the payment arrived", () => {
 
     expect(res.body.find((o: { id: string }) => o.id === order.id)).toMatchObject({ status: "cancelled", stockIssue: true });
   });
+
+  it("leaves the queue once staff mark it sorted out, keeping the note for the history", async () => {
+    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set("Authorization", `Bearer ${staff}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ stockIssue: false, stockIssueNote: expect.stringMatching(/Paid online after this order was cancelled/) });
+    const queue = await request(app).get("/api/orders?unpaid=1").set("Authorization", `Bearer ${staff}`);
+    expect(queue.body.some((o: { id: string }) => o.id === order.id)).toBe(false);
+  });
+
+  it("says so when it is marked sorted out a second time", async () => {
+    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set("Authorization", `Bearer ${staff}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/doesn't need attention any more/);
+  });
 });
 
 describe("which payment methods the kiosk offers (UI review #2)", () => {

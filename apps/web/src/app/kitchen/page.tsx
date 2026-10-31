@@ -24,13 +24,15 @@ const STATUS_LABEL = { pending: "Pending", in_progress: "In Progress", completed
 const NEXT_STATUS = { pending: "in_progress", in_progress: "completed" } as const;
 const TICKET_FAILED = "Couldn't print the kitchen ticket for";
 
-// The printer setting lives in this device's storage; it only changes through the address
-// (?printer=1 / ?printer=0), so there is nothing to subscribe to.
-const noSubscription = () => () => {};
-function kitchenPrinterOn() {
+// The printer setting lives in this device's storage and changes only through the address
+// (?printer=1 / ?printer=0), so it is read from the address once, when the page mounts,
+// and the snapshot itself only reads storage.
+function readPrinterSetting(onChange: () => void) {
   rememberPrinterSetting("kitchen");
-  return hasPrinter("kitchen");
+  onChange();
+  return () => {};
 }
+const kitchenPrinterOn = () => hasPrinter("kitchen");
 
 export default function KitchenPage() {
   const [tasks, setTasks] = useState<KitchenTaskDTO[]>([]);
@@ -143,35 +145,39 @@ export default function KitchenPage() {
 
   // Kitchen tickets: on the device with the kitchen printer (this page opened once with
   // ?printer=1), each order prints a ticket with its number and dishes when it first
-  // appears here, which is once it's paid. A failed ticket is tried again with the next
-  // update or the 30-second tick.
-  const ticketPrinter = useSyncExternalStore(noSubscription, kitchenPrinterOn, () => false);
-  const printingNow = useRef(new Set<string>());
+  // appears here, which is once it's paid. One ticket at a time, oldest first: tickets
+  // sent together queue at the print service, and one still waiting there when the page
+  // gives up on it (after 8 s) would be sent again and print twice. A failed ticket is
+  // tried again with the next update or the 30-second tick.
+  const ticketPrinter = useSyncExternalStore(readPrinterSetting, kitchenPrinterOn, () => false);
+  const printing = useRef(false);
 
   useEffect(() => {
-    if (!ticketPrinter || !loaded) return;
+    if (!ticketPrinter || !loaded || printing.current) return;
     const printed = loadPrintedKitchenOrders();
     if (printed === null) {
       // The printer was only just switched on: orders already on screen aren't printed.
       rememberPrintedKitchenOrders(orders.map((order) => order.orderId));
       return;
     }
-    for (const order of orders) {
-      if (printed.has(order.orderId) || printingNow.current.has(order.orderId)) continue;
-      printingNow.current.add(order.orderId);
-      printKitchenTicket({
-        orderNumber: order.orderNumber,
-        items: order.tasks.map((task) => ({ qty: task.qty, name: task.productName, note: task.specialInstructions })),
-      }).then((ok) => {
-        printingNow.current.delete(order.orderId);
-        if (ok) {
-          rememberPrintedKitchenOrders([order.orderId]);
-          setMessage((current) => (current?.startsWith(TICKET_FAILED) ? null : current));
-        } else {
+    const waiting = orders.filter((order) => !printed.has(order.orderId));
+    if (waiting.length === 0) return;
+    printing.current = true;
+    (async () => {
+      for (const order of waiting) {
+        const ok = await printKitchenTicket({
+          orderNumber: order.orderNumber,
+          items: order.tasks.map((task) => ({ qty: task.qty, name: task.productName, note: task.specialInstructions })),
+        });
+        if (!ok) {
           setMessage(`${TICKET_FAILED} ${order.orderNumber}. Check the kitchen printer; it will try again.`);
+          break;
         }
-      });
-    }
+        rememberPrintedKitchenOrders([order.orderId]);
+        setMessage((current) => (current?.startsWith(TICKET_FAILED) ? null : current));
+      }
+      printing.current = false;
+    })();
   }, [ticketPrinter, loaded, orders, now]);
 
   const readyCount = orders.filter((order) => order.status === "ready").length;

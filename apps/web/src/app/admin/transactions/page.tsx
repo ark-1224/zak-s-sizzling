@@ -223,7 +223,7 @@ function TransactionRow({ order }: { order: TransactionDTO }) {
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-adm-mono text-base font-bold">{order.orderNumber}</span>
               <StatusBadge status={order.status} />
-              {order.stockIssue && <StatusPill tone="bad">STOCK ISSUE</StatusPill>}
+              {order.stockIssue && <StatusPill tone="bad">NEEDS ATTENTION</StatusPill>}
             </div>
             <div className="text-base break-words text-adm-ink-2 md:text-sm">
               {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}

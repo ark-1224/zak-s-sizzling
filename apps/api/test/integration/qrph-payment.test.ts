@@ -3,7 +3,7 @@ import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { prisma } from "../../src/lib/prisma";
 import { PRODUCTS } from "./fixtures";
-import { app, kioskToken } from "./helpers";
+import { app, kioskToken, loginAs } from "./helpers";
 
 // QR Ph shown on the kiosk's own screen: the API asks PayMongo for a QR code, the kiosk
 // polls for the result, and the payment is recorded either by that check or by the
@@ -18,6 +18,8 @@ const saved = { key: process.env.PAYMONGO_SECRET_KEY, secret: process.env.PAYMON
 
 let customer: string;
 let otherKiosk: string;
+/** A second kiosk for the later tests: each session may start only 10 payments in 10 minutes. */
+let payer: string;
 let intentCount = 0;
 /** What PayMongo reports for each payment intent: its status and amount in centavos. */
 const intents = new Map<string, { status: string; amount: number }>();
@@ -58,6 +60,7 @@ beforeAll(async () => {
   vi.stubGlobal("fetch", fakePaymongo);
   customer = await kioskToken();
   otherKiosk = await kioskToken();
+  payer = await kioskToken();
 });
 
 afterAll(() => {
@@ -76,8 +79,8 @@ const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 const juiceStock = async () => (await prisma.inventory.findUniqueOrThrow({ where: { productId: juice.id } })).stockQty;
 const paymentOf = (orderId: string) => prisma.payment.findUniqueOrThrow({ where: { orderId } });
 
-async function placeOrder(qty = 1): Promise<{ id: string; totalAmount: number }> {
-  const res = await request(app).post("/api/orders").set(auth(customer)).send({ items: [{ productId: juice.id, qty }], paymentMethod: "qrph" });
+async function placeOrder(qty = 1, token = customer): Promise<{ id: string; totalAmount: number }> {
+  const res = await request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: juice.id, qty }], paymentMethod: "qrph" });
   expect(res.status).toBe(201);
   return res.body;
 }
@@ -160,6 +163,9 @@ describe("checking a QR Ph payment", () => {
     const res = await checkQr(order.id);
 
     expect(res.body.payment.status).toBe("pending");
+    // Flagged for staff, with both amounts, as the webhook does.
+    expect(res.body.stockIssue).toBe(true);
+    expect(res.body.stockIssueNote).toMatch(/₱1\.00 was paid online, but the order total is ₱55\.00/);
   });
 
   it("doesn't show another kiosk's order", async () => {
@@ -208,5 +214,87 @@ describe("the payment.paid webhook", () => {
     await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference });
 
     expect((await paymentOf(order.id)).status).toBe("paid");
+  });
+
+  const orderOf = (orderId: string) => prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+
+  it("doesn't confirm a payment whose amount isn't the order's total, and flags it for staff", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+
+    await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, amount: 100, metadata: { order_id: order.id } });
+
+    expect((await paymentOf(order.id)).status).toBe("pending");
+    const saved = await orderOf(order.id);
+    expect(saved.status).toBe("pending");
+    expect(saved.stockIssueNote).toMatch(/₱1\.00 was paid online, but the order total is ₱55\.00/);
+  });
+
+  it("records an earlier code paid after the kiosk switched to the counter, as QR Ph with that code", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+    const firstCode = (await paymentOf(order.id)).reference;
+    await request(app).post(`/api/payments/qrph/${order.id}/counter`).set(auth(payer));
+
+    await postEvent({ payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } });
+
+    expect(await paymentOf(order.id)).toMatchObject({ method: "qrph", status: "paid", reference: firstCode });
+    expect((await orderOf(order.id)).status).toBe("confirmed");
+  });
+
+  it("flags a second code paid after the order was already paid, and deducts nothing twice", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+    const firstCode = (await paymentOf(order.id)).reference;
+    await startQr(order.id, payer); // a new code; the first one is still payable at PayMongo
+    const secondCode = (await paymentOf(order.id)).reference;
+    await postEvent({ payment_intent_id: secondCode, amount: 5500, metadata: { order_id: order.id } });
+    const stock = await juiceStock();
+
+    await postEvent({ payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } });
+
+    expect(await juiceStock()).toBe(stock);
+    expect((await paymentOf(order.id)).reference).toBe(secondCode);
+    expect((await orderOf(order.id)).stockIssueNote).toMatch(/second payment of ₱55\.00 arrived online after this order was already paid/);
+  });
+
+  it("flags a QR Ph payment that arrives after staff took the money at the counter", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+    const code = (await paymentOf(order.id)).reference;
+    const staff = await loginAs("staff");
+    expect((await request(app).post(`/api/payments/counter/${order.id}/confirm`).set(auth(staff))).status).toBe(200);
+    expect((await paymentOf(order.id)).method).toBe("counter");
+
+    await postEvent({ payment_intent_id: code, amount: 5500, metadata: { order_id: order.id } });
+
+    expect((await paymentOf(order.id)).method).toBe("counter");
+    expect((await orderOf(order.id)).stockIssue).toBe(true);
+  });
+
+  it("doesn't flag a repeated delivery of the event that paid the order", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+    const event = { payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } };
+    await postEvent(event);
+
+    await postEvent(event);
+
+    expect((await orderOf(order.id)).stockIssue).toBe(false);
+  });
+});
+
+describe("changing the items of an order being paid by QR Ph", () => {
+  it("is refused, so the code on the kiosk keeps matching the total", async () => {
+    const order = await placeOrder(2, payer);
+    await startQr(order.id, payer);
+    const staff = await loginAs("staff");
+    const item = await prisma.orderItem.findFirstOrThrow({ where: { orderId: order.id } });
+
+    const res = await request(app).patch(`/api/orders/${order.id}/items/${item.id}`).set(auth(staff)).send({ qty: 1 });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/being paid by QR Ph/);
+    expect(Number((await prisma.order.findUniqueOrThrow({ where: { id: order.id } })).totalAmount)).toBe(110);
   });
 });

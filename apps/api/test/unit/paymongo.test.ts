@@ -120,11 +120,18 @@ describe("parseWebhookEvent", () => {
     Buffer.from(JSON.stringify({ data: { attributes: { type, data: { attributes } } } }));
 
   it("reads a QR Ph payment.paid event: the order from metadata and the payment intent", () => {
-    expect(parseWebhookEvent(event("payment.paid", { payment_intent_id: "pi_1", metadata: { order_id: input.orderId } }))).toEqual({
+    expect(
+      parseWebhookEvent(event("payment.paid", { payment_intent_id: "pi_1", amount: 5500, metadata: { order_id: input.orderId } }))
+    ).toEqual({
       type: "payment.paid",
       orderId: input.orderId,
       paymentIntentId: "pi_1",
+      amountCentavos: 5500,
     });
+  });
+
+  it("leaves the amount unknown when the event doesn't carry a number", () => {
+    expect(parseWebhookEvent(event("payment.paid", { payment_intent_id: "pi_1", amount: "5500" })).amountCentavos).toBeNull();
   });
 
   it("still reads a hosted-checkout event by its reference number", () => {

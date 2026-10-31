@@ -9,7 +9,16 @@ import { parseId } from "../../lib/ids";
 import { emitOrdersChanged } from "../../websocket";
 import { createOrderSchema, estimateOrderSchema, transactionQuerySchema } from "./schema";
 import { estimateForCart } from "./prepTime";
-import { cancelOrder, createOrder, getOrderBoard, getOrderById, getOrderOwnerSessionId, listOrders, listTransactions } from "./service";
+import {
+  cancelOrder,
+  createOrder,
+  getOrderBoard,
+  getOrderById,
+  getOrderOwnerSessionId,
+  listOrders,
+  listTransactions,
+  markAttentionSortedOut,
+} from "./service";
 
 export const ordersRouter = Router();
 
@@ -36,8 +45,6 @@ ordersRouter.post("/estimate", authenticate, async (req, res, next) => {
   }
 });
 
-// Staff/admin order oversight — currently used by /staff/orders to find counter
-// payments awaiting confirmation. Full filtering/pagination is Sprint 5 scope.
 // The order status board on the counter screen. Public (no sign-in on that screen), so
 // it returns order numbers only. Declared before "/:id" so "board" isn't read as an id.
 ordersRouter.get("/board", async (_req, res, next) => {
@@ -57,6 +64,8 @@ ordersRouter.get("/history", authenticate, authorize("admin"), async (req, res, 
   }
 });
 
+// Staff/admin order oversight — currently used by /staff/orders to find counter
+// payments awaiting confirmation. Full filtering/pagination is Sprint 5 scope.
 ordersRouter.get("/", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
     const orders = await listOrders({ unpaidCounterOnly: req.query.unpaid === "1" });
@@ -150,6 +159,15 @@ ordersRouter.post("/:id/cancel", authenticate, authorize("admin", "staff"), asyn
   }
 });
 
+// Staff have sorted out an order marked NEEDS ATTENTION; it leaves the payment queue.
+ordersRouter.post("/:id/sorted-out", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+  try {
+    res.json(await markAttentionSortedOut(parseId(req.params.id, ORDER_NOT_FOUND)));
+  } catch (err) {
+    next(err);
+  }
+});
+
 /**
  * Item edits/deletes were only ever meant for correcting a still-pending order (per
  * the comment above) — nothing enforced that. Editing/deleting items on an already
@@ -160,10 +178,15 @@ ordersRouter.post("/:id/cancel", authenticate, authorize("admin", "staff"), asyn
  * locked in.
  */
 async function assertOrderIsPending(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true, payment: { select: { method: true, reference: true } } } });
   if (!order) throw new HttpError(404, "Order not found");
   if (order.status !== "pending") {
     throw new HttpError(409, "Only pending orders can have their items edited — this order is already confirmed");
+  }
+  // The QR Ph code on the kiosk was made for the current total; changing the total would
+  // leave the customer paying the old amount.
+  if (order.payment?.method === "qrph" && order.payment.reference) {
+    throw new HttpError(409, "This order is being paid by QR Ph, so its items can't be changed. Cancel it and place it again instead.");
   }
 }
 

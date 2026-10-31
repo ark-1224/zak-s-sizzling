@@ -44,7 +44,8 @@ export async function getSalesReport(range: "daily" | "weekly" | "monthly"): Pro
   }
 
   return Array.from(buckets.entries())
-    .map(([bucket, v]) => ({ bucket, ...v, averageOrderValue: averageOrderValue(v.revenue, v.orderCount) ?? 0 }))
+    // Never null here: a bucket is only made by an order landing in it.
+    .map(([bucket, v]) => ({ bucket, ...v, averageOrderValue: averageOrderValue(v.revenue, v.orderCount)! }))
     .sort((a, b) => a.bucket.localeCompare(b.bucket));
 }
 
