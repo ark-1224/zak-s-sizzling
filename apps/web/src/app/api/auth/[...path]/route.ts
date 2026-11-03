@@ -15,6 +15,15 @@ const PASSED_BACK = ["content-type", "retry-after"];
 export async function POST(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const path = (await params).path.join("/");
   if (!FORWARDED.has(path)) return Response.json({ error: "Not found" }, { status: 404 });
+  // Only this site's own pages may sign in, renew or sign out here. Browsers say where a
+  // request comes from (Sec-Fetch-Site), so a form or script on another website is
+  // refused, and a body that isn't JSON is refused rather than passed on as JSON.
+  if (request.headers.get("sec-fetch-site") !== "same-origin") {
+    return Response.json({ error: "Sign in from the admin site's own pages." }, { status: 403 });
+  }
+  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
+    return Response.json({ error: "Send JSON." }, { status: 415 });
+  }
 
   const headers = new Headers({ "Content-Type": "application/json" });
   const cookie = request.headers.get("cookie");

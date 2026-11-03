@@ -59,6 +59,8 @@ function storeStaffSession(accessToken: string, user: AuthUser) {
 // the API (app/api/auth/[...path]/route.ts): the renewal cookie then belongs to this
 // site, so the browser sends it back. Other API calls go straight to the API.
 const authUrl = (path: string) => `/api/auth/${path}`;
+/** Renewal and sign-out carry no data, but the forwarding route only accepts JSON. */
+const EMPTY_JSON = { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" } as const;
 
 /** Local-only cleanup — used both by logout() and by apiFetch when a refresh attempt fails. */
 export function clearStaffSession() {
@@ -137,7 +139,7 @@ export function logout() {
   // Best-effort — clears the httpOnly refresh cookie server-side. Not awaited: the
   // caller navigates to /login immediately regardless, and the cookie is scoped to
   // /api/auth and expires in 6 hours on its own even if this request never lands.
-  fetch(authUrl("logout"), { method: "POST" }).catch(() => {});
+  fetch(authUrl("logout"), EMPTY_JSON).catch(() => {});
   clearStaffSession();
 }
 
@@ -157,7 +159,7 @@ export async function refreshAccessToken(): Promise<string> {
     logout();
     throw new Error("Signed out after 6 hours without use");
   }
-  const res = await fetch(authUrl("refresh"), { method: "POST" });
+  const res = await fetch(authUrl("refresh"), EMPTY_JSON);
   if (!res.ok) {
     clearStaffSession();
     throw new Error("Session expired");

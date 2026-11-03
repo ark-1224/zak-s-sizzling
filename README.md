@@ -372,7 +372,9 @@ nothing. After that the session lasts until nobody has used a staff screen for 6
 which browsers treat as different websites, so they would not send the API's renewal
 cookie back. Sign-in, renewal and sign-out therefore go to the admin site's own
 `/api/auth/*`, which forwards them to the API (`apps/web/src/app/api/auth/[...path]/route.ts`);
-the cookie then belongs to the admin site. The admin pages renew the 15-minute access
+the cookie then belongs to the admin site. That route accepts only JSON from the admin
+site's own pages (the browser's `Sec-Fetch-Site: same-origin`), so a form or script on
+another website can't use it. The admin pages renew the 15-minute access
 token every 12 minutes while someone has used a staff screen in the last 6 hours, and
 sign out after 6 hours without use; the cookie itself lasts 6 hours after the last
 renewal, so a closed browser follows the same rule. Set **`AUTH_PROXY_SECRET`** to the
