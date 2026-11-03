@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2565" viewBox="0 0 810 2565">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2599" viewBox="0 0 810 2599">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="2565" fill="#ffffff"/>
+<rect x="0" y="0" width="810" height="2599" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 02  Staff and admin sign-in and page access</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
 <text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/proxy.ts, apps/web/src/components/StaffGuard.tsx,</text>
@@ -132,7 +132,7 @@
 <text x="405.0" y="1735.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">can&#x27;t be used any more</text>
 <rect x="557.0" y="1787.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="655.0" y="1809.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Issue a 15-minute access</text>
-<text x="655.0" y="1824.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">token and a 7-day refresh</text>
+<text x="655.0" y="1824.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">token and a 6-hour refresh</text>
 <text x="655.0" y="1839.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">cookie</text>
 <rect x="307.0" y="1892.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
 <text x="405.0" y="1914.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Save the token and user on</text>
@@ -170,8 +170,10 @@
 <text x="30" y="2426" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   can&#x27;t be sent, sign-in stops with “We couldn&#x27;t send your sign-in code”.</text>
 <text x="30" y="2443" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Every API request is checked again on the server (authorize(&quot;admin&quot;) or authorize(&quot;admin&quot;, &quot;staff&quot;)), so the</text>
 <text x="30" y="2460" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   page checks only decide what is shown.</text>
-<text x="30" y="2477" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The access token lasts 15 minutes and is renewed in the background with the 7-day refresh cookie. Each renewal</text>
-<text x="30" y="2494" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   re-reads the account, so a suspended or demoted user loses access at the next renewal. If renewal fails, the</text>
-<text x="30" y="2511" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   next request sends the user back to the login page.</text>
-<text x="30" y="2528" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Log out clears the saved token and the refresh cookie and opens the login page.</text>
+<text x="30" y="2477" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The access token lasts 15 minutes and is renewed in the background with the refresh cookie, through the admin</text>
+<text x="30" y="2494" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   site&#x27;s own address (which forwards to the API) so the browser sends the cookie back. Each renewal re-reads the</text>
+<text x="30" y="2511" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   account, so a suspended or demoted user loses access at the next renewal. After 6 hours with nobody using a</text>
+<text x="30" y="2528" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   staff screen, renewal stops and the screen goes back to the login page; the cookie also lasts only 6 hours after</text>
+<text x="30" y="2545" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   the last renewal.</text>
+<text x="30" y="2562" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Log out clears the saved token and the refresh cookie and opens the login page.</text>
 </svg>

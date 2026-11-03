@@ -786,6 +786,14 @@ When `orders` is updated in section 3, add:
 
 `stock_issue` and `stock_issue_note` now mean "needs attention" and "what staff should do", for any of the four reasons above, not only a stock shortage.
 
+## 12. Staying signed in on the admin side (3 November 2026)
+
+The admin side signed staff out after about 15 minutes, whether or not they were working: the admin site and the API are on different addresses, which browsers treat as different websites, so the cookie that keeps a session going was never sent back. Sign-in, renewal and sign-out now go through the admin site's own address, which forwards them to the API. The client's rule is now in place on every staff screen (admin pages, Orders awaiting payment, the kitchen display): a screen stays signed in while nobody touches it, and signs out after **6 hours without use**, after which the password and the emailed code are needed again.
+
+**Evidence:** `apps/web/src/app/api/auth/[...path]/route.ts` (the forwarding), `apps/web/src/lib/auth.ts` and `apps/web/src/components/StaffGuard.tsx` (the 6-hour rule), `apps/api/src/lib/jwt.ts` (`REFRESH_TOKEN_HOURS`), `apps/api/src/middleware/forwardedClient.ts` (each person's own address for the sign-in limits, with `AUTH_PROXY_SECRET`). Tests: `apps/api/test/unit/forwarded-client.test.ts`, `jwt.test.ts`, `apps/api/test/integration/auth.test.ts`.
+
+If the manuscript states how long a staff session lasts, it should say: *signed out after six hours without use*.
+
 ## Needs decision
 
 The manuscript claims each item below, but the code does not support it (or supports it only in part). The adviser decisions above did not cover them, so they are listed here and not rewritten.

@@ -365,8 +365,20 @@ allows 5 wrong tries; "Send a new code" waits 60 seconds, at most 3 times per si
 and an account gets at most 10 codes an hour. Only a hash of the code is stored, and a
 code stops working once used, when the account signs in again, when its password or
 email changes, or when it is suspended. A wrong password still answers "Invalid email or password" and sends
-nothing. Sessions last 7 days after that, as before, so the code is asked only when
-signing in with the password.
+nothing. After that the session lasts until nobody has used a staff screen for 6 hours
+(the client's rule), so the code is asked only when signing in with the password.
+
+**Staying signed in.** The admin site and the API are on different Railway addresses,
+which browsers treat as different websites, so they would not send the API's renewal
+cookie back. Sign-in, renewal and sign-out therefore go to the admin site's own
+`/api/auth/*`, which forwards them to the API (`apps/web/src/app/api/auth/[...path]/route.ts`);
+the cookie then belongs to the admin site. The admin pages renew the 15-minute access
+token every 12 minutes while someone has used a staff screen in the last 6 hours, and
+sign out after 6 hours without use; the cookie itself lasts 6 hours after the last
+renewal, so a closed browser follows the same rule. Set **`AUTH_PROXY_SECRET`** to the
+same long random value on the API and on the admin web service: the admin site then
+passes each person's own address along, and the API's sign-in limits count each person
+instead of the admin site's server (`apps/api/src/middleware/forwardedClient.ts`).
 
 The API sends the codes through **Brevo** over HTTPS (`apps/api/src/lib/loginMail.ts`),
 because Railway's Hobby plan blocks SMTP. Set these on the **api** service:

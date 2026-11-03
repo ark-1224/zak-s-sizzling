@@ -16,7 +16,7 @@ def login():
              notes=[
                  "The code works for 10 minutes and allows 5 wrong tries; Send a new code waits 60 seconds, at most 3 times per sign-in and 10 emails an hour per account. Only a hash of the code is stored, and it works once. If the email can't be sent, sign-in stops with “We couldn't send your sign-in code”.",
                  "Every API request is checked again on the server (authorize(\"admin\") or authorize(\"admin\", \"staff\")), so the page checks only decide what is shown.",
-                 "The access token lasts 15 minutes and is renewed in the background with the 7-day refresh cookie. Each renewal re-reads the account, so a suspended or demoted user loses access at the next renewal. If renewal fails, the next request sends the user back to the login page.",
+                 "The access token lasts 15 minutes and is renewed in the background with the refresh cookie, through the admin site's own address (which forwards to the API) so the browser sends the cookie back. Each renewal re-reads the account, so a suspended or demoted user loses access at the next renewal. After 6 hours with nobody using a staff screen, renewal stops and the screen goes back to the login page; the cookie also lasts only 6 hours after the last renewal.",
                  "Log out clears the saved token and the refresh cookie and opens the login page.",
              ])
     U, Wb, A = f.lanes
@@ -36,7 +36,7 @@ def login():
     f.n("entercode", U, 11, "io", "Enter the code from the email (or Send a new code)")
     f.n("codeok", A, 12, "decision", "Right code, not expired, fewer than 5 wrong tries?")
     f.n("wrongcode", Wb, 13, "io", "Show “That code isn't right. N tries left”; back to 10 when it can't be used any more")
-    f.n("token", A, 14, "process", "Issue a 15-minute access token and a 7-day refresh cookie")
+    f.n("token", A, 14, "process", "Issue a 15-minute access token and a 6-hour refresh cookie")
     f.n("store", Wb, 15, "process", "Save the token and user on this device; return to the page first opened, or the dashboard (11)")
     f.n("adminonly", Wb, 16, "decision", "Admin-only page and the user is Staff?")
     f.n("redirect", Wb, 17, "process", "Send to the dashboard (11) instead")
