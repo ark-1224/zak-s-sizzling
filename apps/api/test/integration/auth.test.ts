@@ -16,6 +16,8 @@ describe("POST /api/auth/login", () => {
     expect(cookie).toMatch(/zaks_refresh=/);
     expect(cookie).toMatch(/HttpOnly/i);
     expect(cookie).toMatch(/Path=\/api\/auth/);
+    // The client's rule: signed out after 6 hours without use (lib/jwt.ts).
+    expect(cookie).toMatch(/Max-Age=21600/);
   });
 
   it("treats the email as case-insensitive", async () => {

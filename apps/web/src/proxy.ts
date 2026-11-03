@@ -10,7 +10,8 @@ import { NextResponse, type NextRequest } from "next/server";
 // Without SITE_ROLE (local development) both sides are served from one address, as
 // before. The variables are read when each request arrives, so the same build serves
 // either role.
-const ADMIN_PATHS = ["/admin", "/staff", "/kitchen", "/login"];
+// /api/auth: staff sign-in forwarded to the API (app/api/auth/[...path]/route.ts).
+const ADMIN_PATHS = ["/admin", "/staff", "/kitchen", "/login", "/api/auth"];
 const KIOSK_PATHS = ["/checkout"];
 
 const startsWithAny = (pathname: string, prefixes: string[]) =>

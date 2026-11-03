@@ -33,13 +33,21 @@ export function verifyAccessToken(token: string): AccessTokenPayload {
   return jwt.verify(token, ACCESS_SECRET!) as AccessTokenPayload;
 }
 
-// Long-lived, carried only in an httpOnly cookie (never localStorage/JS-readable) so
-// the short-lived access token can be silently renewed without asking the user to log
+/**
+ * How long a staff or admin session lasts without being renewed: the client's rule is
+ * to sign out after 6 hours with nobody using it. Every renewal (every 12 minutes while
+ * someone uses the admin side) starts a fresh 6 hours; the admin pages stop renewing
+ * once nobody has touched them for 6 hours (apps/web/src/lib/auth.ts).
+ */
+export const REFRESH_TOKEN_HOURS = 6;
+
+// Carried only in an httpOnly cookie (never localStorage/JS-readable) so the
+// short-lived access token can be silently renewed without asking the user to log
 // in again every 15 minutes. Stateless by design — revocation on suspend/role-change
 // is handled by refreshAccessToken() re-checking the user record on every use, not by
 // a server-side token blocklist.
 export function signRefreshToken(payload: RefreshTokenPayload): string {
-  return jwt.sign(payload, REFRESH_SECRET!, { expiresIn: "7d" });
+  return jwt.sign(payload, REFRESH_SECRET!, { expiresIn: `${REFRESH_TOKEN_HOURS}h` });
 }
 
 export function verifyRefreshToken(token: string): RefreshTokenPayload {

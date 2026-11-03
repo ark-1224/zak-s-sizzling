@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
+import { forwardedClientAddress } from "./middleware/forwardedClient";
 import { webOrigins } from "./lib/origins";
 import type { Request } from "express";
 import { authRouter } from "./modules/auth/routes";
@@ -31,6 +32,9 @@ export function createApp() {
   // The kiosk site and the admin site (WEB_ORIGIN may list both, lib/origins.ts).
   app.use(cors({ origin: webOrigins(), credentials: true }));
   app.use(cookieParser());
+  // Sign-in forwarded by the admin site carries the person's own address (vouched for
+  // by AUTH_PROXY_SECRET), so the sign-in limits count each person.
+  app.use(forwardedClientAddress);
   // Stashes the raw request body on req.rawBody — needed by the PayMongo webhook route
   // to verify the Paymongo-Signature header, which is computed over the exact raw bytes.
   // limit raised from Express's 100kb default: bulk product import sends the whole CSV

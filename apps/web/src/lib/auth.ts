@@ -3,6 +3,8 @@ import type { AuthUser, LoginCodeChallenge } from "@zaks/shared-types";
 const STAFF_TOKEN_KEY = "zaks.staff.accessToken";
 const STAFF_USER_KEY = "zaks.staff.user";
 const KIOSK_TOKEN_KEY = "zaks.kiosk.sessionToken";
+/** When someone last used a staff screen (any tab), so an idle one signs out. */
+const LAST_ACTIVE_KEY = "zaks.staff.lastActive";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
@@ -11,6 +13,31 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 // while still renewing well before it'd ever actually expire during active use.
 const REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * The client's rule: a staff screen nobody has touched for 6 hours signs out. Within it
+ * the session is renewed in the background however long the screen sits untouched;
+ * after it, renewal stops and the next sign-in needs the password and emailed code. The
+ * API's renewal cookie lasts as long (REFRESH_TOKEN_HOURS), so a closed browser follows
+ * the same rule.
+ */
+export const STAFF_IDLE_LIMIT_MS = 6 * 60 * 60 * 1000;
+
+/** Someone used a staff screen: the 6 hours start again. */
+export function noteStaffActivity() {
+  window.localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
+}
+
+/** True once nobody has used a staff screen for STAFF_IDLE_LIMIT_MS. */
+export function staffIdleTooLong(): boolean {
+  const last = Number(window.localStorage.getItem(LAST_ACTIVE_KEY));
+  // Sessions from before this was recorded count from now.
+  if (!last) {
+    noteStaffActivity();
+    return false;
+  }
+  return Date.now() - last > STAFF_IDLE_LIMIT_MS;
+}
 
 export function getAccessToken(kind: "staff" | "kiosk"): string | null {
   if (typeof window === "undefined") return null;
@@ -28,10 +55,16 @@ function storeStaffSession(accessToken: string, user: AuthUser) {
   window.localStorage.setItem(STAFF_USER_KEY, JSON.stringify(user));
 }
 
+// Sign-in, renewal and sign-out go to this site's own address, which forwards them to
+// the API (app/api/auth/[...path]/route.ts): the renewal cookie then belongs to this
+// site, so the browser sends it back. Other API calls go straight to the API.
+const authUrl = (path: string) => `/api/auth/${path}`;
+
 /** Local-only cleanup — used both by logout() and by apiFetch when a refresh attempt fails. */
 export function clearStaffSession() {
   window.localStorage.removeItem(STAFF_TOKEN_KEY);
   window.localStorage.removeItem(STAFF_USER_KEY);
+  window.localStorage.removeItem(LAST_ACTIVE_KEY);
   clearScheduledRefresh();
 }
 
@@ -39,10 +72,9 @@ export function clearStaffSession() {
 export class LoginStartOverError extends Error {}
 
 async function authPost<T>(path: string, body: object): Promise<T> {
-  const res = await fetch(`${API_URL}/api/auth/${path}`, {
+  const res = await fetch(authUrl(path), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include", // accepts the httpOnly refresh cookie the API sets
     body: JSON.stringify(body),
   });
   if (!res.ok) {
@@ -55,6 +87,7 @@ async function authPost<T>(path: string, body: object): Promise<T> {
 
 function startSession(data: { accessToken: string; user: AuthUser }): AuthUser {
   storeStaffSession(data.accessToken, data.user);
+  noteStaffActivity();
   scheduleTokenRefresh();
   return data.user;
 }
@@ -103,8 +136,8 @@ export function pageAfterLogin(next: string | null): string {
 export function logout() {
   // Best-effort — clears the httpOnly refresh cookie server-side. Not awaited: the
   // caller navigates to /login immediately regardless, and the cookie is scoped to
-  // /api/auth and expires in 7 days on its own even if this request never lands.
-  fetch(`${API_URL}/api/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
+  // /api/auth and expires in 6 hours on its own even if this request never lands.
+  fetch(authUrl("logout"), { method: "POST" }).catch(() => {});
   clearStaffSession();
 }
 
@@ -112,15 +145,19 @@ export function logout() {
  * Silently exchanges the httpOnly refresh cookie for a new access token. Used both
  * proactively (scheduleTokenRefresh, below) and reactively (api-client.ts, on a 401)
  * so a staff/admin session survives well past the access token's 15-minute lifetime
- * without another login prompt — until the refresh token itself expires (7 days) or
- * the account is suspended, at which point this throws and the caller sends the user
- * back to /login.
+ * without another login prompt — until nobody has used a staff screen for 6 hours, the
+ * refresh token itself expires (6 hours after the last renewal) or the account is
+ * suspended, at which point this throws and the caller sends the user back to /login.
  */
 export async function refreshAccessToken(): Promise<string> {
-  const res = await fetch(`${API_URL}/api/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
-  });
+  // Signed out already (a request still running when the screen signed out must not
+  // start the session again), or idle for 6 hours.
+  if (!getStoredUser()) throw new Error("Signed out");
+  if (staffIdleTooLong()) {
+    logout();
+    throw new Error("Signed out after 6 hours without use");
+  }
+  const res = await fetch(authUrl("refresh"), { method: "POST" });
   if (!res.ok) {
     clearStaffSession();
     throw new Error("Session expired");
@@ -138,8 +175,9 @@ export function scheduleTokenRefresh() {
       await refreshAccessToken();
       scheduleTokenRefresh();
     } catch {
-      // Refresh token expired/invalid/suspended — leave it; the next authenticated
-      // API call's reactive 401 handling (api-client.ts) will send the user to /login.
+      // Idle for 6 hours, or the refresh token expired or the account was suspended:
+      // go to the sign-in page now, so an untouched screen doesn't sit there signed out.
+      window.location.href = loginUrlForCurrentPage();
     }
   }, REFRESH_INTERVAL_MS);
 }

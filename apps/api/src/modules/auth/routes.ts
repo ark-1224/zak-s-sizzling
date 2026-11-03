@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import { REFRESH_TOKEN_HOURS } from "../../lib/jwt";
 import { HttpError } from "../../middleware/errorHandler";
 import { kioskSessionLimit, loginAddressLimit, loginAttemptLimit, sessionRefreshLimit } from "../../middleware/rateLimit";
 import { challengeSchema, loginSchema, verifyCodeSchema } from "./schema";
@@ -17,7 +18,7 @@ function setRefreshCookie(res: Response, token: string) {
     secure: isProd,
     sameSite: "lax",
     path: "/api/auth",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: REFRESH_TOKEN_HOURS * 60 * 60 * 1000,
   });
 }
 

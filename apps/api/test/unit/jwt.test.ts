@@ -61,12 +61,12 @@ describe("token types cannot be swapped", () => {
 });
 
 describe("refresh and kiosk tokens", () => {
-  it("refresh tokens last 7 days", () => {
+  it("refresh tokens last 6 hours", () => {
     const token = signRefreshToken({ sub: "user-1" });
     const { iat, exp } = jwt.decode(token) as { iat: number; exp: number };
 
     expect(verifyRefreshToken(token).sub).toBe("user-1");
-    expect(exp - iat).toBe(7 * 24 * 60 * 60);
+    expect(exp - iat).toBe(6 * 60 * 60);
   });
 
   it("kiosk session tokens carry the customer role and last 2 hours", () => {
