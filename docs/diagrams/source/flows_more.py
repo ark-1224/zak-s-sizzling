@@ -133,6 +133,7 @@ def kitchen():
              notes=[
                  "The order's status follows its dishes (confirmed → preparing → ready), and Handed over completes it. The counter's status board (24) is the customer's ready notice; a QR customer's phone receipt doesn't update by itself (a limitation).",
                  "Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress → Completed.",
+                 "At any step until Handed over, Staff or an Admin can press Cancel order and give a reason (18c): the order is cancelled and leaves the display and the board, dishes still Pending go back into stock, and it goes to the payment queue as NEEDS ATTENTION for a refund.",
                  "Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing fails the display says so and tries again with the next update or within 30 seconds.",
              ])
     S, K, A = f.lanes

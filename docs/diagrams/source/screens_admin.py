@@ -745,9 +745,10 @@ def analytics():
 
 
 # --- 18 kitchen display ------------------------------------------------------------------
-def kitchen_page(empty):
-    f = admin_page("18b" if empty else "18", "Kitchen display" + (": no active orders" if empty else ""), "/kitchen",
-                   A + "kitchen/page.tsx", h=800, active="/kitchen")
+def kitchen_page(empty, asking_cancel=False):
+    number = "18b" if empty else "18c" if asking_cancel else "18"
+    title = "Kitchen display" + (": no active orders" if empty else ": cancelling an order" if asking_cancel else "")
+    f = admin_page(number, title, "/kitchen", A + "kitchen/page.tsx", h=800, active="/kitchen")
     f.rect(CX, 24, CW, 752, fill=FILL4, stroke=None, r=6)
     f.text(CX + 24, 66, "Kitchen Display", size=24, bold=True)
     f.text(CX + 24, 90, "0 active orders" if empty else "3 active orders · 1 ready to hand over", size=13, fill=INK2)
@@ -760,7 +761,8 @@ def kitchen_page(empty):
     for i, (otype, due, tasks) in enumerate(orders):
         x, y = CX + 24 + i * (cw + 16), 112
         ready = due == "ready"
-        f.rect(x, y, cw, 90 + len(tasks) * 112 + (58 if ready else 0), fill=FILL3, stroke=INK if ready else LINE, r=12, sw=2.5 if ready else 1)
+        asking = asking_cancel and i == 2
+        f.rect(x, y, cw, 90 + len(tasks) * 112 + (58 if ready else 0) + (362 if asking else 50), fill=FILL3, stroke=INK if ready else LINE, r=12, sw=2.5 if ready else 1)
         f.text(x + 16, y + 30, "ZK-XXXXXX", size=17, bold=True)
         f.pill(x + 120, y + 15, otype, size=10, filled=otype == "TAKE OUT", r=10)
         f.text(x + cw - 16, y + 30, "12:30 PM", size=12, anchor="end", fill=INK2)
@@ -780,6 +782,27 @@ def kitchen_page(empty):
             if status != "completed":
                 f.btn(x + 26, ty + 56, cw - 52, 34, "Start preparing" if status == "pending" else "Mark done", kind="primary", r=17)
             ty += 108
+        if ready:
+            ty += 52
+        if asking:
+            f.rect(x + 12, ty, cw - 24, 350, fill=WHITE, stroke=INK, r=8, sw=1.5)
+            f.wrap(x + 24, ty + 22, cw - 48, "Cancel ZK-XXXXXX? Dishes not started go back into stock, and the payment queue will remind staff to refund the customer.", size=12)
+            cy = ty + 100
+            for reason in ("Customer left", "Ran out of an ingredient", "Order was a mistake"):
+                f.btn(x + 24, cy, cw - 48, 30, reason, kind="secondary", r=15, size=12)
+                cy += 36
+            f.text(x + 24, cy + 12, "Reason", size=12, fill=INK2)
+            f.rect(x + 24, cy + 20, cw - 48, 32, fill=WHITE, stroke=LINE, r=6)
+            f.text(x + 34, cy + 41, "Pick one above, or type it", size=12, fill=INK3)
+            f.btn(x + 24, cy + 60, cw - 48, 32, "Yes, cancel order", kind="danger", r=16, size=12)
+            f.btn(x + 24, cy + 98, cw - 48, 32, "Keep order", kind="secondary", r=16, size=12)
+        else:
+            f.btn(x + 12, ty + 2, cw - 24, 36, "Cancel order", kind="secondary", r=18)
+    if asking_cancel:
+        f.add_note("Cancel order is on every card until the order is handed over. It asks for a reason, a quick choice or typed; Yes, cancel order stays disabled until there is one.")
+        f.add_note("POST /api/kitchen/orders/:id/cancel (Staff and Administrator): the order is cancelled and leaves this display and the counter's status board. Dishes still Pending go back into stock, logged under the person who cancelled with the reason “return”; a dish In Progress or Completed counts as used.")
+        f.add_note("The system can't send money back, so the order appears in Orders awaiting payment (19) as NEEDS ATTENTION with a note to refund the customer, until staff press Mark as sorted out. The reason shows in Transactions (23).")
+        return f
     f.add_note("Only paid orders appear (a counter order after staff confirm it, an online order after the payment arrives), oldest first, one card per order with one row per dish. Updates live (order:created, kitchen:task_updated).")
     f.add_note("On the kitchen's own device (opened once with ?printer=1, shown as “· Ticket printer on” after the order count) each order prints a kitchen ticket when it first appears: the order number and the dishes with special instructions, through print-service/. Each order prints once; a failed ticket shows “Couldn't print the kitchen ticket for ZK-XXXXXX …” and is tried again.")
     f.add_note("Each dish goes Pending → Start preparing → In Progress → Mark done. While an order is being prepared, a dish marked done drops off its card. TAKE OUT is emphasised because it needs packing; the ready time turns bold when late.")
@@ -793,6 +816,10 @@ def kitchen():
 
 def kitchen_empty():
     return kitchen_page(True)
+
+
+def kitchen_cancel():
+    return kitchen_page(False, asking_cancel=True)
 
 
 # --- 19 orders awaiting payment ----------------------------------------------------------
@@ -844,7 +871,7 @@ def orders_page(empty):
     f.add_note("Lists unpaid, not-cancelled orders plus orders flagged for attention (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago it was placed come from the order.")
     f.add_note("Live: the list reloads by itself (orders:changed, an event with no order data) whenever an order is placed, paid, edited or cancelled; an order that arrives while the page is open is marked NEW for a minute (first row).")
     f.add_note("Confirm order (“Checking stock…”) marks it paid, deducts stock and sends it to the kitchen in one step; if stock is short nothing changes and an error tells staff to change the order with the customer. Cancel asks first (second row).")
-    f.add_note("NEEDS ATTENTION (third row) marks an online payment staff must sort out, with the server's note on what happened and what to do: paid after the stock ran out or after the order was cancelled, a wrong amount, or paid twice. Once staff have refunded, substituted or collected the difference, Mark as sorted out takes it off the list (the note stays in the transaction history); an unpaid one also keeps Cancel and Confirm. PARTIAL: this only arises with online payment.")
+    f.add_note("NEEDS ATTENTION (third row) marks an online payment staff must sort out, with the server's note on what happened and what to do: paid after the stock ran out or after the order was cancelled, a wrong amount, paid twice, or cancelled by the kitchen after being paid (18c). Once staff have refunded, substituted or collected the difference, Mark as sorted out takes it off the list (the note stays in the transaction history); an unpaid one also keeps Cancel and Confirm. PARTIAL: this only arises with online payment.")
     return f
 
 
@@ -1115,7 +1142,7 @@ def status_board():
 
 SCREENS = [login, login_error, login_code, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_delete,
            inventory, adjust_stock, raw_materials, raw_adjust, raw_form, barcode_found, barcode_not_found, bulk_import,
-           bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, users, invite_user, confirm_change, edit_user,
+           bulk_import_result, analytics, kitchen, kitchen_empty, kitchen_cancel, orders, orders_empty, users, invite_user, confirm_change, edit_user,
            kiosk_qr, kiosk_qr_invalid, raw_nutrition, categories, transactions, status_board]
 
 SLUGS = {
@@ -1124,7 +1151,7 @@ SLUGS = {
     "13b": "adjust-stock", "14": "raw-materials", "14b": "raw-material-adjust", "14c": "raw-material-form",
     "14d": "raw-material-nutrition", "22": "categories", "23": "transactions", "24": "order-status-board",
     "15": "barcode-found", "15b": "barcode-not-found", "16": "bulk-import-preview", "16b": "bulk-import-result",
-    "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty", "19": "orders-awaiting-payment",
+    "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty", "18c": "kitchen-cancel-order", "19": "orders-awaiting-payment",
     "19b": "orders-awaiting-payment-empty", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",
     "20d": "edit-user",
     "21": "kiosk-qr", "21b": "kiosk-qr-invalid",

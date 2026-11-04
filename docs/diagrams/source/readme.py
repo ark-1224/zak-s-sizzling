@@ -51,6 +51,7 @@ WIREFRAME_DESC = {
     "17": "Analytics: period switch, KPI tiles (with average order value), sales chart, top products, profitability, inventory movement, exports.",
     "18": "Kitchen display: a READY card with Handed over, and order cards with per-dish Start preparing / Mark done.",
     "18b": "Kitchen display with no active orders.",
+    "18c": "Kitchen display: Cancel order asking for a reason.",
     "19": "Counter payment queue (updates live): a new order, a cancel confirmation and a stock-issue order.",
     "19b": "Counter payment queue with nothing waiting.",
     "20": "User accounts with role cards, role selectors, Edit, Test email and Suspend / Reactivate.",
