@@ -7,6 +7,7 @@ import { useCart } from "@/hooks/useCart";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { ensureKioskSession } from "@/lib/auth";
 import { rememberPrinterSetting } from "@/lib/receiptPrinter";
+import { QR_PH_ENABLED } from "@/lib/kioskPayments";
 import { apiFetch } from "@/lib/api-client";
 import { inPriceRange, PRICE_RANGES, type PriceRangeId } from "@/lib/priceRanges";
 import { WelcomeScreen } from "@/components/kiosk/WelcomeScreen";
@@ -61,7 +62,7 @@ export default function KioskHomePage() {
   useEffect(() => {
     let cancelled = false;
     apiFetch<PaymentOptions>("/api/payments/options")
-      .then((o) => !cancelled && setOnlinePayments(o.online))
+      .then((o) => !cancelled && setOnlinePayments(QR_PH_ENABLED && o.online))
       .catch(() => !cancelled && setOnlinePayments(false));
     return () => {
       cancelled = true;

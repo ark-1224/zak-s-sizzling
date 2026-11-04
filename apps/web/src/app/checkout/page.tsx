@@ -20,6 +20,7 @@ import { SizzlingPlate } from "@/components/kiosk/SizzlingPlate";
 import type { OrderDTO, PaymentMethod, PaymentOptions, PrepEstimate } from "@zaks/shared-types";
 import { aboutMinutes } from "@/lib/prepTime";
 import { resetKiosk } from "@/lib/resetKiosk";
+import { QR_PH_ENABLED } from "@/lib/kioskPayments";
 
 const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string }[] = [
   { id: "counter", label: "Pay at counter", icon: "cash", blurb: "Cash or card with staff" },
@@ -39,7 +40,7 @@ const METHODS: { id: PaymentMethod; label: string; icon: IconName; blurb: string
 // QR Ph (the one online method, through PayMongo) stays greyed out until the server
 // confirms online payment is set up
 // (GET /api/payments/options), so a customer can't pick a method that can't work
-// (UI review #2).
+// (UI review #2). It also stays greyed out while QR_PH_ENABLED is off.
 export default function CheckoutPage() {
   const { lines, total, clearCart, orderType, hydrated } = useCart();
   const { showToast } = useToast();
@@ -111,7 +112,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     let cancelled = false;
     apiFetch<PaymentOptions>("/api/payments/options")
-      .then((options) => !cancelled && setOnlineAvailable(options.online))
+      .then((options) => !cancelled && setOnlineAvailable(QR_PH_ENABLED && options.online))
       .catch(() => !cancelled && setOnlineAvailable(false));
     return () => {
       cancelled = true;
@@ -378,7 +379,7 @@ export default function CheckoutPage() {
                     <span className="min-w-0 flex-1">
                       <span className="block text-base leading-tight font-semibold text-ink">{m.label}</span>
                       <span className="block text-sm leading-snug text-ink-soft">
-                        {!unavailable ? m.blurb : onlineAvailable === null ? "Checking…" : "Not set up yet"}
+                        {!unavailable ? m.blurb : onlineAvailable === null ? "Checking…" : "Not available right now"}
                       </span>
                     </span>
                     <span
