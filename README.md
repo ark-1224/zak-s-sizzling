@@ -507,7 +507,10 @@ staff press **Refunded: mark as sorted out**, which records the payment as `refu
 again: mark as sorted out**, which keeps `paid`. A late or repeated PayMongo event can't undo a
 refund: a second payment is flagged again. An order's note keeps everything that needs
 attention, one item per line, so no amount owed is overwritten, and the button sends the note
-staff read: if it has changed, the API answers 409 and the queue shows the new note. Transactions shows the reason and
+staff read: if it has changed, the API answers 409 and the queue shows the new note. Only
+that button clears the flag: confirming an order at the counter leaves it. A payment and its
+flag are written in one transaction, so if the flag can't be written, PayMongo's next delivery
+does both. Transactions shows the reason and
 when it was refunded; cancelled orders don't count in sales.
 
 To test the real gateway path:

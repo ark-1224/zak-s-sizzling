@@ -802,6 +802,8 @@ Until now only an unpaid order could be cancelled. The kitchen display now has *
 
 An automated security review of this change found two weaknesses, corrected the same day (the fourteenth testing session). A new note could replace an unresolved one, hiding a refund still owed, so a note now keeps every item. Marking as sorted out recorded a refund whatever had happened, so it now applies only to the note staff read, and an order paid after being cancelled offers **Placed again** as well as **Refunded**. A correct payment arriving after a wrong one no longer clears the flag. Migration `20261104090122_longer_attention_note`; `apps/api/src/modules/payments/attentionNote.ts`.
 
+A further review found four rarer weaknesses, also corrected the same day (the fifteenth testing session): a payment and its flag are now written together, so a failure can't leave a paid order nobody knows about; an order is locked while its note changes; confirming at the counter no longer clears a flag, so staff always press Mark as sorted out; and a note about a particular payment names its PayMongo code, so two similar payments aren't taken for one. Test: `apps/api/test/integration/payment-flag-atomic.test.ts`.
+
 ### 13.1 Data dictionary
 
 When `orders` and `payments` are updated in section 3, make `orders.stock_issue_note` varchar(1000), and add:
