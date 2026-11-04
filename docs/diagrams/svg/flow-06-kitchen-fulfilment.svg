@@ -149,7 +149,7 @@
 <text x="30" y="2445" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Completed.</text>
 <text x="30" y="2462" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• At any step until Handed over, Staff or an Admin can press Cancel order and give a reason (18c): the order is</text>
 <text x="30" y="2479" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   cancelled and leaves the display and the board, dishes still Pending go back into stock, and it goes to the</text>
-<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   payment queue as NEEDS ATTENTION for a refund.</text>
+<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   payment queue as NEEDS ATTENTION until staff refund the customer and record it.</text>
 <text x="30" y="2513" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing</text>
 <text x="30" y="2530" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   fails the display says so and tries again with the next update or within 30 seconds.</text>
 </svg>

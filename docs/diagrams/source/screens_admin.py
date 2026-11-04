@@ -801,7 +801,7 @@ def kitchen_page(empty, asking_cancel=False):
     if asking_cancel:
         f.add_note("Cancel order is on every card until the order is handed over. It asks for a reason, a quick choice or typed; Yes, cancel order stays disabled until there is one.")
         f.add_note("POST /api/kitchen/orders/:id/cancel (Staff and Administrator): the order is cancelled and leaves this display and the counter's status board. Dishes still Pending go back into stock, logged under the person who cancelled with the reason “return”; a dish In Progress or Completed counts as used.")
-        f.add_note("The system can't send money back, so the order appears in Orders awaiting payment (19) as NEEDS ATTENTION with a note to refund the customer, until staff press Mark as sorted out. The reason shows in Transactions (23).")
+        f.add_note("The system can't send money back, so the order appears in Orders awaiting payment (19) as NEEDS ATTENTION with a note to refund the customer, until staff refund it and press Refunded: mark as sorted out, which records the payment as refunded. The reason and refund time show in Transactions (23).")
         return f
     f.add_note("Only paid orders appear (a counter order after staff confirm it, an online order after the payment arrives), oldest first, one card per order with one row per dish. Updates live (order:created, kitchen:task_updated).")
     f.add_note("On the kitchen's own device (opened once with ?printer=1, shown as “· Ticket printer on” after the order count) each order prints a kitchen ticket when it first appears: the order number and the dishes with special instructions, through print-service/. Each order prints once; a failed ticket shows “Couldn't print the kitchen ticket for ZK-XXXXXX …” and is tried again.")
@@ -871,7 +871,7 @@ def orders_page(empty):
     f.add_note("Lists unpaid, not-cancelled orders plus orders flagged for attention (newest first, up to 50). Search ignores spaces and dashes. The order type, payment method and how long ago it was placed come from the order.")
     f.add_note("Live: the list reloads by itself (orders:changed, an event with no order data) whenever an order is placed, paid, edited or cancelled; an order that arrives while the page is open is marked NEW for a minute (first row).")
     f.add_note("Confirm order (“Checking stock…”) marks it paid, deducts stock and sends it to the kitchen in one step; if stock is short nothing changes and an error tells staff to change the order with the customer. Cancel asks first (second row).")
-    f.add_note("NEEDS ATTENTION (third row) marks an online payment staff must sort out, with the server's note on what happened and what to do: paid after the stock ran out or after the order was cancelled, a wrong amount, paid twice, or cancelled by the kitchen after being paid (18c). Once staff have refunded, substituted or collected the difference, Mark as sorted out takes it off the list (the note stays in the transaction history); an unpaid one also keeps Cancel and Confirm. PARTIAL: this only arises with online payment.")
+    f.add_note("NEEDS ATTENTION (third row) marks an online payment staff must sort out, with the server's note on what happened and what to do: paid after the stock ran out or after the order was cancelled, a wrong amount, paid twice, or cancelled by the kitchen after being paid (18c). Once staff have refunded, substituted or collected the difference, Mark as sorted out takes it off the list (the note stays in the transaction history); on a cancelled, paid order the button reads “Refunded: mark as sorted out” and records the payment as refunded; an unpaid one also keeps Cancel and Confirm. PARTIAL: this only arises with online payment.")
     return f
 
 
@@ -1106,7 +1106,7 @@ def transactions():
         if i < 3:
             f.line(CX, y, CX + CW, y, stroke=LINE_SOFT)
     f.add_note("Admin only. GET /api/orders/history: the orders in the date range (Manila days, today by default), newest first, 25 a page (Previous / Next with “Page 1 of N”). Filters: status (Unpaid, Confirmed, Preparing, Ready, Handed over, Cancelled), payment method, paid or unpaid, and order number (ignores spaces and dashes).")
-    f.add_note("The totals cover every matching order: how many, sales from the paid ones (confirmed to handed over, as in Analytics) and their average order value. Clicking a row opens its items, instructions, timeline (placed, paid, preparing, ready, handed over or cancelled) and the PayMongo reference for QR Ph.")
+    f.add_note("The totals cover every matching order: how many, sales from the paid ones (confirmed to handed over, as in Analytics) and their average order value. Clicking a row opens its items, instructions, timeline (placed, paid, preparing, ready, handed over or cancelled, refunded), the reason if the kitchen cancelled it, and the PayMongo reference for QR Ph.")
     f.add_note("Reloads by itself when an order changes (orders:changed). Empty: “No orders match these filters.”")
     return f
 

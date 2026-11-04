@@ -794,6 +794,25 @@ The admin side signed staff out after about 15 minutes, whether or not they were
 
 If the manuscript states how long a staff session lasts, it should say: *signed out after six hours without use*.
 
+## 13. Cancelling a paid order from the kitchen (4 November 2026)
+
+Until now only an unpaid order could be cancelled. The kitchen display now has **Cancel order** on every order until it is handed over, for Staff and the Administrator, and it asks for a reason. Dishes not yet started go back into stock (logged under the person who cancelled); a dish started or done counts as used. The order leaves the kitchen display and the status board and no longer counts toward preparation-time estimates. The system cannot send money back, so the order goes to the payment queue as **NEEDS ATTENTION** until staff have refunded the customer by hand and press **Refunded: mark as sorted out**, which records the payment as refunded. Transactions shows the reason, the refund time, and "refunded" in place of "paid"; cancelled orders are not counted in sales.
+
+**Evidence:** `apps/api/src/modules/kitchen/service.ts` (`cancelKitchenOrder`), `apps/api/src/modules/inventory/fulfillment.ts` (`returnStockForLines`), `apps/api/src/modules/orders/service.ts` (`markAttentionSortedOut`), `apps/web/src/app/kitchen/page.tsx`, migrations `20261104075840_order_cancel_reason` and `20261104081519_payment_refunded_at`. Tests: `apps/api/test/integration/kitchen-cancel.test.ts`, `qrph-payment.test.ts`, `online-payment.test.ts` (the thirteenth testing session). New wireframe 18c; wireframes 18, 19 and 23 and flow 06 are updated.
+
+### 13.1 Data dictionary
+
+When `orders` and `payments` are updated in section 3, add:
+
+| Table | Column | Type | Description |
+|---|---|---|---|
+| orders | cancel_reason | varchar(200) | Why the kitchen cancelled a paid order; empty otherwise |
+| payments | refunded_at | timestamp | When staff marked a cancelled, paid order as sorted out, having refunded the customer; empty otherwise |
+
+### 13.2 Manuscript text
+
+If the manuscript says a paid order cannot be cancelled, or describes cancellation as only for unpaid orders, it should add: *a paid order can be cancelled from the kitchen display before it is handed over, with a recorded reason; the refund itself is made by staff outside the system and then recorded.*
+
 ## Needs decision
 
 The manuscript claims each item below, but the code does not support it (or supports it only in part). The adviser decisions above did not cover them, so they are listed here and not rewritten.

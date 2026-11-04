@@ -494,7 +494,20 @@ after a new code is shown or the order switches to the counter, paid as well). S
 **Mark as sorted out** (`POST /api/orders/:id/sorted-out`) once they have refunded,
 substituted or collected the difference; the note stays in the transaction history. While
 a QR code is out for an order, its items can't be changed, so the code always matches the
-total. To test the real gateway path:
+total.
+
+**Cancelling from the kitchen.** Until an order is handed over, Staff or an Administrator
+can press **Cancel order** on its card on the kitchen display and give a reason
+(`POST /api/kitchen/orders/:id/cancel`). Dishes still Pending go back into stock, logged
+under that person with the reason `return`; a dish started or done counts as used. The
+order leaves the display and the status board, and goes to the payment queue as NEEDS
+ATTENTION, since the system can't send money back. Once the customer has been refunded,
+staff press **Refunded: mark as sorted out**, which records the payment as `refunded`
+(any cancelled, paid order; other flagged orders keep `paid`). A late or repeated PayMongo
+event can't undo that: a second payment is flagged again. Transactions shows the reason and
+when it was refunded; cancelled orders don't count in sales.
+
+To test the real gateway path:
 
 1. Create a PayMongo account and copy your **test** secret key (`sk_test_…`) from
    Developers → API keys. The public key isn't used.
