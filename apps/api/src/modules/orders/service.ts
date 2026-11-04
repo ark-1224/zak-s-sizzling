@@ -335,23 +335,41 @@ export async function cancelOrder(id: string): Promise<OrderDTO> {
 
 /**
  * Staff have dealt with an order that needed attention (refunded, substituted, collected
- * the difference): it leaves the payment queue. The note stays, so the transaction
- * history still shows what happened. For a cancelled order that was paid, sorting it out
- * means the customer was refunded, so its payment is recorded as refunded; any other
- * order's payment stays as it is. One conditional update, so a second click says so.
+ * the difference): it leaves the payment queue, and the note stays as history. It applies
+ * only to the note they read, so a click made just as something new arrived changes
+ * nothing and says so. A cancelled order that was paid must say what became of the money:
+ * refunded, which records the payment as refunded, or, if it was paid after being cancelled,
+ * placed again, which leaves the payment as it is. Any other order's payment stays as it is.
  */
-export async function markAttentionSortedOut(id: string): Promise<OrderDTO> {
+export async function markAttentionSortedOut(
+  id: string,
+  input: { note: string | null; resolution?: "refunded" | "placed_again" }
+): Promise<OrderDTO> {
   await prisma.$transaction(async (tx) => {
-    const result = await tx.order.updateMany({ where: { id, stockIssue: true }, data: { stockIssue: false } });
-    if (result.count === 0) {
-      const order = await tx.order.findUnique({ where: { id }, select: { orderNumber: true } });
-      if (!order) throw new HttpError(404, "Order not found");
-      throw new HttpError(409, `${order.orderNumber} doesn't need attention any more`);
-    }
-    await tx.payment.updateMany({
-      where: { orderId: id, status: "paid", order: { status: "cancelled" } },
-      data: { status: "refunded", refundedAt: new Date() },
+    const order = await tx.order.findUnique({
+      where: { id },
+      select: { orderNumber: true, status: true, stockIssue: true, cancelReason: true, payment: { select: { status: true } } },
     });
+    if (!order) throw new HttpError(404, "Order not found");
+    if (!order.stockIssue) throw new HttpError(409, `${order.orderNumber} doesn't need attention any more`);
+
+    const moneyToSettle = order.status === "cancelled" && order.payment?.status === "paid";
+    if (moneyToSettle && !input.resolution) throw new HttpError(400, `Say whether ${order.orderNumber} was refunded`);
+    // The kitchen cancels an order that was being made, so there's nothing to place again.
+    if (input.resolution === "placed_again" && (!moneyToSettle || order.cancelReason)) {
+      throw new HttpError(409, `${order.orderNumber} can't be marked as placed again`);
+    }
+
+    const placedAgain = input.resolution === "placed_again";
+    const result = await tx.order.updateMany({
+      where: { id, stockIssue: true, stockIssueNote: input.note },
+      data: { stockIssue: false, ...(placedAgain ? { stockIssueNote: `${input.note}\nPlaced again instead of refunded.` } : {}) },
+    });
+    if (result.count === 0) throw new HttpError(409, `${order.orderNumber} has a new note. Read it, then try again`);
+
+    if (moneyToSettle && input.resolution === "refunded") {
+      await tx.payment.updateMany({ where: { orderId: id, status: "paid" }, data: { status: "refunded", refundedAt: new Date() } });
+    }
   });
   emitOrdersChanged();
   return (await getOrderById(id))!;

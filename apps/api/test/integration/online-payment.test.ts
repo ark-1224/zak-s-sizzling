@@ -205,6 +205,12 @@ describe("a paid online order", () => {
   });
 });
 
+/** Marks an order as sorted out, having read the note it has now. */
+const sortOut = async (orderId: string, resolution?: string) => {
+  const { stockIssueNote: note } = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  return request(app).post(`/api/orders/${orderId}/sorted-out`).set("Authorization", `Bearer ${staff}`).send({ note, resolution });
+};
+
 describe("a payment event that doesn't say the amount", () => {
   it("isn't confirmed, and the order is marked for staff to check the amount", async () => {
     const order = await placeQrphOrder(1);
@@ -254,7 +260,7 @@ describe("an online order paid after stock ran out", () => {
   });
 
   it("keeps the payment as paid when sorted out, since the order wasn't cancelled", async () => {
-    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set("Authorization", `Bearer ${staff}`);
+    const res = await sortOut(order.id);
 
     expect(res.body).toMatchObject({ stockIssue: false, payment: { status: "paid" } });
   });
@@ -291,7 +297,7 @@ describe("an online order cancelled before the payment arrived", () => {
   });
 
   it("leaves the queue once staff mark it sorted out, keeping the note for the history", async () => {
-    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set("Authorization", `Bearer ${staff}`);
+    const res = await sortOut(order.id, "refunded");
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ stockIssue: false, stockIssueNote: expect.stringMatching(/Paid online after this order was cancelled/) });
@@ -300,10 +306,26 @@ describe("an online order cancelled before the payment arrived", () => {
   });
 
   it("says so when it is marked sorted out a second time", async () => {
-    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set("Authorization", `Bearer ${staff}`);
+    const res = await sortOut(order.id, "refunded");
 
     expect(res.status).toBe(409);
     expect(res.body.error).toMatch(/doesn't need attention any more/);
+  });
+});
+
+describe("an online order paid after being cancelled, and placed again instead of refunded", () => {
+  it("keeps the payment as paid, and the note says what happened", async () => {
+    await prisma.inventory.update({ where: { productId: soda.id }, data: { stockQty: 5 } });
+    const order = await placeQrphOrder(1);
+    await request(app).post(`/api/orders/${order.id}/cancel`).set("Authorization", `Bearer ${staff}`);
+    const body = paidInFull(order);
+    await postWebhook(body, sign(body));
+
+    const res = await sortOut(order.id, "placed_again");
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: "cancelled", stockIssue: false, payment: { status: "paid" } });
+    expect(res.body.stockIssueNote).toMatch(/Placed again instead of refunded/);
   });
 });
 

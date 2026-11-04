@@ -5,6 +5,7 @@ import { HttpError } from "../../middleware/errorHandler";
 import { refreshAvailability, returnStockForLines } from "../inventory/fulfillment";
 import { setEstimateOnReachingKitchen } from "../orders/prepTime";
 import { BOARD_WINDOW_MS } from "../orders/service";
+import { addAttentionNote } from "../payments/attentionNote";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
 
 type TaskWithRelations = Prisma.KitchenTaskGetPayload<{
@@ -148,11 +149,12 @@ export async function cancelKitchenOrder(orderId: string, reason: string, userId
   const touched = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
-      select: { orderNumber: true, status: true, totalAmount: true, payment: { select: { method: true } } },
+      select: { orderNumber: true, status: true, totalAmount: true, stockIssue: true, stockIssueNote: true, payment: { select: { method: true } } },
     });
     if (!order) throw new HttpError(404, "Order not found");
 
     const paidBy = order.payment?.method === "counter" ? "paid at the counter" : "paid online";
+    const refundNote = `Cancelled in the kitchen: ${reason}. Refund the customer ₱${Number(order.totalAmount).toFixed(2)} (${paidBy}).`;
     const result = await tx.order.updateMany({
       where: { id: orderId, status: { in: ["confirmed", "preparing", "ready"] } },
       data: {
@@ -160,7 +162,7 @@ export async function cancelKitchenOrder(orderId: string, reason: string, userId
         cancelledAt: new Date(),
         cancelReason: reason,
         stockIssue: true,
-        stockIssueNote: `Cancelled in the kitchen: ${reason}. Refund the customer ₱${Number(order.totalAmount).toFixed(2)} (${paidBy}).`,
+        stockIssueNote: addAttentionNote(order.stockIssueNote, order.stockIssue, refundNote),
       },
     });
     if (result.count === 0) {

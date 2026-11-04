@@ -7,7 +7,7 @@ import { HttpError } from "../../middleware/errorHandler";
 import { prisma } from "../../lib/prisma";
 import { parseId } from "../../lib/ids";
 import { emitOrdersChanged } from "../../websocket";
-import { createOrderSchema, estimateOrderSchema, transactionQuerySchema } from "./schema";
+import { createOrderSchema, estimateOrderSchema, sortedOutSchema, transactionQuerySchema } from "./schema";
 import { estimateForCart } from "./prepTime";
 import {
   cancelOrder,
@@ -162,7 +162,8 @@ ordersRouter.post("/:id/cancel", authenticate, authorize("admin", "staff"), asyn
 // Staff have sorted out an order marked NEEDS ATTENTION; it leaves the payment queue.
 ordersRouter.post("/:id/sorted-out", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    res.json(await markAttentionSortedOut(parseId(req.params.id, ORDER_NOT_FOUND)));
+    const orderId = parseId(req.params.id, ORDER_NOT_FOUND);
+    res.json(await markAttentionSortedOut(orderId, sortedOutSchema.parse(req.body)));
   } catch (err) {
     next(err);
   }

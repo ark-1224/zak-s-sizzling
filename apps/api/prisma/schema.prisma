@@ -256,7 +256,7 @@ model Order {
   // was cancelled, the amount wasn't the total, or it was paid twice. The name is the
   // first of these; screens show it as NEEDS ATTENTION.
   stockIssue           Boolean               @default(false) @map("stock_issue")
-  stockIssueNote       String?               @map("stock_issue_note") @db.VarChar(300)
+  stockIssueNote       String?               @map("stock_issue_note") @db.VarChar(1000)
   // Estimated preparation time (orders/prepTime.ts): worked out when the order is placed,
   // and again when it reaches the kitchen, which also sets when it should be ready.
   estimatedPrepMinutes Int?                  @map("estimated_prep_minutes")

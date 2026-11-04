@@ -140,15 +140,21 @@ export default function StaffOrdersPage() {
     }
   }
 
-  async function handleSortedOut(order: OrderDTO) {
+  async function handleSortedOut(order: OrderDTO, resolution?: "refunded" | "placed_again") {
     setSortingOutId(order.id);
     try {
-      const saved = await apiFetch<OrderDTO>(`/api/orders/${order.id}/sorted-out`, { method: "POST", auth: "staff" });
+      const saved = await apiFetch<OrderDTO>(`/api/orders/${order.id}/sorted-out`, {
+        method: "POST",
+        auth: "staff",
+        // The note on screen, so a click made just as something new arrived is refused.
+        body: JSON.stringify({ note: order.stockIssueNote, resolution }),
+      });
       const refunded = saved.payment?.status === "refunded" ? " Its payment is recorded as refunded." : "";
       setMessage({ text: `${order.orderNumber} was marked as sorted out.${refunded} Its note stays in the transaction history.`, error: false });
       await load();
     } catch (err) {
-      // A 409 means someone else marked it a moment ago; the refreshed list shows it gone.
+      // A 409 means someone else marked it a moment ago, or a new note arrived; the
+      // refreshed list shows which.
       const text = err instanceof ApiError ? err.message : "Could not mark the order as sorted out.";
       setMessage({ text: `${order.orderNumber}: ${text}`, error: true });
       await load();
@@ -228,6 +234,8 @@ export default function StaffOrdersPage() {
                   // Still to be confirmed and paid at the counter, even when it needs attention
                   // (a wrong amount paid online: collect the difference, or refund and cancel).
                   const awaitingPayment = order.payment?.status !== "paid" && order.status !== "cancelled";
+                  // A cancelled order that was paid: staff say what became of the money.
+                  const moneyToSettle = order.status === "cancelled" && order.payment?.status === "paid";
                   return (
                     <li key={order.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
@@ -256,21 +264,47 @@ export default function StaffOrdersPage() {
                         </div>
                         {order.stockIssue && (
                           <div className="mt-2 rounded-[5px] border border-adm-bad bg-adm-bad-soft p-2.5 text-base text-adm-ink md:text-sm">
-                            <p>{order.stockIssueNote ?? "Something went wrong with this order's online payment. Check it with the customer."}</p>
+                            <p className="whitespace-pre-line">
+                              {order.stockIssueNote ?? "Something went wrong with this order's online payment. Check it with the customer."}
+                            </p>
                             {/* Once staff have refunded, substituted or collected the difference. */}
-                            <AdmButton
-                              variant="secondary"
-                              size="compact"
-                              className="mt-2 bg-adm-surface"
-                              disabled={sortingOutId === order.id}
-                              onClick={() => handleSortedOut(order)}
-                            >
-                              {sortingOutId === order.id
-                                ? "Saving…"
-                                : order.status === "cancelled" && order.payment?.status === "paid"
-                                  ? "Refunded: mark as sorted out"
-                                  : "Mark as sorted out"}
-                            </AdmButton>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {moneyToSettle ? (
+                                <>
+                                  <AdmButton
+                                    variant="secondary"
+                                    size="compact"
+                                    className="bg-adm-surface"
+                                    disabled={sortingOutId === order.id}
+                                    onClick={() => handleSortedOut(order, "refunded")}
+                                  >
+                                    {sortingOutId === order.id ? "Saving…" : "Refunded: mark as sorted out"}
+                                  </AdmButton>
+                                  {/* Paid after being cancelled: the kitchen's own cancels can't be placed again. */}
+                                  {!order.cancelReason && (
+                                    <AdmButton
+                                      variant="secondary"
+                                      size="compact"
+                                      className="bg-adm-surface"
+                                      disabled={sortingOutId === order.id}
+                                      onClick={() => handleSortedOut(order, "placed_again")}
+                                    >
+                                      Placed again: mark as sorted out
+                                    </AdmButton>
+                                  )}
+                                </>
+                              ) : (
+                                <AdmButton
+                                  variant="secondary"
+                                  size="compact"
+                                  className="bg-adm-surface"
+                                  disabled={sortingOutId === order.id}
+                                  onClick={() => handleSortedOut(order)}
+                                >
+                                  {sortingOutId === order.id ? "Saving…" : "Mark as sorted out"}
+                                </AdmButton>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>

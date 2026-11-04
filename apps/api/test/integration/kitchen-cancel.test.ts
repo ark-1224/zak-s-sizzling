@@ -48,6 +48,11 @@ async function paidOrder(items: { productId: string; qty: number }[]) {
 const cancel = (orderId: string, reason: unknown = "Customer left") =>
   request(app).post(`/api/kitchen/orders/${orderId}/cancel`).set(auth(staff)).send({ reason });
 const setTask = (taskId: string, status: string) => request(app).patch(`/api/kitchen/tasks/${taskId}`).set(auth(staff)).send({ status });
+/** Marks an order as sorted out, having read the note it has now. */
+const sortOut = async (orderId: string, resolution: string | undefined = "refunded") => {
+  const { stockIssueNote: note } = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  return request(app).post(`/api/orders/${orderId}/sorted-out`).set(auth(staff)).send({ note, resolution });
+};
 const kitchenQueue = async () => (await request(app).get("/api/kitchen/tasks").set(auth(staff))).body as { orderId: string }[];
 
 describe("cancelling an order nobody has started", () => {
@@ -200,11 +205,47 @@ describe("what can't be cancelled from the kitchen", () => {
 });
 
 describe("after the refund", () => {
+  it("must say the customer was refunded, and can't be marked as placed again", async () => {
+    const order = await paidOrder([{ productId: water.id, qty: 1 }]);
+    await cancel(order.id);
+    const { stockIssueNote: note } = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
+    const post = (body: object) => request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff)).send(body);
+
+    expect((await post({ note })).status).toBe(400);
+    const placedAgain = await post({ note, resolution: "placed_again" });
+    expect(placedAgain.status).toBe(409);
+    expect(placedAgain.body.error).toMatch(/can't be marked as placed again/);
+
+    const saved = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(saved.stockIssue).toBe(true);
+    expect(saved.payment?.status).toBe("paid");
+  });
+
+  it("refuses a click on a note that has changed, and records nothing", async () => {
+    const order = await paidOrder([{ productId: water.id, qty: 1 }]);
+    await cancel(order.id);
+
+    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff)).send({ note: "An older note", resolution: "refunded" });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toMatch(/has a new note/);
+    const saved = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, include: { payment: true } });
+    expect(saved.stockIssue).toBe(true);
+    expect(saved.payment?.status).toBe("paid");
+  });
+
+  it("needs to say which note it read", async () => {
+    const order = await paidOrder([{ productId: water.id, qty: 1 }]);
+    await cancel(order.id);
+
+    expect((await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff)).send({ resolution: "refunded" })).status).toBe(400);
+  });
+
   it("leaves the payment queue once marked as sorted out, keeping the reason", async () => {
     const order = await paidOrder([{ productId: water.id, qty: 1 }]);
     await cancel(order.id);
 
-    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff));
+    const res = await sortOut(order.id);
 
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ status: "cancelled", stockIssue: false, cancelReason: "Customer left" });
@@ -217,7 +258,7 @@ describe("after the refund", () => {
     await cancel(order.id);
     expect((await prisma.payment.findUniqueOrThrow({ where: { orderId: order.id } })).status).toBe("paid"); // not refunded yet
 
-    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff));
+    const res = await sortOut(order.id);
 
     expect(res.body.payment.status).toBe("refunded");
     const payment = await prisma.payment.findUniqueOrThrow({ where: { orderId: order.id } });

@@ -37,6 +37,14 @@ export const transactionQuerySchema = z
   })
   .refine((v) => !v.from || !v.to || v.from <= v.to, { message: "The start date must be on or before the end date", path: ["from"] });
 
+// Staff mark an order as sorted out. `note` is the note they read: if it has changed since,
+// something new needs attention and they are asked to read it. `resolution` says what became
+// of the money on a cancelled order that was paid.
+export const sortedOutSchema = z.object({
+  note: z.string().max(2000).nullable(),
+  resolution: z.enum(["refunded", "placed_again"]).optional(),
+});
+
 // The cart shown at checkout, for its estimated preparation time (prepTime.ts).
 export const estimateOrderSchema = z.object({
   items: z

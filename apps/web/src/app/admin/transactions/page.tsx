@@ -259,7 +259,7 @@ function TransactionRow({ order }: { order: TransactionDTO }) {
             )}
             {/* Once marked as sorted out, the note stays as history. */}
             {order.stockIssueNote && (
-              <p className={`mt-2 text-sm ${order.stockIssue ? "text-adm-bad" : "text-adm-ink-3"}`}>
+              <p className={`mt-2 text-sm whitespace-pre-line ${order.stockIssue ? "text-adm-bad" : "text-adm-ink-3"}`}>
                 {order.stockIssueNote}
                 {!order.stockIssue && " (Sorted out.)"}
               </p>

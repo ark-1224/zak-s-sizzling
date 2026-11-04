@@ -22,6 +22,8 @@ let otherKiosk: string;
 let payer: string;
 /** A third kiosk, for the refund tests. */
 let refunder: string;
+/** A fourth, as each session may start only 10 payments. */
+let refunder2: string;
 let intentCount = 0;
 /** What PayMongo reports for each payment intent: its status and amount in centavos. */
 const intents = new Map<string, { status: string; amount: number }>();
@@ -64,6 +66,9 @@ beforeAll(async () => {
   otherKiosk = await kioskToken();
   payer = await kioskToken();
   refunder = await kioskToken();
+  refunder2 = await kioskToken();
+  // Enough for every paid order in this file.
+  await prisma.inventory.update({ where: { productId: juice.id }, data: { stockQty: 50 } });
 });
 
 afterAll(() => {
@@ -287,6 +292,20 @@ describe("the payment.paid webhook", () => {
     expect((await orderOf(order.id)).stockIssue).toBe(true);
   });
 
+  it("keeps the flag when the right amount arrives after a wrong one, since that money is still owed", async () => {
+    const order = await placeOrder(1, payer);
+    await startQr(order.id, payer);
+    const reference = (await paymentOf(order.id)).reference;
+    await postEvent({ payment_intent_id: reference, amount: 100, metadata: { order_id: order.id } });
+
+    await postEvent({ payment_intent_id: reference, amount: 5500, metadata: { order_id: order.id } });
+
+    const saved = await orderOf(order.id);
+    expect((await paymentOf(order.id)).status).toBe("paid");
+    expect(saved).toMatchObject({ status: "confirmed", stockIssue: true });
+    expect(saved.stockIssueNote).toMatch(/₱1\.00 was paid online/);
+  });
+
   it("doesn't flag a repeated delivery of the event that paid the order", async () => {
     const order = await placeOrder(1, payer);
     await startQr(order.id, payer);
@@ -309,7 +328,8 @@ describe("the payment.paid webhook", () => {
       const paidEvent = { payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } };
       await postEvent(paidEvent);
       await request(app).post(`/api/kitchen/orders/${order.id}/cancel`).set(auth(staff)).send({ reason: "Customer left" });
-      await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff));
+      const { stockIssueNote: note } = await orderOf(order.id);
+      await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff)).send({ note, resolution: "refunded" });
       expect((await paymentOf(order.id)).status).toBe("refunded");
       return { order, firstCode, paidEvent };
     }
@@ -331,7 +351,44 @@ describe("the payment.paid webhook", () => {
       await postEvent({ payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } });
 
       expect((await paymentOf(order.id)).status).toBe("refunded");
-      expect((await orderOf(order.id)).stockIssueNote).toMatch(/second payment of ₱55\.00/);
+      const saved = await orderOf(order.id);
+      expect(saved.stockIssueNote).toMatch(/second payment of ₱55\.00/);
+      // The first refund, already made, is kept and marked as done.
+      expect(saved.stockIssueNote).toMatch(/Cancelled in the kitchen: Customer left\..*\(Sorted out\.\)/);
+    });
+
+    it("keeps both refunds on the note when a second payment arrives before the first is made", async () => {
+      const staff = await loginAs("staff");
+      const order = await placeOrder(1, refunder);
+      await startQr(order.id, refunder);
+      const firstCode = (await paymentOf(order.id)).reference;
+      await startQr(order.id, refunder);
+      await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } });
+      await request(app).post(`/api/kitchen/orders/${order.id}/cancel`).set(auth(staff)).send({ reason: "Customer left" });
+
+      const second = { payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } };
+      await postEvent(second);
+      await postEvent(second); // PayMongo repeats it: still listed once
+
+      const { stockIssueNote: note } = await orderOf(order.id);
+      expect(note).toMatch(/Cancelled in the kitchen: Customer left\. Refund the customer ₱55\.00/);
+      expect(note!.match(/second payment of ₱55\.00/g)).toHaveLength(1);
+    });
+
+    it("keeps its note when the kitchen cancels an order already flagged for a second payment", async () => {
+      const staff = await loginAs("staff");
+      const order = await placeOrder(1, refunder2);
+      await startQr(order.id, refunder2);
+      const firstCode = (await paymentOf(order.id)).reference;
+      await startQr(order.id, refunder2);
+      await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } });
+      await postEvent({ payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } });
+
+      await request(app).post(`/api/kitchen/orders/${order.id}/cancel`).set(auth(staff)).send({ reason: "Customer left" });
+
+      const { stockIssueNote: note } = await orderOf(order.id);
+      expect(note).toMatch(/second payment of ₱55\.00/);
+      expect(note).toMatch(/Cancelled in the kitchen: Customer left/);
     });
   });
 });

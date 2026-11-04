@@ -14,6 +14,7 @@ import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
 import { deductStockForOrder, refreshAvailability, StockShortageError } from "../inventory/fulfillment";
 import { createKitchenTasksForOrder } from "../kitchen/service";
+import { addAttentionNote } from "./attentionNote";
 
 async function loadPayableOrder(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -34,11 +35,13 @@ class OrderCancelledError extends Error {}
 /**
  * Confirms the order only if it is still pending. Cancelling is one conditional update
  * too (orders/service.ts), so whichever commits first wins and the other is refused.
+ * Staff confirming at the counter have read the order's note, so that settles it (the note
+ * stays as history); a payment arriving online settles nothing staff were told about.
  */
-async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string) {
+async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string, settlesNote: boolean) {
   const result = await tx.order.updateMany({
     where: { id: orderId, status: "pending" },
-    data: { status: "confirmed", stockIssue: false, stockIssueNote: null },
+    data: { status: "confirmed", ...(settlesNote ? { stockIssue: false } : {}) },
   });
   if (result.count === 0) throw new OrderCancelledError();
 }
@@ -49,16 +52,23 @@ async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string
  * difference, offer a substitute), since the screens show it as written.
  */
 async function flagForStaff(order: { id: string; orderNumber: string }, note: string) {
-  const text = note.slice(0, 300);
-  // Only when the note is new: a repeated delivery of the same event leaves the order,
-  // and every open screen, alone.
-  const { count } = await prisma.order.updateMany({
-    where: { id: order.id, OR: [{ stockIssue: false }, { stockIssueNote: null }, { stockIssueNote: { not: text } }] },
-    data: { stockIssue: true, stockIssueNote: text },
-  });
-  if (count === 0) return;
-  emitOrdersChanged();
-  console.warn(`[payments] order ${order.orderNumber}: ${note}`);
+  // Added only if conditional on the note it read, so two events at once both get kept;
+  // failing all three tries answers an error, and PayMongo delivers the event again.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const current = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { stockIssue: true, stockIssueNote: true } });
+    // A repeated delivery of the same event leaves the order, and every open screen, alone.
+    if (current.stockIssueNote?.includes(note)) return;
+    const { count } = await prisma.order.updateMany({
+      where: { id: order.id, stockIssueNote: current.stockIssueNote },
+      data: { stockIssue: true, stockIssueNote: addAttentionNote(current.stockIssueNote, current.stockIssue, note) },
+    });
+    if (count > 0) {
+      emitOrdersChanged();
+      console.warn(`[payments] order ${order.orderNumber}: ${note}`);
+      return;
+    }
+  }
+  throw new Error(`Could not add a note to order ${order.orderNumber}`);
 }
 
 const pesos = (centavos: number) => `₱${(centavos / 100).toFixed(2)}`;
@@ -205,7 +215,7 @@ export async function confirmCounterPayment(orderId: string) {
       if (!applied) throw new HttpError(409, "Order is already paid");
 
       const touched = await deductStockForOrder(tx, order.id);
-      await confirmPendingOrder(tx, order.id);
+      await confirmPendingOrder(tx, order.id, true);
       return touched;
     })
     .catch((err) => {
@@ -247,7 +257,7 @@ async function recordOnlinePayment(
       if (!applied) return null; // already processed (gateway retry / duplicate delivery)
 
       const touched = await deductStockForOrder(tx, order.id);
-      await confirmPendingOrder(tx, order.id);
+      await confirmPendingOrder(tx, order.id, false);
       return touched;
     });
     if (!touched) return;
@@ -311,7 +321,8 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     const sameCode = order.payment.method === "qrph" && order.payment.reference === event.paymentIntentId;
     if (event.paymentIntentId && !sameCode) {
       const amount = event.amountCentavos === null ? "A second payment" : `A second payment of ${pesos(event.amountCentavos)}`;
-      await flagForStaff(order, `${amount} arrived online after this order was already paid. Refund the customer.`);
+      // The code names this payment, so another code's payment isn't taken for a repeat.
+      await flagForStaff(order, `${amount} arrived online after this order was already paid (PayMongo ${event.paymentIntentId}). Refund the customer.`);
     }
     return;
   }
