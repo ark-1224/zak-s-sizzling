@@ -143,8 +143,9 @@ export default function StaffOrdersPage() {
   async function handleSortedOut(order: OrderDTO) {
     setSortingOutId(order.id);
     try {
-      await apiFetch(`/api/orders/${order.id}/sorted-out`, { method: "POST", auth: "staff" });
-      setMessage({ text: `${order.orderNumber} was marked as sorted out. Its note stays in the transaction history.`, error: false });
+      const saved = await apiFetch<OrderDTO>(`/api/orders/${order.id}/sorted-out`, { method: "POST", auth: "staff" });
+      const refunded = saved.payment?.status === "refunded" ? " Its payment is recorded as refunded." : "";
+      setMessage({ text: `${order.orderNumber} was marked as sorted out.${refunded} Its note stays in the transaction history.`, error: false });
       await load();
     } catch (err) {
       // A 409 means someone else marked it a moment ago; the refreshed list shows it gone.
@@ -244,7 +245,8 @@ export default function StaffOrdersPage() {
                         <div className="mt-1 text-sm text-adm-ink-3">
                           {order.orderType === "take_out" ? "Take out" : "Dine in"} · <PaymentMethodText order={order} /> · ₱
                           {order.totalAmount.toFixed(2)}
-                          {order.payment?.status === "paid" && " · paid"} ·{" "}
+                          {order.payment?.status === "paid" && " · paid"}
+                          {order.payment?.status === "refunded" && " · refunded"} ·{" "}
                           <time dateTime={order.createdAt} title={formatDateTime(order.createdAt)}>
                             placed {timeAgo(order.createdAt, now)}
                           </time>
@@ -263,7 +265,11 @@ export default function StaffOrdersPage() {
                               disabled={sortingOutId === order.id}
                               onClick={() => handleSortedOut(order)}
                             >
-                              {sortingOutId === order.id ? "Saving…" : "Mark as sorted out"}
+                              {sortingOutId === order.id
+                                ? "Saving…"
+                                : order.status === "cancelled" && order.payment?.status === "paid"
+                                  ? "Refunded: mark as sorted out"
+                                  : "Mark as sorted out"}
                             </AdmButton>
                           </div>
                         )}

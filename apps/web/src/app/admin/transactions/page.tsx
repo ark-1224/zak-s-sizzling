@@ -31,6 +31,7 @@ const TIMELINE_STEPS: { key: keyof OrderTimeline; label: string }[] = [
   { key: "readyAt", label: "Ready" },
   { key: "handedOverAt", label: "Handed over" },
   { key: "cancelledAt", label: "Cancelled" },
+  { key: "refundedAt", label: "Refunded" },
 ];
 
 interface Filters {
@@ -214,7 +215,7 @@ export default function AdminTransactionsPage() {
 
 function TransactionRow({ order }: { order: TransactionDTO }) {
   const method = order.payment ? (METHOD_LABEL[order.payment.method] ?? order.payment.method) : "—";
-  const paid = order.payment?.status === "paid";
+  const paymentStatus = order.payment?.status === "paid" ? "paid" : order.payment?.status === "refunded" ? "refunded" : "unpaid";
   return (
     <li>
       <details className="group">
@@ -233,7 +234,7 @@ function TransactionRow({ order }: { order: TransactionDTO }) {
             <div className="font-adm-mono text-base font-bold text-adm-ink">{peso(order.totalAmount)}</div>
             <div>
               {formatDateTime(order.createdAt)} · {order.orderType === "take_out" ? "Take out" : "Dine in"} · {method}
-              {paid ? " · paid" : " · unpaid"}
+              {` · ${paymentStatus}`}
             </div>
           </div>
         </summary>

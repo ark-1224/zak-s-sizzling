@@ -151,6 +151,8 @@ export type KitchenTaskStatus = "pending" | "in_progress" | "completed";
 export interface OrderTimeline {
   placedAt: string;
   paidAt: string | null;
+  /** Staff marked a cancelled, paid order as sorted out, having refunded the customer. */
+  refundedAt: string | null;
   /** The kitchen started the first dish. */
   preparingAt: string | null;
   /** The kitchen finished the last dish. */

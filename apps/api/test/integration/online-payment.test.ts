@@ -252,6 +252,12 @@ describe("an online order paid after stock ran out", () => {
     const listed = res.body.find((o: { id: string }) => o.id === order.id);
     expect(listed).toMatchObject({ stockIssue: true, stockIssueNote: expect.stringContaining(soda.name) });
   });
+
+  it("keeps the payment as paid when sorted out, since the order wasn't cancelled", async () => {
+    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set("Authorization", `Bearer ${staff}`);
+
+    expect(res.body).toMatchObject({ stockIssue: false, payment: { status: "paid" } });
+  });
 });
 
 describe("an online order cancelled before the payment arrived", () => {

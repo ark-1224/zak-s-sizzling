@@ -120,7 +120,7 @@ export async function checkQrPhPayment(orderId: string) {
   if (!order) throw new HttpError(404, "Order not found");
   const payment = order.payment;
   // Once the order is flagged for staff (a wrong amount was paid), PayMongo isn't asked again.
-  if (payment && payment.status !== "paid" && payment.method === "qrph" && payment.reference && !order.stockIssue && isPaymongoConfigured()) {
+  if (payment && payment.status === "pending" && payment.method === "qrph" && payment.reference && !order.stockIssue && isPaymongoConfigured()) {
     const intent = await getPaymentIntent(payment.reference);
     if (intent.status === "succeeded") {
       await recordOnlinePayment(order, intent.amountCentavos, { paidAt: new Date() }, { method: "qrph", paidAt: new Date() });
@@ -165,8 +165,9 @@ async function markPaymentPaidIfNotAlready(
   createData: Omit<Prisma.PaymentUncheckedCreateInput, "orderId" | "status" | "amount">
 ): Promise<boolean> {
   if (order.payment) {
+    // Not a refunded one either: a late or repeated event mustn't undo the refund.
     const result = await db.payment.updateMany({
-      where: { orderId: order.id, status: { not: "paid" } },
+      where: { orderId: order.id, status: { notIn: ["paid", "refunded"] } },
       data: { status: "paid", ...updateData },
     });
     return result.count > 0;
@@ -304,8 +305,9 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
   // An earlier QR Ph code stays payable at PayMongo after the kiosk shows a new one or
   // switches to paying at the counter (a phone may have saved it). If the order is already
   // paid by another means or another code, this is a second payment: flag it for a refund.
-  // A repeat of the event that paid the order (same QR Ph code) changes nothing.
-  if (order.payment.status === "paid") {
+  // A repeat of the event that paid the order (same QR Ph code) changes nothing, also
+  // once it has been refunded.
+  if (order.payment.status === "paid" || order.payment.status === "refunded") {
     const sameCode = order.payment.method === "qrph" && order.payment.reference === event.paymentIntentId;
     if (event.paymentIntentId && !sameCode) {
       const amount = event.amountCentavos === null ? "A second payment" : `A second payment of ${pesos(event.amountCentavos)}`;

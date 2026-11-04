@@ -211,4 +211,26 @@ describe("after the refund", () => {
     const queue = await request(app).get("/api/orders?unpaid=1").set(auth(staff));
     expect(queue.body.some((o: { id: string }) => o.id === order.id)).toBe(false);
   });
+
+  it("records the payment as refunded, with when, and shows it in the transaction history", async () => {
+    const order = await paidOrder([{ productId: water.id, qty: 1 }]);
+    await cancel(order.id);
+    expect((await prisma.payment.findUniqueOrThrow({ where: { orderId: order.id } })).status).toBe("paid"); // not refunded yet
+
+    const res = await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff));
+
+    expect(res.body.payment.status).toBe("refunded");
+    const payment = await prisma.payment.findUniqueOrThrow({ where: { orderId: order.id } });
+    expect(payment.refundedAt).not.toBeNull();
+
+    const admin = await loginAs("admin");
+    const history = async (extra = "") =>
+      (await request(app).get(`/api/orders/history?q=${order.orderNumber}${extra}`).set(auth(admin))).body;
+    const listed = (await history()).orders[0];
+    expect(listed.payment.status).toBe("refunded");
+    expect(listed.timeline.refundedAt).toEqual(payment.refundedAt!.toISOString());
+    // Paid once and refunded: neither still owed nor counted in sales.
+    expect((await history("&paid=unpaid")).total).toBe(0);
+    expect((await history()).sales).toBe(0);
+  });
 });

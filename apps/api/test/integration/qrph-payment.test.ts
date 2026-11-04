@@ -20,6 +20,8 @@ let customer: string;
 let otherKiosk: string;
 /** A second kiosk for the later tests: each session may start only 10 payments in 10 minutes. */
 let payer: string;
+/** A third kiosk, for the refund tests. */
+let refunder: string;
 let intentCount = 0;
 /** What PayMongo reports for each payment intent: its status and amount in centavos. */
 const intents = new Map<string, { status: string; amount: number }>();
@@ -61,6 +63,7 @@ beforeAll(async () => {
   customer = await kioskToken();
   otherKiosk = await kioskToken();
   payer = await kioskToken();
+  refunder = await kioskToken();
 });
 
 afterAll(() => {
@@ -293,6 +296,43 @@ describe("the payment.paid webhook", () => {
     await postEvent(event);
 
     expect((await orderOf(order.id)).stockIssue).toBe(false);
+  });
+
+  describe("once the kitchen cancelled the order and the customer was refunded", () => {
+    /** A QR Ph order paid with its second code, cancelled in the kitchen and refunded. */
+    async function refundedOrder() {
+      const staff = await loginAs("staff");
+      const order = await placeOrder(1, refunder);
+      await startQr(order.id, refunder);
+      const firstCode = (await paymentOf(order.id)).reference;
+      await startQr(order.id, refunder);
+      const paidEvent = { payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } };
+      await postEvent(paidEvent);
+      await request(app).post(`/api/kitchen/orders/${order.id}/cancel`).set(auth(staff)).send({ reason: "Customer left" });
+      await request(app).post(`/api/orders/${order.id}/sorted-out`).set(auth(staff));
+      expect((await paymentOf(order.id)).status).toBe("refunded");
+      return { order, firstCode, paidEvent };
+    }
+
+    it("stays refunded when PayMongo repeats the event that paid it", async () => {
+      const { order, paidEvent } = await refundedOrder();
+      const stock = await juiceStock();
+
+      await postEvent(paidEvent);
+
+      expect((await paymentOf(order.id)).status).toBe("refunded");
+      expect((await orderOf(order.id)).stockIssue).toBe(false);
+      expect(await juiceStock()).toBe(stock);
+    });
+
+    it("stays refunded, and is flagged again, when an earlier code is paid afterwards", async () => {
+      const { order, firstCode } = await refundedOrder();
+
+      await postEvent({ payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } });
+
+      expect((await paymentOf(order.id)).status).toBe("refunded");
+      expect((await orderOf(order.id)).stockIssueNote).toMatch(/second payment of ₱55\.00/);
+    });
   });
 });
 

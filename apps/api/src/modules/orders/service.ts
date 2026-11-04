@@ -225,7 +225,8 @@ export async function listTransactions(query: z.infer<typeof transactionQuerySch
     AND: [
       ...(query.method ? [{ payment: { method: query.method } }] : []),
       ...(query.paid === "paid" ? [{ payment: { status: "paid" as const } }] : []),
-      ...(query.paid === "unpaid" ? [{ OR: [{ payment: null }, { payment: { status: { not: "paid" as const } } }] }] : []),
+      // A refunded order was paid once, so it isn't one still waiting for its money.
+      ...(query.paid === "unpaid" ? [{ OR: [{ payment: null }, { payment: { status: { notIn: ["paid" as const, "refunded" as const] } } }] }] : []),
     ],
   };
 
@@ -280,6 +281,7 @@ function toTransactionDTO(order: OrderWithTasks): TransactionDTO {
     timeline: {
       placedAt: order.createdAt.toISOString(),
       paidAt: order.payment?.paidAt?.toISOString() ?? null,
+      refundedAt: order.payment?.refundedAt?.toISOString() ?? null,
       preparingAt: started.length > 0 ? new Date(Math.min(...started)).toISOString() : null,
       readyAt: reachedReady && finished.length > 0 ? new Date(Math.max(...finished)).toISOString() : null,
       // Orders from before these times were recorded fall back to their last change.
@@ -334,15 +336,23 @@ export async function cancelOrder(id: string): Promise<OrderDTO> {
 /**
  * Staff have dealt with an order that needed attention (refunded, substituted, collected
  * the difference): it leaves the payment queue. The note stays, so the transaction
- * history still shows what happened. One conditional update, so a second click says so.
+ * history still shows what happened. For a cancelled order that was paid, sorting it out
+ * means the customer was refunded, so its payment is recorded as refunded; any other
+ * order's payment stays as it is. One conditional update, so a second click says so.
  */
 export async function markAttentionSortedOut(id: string): Promise<OrderDTO> {
-  const result = await prisma.order.updateMany({ where: { id, stockIssue: true }, data: { stockIssue: false } });
-  if (result.count === 0) {
-    const order = await prisma.order.findUnique({ where: { id }, select: { orderNumber: true } });
-    if (!order) throw new HttpError(404, "Order not found");
-    throw new HttpError(409, `${order.orderNumber} doesn't need attention any more`);
-  }
+  await prisma.$transaction(async (tx) => {
+    const result = await tx.order.updateMany({ where: { id, stockIssue: true }, data: { stockIssue: false } });
+    if (result.count === 0) {
+      const order = await tx.order.findUnique({ where: { id }, select: { orderNumber: true } });
+      if (!order) throw new HttpError(404, "Order not found");
+      throw new HttpError(409, `${order.orderNumber} doesn't need attention any more`);
+    }
+    await tx.payment.updateMany({
+      where: { orderId: id, status: "paid", order: { status: "cancelled" } },
+      data: { status: "refunded", refundedAt: new Date() },
+    });
+  });
   emitOrdersChanged();
   return (await getOrderById(id))!;
 }
