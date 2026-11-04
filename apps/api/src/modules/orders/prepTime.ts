@@ -66,13 +66,13 @@ export async function estimateForCart(items: { productId: string; qty: number }[
  * when it should be ready. The estimate shown at checkout used the queue at that
  * moment; for a counter order the customer may pay much later.
  */
-export async function setEstimateOnReachingKitchen(orderId: string, now = new Date()): Promise<void> {
-  const items = await prisma.orderItem.findMany({ where: { orderId }, select: { qty: true, product: { select: { prepMinutes: true } } } });
+export async function setEstimateOnReachingKitchen(orderId: string, db: Db = prisma, now = new Date()): Promise<void> {
+  const items = await db.orderItem.findMany({ where: { orderId }, select: { qty: true, product: { select: { prepMinutes: true } } } });
   const minutes = estimatePrepMinutes(
     items.map((item) => ({ qty: item.qty, prepMinutes: item.product.prepMinutes })),
-    await countOrdersInKitchen(orderId)
+    await countOrdersInKitchen(orderId, db)
   );
-  await prisma.order.update({
+  await db.order.update({
     where: { id: orderId },
     data: { estimatedPrepMinutes: minutes, estimatedReadyAt: new Date(now.getTime() + minutes * 60_000) },
   });

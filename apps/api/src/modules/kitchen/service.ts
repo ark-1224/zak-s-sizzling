@@ -32,23 +32,14 @@ function toTaskDTO(task: TaskWithRelations): KitchenTaskDTO {
   };
 }
 
-/** Called once an order is paid — creates one KitchenTask per line item and puts the
- *  order on the kitchen's radar. Orders that are only `pending` (unpaid) never reach
- *  the kitchen, matching the manuscript's payment-before-prep flow. */
-export async function createKitchenTasksForOrder(orderId: string): Promise<void> {
-  // The estimate is set once, when the order first reaches the kitchen, so running this
-  // twice doesn't move the ready time.
-  const current = await prisma.order.findUnique({ where: { id: orderId }, select: { estimatedReadyAt: true } });
-  if (current && !current.estimatedReadyAt) await setEstimateOnReachingKitchen(orderId);
-
-  const items = await prisma.orderItem.findMany({ where: { orderId } });
-  await prisma.kitchenTask.createMany({
-    data: items.map((item) => ({ orderItemId: item.id })),
-    skipDuplicates: true, // idempotent if this ever runs twice for the same order
-  });
-
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (order) getIO()?.emit("order:created", { orderId: order.id, orderNumber: order.orderNumber });
+/** Called in the transaction that records an order's payment, so a paid order always has
+ *  its tasks: creates one KitchenTask per line item and sets when it should be ready.
+ *  Orders that are only `pending` (unpaid) never reach the kitchen, matching the
+ *  manuscript's payment-before-prep flow. The caller announces it once committed. */
+export async function createKitchenTasksForOrder(tx: Prisma.TransactionClient, orderId: string): Promise<void> {
+  await setEstimateOnReachingKitchen(orderId, tx);
+  const items = await tx.orderItem.findMany({ where: { orderId } });
+  await tx.kitchenTask.createMany({ data: items.map((item) => ({ orderItemId: item.id })) });
 }
 
 /**

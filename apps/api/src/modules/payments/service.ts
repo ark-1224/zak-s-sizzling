@@ -12,7 +12,7 @@ import {
 import { emitOrdersChanged, getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
-import { deductStockForOrder, refreshAvailability, StockShortageError } from "../inventory/fulfillment";
+import { deductStockForOrder, refreshAvailability, StockShortageError, type TouchedStock } from "../inventory/fulfillment";
 import { createKitchenTasksForOrder } from "../kitchen/service";
 import { addAttentionNote, lockOrder } from "./attentionNote";
 
@@ -86,7 +86,18 @@ function wrongAmountNote(paidCentavos: number, order: { totalAmount: Prisma.Deci
   return `${pesos(paidCentavos)} was paid online, but the order total is ${pesos(totalCentavos(order))}${paymongoCode(reference)}. Refund it, or collect the difference, before confirming.`;
 }
 
-function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSessionId: string | null }) {
+/**
+ * Once a payment has committed: the order is paid and in the kitchen whatever happens here,
+ * so a failure is logged rather than answered as an error. The next stock change on that
+ * product corrects its availability.
+ */
+async function announcePaidOrder(order: { id: string; orderNumber: string; kioskSessionId: string | null }, touched: TouchedStock) {
+  try {
+    await refreshAvailability(touched); // emits inventory:updated for affected products
+  } catch (err) {
+    console.error(`[payments] order ${order.orderNumber}: couldn't update product availability`, err);
+  }
+  getIO()?.emit("order:created", { orderId: order.id, orderNumber: order.orderNumber });
   getIO()?.emit("payment:confirmed", {
     orderId: order.id,
     orderNumber: order.orderNumber,
@@ -203,9 +214,9 @@ async function markPaymentPaidIfNotAlready(
 
 /**
  * Staff confirm a counter order before collecting payment. Marking it paid, deducting
- * every unit and raw material it needs, and confirming the order happen in one
- * transaction: if anything is short, StockShortageError (409) rolls it all back, so
- * nothing is deducted, the order stays unpaid, and staff can change it with the
+ * every unit and raw material it needs, confirming the order and sending it to the kitchen
+ * happen in one transaction: if anything is short, StockShortageError (409) rolls it all
+ * back, so nothing is deducted, the order stays unpaid, and staff can change it with the
  * customer before any money changes hands.
  */
 export async function confirmCounterPayment(orderId: string) {
@@ -223,6 +234,7 @@ export async function confirmCounterPayment(orderId: string) {
 
       const touched = await deductStockForOrder(tx, order.id);
       await confirmPendingOrder(tx, order.id);
+      await createKitchenTasksForOrder(tx, order.id);
       return touched;
     })
     .catch((err) => {
@@ -230,9 +242,7 @@ export async function confirmCounterPayment(orderId: string) {
       throw err;
     });
 
-  await refreshAvailability(touched); // emits inventory:updated for affected products
-  await createKitchenTasksForOrder(order.id); // also emits order:created
-  emitPaymentConfirmed(order);
+  await announcePaidOrder(order, touched);
   return getOrderById(order.id);
 }
 
@@ -266,13 +276,10 @@ async function recordOnlinePayment(
 
       const touched = await deductStockForOrder(tx, order.id);
       await confirmPendingOrder(tx, order.id);
+      await createKitchenTasksForOrder(tx, order.id);
       return touched;
     });
-    if (!touched) return;
-
-    await refreshAvailability(touched);
-    await createKitchenTasksForOrder(order.id);
-    emitPaymentConfirmed(order);
+    if (touched) await announcePaidOrder(order, touched);
   } catch (err) {
     // The money was taken, so this can't be refused like a counter order: record the
     // payment, deduct nothing (stock never goes negative), create no kitchen tasks, and
