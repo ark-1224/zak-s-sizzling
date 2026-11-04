@@ -800,9 +800,11 @@ Until now only an unpaid order could be cancelled. The kitchen display now has *
 
 **Evidence:** `apps/api/src/modules/kitchen/service.ts` (`cancelKitchenOrder`), `apps/api/src/modules/inventory/fulfillment.ts` (`returnStockForLines`), `apps/api/src/modules/orders/service.ts` (`markAttentionSortedOut`), `apps/web/src/app/kitchen/page.tsx`, migrations `20261104075840_order_cancel_reason` and `20261104081519_payment_refunded_at`. Tests: `apps/api/test/integration/kitchen-cancel.test.ts`, `qrph-payment.test.ts`, `online-payment.test.ts` (the thirteenth testing session). New wireframe 18c; wireframes 18, 19 and 23 and flow 06 are updated.
 
+An automated security review of this change found two weaknesses, corrected the same day (the fourteenth testing session). A new note could replace an unresolved one, hiding a refund still owed, so a note now keeps every item. Marking as sorted out recorded a refund whatever had happened, so it now applies only to the note staff read, and an order paid after being cancelled offers **Placed again** as well as **Refunded**. A correct payment arriving after a wrong one no longer clears the flag. Migration `20261104090122_longer_attention_note`; `apps/api/src/modules/payments/attentionNote.ts`.
+
 ### 13.1 Data dictionary
 
-When `orders` and `payments` are updated in section 3, add:
+When `orders` and `payments` are updated in section 3, make `orders.stock_issue_note` varchar(1000), and add:
 
 | Table | Column | Type | Description |
 |---|---|---|---|

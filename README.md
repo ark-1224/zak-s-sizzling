@@ -503,8 +503,11 @@ under that person with the reason `return`; a dish started or done counts as use
 order leaves the display and the status board, and goes to the payment queue as NEEDS
 ATTENTION, since the system can't send money back. Once the customer has been refunded,
 staff press **Refunded: mark as sorted out**, which records the payment as `refunded`
-(any cancelled, paid order; other flagged orders keep `paid`). A late or repeated PayMongo
-event can't undo that: a second payment is flagged again. Transactions shows the reason and
+(other flagged orders keep `paid`). An order paid after being cancelled also offers **Placed
+again: mark as sorted out**, which keeps `paid`. A late or repeated PayMongo event can't undo a
+refund: a second payment is flagged again. An order's note keeps everything that needs
+attention, one item per line, so no amount owed is overwritten, and the button sends the note
+staff read: if it has changed, the API answers 409 and the queue shows the new note. Transactions shows the reason and
 when it was refunded; cancelled orders don't count in sales.
 
 To test the real gateway path:
