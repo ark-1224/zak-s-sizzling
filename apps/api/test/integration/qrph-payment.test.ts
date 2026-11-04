@@ -292,6 +292,38 @@ describe("the payment.paid webhook", () => {
     expect((await orderOf(order.id)).stockIssue).toBe(true);
   });
 
+  it("lists two wrong payments of the same amount separately, each by its code", async () => {
+    const order = await placeOrder(1, refunder2);
+    await startQr(order.id, refunder2);
+    const firstCode = (await paymentOf(order.id)).reference!;
+    await startQr(order.id, refunder2);
+    const secondCode = (await paymentOf(order.id)).reference!;
+
+    await postEvent({ payment_intent_id: firstCode, amount: 100, metadata: { order_id: order.id } });
+    await postEvent({ payment_intent_id: secondCode, amount: 100, metadata: { order_id: order.id } });
+    await postEvent({ payment_intent_id: secondCode, amount: 100, metadata: { order_id: order.id } }); // repeated: listed once
+
+    const { stockIssueNote: note } = await orderOf(order.id);
+    expect(note!.match(/₱1\.00 was paid online/g)).toHaveLength(2);
+    expect(note).toContain(firstCode);
+    expect(note).toContain(secondCode);
+  });
+
+  it("keeps the flag when staff confirm at the counter, until they mark it as sorted out", async () => {
+    const staff = await loginAs("staff");
+    const order = await placeOrder(1, refunder2);
+    await startQr(order.id, refunder2);
+    await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, amount: 100, metadata: { order_id: order.id } });
+
+    const confirm = await request(app).post(`/api/payments/counter/${order.id}/confirm`).set(auth(staff));
+
+    expect(confirm.status).toBe(200);
+    const saved = await orderOf(order.id);
+    expect(saved).toMatchObject({ status: "confirmed", stockIssue: true });
+    const queue = await request(app).get("/api/orders?unpaid=1").set(auth(staff));
+    expect(queue.body.some((o: { id: string }) => o.id === order.id)).toBe(true);
+  });
+
   it("keeps the flag when the right amount arrives after a wrong one, since that money is still owed", async () => {
     const order = await placeOrder(1, payer);
     await startQr(order.id, payer);
@@ -373,6 +405,25 @@ describe("the payment.paid webhook", () => {
       const { stockIssueNote: note } = await orderOf(order.id);
       expect(note).toMatch(/Cancelled in the kitchen: Customer left\. Refund the customer ₱55\.00/);
       expect(note!.match(/second payment of ₱55\.00/g)).toHaveLength(1);
+    });
+
+    it("keeps both notes when a second payment and the kitchen's cancel happen at the same moment", async () => {
+      const staff = await loginAs("staff");
+      const third = await kioskToken();
+      const order = await placeOrder(1, third);
+      await startQr(order.id, third);
+      const firstCode = (await paymentOf(order.id)).reference;
+      await startQr(order.id, third);
+      await postEvent({ payment_intent_id: (await paymentOf(order.id)).reference, amount: 5500, metadata: { order_id: order.id } });
+
+      await Promise.all([
+        postEvent({ payment_intent_id: firstCode, amount: 5500, metadata: { order_id: order.id } }),
+        request(app).post(`/api/kitchen/orders/${order.id}/cancel`).set(auth(staff)).send({ reason: "Customer left" }),
+      ]);
+
+      const { stockIssueNote: note } = await orderOf(order.id);
+      expect(note).toMatch(/second payment of ₱55\.00/);
+      expect(note).toMatch(/Cancelled in the kitchen: Customer left/);
     });
 
     it("keeps its note when the kitchen cancels an order already flagged for a second payment", async () => {

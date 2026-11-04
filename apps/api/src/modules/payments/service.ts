@@ -14,7 +14,7 @@ import { HttpError } from "../../middleware/errorHandler";
 import { getOrderById } from "../orders/service";
 import { deductStockForOrder, refreshAvailability, StockShortageError } from "../inventory/fulfillment";
 import { createKitchenTasksForOrder } from "../kitchen/service";
-import { addAttentionNote } from "./attentionNote";
+import { addAttentionNote, lockOrder } from "./attentionNote";
 
 async function loadPayableOrder(orderId: string) {
   const order = await prisma.order.findUnique({
@@ -34,49 +34,56 @@ class OrderCancelledError extends Error {}
 
 /**
  * Confirms the order only if it is still pending. Cancelling is one conditional update
- * too (orders/service.ts), so whichever commits first wins and the other is refused.
- * Staff confirming at the counter have read the order's note, so that settles it (the note
- * stays as history); a payment arriving online settles nothing staff were told about.
+ * too (orders/service.ts), so whichever commits first wins and the other is refused. It
+ * leaves a NEEDS ATTENTION flag alone: only Mark as sorted out, which checks the note staff
+ * read, settles that.
  */
-async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string, settlesNote: boolean) {
+async function confirmPendingOrder(tx: Prisma.TransactionClient, orderId: string) {
   const result = await tx.order.updateMany({
     where: { id: orderId, status: "pending" },
-    data: { status: "confirmed", ...(settlesNote ? { stockIssue: false } : {}) },
+    data: { status: "confirmed" },
   });
   if (result.count === 0) throw new OrderCancelledError();
 }
 
 /**
- * Puts a note on the order for staff to act on: it shows in the payment queue with a
- * NEEDS ATTENTION badge. The note says what happened and what to do (refund, collect the
- * difference, offer a substitute), since the screens show it as written.
+ * Puts a note on the order for staff to act on, inside the caller's transaction: it shows
+ * in the payment queue with a NEEDS ATTENTION badge. The note says what happened and what
+ * to do (refund, collect the difference, offer a substitute), since the screens show it as
+ * written. Returns false for a repeated delivery of the same event, which changes nothing;
+ * a note about a particular payment names its PayMongo code, so another payment isn't
+ * taken for a repeat.
  */
-async function flagForStaff(order: { id: string; orderNumber: string }, note: string) {
-  // Added only if conditional on the note it read, so two events at once both get kept;
-  // failing all three tries answers an error, and PayMongo delivers the event again.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const current = await prisma.order.findUniqueOrThrow({ where: { id: order.id }, select: { stockIssue: true, stockIssueNote: true } });
-    // A repeated delivery of the same event leaves the order, and every open screen, alone.
-    if (current.stockIssueNote?.includes(note)) return;
-    const { count } = await prisma.order.updateMany({
-      where: { id: order.id, stockIssueNote: current.stockIssueNote },
-      data: { stockIssue: true, stockIssueNote: addAttentionNote(current.stockIssueNote, current.stockIssue, note) },
-    });
-    if (count > 0) {
-      emitOrdersChanged();
-      console.warn(`[payments] order ${order.orderNumber}: ${note}`);
-      return;
-    }
-  }
-  throw new Error(`Could not add a note to order ${order.orderNumber}`);
+async function addNoteForStaff(tx: Prisma.TransactionClient, orderId: string, note: string): Promise<boolean> {
+  await lockOrder(tx, orderId);
+  const current = await tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { stockIssue: true, stockIssueNote: true } });
+  if (current.stockIssueNote?.includes(note)) return false;
+  await tx.order.update({
+    where: { id: orderId },
+    data: { stockIssue: true, stockIssueNote: addAttentionNote(current.stockIssueNote, current.stockIssue, note) },
+  });
+  return true;
 }
+
+/** Once a note is committed: open screens reload. */
+function announceNote(order: { orderNumber: string }, note: string) {
+  emitOrdersChanged();
+  console.warn(`[payments] order ${order.orderNumber}: ${note}`);
+}
+
+async function flagForStaff(order: { id: string; orderNumber: string }, note: string) {
+  if (await prisma.$transaction((tx) => addNoteForStaff(tx, order.id, note))) announceNote(order, note);
+}
+
+/** " (PayMongo pi_…)" when the payment's code is known. */
+const paymongoCode = (reference: string | null) => (reference ? ` (PayMongo ${reference})` : "");
 
 const pesos = (centavos: number) => `₱${(centavos / 100).toFixed(2)}`;
 const totalCentavos = (order: { totalAmount: Prisma.Decimal }) => toCentavos(Number(order.totalAmount));
 
 /** A paid amount that isn't the order's total: recorded for staff, never confirmed. */
-function wrongAmountNote(paidCentavos: number, order: { totalAmount: Prisma.Decimal }) {
-  return `${pesos(paidCentavos)} was paid online, but the order total is ${pesos(totalCentavos(order))}. Refund it, or collect the difference, before confirming.`;
+function wrongAmountNote(paidCentavos: number, order: { totalAmount: Prisma.Decimal }, reference: string | null) {
+  return `${pesos(paidCentavos)} was paid online, but the order total is ${pesos(totalCentavos(order))}${paymongoCode(reference)}. Refund it, or collect the difference, before confirming.`;
 }
 
 function emitPaymentConfirmed(order: { id: string; orderNumber: string; kioskSessionId: string | null }) {
@@ -133,7 +140,7 @@ export async function checkQrPhPayment(orderId: string) {
   if (payment && payment.status === "pending" && payment.method === "qrph" && payment.reference && !order.stockIssue && isPaymongoConfigured()) {
     const intent = await getPaymentIntent(payment.reference);
     if (intent.status === "succeeded") {
-      await recordOnlinePayment(order, intent.amountCentavos, { paidAt: new Date() }, { method: "qrph", paidAt: new Date() });
+      await recordOnlinePayment(order, intent.amountCentavos, payment.reference, { paidAt: new Date() }, { method: "qrph", paidAt: new Date() });
     }
   }
   return getOrderById(orderId);
@@ -215,7 +222,7 @@ export async function confirmCounterPayment(orderId: string) {
       if (!applied) throw new HttpError(409, "Order is already paid");
 
       const touched = await deductStockForOrder(tx, order.id);
-      await confirmPendingOrder(tx, order.id, true);
+      await confirmPendingOrder(tx, order.id);
       return touched;
     })
     .catch((err) => {
@@ -242,12 +249,13 @@ type OrderWithPayment = Prisma.OrderGetPayload<{ include: { payment: true } }>;
 async function recordOnlinePayment(
   order: OrderWithPayment,
   paidCentavos: number,
+  reference: string | null,
   paymentUpdate: Omit<Prisma.PaymentUpdateManyMutationInput, "status">,
   paymentCreate: Omit<Prisma.PaymentUncheckedCreateInput, "orderId" | "status" | "amount">
 ) {
   // The QR Ph code was made for the order's total.
   if (paidCentavos !== totalCentavos(order)) {
-    await flagForStaff(order, wrongAmountNote(paidCentavos, order));
+    await flagForStaff(order, wrongAmountNote(paidCentavos, order, reference));
     return;
   }
 
@@ -257,7 +265,7 @@ async function recordOnlinePayment(
       if (!applied) return null; // already processed (gateway retry / duplicate delivery)
 
       const touched = await deductStockForOrder(tx, order.id);
-      await confirmPendingOrder(tx, order.id, false);
+      await confirmPendingOrder(tx, order.id);
       return touched;
     });
     if (!touched) return;
@@ -277,7 +285,11 @@ async function recordOnlinePayment(
           ? `Paid online, but the stock ran out, so nothing was sent to the kitchen. ${err.message} Offer the customer a substitute or a refund.`
           : null;
     if (note === null) throw err;
-    if (await markPaymentPaidIfNotAlready(prisma, order, paymentUpdate, paymentCreate)) await flagForStaff(order, note);
+    // Together, or PayMongo's retry would find it paid, with nobody told about it.
+    const flagged = await prisma.$transaction(
+      async (tx) => (await markPaymentPaidIfNotAlready(tx, order, paymentUpdate, paymentCreate)) && addNoteForStaff(tx, order.id, note)
+    );
+    if (flagged) announceNote(order, note);
   }
 }
 
@@ -321,8 +333,7 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
     const sameCode = order.payment.method === "qrph" && order.payment.reference === event.paymentIntentId;
     if (event.paymentIntentId && !sameCode) {
       const amount = event.amountCentavos === null ? "A second payment" : `A second payment of ${pesos(event.amountCentavos)}`;
-      // The code names this payment, so another code's payment isn't taken for a repeat.
-      await flagForStaff(order, `${amount} arrived online after this order was already paid (PayMongo ${event.paymentIntentId}). Refund the customer.`);
+      await flagForStaff(order, `${amount} arrived online after this order was already paid${paymongoCode(event.paymentIntentId)}. Refund the customer.`);
     }
     return;
   }
@@ -338,7 +349,7 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
   if (paidCentavos === null) {
     await flagForStaff(
       order,
-      "PayMongo reported a payment without its amount, so it wasn't confirmed. Check the amount in PayMongo's dashboard, then confirm the order at the counter or refund the customer."
+      `PayMongo reported a payment without its amount, so it wasn't confirmed${paymongoCode(event.paymentIntentId)}. Check the amount in PayMongo's dashboard, then confirm the order at the counter or refund the customer.`
     );
     return;
   }
@@ -350,6 +361,7 @@ export async function handleWebhook(rawBody: Buffer, signatureHeader: string | u
   await recordOnlinePayment(
     order,
     paidCentavos,
+    event.paymentIntentId,
     { paidAt: new Date(), gatewayPayload: JSON.parse(rawBody.toString("utf8")), ...qrPh },
     { method: order.payment.method, paidAt: new Date() }
   );

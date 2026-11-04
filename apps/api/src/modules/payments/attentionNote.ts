@@ -1,3 +1,13 @@
+import type { Prisma } from "@prisma/client";
+
+/**
+ * Holds the order's row until the transaction ends. Whoever changes an order's note takes
+ * this first, then reads the note, so two changes at once can't overwrite each other.
+ */
+export async function lockOrder(tx: Prisma.TransactionClient, orderId: string) {
+  await tx.$queryRaw`SELECT id FROM orders WHERE id = ${orderId}::uuid FOR UPDATE`;
+}
+
 // orders.stock_issue_note is varchar(1000).
 const NOTE_MAX = 1000;
 const TOO_LONG = "… More in PayMongo's dashboard.";

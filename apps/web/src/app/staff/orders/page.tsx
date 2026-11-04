@@ -233,6 +233,7 @@ export default function StaffOrdersPage() {
                 {shown.map((order) => {
                   // Still to be confirmed and paid at the counter, even when it needs attention
                   // (a wrong amount paid online: collect the difference, or refund and cancel).
+                  // Confirming leaves the flag: Mark as sorted out settles that.
                   const awaitingPayment = order.payment?.status !== "paid" && order.status !== "cancelled";
                   // A cancelled order that was paid: staff say what became of the money.
                   const moneyToSettle = order.status === "cancelled" && order.payment?.status === "paid";

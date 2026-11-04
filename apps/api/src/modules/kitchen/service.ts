@@ -5,7 +5,7 @@ import { HttpError } from "../../middleware/errorHandler";
 import { refreshAvailability, returnStockForLines } from "../inventory/fulfillment";
 import { setEstimateOnReachingKitchen } from "../orders/prepTime";
 import { BOARD_WINDOW_MS } from "../orders/service";
-import { addAttentionNote } from "../payments/attentionNote";
+import { addAttentionNote, lockOrder } from "../payments/attentionNote";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
 
 type TaskWithRelations = Prisma.KitchenTaskGetPayload<{
@@ -147,6 +147,7 @@ export async function handOverOrder(orderId: string): Promise<void> {
  */
 export async function cancelKitchenOrder(orderId: string, reason: string, userId: string): Promise<void> {
   const touched = await prisma.$transaction(async (tx) => {
+    await lockOrder(tx, orderId);
     const order = await tx.order.findUnique({
       where: { id: orderId },
       select: { orderNumber: true, status: true, totalAmount: true, stockIssue: true, stockIssueNote: true, payment: { select: { method: true } } },
