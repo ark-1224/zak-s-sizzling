@@ -251,7 +251,18 @@ function TransactionRow({ order }: { order: TransactionDTO }) {
                 </li>
               ))}
             </ul>
-            {order.stockIssueNote && <p className="mt-2 text-sm text-adm-bad">{order.stockIssueNote}</p>}
+            {order.cancelReason && (
+              <p className="mt-2 text-sm text-adm-ink">
+                <strong>Reason for cancelling:</strong> {order.cancelReason}
+              </p>
+            )}
+            {/* Once marked as sorted out, the note stays as history. */}
+            {order.stockIssueNote && (
+              <p className={`mt-2 text-sm ${order.stockIssue ? "text-adm-bad" : "text-adm-ink-3"}`}>
+                {order.stockIssueNote}
+                {!order.stockIssue && " (Sorted out.)"}
+              </p>
+            )}
           </div>
           <div>
             <div className="mb-1.5 text-xs tracking-[.07em] text-adm-ink-3 uppercase">Timeline</div>

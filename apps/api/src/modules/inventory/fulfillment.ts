@@ -200,6 +200,54 @@ export async function deductStockForOrder(tx: Db, orderId: string): Promise<Touc
 }
 
 /**
+ * Puts back the stock of order lines that were never made, inside the caller's
+ * transaction, when the kitchen cancels a paid order. Logged like a manual adjustment,
+ * under the person who cancelled, with the reason "return". Rows are updated in the same
+ * sorted order as deduction. A recipe's amounts are the recipe as it stands now.
+ */
+export async function returnStockForLines(
+  tx: Db,
+  lines: StockLine[],
+  log: { orderId: string; userId: string; note: string }
+): Promise<TouchedStock> {
+  const needs = computeStockNeeds(lines);
+
+  for (const [productId, need] of [...needs.units].sort(([a], [b]) => a.localeCompare(b))) {
+    const row = await tx.inventory.update({ where: { productId }, data: { stockQty: { increment: need.qty } } });
+    await tx.stockAdjustment.create({
+      data: {
+        productId,
+        delta: need.qty,
+        previousQty: row.stockQty - need.qty,
+        newQty: row.stockQty,
+        reason: "return",
+        note: log.note,
+        adjustedById: log.userId,
+      },
+    });
+  }
+
+  for (const [rawMaterialId, need] of [...needs.materials].sort(([a], [b]) => a.localeCompare(b))) {
+    const row = await tx.rawMaterial.update({ where: { id: rawMaterialId }, data: { stockQty: { increment: need.qty } } });
+    await tx.rawMaterialMovement.create({
+      data: {
+        rawMaterialId,
+        delta: need.qty,
+        previousQty: row.stockQty.sub(need.qty),
+        newQty: row.stockQty,
+        type: "adjustment",
+        reason: "return",
+        orderId: log.orderId,
+        adjustedById: log.userId,
+        note: log.note,
+      },
+    });
+  }
+
+  return { productIds: [...needs.units.keys()], materialIds: [...needs.materials.keys()] };
+}
+
+/**
  * After stock changes are committed: recomputes availability for the products
  * touched and every recipe product that uses a touched raw material, saves any
  * change, and broadcasts `inventory:updated` so the kiosk shows "Sold out" live.

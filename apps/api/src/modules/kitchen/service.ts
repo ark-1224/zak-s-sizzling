@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { emitOrdersChanged, getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
+import { refreshAvailability, returnStockForLines } from "../inventory/fulfillment";
 import { setEstimateOnReachingKitchen } from "../orders/prepTime";
 import { BOARD_WINDOW_MS } from "../orders/service";
 import type { KitchenTaskDTO } from "@zaks/shared-types";
@@ -58,7 +59,7 @@ export async function listActiveTasks(): Promise<KitchenTaskDTO[]> {
   const tasks = await prisma.kitchenTask.findMany({
     where: {
       OR: [
-        { status: { not: "completed" } },
+        { status: { not: "completed" }, orderItem: { order: { status: { not: "cancelled" } } } },
         // Ready orders leave with the counter board's window, even if never handed over.
         { orderItem: { order: { status: "ready", createdAt: { gte: new Date(Date.now() - BOARD_WINDOW_MS) } } } },
       ],
@@ -80,6 +81,7 @@ export async function updateTaskStatus(
   if (!existing) throw new HttpError(404, "Kitchen task not found");
   const order = existing.orderItem.order;
   if (order.status === "completed") throw new HttpError(409, `${order.orderNumber} was already handed over`);
+  if (order.status === "cancelled") throw new HttpError(409, `${order.orderNumber} was cancelled`);
 
   const task = await prisma.kitchenTask.update({
     where: { id: taskId },
@@ -132,5 +134,48 @@ export async function handOverOrder(orderId: string): Promise<void> {
     if (order.status === "completed") throw new HttpError(409, `${order.orderNumber} was already handed over`);
     throw new HttpError(409, `${order.orderNumber} isn't ready yet; finish every dish first`);
   }
+  emitOrdersChanged();
+}
+
+/**
+ * The kitchen cancels a paid order at any point before it is handed over. Dishes nobody
+ * has started go back into stock; a dish already started or done counts as used. The
+ * system can't send the money back, so the order goes to the payment queue as NEEDS
+ * ATTENTION until staff have refunded the customer. All or nothing, and the status is one
+ * conditional update, so cancelling twice or racing Handed over changes nothing and says why.
+ */
+export async function cancelKitchenOrder(orderId: string, reason: string, userId: string): Promise<void> {
+  const touched = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: { orderNumber: true, status: true, totalAmount: true, payment: { select: { method: true } } },
+    });
+    if (!order) throw new HttpError(404, "Order not found");
+
+    const paidBy = order.payment?.method === "counter" ? "paid at the counter" : "paid online";
+    const result = await tx.order.updateMany({
+      where: { id: orderId, status: { in: ["confirmed", "preparing", "ready"] } },
+      data: {
+        status: "cancelled",
+        cancelledAt: new Date(),
+        cancelReason: reason,
+        stockIssue: true,
+        stockIssueNote: `Cancelled in the kitchen: ${reason}. Refund the customer ₱${Number(order.totalAmount).toFixed(2)} (${paidBy}).`,
+      },
+    });
+    if (result.count === 0) {
+      if (order.status === "completed") throw new HttpError(409, `${order.orderNumber} was already handed over`);
+      if (order.status === "cancelled") throw new HttpError(409, `${order.orderNumber} is already cancelled`);
+      throw new HttpError(409, `${order.orderNumber} hasn't reached the kitchen`);
+    }
+
+    const unstarted = await tx.orderItem.findMany({
+      where: { orderId, kitchenTask: { status: "pending" } },
+      include: { product: { include: { recipeItems: { include: { rawMaterial: true } } } } },
+    });
+    return returnStockForLines(tx, unstarted, { orderId, userId, note: `Order ${order.orderNumber} cancelled in the kitchen` });
+  });
+
+  await refreshAvailability(touched);
   emitOrdersChanged();
 }

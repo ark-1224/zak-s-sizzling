@@ -65,6 +65,7 @@ const MATRIX: Entry[] = [
   { method: "delete", route: "/api/orders/:id/items/:itemId", path: `/api/orders/${MISSING}/items/${MISSING}`, expected: STAFF },
   { method: "post", route: "/api/orders/:id/cancel", path: `/api/orders/${MISSING}/cancel`, expected: STAFF },
   { method: "post", route: "/api/orders/:id/sorted-out", path: `/api/orders/${MISSING}/sorted-out`, expected: STAFF },
+  { method: "post", route: "/api/kitchen/orders/:id/cancel", path: `/api/kitchen/orders/${MISSING}/cancel`, expected: STAFF },
   { method: "post", route: "/api/payments/counter/:orderId/confirm", path: `/api/payments/counter/${MISSING}/confirm`, expected: STAFF },
   { method: "get", route: "/api/kitchen/tasks", path: "/api/kitchen/tasks", expected: STAFF },
   { method: "patch", route: "/api/kitchen/tasks/:id", path: `/api/kitchen/tasks/${MISSING}`, body: {}, expected: STAFF },

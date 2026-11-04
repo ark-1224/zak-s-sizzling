@@ -265,6 +265,8 @@ model Order {
   // transaction history (updatedAt moves on with any later change, e.g. a refund flag).
   handedOverAt         DateTime?             @map("handed_over_at")
   cancelledAt          DateTime?             @map("cancelled_at")
+  // Why the kitchen cancelled a paid order; empty for an unpaid one cancelled in the queue.
+  cancelReason         String?               @map("cancel_reason") @db.VarChar(200)
   createdAt            DateTime              @default(now()) @map("created_at")
   updatedAt            DateTime              @updatedAt @map("updated_at")
   items                OrderItem[]

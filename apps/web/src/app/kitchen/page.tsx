@@ -19,10 +19,14 @@ import type { KitchenTaskDTO, OrderStatus, OrderType } from "@zaks/shared-types"
 // per-order-item (see the ERD), so each order card lists its items with their own
 // Pending → In-Progress → Completed control. The order follows its dishes (preparing,
 // then ready); a ready order stays as a READY card until the kitchen presses Handed over,
-// which completes it and takes it off the counter's status board.
+// which completes it and takes it off the counter's status board. Until then the kitchen
+// can cancel an order, with a reason: dishes not started go back into stock, and the
+// payment queue reminds staff to refund the customer.
 const STATUS_LABEL = { pending: "Pending", in_progress: "In Progress", completed: "Completed" } as const;
 const NEXT_STATUS = { pending: "in_progress", in_progress: "completed" } as const;
 const TICKET_FAILED = "Couldn't print the kitchen ticket for";
+const CANCEL_REASONS = ["Customer left", "Ran out of an ingredient", "Order was a mistake"];
+const CANCEL_REASON_MAX = 200; // orders.cancel_reason is varchar(200)
 
 // The printer setting lives in this device's storage and changes only through the address
 // (?printer=1 / ?printer=0), so it is read from the address once, when the page mounts,
@@ -113,6 +117,28 @@ export default function KitchenPage() {
     }
   }
 
+  // The order whose Cancel order was pressed and now asks for a reason.
+  const [cancelAskId, setCancelAskId] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  async function cancelOrder(orderId: string, orderNumber: string, reason: string) {
+    setCancellingId(orderId);
+    setNotice(null);
+    try {
+      await apiFetch(`/api/kitchen/orders/${orderId}/cancel`, { method: "POST", auth: "staff", body: JSON.stringify({ reason }) });
+      setNotice(`${orderNumber} was cancelled. It is in Orders awaiting payment until the customer is refunded.`);
+      setCancelAskId(null);
+      await load();
+    } catch (err) {
+      // A 409 means it was handed over or cancelled meanwhile; the reload shows which.
+      setMessage(err instanceof ApiError ? err.message : "Could not cancel the order.");
+      setCancelAskId(null);
+      await load();
+    } finally {
+      setCancellingId(null);
+    }
+  }
+
   const orders = useMemo(() => {
     const byOrder = new Map<
       string,
@@ -197,6 +223,11 @@ export default function KitchenPage() {
         </div>
       )}
       {message && <div className="mb-4 text-base text-berry md:text-sm">{message}</div>}
+      {notice && (
+        <div role="status" className="mb-4 text-base text-cream md:text-sm">
+          {notice}
+        </div>
+      )}
 
       {!loaded ? (
         !loadError && <div className="text-cream/70">Loading…</div>
@@ -269,10 +300,86 @@ export default function KitchenPage() {
                   {handingOver === order.orderId ? "Handing over…" : "Handed over"}
                 </button>
               )}
+              {cancelAskId === order.orderId ? (
+                <CancelOrderPanel
+                  orderNumber={order.orderNumber}
+                  busy={cancellingId === order.orderId}
+                  onCancel={(reason) => cancelOrder(order.orderId, order.orderNumber, reason)}
+                  onKeep={() => setCancelAskId(null)}
+                />
+              ) : (
+                <button
+                  onClick={() => setCancelAskId(order.orderId)}
+                  className="mt-3 min-h-11 w-full rounded-full border border-white/25 text-sm font-bold text-cream/90"
+                >
+                  Cancel order
+                </button>
+              )}
             </div>
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Asks for a reason before cancelling: a quick choice, or typed.
+function CancelOrderPanel({
+  orderNumber,
+  busy,
+  onCancel,
+  onKeep,
+}: {
+  orderNumber: string;
+  busy: boolean;
+  onCancel: (reason: string) => void;
+  onKeep: () => void;
+}) {
+  const [reason, setReason] = useState("");
+  const typed = reason.trim();
+  return (
+    <div role="group" aria-label={`Cancel ${orderNumber}?`} className="mt-3 rounded-lg border border-berry bg-white/5 p-3">
+      <p className="text-base md:text-sm">
+        Cancel <strong>{orderNumber}</strong>? Dishes not started go back into stock, and the payment queue will remind staff to refund
+        the customer.
+      </p>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {CANCEL_REASONS.map((choice) => (
+          <button
+            key={choice}
+            type="button"
+            aria-pressed={typed === choice}
+            onClick={() => setReason(choice)}
+            className={`min-h-11 rounded-full border px-3 text-sm font-semibold ${
+              typed === choice ? "border-honey bg-honey text-ink" : "border-white/25 text-cream/90"
+            }`}
+          >
+            {choice}
+          </button>
+        ))}
+      </div>
+      <label className="mt-2.5 block text-sm text-cream/80">
+        Reason
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          maxLength={CANCEL_REASON_MAX}
+          placeholder="Pick one above, or type it"
+          className="mt-1 min-h-11 w-full rounded-lg border border-white/25 bg-white/10 px-3 text-base text-cream placeholder:text-cream/50"
+        />
+      </label>
+      <div className="mt-2.5 flex flex-col gap-2">
+        <button
+          onClick={() => onCancel(typed)}
+          disabled={busy || !typed}
+          className="min-h-11 w-full rounded-full bg-berry text-sm font-bold text-cream disabled:opacity-60"
+        >
+          {busy ? "Cancelling…" : "Yes, cancel order"}
+        </button>
+        <button onClick={onKeep} disabled={busy} className="min-h-11 w-full rounded-full border border-white/25 text-sm font-bold text-cream/90">
+          Keep order
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { authenticate } from "../../middleware/authenticate";
+import { authenticate, type AuthenticatedRequest } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { parseId } from "../../lib/ids";
-import { updateTaskStatusSchema } from "./schema";
-import { handOverOrder, listActiveTasks, updateTaskStatus } from "./service";
+import { cancelKitchenOrderSchema, updateTaskStatusSchema } from "./schema";
+import { cancelKitchenOrder, handOverOrder, listActiveTasks, updateTaskStatus } from "./service";
 
 export const kitchenRouter = Router();
 
@@ -28,6 +28,18 @@ kitchenRouter.patch("/tasks/:id", authenticate, authorize("admin", "staff"), asy
 kitchenRouter.post("/orders/:id/handed-over", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
     await handOverOrder(parseId(req.params.id, "Order not found"));
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// The kitchen cancels a paid order that hasn't been handed over, with a reason.
+kitchenRouter.post("/orders/:id/cancel", authenticate, authorize("admin", "staff"), async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const orderId = parseId(req.params.id, "Order not found");
+    const { reason } = cancelKitchenOrderSchema.parse(req.body);
+    await cancelKitchenOrder(orderId, reason, req.user!.id);
     res.status(204).send();
   } catch (err) {
     next(err);

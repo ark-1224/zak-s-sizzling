@@ -13,10 +13,11 @@ import type { OrderDTO } from "@zaks/shared-types";
 // confirm them, per the manuscript's "Billing and Payment Processing" staff requirement.
 // Staff confirm first and collect the money after: confirming checks and deducts the
 // stock, so a short order is caught before any money changes hands
-// (docs/design/raw-material-stock.md 3.2). Online payments staff must sort out are
-// listed too, marked NEEDS ATTENTION with the server's note on what happened and what to
-// do: paid after the stock ran out or after the order was cancelled, a wrong amount, or
-// paid twice. Once staff have dealt with it, Mark as sorted out takes it off the list.
+// (docs/design/raw-material-stock.md 3.2). Payments staff must sort out are listed too,
+// marked NEEDS ATTENTION with the server's note on what happened and what to do: paid
+// after the stock ran out or after the order was cancelled, a wrong amount, paid twice, or
+// cancelled by the kitchen after being paid. Once staff have dealt with it, Mark as sorted
+// out takes it off the list.
 // Each order shows how long ago it was placed, and the list can be searched by order
 // number (the customer reads it off their receipt screen). An abandoned unpaid order
 // can be cancelled, after a second click to make sure (UI review #15). The list reloads
@@ -253,12 +254,12 @@ export default function StaffOrdersPage() {
                         </div>
                         {order.stockIssue && (
                           <div className="mt-2 rounded-[5px] border border-adm-bad bg-adm-bad-soft p-2.5 text-base text-adm-ink md:text-sm">
-                            {order.stockIssueNote ?? "Something went wrong with this order's online payment. Check it with the customer."}
+                            <p>{order.stockIssueNote ?? "Something went wrong with this order's online payment. Check it with the customer."}</p>
                             {/* Once staff have refunded, substituted or collected the difference. */}
                             <AdmButton
                               variant="secondary"
                               size="compact"
-                              className="mt-2 block bg-adm-surface"
+                              className="mt-2 bg-adm-surface"
                               disabled={sortingOutId === order.id}
                               onClick={() => handleSortedOut(order)}
                             >

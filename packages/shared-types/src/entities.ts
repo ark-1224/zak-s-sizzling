@@ -131,9 +131,11 @@ export interface OrderDTO {
   status: OrderStatus;
   orderType: OrderType;
   totalAmount: number;
-  /** Paid online but stock ran short: nothing was deducted and staff must substitute or refund. */
+  /** Staff must sort this order out (shown as NEEDS ATTENTION); the note says what to do. */
   stockIssue: boolean;
   stockIssueNote: string | null;
+  /** Why the kitchen cancelled it; null otherwise. */
+  cancelReason: string | null;
   /** Estimated preparation time in minutes: from when the order was placed, then from when it reached the kitchen. 0 = ready right away. */
   estimatedPrepMinutes: number | null;
   /** When the order should be ready; set once it reaches the kitchen (paid, or confirmed at the counter). */

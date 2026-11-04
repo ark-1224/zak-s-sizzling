@@ -23,6 +23,7 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
     totalAmount: Number(order.totalAmount),
     stockIssue: order.stockIssue,
     stockIssueNote: order.stockIssueNote,
+    cancelReason: order.cancelReason,
     estimatedPrepMinutes: order.estimatedPrepMinutes,
     estimatedReadyAt: order.estimatedReadyAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),

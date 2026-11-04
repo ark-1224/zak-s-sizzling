@@ -39,6 +39,7 @@ export function countOrdersInKitchen(excludeOrderId?: string, db: Db = prisma): 
   return db.order.count({
     where: {
       id: excludeOrderId ? { not: excludeOrderId } : undefined,
+      status: { not: "cancelled" },
       items: { some: { kitchenTask: { status: { not: "completed" } } } },
     },
   });
