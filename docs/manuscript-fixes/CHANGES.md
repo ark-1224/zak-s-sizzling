@@ -804,6 +804,8 @@ An automated security review of this change found two weaknesses, corrected the 
 
 A further review found four rarer weaknesses, also corrected the same day (the fifteenth testing session): a payment and its flag are now written together, so a failure can't leave a paid order nobody knows about; an order is locked while its note changes; confirming at the counter no longer clears a flag, so staff always press Mark as sorted out; and a note about a particular payment names its PayMongo code, so two similar payments aren't taken for one. Test: `apps/api/test/integration/payment-flag-atomic.test.ts`.
 
+While correcting these, one more was found and corrected the same day (the sixteenth testing session): an order's kitchen tasks were written after its payment was saved, so a failure there left a paid order the kitchen never saw, because the next try found it paid and stopped. They are now written in the same transaction as the payment. If updating product availability fails after that, the error is logged and the payment still counts as recorded. Test: `apps/api/test/integration/kitchen-tasks-atomic.test.ts`.
+
 ### 13.1 Data dictionary
 
 When `orders` and `payments` are updated in section 3, make `orders.stock_issue_note` varchar(1000), and add:

@@ -510,7 +510,9 @@ attention, one item per line, so no amount owed is overwritten, and the button s
 staff read: if it has changed, the API answers 409 and the queue shows the new note. Only
 that button clears the flag: confirming an order at the counter leaves it. A payment and its
 flag are written in one transaction, so if the flag can't be written, PayMongo's next delivery
-does both. Transactions shows the reason and
+does both. An order's kitchen tasks are written in the same transaction as its payment, so a
+paid order always reaches the kitchen: if they can't be written, nothing is recorded and the
+next delivery, or pressing Confirm again, does it all. Transactions shows the reason and
 when it was refunded; cancelled orders don't count in sales.
 
 To test the real gateway path:
