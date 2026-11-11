@@ -313,7 +313,7 @@ npm run low-stock:now
 
 ### Database backups
 
-The worker backs up the whole database every night at 2:00 AM (Manila time) with
+The worker backs up the whole database every night at 11:00 PM (Manila time) with
 `pg_dump`: plain SQL, gzip-compressed, without owners or privileges so it restores into
 any database (`apps/worker/src/jobs/backupDatabase.ts`). When the `BACKUP_STORAGE_*`
 settings are present it uploads each backup to that S3-compatible bucket, under

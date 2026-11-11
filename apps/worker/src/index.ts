@@ -12,7 +12,7 @@ console.log("[worker] Zak's Sizzling Hub background worker started");
 // ever left unset on a deployed service, it must not behave like local dev.
 const isLocalDev = process.env.NODE_ENV === "development";
 
-// Nightly database backup at 2:00 AM Philippine time (jobs/backupDatabase.ts). Locally
+// Nightly database backup at 11:00 PM Philippine time (jobs/backupDatabase.ts). Locally
 // it's always scheduled: written to apps/worker/backups, and uploaded as well when cloud
 // storage is set up. Deployed, it's scheduled only with cloud storage, because the
 // container's disk doesn't survive a redeploy; there the file is deleted once uploaded.
@@ -35,9 +35,9 @@ function runBackup(reason: string) {
     });
 }
 
-if (backupsScheduled) cron.schedule("0 2 * * *", () => runBackup("nightly"), { timezone: "Asia/Manila" });
+if (backupsScheduled) cron.schedule("0 23 * * *", () => runBackup("nightly"), { timezone: "Asia/Manila" });
 
-// Deployed with cloud storage: after a restart or some downtime, don't wait for 2:00 AM
+// Deployed with cloud storage: after a restart or some downtime, don't wait for 11:00 PM
 // if the newest backup is more than a day old. Checking the bucket at every start also
 // shows straight away whether the storage settings work.
 if (!isLocalDev && storage) {
@@ -45,7 +45,7 @@ if (!isLocalDev && storage) {
     try {
       const [newest] = await listBackups(storage.client, storage.bucket);
       if (newest && Date.now() - newest.lastModified.getTime() < 24 * 60 * 60 * 1000) {
-        console.log(`[backup] newest cloud backup: ${newest.key} (${newest.lastModified.toISOString()}); next one at 2:00 AM`);
+        console.log(`[backup] newest cloud backup: ${newest.key} (${newest.lastModified.toISOString()}); next one at 11:00 PM`);
         return;
       }
       console.log(`[backup] ${newest ? "the newest cloud backup is over a day old" : "no cloud backup yet"}; taking one now`);
@@ -64,7 +64,7 @@ cron.schedule("0 * * * *", () => {
 console.log(`[worker] ${describeStorageConfig(storageConfig)}`);
 console.log(
   backupsScheduled
-    ? "[worker] scheduled: nightly backup (2:00 AM Manila time), hourly low-stock sweep"
+    ? "[worker] scheduled: nightly backup (11:00 PM Manila time), hourly low-stock sweep"
     : "[worker] scheduled: hourly low-stock sweep (nightly backup off until cloud storage is set up)"
 );
 
