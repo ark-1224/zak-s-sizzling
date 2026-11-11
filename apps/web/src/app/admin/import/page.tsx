@@ -261,10 +261,17 @@ export default function BulkImportPage() {
                       <StatusPill tone="ok">{currentPreview.created} NEW</StatusPill>
                       <StatusPill tone="warn">{currentPreview.updated} UPDATE</StatusPill>
                       <StatusPill tone="bad">{currentPreview.errors} ERROR{currentPreview.errors !== 1 ? "S" : ""}</StatusPill>
+                      {currentPreview.warnings > 0 && (
+                        <StatusPill tone="warn">
+                          {currentPreview.warnings} WARNING{currentPreview.warnings !== 1 ? "S" : ""}
+                        </StatusPill>
+                      )}
                       <span className="text-base text-adm-ink-2 md:text-sm">
                         {currentPreview.errors > 0
                           ? `Fix the ${currentPreview.errors} row${currentPreview.errors !== 1 ? "s" : ""} marked ERROR, in the box above or in your file, and the preview updates.`
-                          : "All rows are ready to import."}
+                          : currentPreview.warnings > 0
+                            ? `All rows can be imported. Check the ${currentPreview.warnings} row${currentPreview.warnings !== 1 ? "s" : ""} with a warning first.`
+                            : "All rows are ready to import."}
                       </span>
                     </div>
                     <div className="max-h-80 overflow-auto">
@@ -274,7 +281,7 @@ export default function BulkImportPage() {
                             <th className="px-4.5 py-2 font-medium">Row</th>
                             <th className="px-3 py-2 font-medium">Name</th>
                             <th className="px-3 py-2 font-medium">Will</th>
-                            <th className="px-4.5 py-2 font-medium">Problem</th>
+                            <th className="px-4.5 py-2 font-medium">Problem or warning</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -291,7 +298,9 @@ export default function BulkImportPage() {
                                   <StatusPill tone="ok">NEW</StatusPill>
                                 )}
                               </td>
-                              <td className="px-4.5 py-2 text-adm-bad">{r.message ?? ""}</td>
+                              <td className={`px-4.5 py-2 ${r.message ? "text-adm-bad" : "text-adm-warn"}`}>
+                                {r.message ?? (r.warning ? `Warning: ${r.warning}` : "")}
+                              </td>
                             </tr>
                           ))}
                         </tbody>

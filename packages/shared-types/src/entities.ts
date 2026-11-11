@@ -272,6 +272,8 @@ export interface BulkImportRowResult {
   status: "created" | "updated" | "error";
   name?: string;
   message?: string;
+  /** A row that can be imported but deserves a look first, e.g. a name another product already has. */
+  warning?: string;
 }
 
 export interface BulkImportSummary {
@@ -279,6 +281,8 @@ export interface BulkImportSummary {
   created: number;
   updated: number;
   errors: number;
+  /** Rows that can be imported but carry a warning (they are counted in created/updated too). */
+  warnings: number;
   /** True for a preview: rows were checked and nothing was saved. */
   dryRun: boolean;
   results: BulkImportRowResult[];

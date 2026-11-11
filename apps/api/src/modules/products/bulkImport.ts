@@ -85,10 +85,22 @@ export async function bulkImportProducts(rows: Record<string, string>[], { dryRu
   // with the same barcode updates it: the preview has to follow that too.
   const barcodesInFile = new Set<string>();
 
+  // Rows are matched by barcode only, so a row named like an existing product (or like an
+  // earlier row of this file) adds a second product with that name. That's allowed, but
+  // the admin is warned so it isn't a surprise on the kiosk.
+  const existingProducts = await prisma.product.findMany({ select: { id: true, name: true } });
+  const productsByName = new Map<string, { id: string; name: string }[]>();
+  for (const p of existingProducts) {
+    const key = nameKey(p.name);
+    productsByName.set(key, [...(productsByName.get(key) ?? []), p]);
+  }
+  const namesInFile = new Map<string, { row: number; barcode?: string }>();
+
   const results: BulkImportRowResult[] = [];
   let created = 0;
   let updated = 0;
   let errors = 0;
+  let warnings = 0;
 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2; // +1 for 0-index, +1 for the header row
@@ -103,8 +115,13 @@ export async function bulkImportProducts(rows: Record<string, string>[], { dryRu
     const isUpdate = Boolean(existing) || (row.barcode !== undefined && barcodesInFile.has(row.barcode));
     if (row.barcode) barcodesInFile.add(row.barcode);
 
+    const warning = sameNameWarning(row, existing?.id, productsByName, namesInFile);
+    if (!namesInFile.has(nameKey(row.name))) namesInFile.set(nameKey(row.name), { row: rowNum, barcode: row.barcode });
+    if (warning) warnings++;
+    const withWarning = warning ? { warning } : {};
+
     if (dryRun) {
-      results.push({ row: rowNum, status: isUpdate ? "updated" : "created", name: row.name });
+      results.push({ row: rowNum, status: isUpdate ? "updated" : "created", name: row.name, ...withWarning });
       if (isUpdate) updated++;
       else created++;
       continue;
@@ -121,7 +138,7 @@ export async function bulkImportProducts(rows: Record<string, string>[], { dryRu
           stockQty: row.stockQty,
           minStockThreshold: row.minStockThreshold,
         });
-        results.push({ row: rowNum, status: "updated", name: row.name });
+        results.push({ row: rowNum, status: "updated", name: row.name, ...withWarning });
         updated++;
       } else {
         await createProduct({
@@ -134,7 +151,7 @@ export async function bulkImportProducts(rows: Record<string, string>[], { dryRu
           stockQty: row.stockQty ?? 0,
           minStockThreshold: row.minStockThreshold ?? 5,
         });
-        results.push({ row: rowNum, status: "created", name: row.name });
+        results.push({ row: rowNum, status: "created", name: row.name, ...withWarning });
         created++;
       }
     } catch (err) {
@@ -143,5 +160,35 @@ export async function bulkImportProducts(rows: Record<string, string>[], { dryRu
     }
   }
 
-  return { total: rows.length, created, updated, errors, dryRun, results };
+  return { total: rows.length, created, updated, errors, warnings, dryRun, results };
+}
+
+/** Product names compare without regard to letter case or extra spaces. */
+function nameKey(name: string): string {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/**
+ * Warns when this row would leave two products with the same name: another product
+ * already has it (not the one this row updates), or an earlier row of this file adds it
+ * (unless both rows carry the same barcode, in which case the later row just updates it).
+ */
+function sameNameWarning(
+  row: ValidRow,
+  updatesProductId: string | undefined,
+  productsByName: Map<string, { id: string; name: string }[]>,
+  namesInFile: Map<string, { row: number; barcode?: string }>,
+): string | undefined {
+  const key = nameKey(row.name);
+  const other = (productsByName.get(key) ?? []).find((p) => p.id !== updatesProductId);
+  if (other) {
+    return updatesProductId
+      ? `Another product is already named "${other.name}", so after this update two products share that name.`
+      : `A product named "${other.name}" already exists. This row adds a second one; give it a barcode that matches the existing product to update it instead.`;
+  }
+  const earlier = namesInFile.get(key);
+  if (earlier && !(row.barcode && earlier.barcode === row.barcode)) {
+    return `Same name as row ${earlier.row} of this file, so the import adds two products named "${row.name}".`;
+  }
+  return undefined;
 }

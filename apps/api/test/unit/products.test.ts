@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../../src/lib/prisma", () => ({
   prisma: {
     category: { findMany: vi.fn() },
-    product: { findUnique: vi.fn() },
+    product: { findUnique: vi.fn(), findMany: vi.fn() },
   },
 }));
 vi.mock("../../src/modules/products/service", async (importOriginal) => ({
@@ -26,6 +26,74 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocked(prisma.category.findMany).mockResolvedValue([drinks] as never);
   mocked(prisma.product.findUnique).mockResolvedValue(null as never);
+  mocked(prisma.product.findMany).mockResolvedValue([] as never);
+});
+
+describe("bulkImportProducts same-name warning", () => {
+  it("warns when a new row has the name of an existing product, ignoring case and spaces", async () => {
+    mocked(prisma.product.findMany).mockResolvedValue([{ id: "p-1", name: "Iced Tea" }] as never);
+
+    const summary = await bulkImportProducts([{ name: "  iced  TEA ", category: "Drinks", price: "45" }], { dryRun: true });
+
+    expect(summary).toMatchObject({ created: 1, errors: 0, warnings: 1 });
+    expect(summary.results[0].status).toBe("created");
+    expect(summary.results[0].warning).toMatch(/A product named "Iced Tea" already exists/);
+  });
+
+  it("doesn't warn when the row updates that same product by barcode", async () => {
+    mocked(prisma.product.findMany).mockResolvedValue([{ id: "p-1", name: "Iced Tea" }] as never);
+    mocked(prisma.product.findUnique).mockResolvedValue({ id: "p-1" } as never);
+
+    const summary = await bulkImportProducts([{ name: "Iced Tea", category: "Drinks", price: "50", barcode: "480001" }], { dryRun: true });
+
+    expect(summary).toMatchObject({ updated: 1, warnings: 0 });
+    expect(summary.results[0].warning).toBeUndefined();
+  });
+
+  it("warns when a row's barcode updates one product but its name belongs to another", async () => {
+    mocked(prisma.product.findMany).mockResolvedValue([
+      { id: "p-1", name: "Iced Tea" },
+      { id: "p-2", name: "Lemonade" },
+    ] as never);
+    mocked(prisma.product.findUnique).mockResolvedValue({ id: "p-2" } as never);
+
+    const summary = await bulkImportProducts([{ name: "Iced Tea", category: "Drinks", price: "50", barcode: "480002" }], { dryRun: true });
+
+    expect(summary).toMatchObject({ updated: 1, warnings: 1 });
+    expect(summary.results[0].warning).toMatch(/Another product is already named "Iced Tea"/);
+  });
+
+  it("warns when two rows of the same file add the same name, but not when they share a barcode", async () => {
+    const summary = await bulkImportProducts(
+      [
+        { name: "Mango Shake", category: "Drinks", price: "80" },
+        { name: "mango shake", category: "Drinks", price: "85" },
+        { name: "Buko Shake", category: "Drinks", price: "80", barcode: "B1" },
+        { name: "Buko Shake", category: "Drinks", price: "90", barcode: "B1" },
+      ],
+      { dryRun: true },
+    );
+
+    expect(summary.results.map((r) => r.warning ?? null)).toEqual([null, expect.stringMatching(/row 2 of this file/), null, null]);
+    expect(summary.warnings).toBe(1);
+  });
+
+  it("keeps the warning on the saved import's results and still saves the row", async () => {
+    mocked(prisma.product.findMany).mockResolvedValue([{ id: "p-1", name: "Iced Tea" }] as never);
+
+    const summary = await bulkImportProducts([{ name: "Iced Tea", category: "Drinks", price: "45" }]);
+
+    expect(createProduct).toHaveBeenCalledTimes(1);
+    expect(summary).toMatchObject({ created: 1, warnings: 1 });
+  });
+
+  it("gives an error row no warning", async () => {
+    mocked(prisma.product.findMany).mockResolvedValue([{ id: "p-1", name: "Iced Tea" }] as never);
+
+    const summary = await bulkImportProducts([{ name: "Iced Tea", category: "Drinks", price: "abc" }], { dryRun: true });
+
+    expect(summary).toMatchObject({ errors: 1, warnings: 0 });
+  });
 });
 
 describe("bulkImportProducts row checks", () => {
