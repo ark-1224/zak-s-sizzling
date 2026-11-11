@@ -8,8 +8,10 @@ import { getSocket } from "@/lib/websocket";
 import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
 import { PageHeader, Card, AdmButton, StatusPill, admButtonClass, admInputClass } from "@/components/admin/ui";
 import { AdjustStockModal } from "@/components/admin/AdjustStockModal";
+import { CameraScanner } from "@/components/admin/CameraScanner";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ProductPhoto } from "@/components/kiosk/ProductPhoto";
+import { Icon } from "@/components/Icon";
 import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import type { Category, InventoryUpdatedEvent, Product } from "@zaks/shared-types";
 
@@ -21,6 +23,9 @@ import type { Category, InventoryUpdatedEvent, Product } from "@zaks/shared-type
 // submits the form. When the field isn't focused, useBarcodeScanner still catches a
 // scan's fast burst of keys. After each lookup the field is cleared and focused again,
 // ready for the next item.
+//
+// No reader at hand? "Scan with camera" reads the barcode with the device's camera (a
+// phone's back camera), then looks it up the same way (components/admin/CameraScanner).
 //
 // A barcode with no product says so plainly; an administrator can add the product
 // straight from there with the scanned barcode filled in. Any other failure (no
@@ -71,6 +76,7 @@ export default function BarcodeLookupPage() {
   // Admin only: adding a product for a barcode that wasn't found.
   const [adding, setAdding] = useState<{ barcode: string; categories: Category[] } | null>(null);
   const [inputError, setInputError] = useState<string | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const requestId = useRef(0);
   const success = useSuccessMessage();
@@ -79,8 +85,10 @@ export default function BarcodeLookupPage() {
     setRecent((list) => [entry, ...list.filter((r) => r.code !== entry.code)].slice(0, RECENT_COUNT));
   }, []);
 
+  // refocus: put the cursor back in the field afterwards. Not after a camera scan, where
+  // focusing the field would only pop up the phone's keyboard over the result.
   const runLookup = useCallback(
-    async (raw: string) => {
+    async (raw: string, { refocus = true }: { refocus?: boolean } = {}) => {
       const cleaned = cleanBarcode(raw);
       if ("error" in cleaned) {
         setInputError(cleaned.error);
@@ -106,7 +114,7 @@ export default function BarcodeLookupPage() {
           setLookup({ state: "error", code: scanned, message: err instanceof ApiError ? err.message : NO_CONNECTION });
         }
       } finally {
-        if (id === requestId.current) inputRef.current?.focus();
+        if (id === requestId.current && refocus) inputRef.current?.focus();
       }
     },
     [remember]
@@ -114,7 +122,7 @@ export default function BarcodeLookupPage() {
 
   // A scan while focus is elsewhere on the page. Not while a form is open: the product
   // form catches scans into its own barcode field.
-  useBarcodeScanner(runLookup, adjusting === null && adding === null);
+  useBarcodeScanner(runLookup, adjusting === null && adding === null && !cameraOpen);
 
   async function startAdding(barcode: string) {
     try {
@@ -164,7 +172,7 @@ export default function BarcodeLookupPage() {
       <div>
         <PageHeader eyebrow="Operations" title="Barcode lookup" />
         <p className="text-base text-adm-ink-2 md:text-sm">
-          Scan a product&apos;s barcode with the barcode reader, or type it and press Enter, to see its price and stock.
+          Scan a product&apos;s barcode with the barcode reader or the camera, or type it and press Enter, to see its price and stock.
         </p>
       </div>
 
@@ -194,6 +202,10 @@ export default function BarcodeLookupPage() {
         />
         <AdmButton type="submit" variant="primary" disabled={!code.trim() || lookup.state === "loading"}>
           Look up
+        </AdmButton>
+        <AdmButton type="button" variant="secondary" className="gap-2" onClick={() => setCameraOpen(true)}>
+          <Icon name="barcode" className="h-4.5 w-4.5" />
+          Scan with camera
         </AdmButton>
       </form>
       {inputError && (
@@ -240,6 +252,16 @@ export default function BarcodeLookupPage() {
             ))}
           </ul>
         </section>
+      )}
+
+      {cameraOpen && (
+        <CameraScanner
+          onDetected={(scanned) => {
+            setCameraOpen(false);
+            runLookup(scanned, { refocus: false });
+          }}
+          onClose={() => setCameraOpen(false)}
+        />
       )}
 
       {adding && (
