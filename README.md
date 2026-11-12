@@ -53,7 +53,9 @@ Sprints 1-3 are built and verified end-to-end against the local PostgreSQL datab
   One bug was found and fixed during this: a product-deletion safety check (blocking
   deletion of products with order history) wasn't catching the actual Prisma error type
   Postgres returns for that constraint, silently falling through to a raw 500 — now
-  returns a proper 409 with a clear message.
+  returns a proper 409 with a clear message. (Barcode lookup and the separate Inventory
+  page were removed in November 2026 after the panel's review; see "Panel feedback"
+  below.)
 
 - **Sprint 5** — kitchen display, analytics, backups, data export. **The core
   requirement — a paid order reaching the kitchen and its status changes broadcasting
@@ -158,7 +160,7 @@ order is paid. Offline/PWA support was removed from scope.
   but never built; per-item profitability needed a `cost` field the schema didn't
   have). All three were built and verified live: a CSV with a mix of new, updating,
   and invalid rows produced exactly the expected created/updated/error counts (matched
-  by barcode); a staff account was created, confirmed it can log in, confirmed its
+  by barcode then; by name since November 2026); a staff account was created, confirmed it can log in, confirmed its
   sidebar correctly hides "Users & roles", and confirmed hitting `/admin/users`
   directly still redirects it away — **and confirmed the server itself rejects a staff
   token with a real 403** (not just a client-side redirect), confirmed an admin can't
@@ -233,7 +235,8 @@ order is paid. Offline/PWA support was removed from scope.
   them with the icon as fallback. Price chips filter the kiosk menu. Verified with
   integration tests (prep-time, barcode-lookup, product-images) and in the browser at
   1024×600 and 375px: a cart's estimate (17 min) matched the formula through checkout,
-  receipt, counter confirmation and the kitchen display.
+  receipt, counter confirmation and the kitchen display. (`/admin/barcode` was removed
+  in November 2026 at the panel's request.)
 
 - **Functional gaps closed (28 October 2026)** — order status now follows the kitchen
   (confirmed → preparing → ready, then completed when the kitchen presses **Handed
@@ -263,6 +266,48 @@ order is paid. Offline/PWA support was removed from scope.
   and in the browser: wrong code (4 tries left), then the right code pasted with a space
   signed in and returned to the requested page.
 
+- **Panel feedback: bill of materials (12–13 November 2026)** — after the panel's review
+  the whole inventory runs on raw materials:
+  - **Every dish is made from a bill of materials.** The product form's "how is stock
+    counted" switch and plate counts are gone; a dish needs at least one raw material in
+    its recipe to be saved, and its stock is the servings its raw materials can make.
+    Saving a recipe puts its raw materials back in use.
+  - **Ready-made items.** A built-in **Ready-made** category holds items sold as they
+    are (bottled drinks such as Coke Kasalo and Iced Tea). They have no recipe and are
+    counted in pieces with a minimum, like the old unit products. The category's name is
+    fixed and it can't be deleted; there is only one.
+  - **Raw materials is the inventory page.** Three tabs: Raw materials, **Dishes
+    (servings)** (each dish's servings and the raw material that limits it) and
+    **Ready-made (pieces)** (pieces, minimum, Adjust stock with a reason, and a change
+    log). `/admin/inventory` redirects to the Dishes tab. `?filter=low` / `?filter=out`
+    show what needs restocking or has run out.
+  - **Dashboard.** The notice reads "X items at or below minimum stock" with a **See
+    more** button, and the **Needs restock** and **Out of stock** tiles are links; all
+    open Raw materials filtered. They count raw materials in use plus ready-made items.
+  - **Special instructions per product.** The product form sets each dish's quick
+    options (up to 8, 30 characters each) and an **Offer special instructions** switch;
+    the kiosk shows that dish's options, or no instructions section when it's off. New
+    dishes start with their category's usual options.
+  - **Barcode lookup removed.** The page, sidebar link, camera scanner (and its ZXing
+    packages), the product's barcode field and the barcode import column are gone; the
+    `barcode` column stays in the database, unused.
+  - **Bulk import with recipes.** Two tables, as two sheets of one Excel file or two CSV
+    texts: Products (`name, category, price, cost, description`) and Recipes (`product,
+    rawMaterial, qtyPerServing`). Products are matched by name; a new dish must bring its
+    recipe; recipe rows replace a dish's whole recipe and can update a dish already on
+    the menu; ready-made items take no recipe. The Excel template has dropdowns for
+    categories and raw materials.
+
+  Migrations `product_instructions_and_bom` (adds the options and switch with each
+  category's old chips as defaults, switches products to recipe tracking and marks
+  dishes without a recipe unavailable) and `ready_made_category` (adds the category and
+  moves Coke Kasalo and Iced Tea into it with their old piece counts). Verified with unit
+  and integration tests (`ready-made.test.ts`, BOM and special-instruction cases in
+  `products.test.ts`, the two-table import tests) and in the browser: the dashboard
+  notice and tiles, the filtered lists, the three tabs, the product form for a dish and a
+  ready-made item, Adjust stock on a ready-made item, the kiosk's options and Ready-made
+  category, and the import preview.
+
 ## Prerequisites
 
 - Node.js 20+ and npm
@@ -288,7 +333,9 @@ npm run db:seed -w apps/api
 The seed script creates 3 roles, one admin user, and Zak's real menu: the twelve
 sizzling plates and prices from the owner's menu poster, each with a photo cut from that
 poster (`apps/api/prisma/seed-images/`), plus sample raw materials and recipes for Pork
-Sisig and Chicken Teriyaki. The poster lists only names and prices, so each dish's
+Sisig and Chicken Teriyaki. Every dish needs a recipe now, so the other seeded dishes
+show as sold out until one is added (Products, or Bulk import's Recipes table). The
+migrations also add the built-in Ready-made category. The poster lists only names and prices, so each dish's
 description, ingredients, allergens and nutrition are estimates from typical recipes and
 USDA FoodData Central, to be confirmed with the owner (sources and portions in
 `docs/design/menu-nutrition.md`); the preparation times are estimates too. It prints the
@@ -445,7 +492,7 @@ It sends one test email to `ALERT_EMAIL_TO`, or says what's missing or why it wa
 refused. When the worker starts it logs whether email alerts are on. Without
 these settings everything still runs, and alerts stay in the worker's log.
 
-**Low-stock emails.** When a unit-counted product or an active raw material reaches its
+**Low-stock emails.** When a ready-made item (counted in pieces) or an active raw material reaches its
 minimum stock level (goes from above it to at or below it), database triggers on
 `inventory` and `raw_materials` queue a row in `low_stock_alerts`, whatever changed the
 stock: a sale, an adjustment, a restock, an edited minimum. The worker emails whatever is

@@ -1,6 +1,7 @@
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../../src/lib/prisma";
+import { refreshAvailability } from "../../src/modules/inventory/fulfillment";
 import { PRODUCTS, RAW_MATERIALS, USERS } from "./fixtures";
 import { app, kioskToken, loginAs } from "./helpers";
 
@@ -28,6 +29,9 @@ beforeAll(async () => {
   const materials = await prisma.rawMaterial.findMany({ where: { name: { in: materialNames } } });
   materialsBefore = materials.map((m) => ({ name: m.name, stockQty: m.stockQty.toNumber() }));
   await prisma.rawMaterial.updateMany({ where: { name: { in: materialNames } }, data: { stockQty: 10_000 } });
+  // An earlier file may have left the bowl sold out (stock.test.ts ends with too little
+  // rice); with the raw materials restocked, work out its availability again.
+  await refreshAvailability({ productIds: [water.id, bowl.id], materialIds: [] });
 });
 
 afterAll(async () => {
