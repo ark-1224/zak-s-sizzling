@@ -4,27 +4,34 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import Link from "next/link";
 import { getStoredUser } from "@/lib/auth";
-import { formatMaterialQty } from "@/lib/units";
-import { PageHeader, Card, KpiTile, StatusPill } from "@/components/admin/ui";
+import { PageHeader, Card, KpiTile, StatusPill, admButtonClass } from "@/components/admin/ui";
 import type { Product, RawMaterialDTO } from "@zaks/shared-types";
 
 // Live stock dashboard — the admin landing page, ported from the Stock Inventory
-// System UI mockup's screen 02. Replaces the old bare nav-link list now that
-// AdminShell's sidebar carries navigation.
+// System UI mockup's screen 02. Every dish is made from a bill of materials (panel
+// feedback), so stock is counted in raw materials, plus the ready-made items (bottled
+// drinks, counted in pieces). The low-stock notice and the Needs restock / Out of stock
+// tiles count both, and each links to the Raw materials page already filtered to them.
+// The table shows the servings each dish's recipe can still make, or a ready-made
+// item's pieces.
+const isReadyMade = (p: Product) => p.category?.isReadyMade === true;
+
 function stockLevel(p: Product): { pct: number; tone: "ok" | "warn" | "bad"; label: string } {
-  const on = p.stockQty ?? 0;
-  // A recipe dish's stock is the servings its raw materials can make; it runs low when
-  // one of those raw materials does, which the banner above the table reports.
-  if (p.tracking === "recipe") return on === 0 ? { pct: 2, tone: "bad", label: "OUT" } : { pct: 100, tone: "ok", label: "OK" };
-  const min = p.minStockThreshold ?? 5;
-  if (on === 0) return { pct: 2, tone: "bad", label: "OUT" };
-  if (on <= min) return { pct: Math.max(8, Math.min(100, (on / (min * 2)) * 100)), tone: "warn", label: "LOW" };
+  const qty = p.stockQty ?? 0;
+  if (qty <= 0) return { pct: 2, tone: "bad", label: "OUT" };
+  // A ready-made item has its own minimum. A dish runs low when one of its raw materials
+  // does, which the notice above reports.
+  if (isReadyMade(p) && qty <= (p.minStockThreshold ?? 0)) return { pct: 35, tone: "warn", label: "LOW" };
   return { pct: 100, tone: "ok", label: "OK" };
+}
+
+/** The Raw materials page filtered to `filter`, on the Ready-made tab when only ready-made items match. */
+function stockHref(filter: "low" | "out", materialCount: number, readyMadeCount: number) {
+  return materialCount === 0 && readyMadeCount > 0 ? `/admin/raw-materials?tab=ready-made&filter=${filter}` : `/admin/raw-materials?filter=${filter}`;
 }
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [lowStock, setLowStock] = useState<Product[]>([]);
   const [materials, setMaterials] = useState<RawMaterialDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -34,13 +41,11 @@ export default function AdminDashboardPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [prods, low, mats] = await Promise.all([
+      const [prods, mats] = await Promise.all([
         apiFetch<Product[]>("/api/products", { auth: "staff" }), // cost comes back for admins only
-        apiFetch<Product[]>("/api/inventory/low-stock", { auth: "staff" }),
         apiFetch<RawMaterialDTO[]>("/api/raw-materials", { auth: "staff" }),
       ]);
       setProducts(prods);
-      setLowStock(low);
       setMaterials(mats);
     } catch (err) {
       setMessage(err instanceof ApiError ? err.message : "Could not load the dashboard.");
@@ -55,22 +60,28 @@ export default function AdminDashboardPage() {
   }, [load]);
 
   const categoryCount = new Set(products.map((p) => p.categoryId)).size;
-  const outOfStock = products.filter((p) => (p.stockQty ?? 0) === 0).length;
-  // Recipe dishes hold no stock of their own: their value is in their raw materials.
+  const inUse = materials.filter((m) => m.isActive);
+  const readyMade = products.filter(isReadyMade);
+  // At or below the minimum, ones that ran out included (UI review #9).
+  const lowMaterials = inUse.filter((m) => m.isLow).length;
+  const outMaterials = inUse.filter((m) => m.stockQty <= 0).length;
+  const lowReadyMade = readyMade.filter((p) => (p.stockQty ?? 0) <= (p.minStockThreshold ?? 0)).length;
+  const outReadyMade = readyMade.filter((p) => (p.stockQty ?? 0) <= 0).length;
+  const lowCount = lowMaterials + lowReadyMade;
+  const outCount = outMaterials + outReadyMade;
+  const lowHref = stockHref("low", lowMaterials, lowReadyMade);
+  const outHref = stockHref("out", outMaterials, outReadyMade);
+  // Dishes hold no stock of their own: the inventory's value is its raw materials and
+  // its ready-made items' pieces.
   const inventoryValueAtCost =
-    products.filter((p) => p.tracking === "unit").reduce((sum, p) => sum + (p.cost ?? 0) * (p.stockQty ?? 0), 0) +
-    materials.reduce((sum, m) => sum + (m.costPerUnit ?? 0) * m.stockQty, 0);
+    materials.reduce((sum, m) => sum + (m.costPerUnit ?? 0) * m.stockQty, 0) +
+    readyMade.reduce((sum, p) => sum + (p.cost ?? 0) * Math.max(0, p.stockQty ?? 0), 0);
   // The value only counts items with a cost recorded, so say how many that is
   // (UI review #10): "At cost · 2 of 23 items have a cost".
-  const unitProducts = products.filter((p) => p.tracking === "unit");
-  const costedItems = unitProducts.filter((p) => p.cost != null).length + materials.filter((m) => m.costPerUnit != null).length;
-  const valuedItems = unitProducts.length + materials.length;
+  const stockItems = materials.length + readyMade.length;
+  const costedItems = materials.filter((m) => m.costPerUnit != null).length + readyMade.filter((p) => p.cost != null).length;
   const inventoryValueSub =
-    costedItems === valuedItems ? "At cost" : `At cost · ${costedItems} of ${valuedItems} item${valuedItems !== 1 ? "s" : ""} have a cost`;
-  const lowMaterials = materials.filter((m) => m.isActive && m.isLow);
-  // Everything at or below its minimum, sold-out items included (UI review #9: leaving
-  // them out made the tile disagree with the banner and hid the most urgent items).
-  const lowCount = lowStock.length + lowMaterials.length;
+    costedItems === stockItems ? "Raw materials and ready-made items at cost" : `At cost · ${costedItems} of ${stockItems} item${stockItems !== 1 ? "s" : ""} have a cost`;
 
   if (loading) return <div className="text-adm-ink-3">Loading…</div>;
 
@@ -81,34 +92,14 @@ export default function AdminDashboardPage() {
       {message && <div className="text-sm text-adm-bad">{message}</div>}
 
       {lowCount > 0 && (
-        <div className="flex flex-wrap items-center gap-3.5 rounded-[6px] border border-adm-warn bg-adm-warn-soft px-4 py-3.5">
+        <div role="status" className="flex flex-wrap items-center gap-3.5 rounded-[6px] border border-adm-warn bg-adm-warn-soft px-4 py-3.5">
           <span className="h-1.75 w-1.75 flex-shrink-0 rounded-full bg-adm-warn" />
           <div className="min-w-0 flex-1 text-base font-medium md:text-sm">
-            {lowCount} item{lowCount !== 1 ? "s" : ""} at or below minimum stock level
-            {lowMaterials.length > 0 && (
-              <>
-                {" "}
-                ({lowMaterials.length} raw material{lowMaterials.length !== 1 ? "s" : ""},{" "}
-                <Link href="/admin/raw-materials" className="underline underline-offset-2">
-                  restock
-                </Link>
-                )
-              </>
-            )}
-            .
+            {lowCount} item{lowCount !== 1 ? "s" : ""} at or below minimum stock
           </div>
-          <div className="flex w-full flex-wrap gap-1.5 md:ml-auto md:w-auto">
-            {[
-              ...lowStock.map((p) => ({ id: p.id, label: `${p.name.toUpperCase()} · ${p.stockQty}` })),
-              ...lowMaterials.map((m) => ({ id: m.id, label: `${m.name.toUpperCase()} · ${formatMaterialQty(m.stockQty, m.unit)}` })),
-            ]
-              .slice(0, 4)
-              .map((chip) => (
-                <span key={chip.id} className="font-adm-mono rounded-[3px] border border-adm-warn px-2 py-0.75 text-xs break-words text-adm-ink-2">
-                  {chip.label}
-                </span>
-              ))}
-          </div>
+          <Link href={lowHref} className={admButtonClass({ variant: "secondary", size: "compact" })}>
+            See more
+          </Link>
         </div>
       )}
 
@@ -117,12 +108,11 @@ export default function AdminDashboardPage() {
         {isAdmin && (
           <KpiTile label="Inventory value" value={`₱${inventoryValueAtCost.toLocaleString("en-US", { maximumFractionDigits: 0 })}`} sub={inventoryValueSub} />
         )}
-        <KpiTile label="Needs restock" value={String(lowCount)} sub="At or below minimum, incl. sold out" color="var(--adm-warn)" />
-        {/* The kiosk keeps sold-out items on the menu, marked "Sold out" (kiosk/ItemTile.tsx). */}
-        <KpiTile label="Out of stock" value={String(outOfStock)} sub="Shown as sold out" color="var(--adm-bad)" />
+        <KpiTile label="Needs restock" value={String(lowCount)} sub="Items at or below minimum" color="var(--adm-warn)" href={lowHref} />
+        <KpiTile label="Out of stock" value={String(outCount)} sub="Items with none left" color="var(--adm-bad)" href={outHref} />
       </div>
 
-      <Card title="Current inventory levels">
+      <Card title="Servings available per dish (pieces for ready-made items)">
         <ul className="divide-y divide-adm-line-soft md:hidden">
           {products.map((p) => {
             const level = stockLevel(p);
@@ -135,7 +125,7 @@ export default function AdminDashboardPage() {
                     <div className="text-sm text-adm-ink-2">{p.category?.name}</div>
                   </div>
                   <div className="font-adm-mono shrink-0 text-base">
-                    {p.stockQty ?? 0} {p.tracking === "recipe" ? "servings" : "on hand"}
+                    {p.stockQty ?? 0} {isReadyMade(p) ? "pieces" : "servings"}
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
@@ -154,7 +144,7 @@ export default function AdminDashboardPage() {
               <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                 <th className="px-4.5 py-2.75 font-medium">Product</th>
                 <th className="px-3 py-2.75 font-medium">Category</th>
-                <th className="px-3 py-2.75 text-right font-medium">On hand</th>
+                <th className="px-3 py-2.75 text-right font-medium">Servings / pieces</th>
                 <th className="w-45 px-4.5 py-2.75 font-medium">Level</th>
               </tr>
             </thead>
@@ -166,12 +156,10 @@ export default function AdminDashboardPage() {
                   <tr key={p.id} className="border-t border-adm-line-soft">
                     <td className="px-4.5 py-3">
                       <div className="font-medium">{p.name}</div>
-                      {p.barcode && <div className="font-adm-mono mt-0.5 text-xs text-adm-ink-3">{p.barcode}</div>}
                     </td>
                     <td className="px-3 py-3 text-adm-ink-2 whitespace-nowrap">{p.category?.name}</td>
                     <td className="font-adm-mono px-3 py-3 text-right whitespace-nowrap">
                       {p.stockQty ?? 0}
-                      {p.tracking === "recipe" && <span className="ml-1 text-adm-ink-3">servings</span>}
                     </td>
                     <td className="px-4.5 py-3">
                       <div className="flex items-center gap-2.5">

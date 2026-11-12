@@ -5,7 +5,9 @@ import { app, loginAs } from "./helpers";
 
 // Manual product stock adjustments (PATCH /api/inventory/:productId), UI review #5:
 // damaged goods and spoilage can only lower the stock. Test files share one database
-// and run in no fixed order, so this file creates its own product.
+// and run in no fixed order, so this file creates its own product. Dishes are made from
+// a bill of materials now, so the API no longer creates unit-counted products; this one
+// is written straight to the database, like a product saved before that change.
 
 let admin: string;
 let staff: string;
@@ -20,11 +22,10 @@ beforeAll(async () => {
   admin = await loginAs("admin");
   staff = await loginAs("staff");
   const categoryId = (await request(app).get("/api/categories")).body[0].id;
-  const created = await request(app)
-    .post("/api/products")
-    .set(as(admin))
-    .send({ name: "Adjust Test Iced Tea", price: 45, categoryId, stockQty: 20, minStockThreshold: 5 });
-  productId = created.body.id;
+  const created = await prisma.product.create({
+    data: { name: "Adjust Test Iced Tea", price: 45, categoryId, tracking: "unit", inventory: { create: { stockQty: 20, minStockThreshold: 5 } } },
+  });
+  productId = created.id;
 });
 
 describe("adjusting a product's stock (Staff)", () => {

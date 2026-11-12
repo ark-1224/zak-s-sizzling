@@ -73,7 +73,6 @@ const MATRIX: Entry[] = [
   { method: "get", route: "/api/inventory/low-stock", path: "/api/inventory/low-stock", expected: STAFF },
   { method: "get", route: "/api/inventory/adjustments", path: "/api/inventory/adjustments", expected: STAFF },
   { method: "patch", route: "/api/inventory/:productId", path: `/api/inventory/${MISSING}`, body: {}, expected: STAFF },
-  { method: "get", route: "/api/products/barcode/:code", path: `/api/products/barcode/${PRODUCTS.sisig.barcode}`, expected: STAFF },
   { method: "get", route: "/api/raw-materials/", path: "/api/raw-materials", expected: STAFF },
   { method: "get", route: "/api/raw-materials/movements", path: "/api/raw-materials/movements", expected: STAFF },
   { method: "patch", route: "/api/raw-materials/:id/stock", path: `/api/raw-materials/${MISSING}/stock`, body: {}, expected: STAFF },

@@ -50,14 +50,15 @@ describe("reading a cell", () => {
 describe("turning a sheet into import CSV", () => {
   it("matches column names loosely, keeps the template's column order, and leaves out other columns", async () => {
     const file = await workbook([
-      ["Price", "Product notes", "NAME", "Category", "Stock qty", "min_stock_threshold"],
-      [185, "ignored", "Sizzling Sisig", "Sizzling Plates", 20, 5],
+      ["Price", "Product notes", "NAME", "Category", "Stock qty", "Barcode"],
+      [185, "ignored", "Sizzling Sisig", "Sizzling Plates", 20, "480001"],
     ]);
 
     const result = await xlsxToImportCsv(file);
 
-    expect(result).toMatchObject({ sheetName: "Products", rows: 1, ignoredColumns: ["Product notes"] });
-    expect(result.csvText).toBe("name,category,price,stockQty,minStockThreshold\nSizzling Sisig,Sizzling Plates,185,20,5");
+    // A dish's stock comes from its recipe and barcodes are gone, so those columns are left out.
+    expect(result).toMatchObject({ sheetName: "Products", rows: 1, ignoredColumns: ["Product notes", "Stock qty", "Barcode"], recipes: null });
+    expect(result.csvText).toBe("name,category,price\nSizzling Sisig,Sizzling Plates,185");
   });
 
   it("finds the header row below a title, and skips empty rows", async () => {
@@ -76,20 +77,46 @@ describe("turning a sheet into import CSV", () => {
     ]);
   });
 
-  it("keeps a text barcode's leading zeros, uses a formula's result, and survives commas and quotes", async () => {
-    const file = await workbook(
-      [
-        ["name", "barcode", "category", "price", "description"],
-        ["Bottled Water", "0048000123", "Drinks", { formula: "10*2", result: 20 }, 'Cold, "500 ml"'],
-      ],
-      (sheet) => {
-        sheet.getColumn(2).numFmt = "@";
-      }
-    );
+  it("uses a formula's result and survives commas and quotes", async () => {
+    const file = await workbook([
+      ["name", "category", "price", "cost", "description"],
+      ["Bottled Water", "Drinks", { formula: "10*2", result: 20 }, 8, 'Cold, "500 ml"'],
+    ]);
 
     expect(fromCSV((await xlsxToImportCsv(file)).csvText)).toEqual([
-      { name: "Bottled Water", barcode: "0048000123", category: "Drinks", price: "20", description: 'Cold, "500 ml"' },
+      { name: "Bottled Water", category: "Drinks", price: "20", cost: "8", description: 'Cold, "500 ml"' },
     ]);
+  });
+
+  it("reads the Recipes sheet next to the Products sheet, whatever the sheet order", async () => {
+    const wb = new ExcelJS.Workbook();
+    const recipes = wb.addWorksheet("Bill of materials");
+    recipes.addRow(["Product", "Raw material", "Qty per serving"]);
+    recipes.addRow(["Pork Sisig", "Pork mask", 150]);
+    recipes.addRow(["Pork Sisig", "Onion", 20]);
+    const products = wb.addWorksheet("Menu");
+    products.addRow(["name", "category", "price"]);
+    products.addRow(["Pork Sisig", "Sizzling Plates", 185]);
+
+    const result = await xlsxToImportCsv(Buffer.from(await wb.xlsx.writeBuffer()));
+
+    expect(result).toMatchObject({ sheetName: "Menu", rows: 1 });
+    expect(result.recipes).toMatchObject({ sheetName: "Bill of materials", rows: 2, ignoredColumns: [] });
+    expect(fromCSV(result.recipes!.csvText)).toEqual([
+      { product: "Pork Sisig", rawMaterial: "Pork mask", qtyPerServing: "150" },
+      { product: "Pork Sisig", rawMaterial: "Onion", qtyPerServing: "20" },
+    ]);
+  });
+
+  it("accepts a workbook with only recipes, to update the recipes of dishes already on the menu", async () => {
+    const file = await workbook([
+      ["product", "rawMaterial", "qtyPerServing"],
+      ["Java Rice", "Rice", 180],
+    ]);
+
+    const result = await xlsxToImportCsv(file);
+
+    expect(result).toMatchObject({ csvText: "", rows: 0, recipes: { rows: 1 } });
   });
 
   it("uses the first sheet that has rows", async () => {
@@ -108,13 +135,13 @@ describe("turning a sheet into import CSV", () => {
     const err = await failure(xlsxToImportCsv(await workbook([["Sisig", 185], ["Bulalo", 260]])));
 
     expect(err).toMatchObject({ status: 400 });
-    expect(err?.message).toMatch(/^Couldn't find the header row in the sheet "Products"/);
+    expect(err?.message).toMatch(/^Couldn't find a Products or Recipes table/);
   });
 
   it("explains a header row with no products under it", async () => {
     const err = await failure(xlsxToImportCsv(await workbook([["name", "category", "price"]])));
 
-    expect(err).toMatchObject({ status: 400, message: 'The sheet "Products" has a header row but no products under it.' });
+    expect(err).toMatchObject({ status: 400, message: "The Excel file has header rows but no rows under them." });
   });
 
   it("refuses a file that isn't an .xlsx workbook, saying how to save one", async () => {
@@ -229,36 +256,54 @@ describe("files that would cost too much to read", () => {
 describe("the Excel template", () => {
   const categories = [{ name: "Sizzling Plates" }, { name: "Drinks" }, { name: "Desserts" }];
 
-  it("has the import columns, a sample row in Drinks, and the barcode column stored as text", async () => {
+  const materials = [
+    { name: "Iced tea powder", unit: "g" as const },
+    { name: "Ice", unit: "g" as const },
+    { name: "Cup", unit: "pc" as const },
+  ];
+
+  it("has a Products sheet with the import columns and a sample row in Drinks", async () => {
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load((await buildImportTemplateXlsx(categories)) as unknown as ArrayBuffer);
+    await wb.xlsx.load((await buildImportTemplateXlsx(categories, materials)) as unknown as ArrayBuffer);
     const sheet = wb.getWorksheet("Products")!;
 
-    expect(sheet.getRow(1).values).toEqual([
-      undefined,
-      "name",
-      "barcode",
-      "category",
-      "price",
-      "cost",
-      "stockQty",
-      "minStockThreshold",
-      "description",
-    ]);
+    expect(sheet.getRow(1).values).toEqual([undefined, "name", "category", "price", "cost", "description"]);
     expect(sheet.getCell("A2").value).toBe("Sample Iced Tea");
-    expect(sheet.getCell("C2").value).toBe("Drinks");
-    expect(sheet.getColumn(2).numFmt).toBe("@");
+    expect(sheet.getCell("B2").value).toBe("Drinks");
   });
 
-  it("offers the current categories as a dropdown in the category column", async () => {
+  it("has a Recipes sheet whose sample uses real raw materials, so it imports as it is", async () => {
     const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load((await buildImportTemplateXlsx(categories)) as unknown as ArrayBuffer);
+    await wb.xlsx.load((await buildImportTemplateXlsx(categories, materials)) as unknown as ArrayBuffer);
+    const sheet = wb.getWorksheet("Recipes")!;
+
+    expect(sheet.getRow(1).values).toEqual([undefined, "product", "rawMaterial", "qtyPerServing"]);
+    expect([sheet.getRow(2).values, sheet.getRow(3).values]).toEqual([
+      [undefined, "Sample Iced Tea", "Iced tea powder", 100],
+      [undefined, "Sample Iced Tea", "Ice", 100],
+    ]);
+  });
+
+  it("offers the current categories and raw materials as dropdowns", async () => {
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load((await buildImportTemplateXlsx(categories, materials)) as unknown as ArrayBuffer);
 
     expect(wb.getWorksheet("Categories")!.getColumn(1).values.slice(2)).toEqual(["Sizzling Plates", "Drinks", "Desserts"]);
-    expect(wb.getWorksheet("Products")!.getCell("C10").dataValidation).toMatchObject({
+    expect(wb.getWorksheet("Products")!.getCell("B10").dataValidation).toMatchObject({
       type: "list",
-      formulae: ["Categories!$A$2:$A$4"],
+      formulae: ["'Categories'!$A$2:$A$4"],
     });
+    expect(wb.getWorksheet("Raw materials")!.getColumn(2).values.slice(2)).toEqual(["g", "g", "pc"]);
+    expect(wb.getWorksheet("Recipes")!.getCell("B10").dataValidation).toMatchObject({
+      type: "list",
+      formulae: ["'Raw materials'!$A$2:$A$4"],
+    });
+  });
+
+  it("reads back as both tables", async () => {
+    const result = await xlsxToImportCsv(await buildImportTemplateXlsx(categories, materials));
+
+    expect(result).toMatchObject({ sheetName: "Products", rows: 1, recipes: { sheetName: "Recipes", rows: 2 } });
   });
 
   it("uses the first category for the sample when there is no Drinks category", async () => {

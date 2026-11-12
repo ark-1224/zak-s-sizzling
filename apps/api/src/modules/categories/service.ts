@@ -11,7 +11,7 @@ const NOT_FOUND = "Category not found";
 type CategoryRow = Prisma.CategoryGetPayload<{ include: { _count: { select: { products: true } } } }>;
 
 function toCategoryDTO(c: CategoryRow): Category {
-  return { id: c.id, name: c.name, icon: c.icon, sortOrder: c.sortOrder, isNew: c.isNew, productCount: c._count.products };
+  return { id: c.id, name: c.name, icon: c.icon, sortOrder: c.sortOrder, isNew: c.isNew, isReadyMade: c.isReadyMade, productCount: c._count.products };
 }
 
 /** Open kiosks reload their category rail. */
@@ -57,6 +57,11 @@ export async function createCategory(input: z.infer<typeof createCategorySchema>
 export async function updateCategory(id: number, input: z.infer<typeof updateCategorySchema>): Promise<Category> {
   const existing = await prisma.category.findUnique({ where: { id } });
   if (!existing) throw new HttpError(404, NOT_FOUND);
+  // Ready-made items are known by this category, so its name stays as it is (its icon,
+  // "new" badge and place on the rail can still change).
+  if (existing.isReadyMade && input.name !== undefined && input.name.trim() !== existing.name) {
+    throw new HttpError(409, `"${existing.name}" is the built-in category for ready-made items, so its name can't be changed`);
+  }
   if (input.name !== undefined) await assertNameFree(input.name, id);
   const row = await prisma.category.update({
     where: { id },
@@ -78,6 +83,7 @@ export async function updateCategory(id: number, input: z.infer<typeof updateCat
 export async function deleteCategory(id: number): Promise<void> {
   const existing = await prisma.category.findUnique({ where: { id }, include: { _count: { select: { products: true } } } });
   if (!existing) throw new HttpError(404, NOT_FOUND);
+  if (existing.isReadyMade) throw new HttpError(409, `"${existing.name}" is the built-in category for ready-made items, so it can't be deleted`);
   const count = existing._count.products;
   if (count > 0) {
     throw new HttpError(409, `Move its ${count} product${count !== 1 ? "s" : ""} to another category first, then delete "${existing.name}"`);

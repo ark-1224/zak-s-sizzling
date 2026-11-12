@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import request from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../../src/lib/prisma";
-import { CATEGORY } from "./fixtures";
+import { CATEGORY, RAW_MATERIALS } from "./fixtures";
 import { app, loginAs } from "./helpers";
 
 // Bulk import from Excel (POST /api/products/import-xlsx, then the existing
@@ -16,52 +16,71 @@ beforeAll(async () => {
   admin = await loginAs("admin");
 });
 
-async function xlsxBase64(rows: ExcelJS.CellValue[][]): Promise<string> {
+async function xlsxBase64(rows: ExcelJS.CellValue[][], recipeRows?: ExcelJS.CellValue[][]): Promise<string> {
   const wb = new ExcelJS.Workbook();
   const sheet = wb.addWorksheet("New items");
-  sheet.getColumn(2).numFmt = "@";
   for (const row of rows) sheet.addRow(row);
+  if (recipeRows) {
+    const recipes = wb.addWorksheet("Recipes");
+    for (const row of recipeRows) recipes.addRow(row);
+  }
   return Buffer.from(await wb.xlsx.writeBuffer()).toString("base64");
 }
 
 const convert = (fileBase64: unknown) =>
   request(app).post("/api/products/import-xlsx").set("Authorization", `Bearer ${admin}`).send({ fileBase64 });
-const bulkImport = (csvText: string, dryRun: boolean) =>
-  request(app).post("/api/products/bulk-import").set("Authorization", `Bearer ${admin}`).send({ csvText, dryRun });
+const bulkImport = (csvText: string, dryRun: boolean, recipesCsvText?: string) =>
+  request(app).post("/api/products/bulk-import").set("Authorization", `Bearer ${admin}`).send({ csvText, recipesCsvText, dryRun });
 
 describe("importing products from an Excel file", () => {
   it("previews the sheet's rows with the same checks as a CSV, saving nothing", async () => {
-    const file = await xlsxBase64([
-      ["name", "barcode", "category", "price", "stockQty"],
-      ["XLSX Test Preview Tea", "", CATEGORY.name, 45, 10],
-      ["XLSX Test Preview Bad", "", "No Such Category", 50, 3],
-    ]);
+    const file = await xlsxBase64(
+      [
+        ["name", "category", "price"],
+        ["XLSX Test Preview Tea", CATEGORY.name, 45],
+        ["XLSX Test Preview Bad", "No Such Category", 50],
+      ],
+      [
+        ["product", "rawMaterial", "qtyPerServing"],
+        ["XLSX Test Preview Tea", RAW_MATERIALS.rice.name, 10],
+      ]
+    );
 
     const converted = await convert(file);
-    const preview = await bulkImport(converted.body.csvText, true);
+    const preview = await bulkImport(converted.body.csvText, true, converted.body.recipes.csvText);
 
     expect(converted.status).toBe(200);
-    expect(converted.body).toMatchObject({ sheetName: "New items", rows: 2, ignoredColumns: [] });
+    expect(converted.body).toMatchObject({ sheetName: "New items", rows: 2, ignoredColumns: [], recipes: { sheetName: "Recipes", rows: 1 } });
     expect(preview.body).toMatchObject({ total: 2, created: 1, errors: 1, dryRun: true });
     expect(preview.body.results[1]).toMatchObject({ row: 3, status: "error", message: 'Unknown category "No Such Category"' });
     expect(await prisma.product.count({ where: { name: { startsWith: "XLSX Test Preview" } } })).toBe(0);
   });
 
-  it("imports the rows, keeping a text barcode's leading zeros", async () => {
-    const file = await xlsxBase64([
-      ["Name", "Barcode", "Category", "Price", "Cost", "Stock qty", "Min stock threshold"],
-      ["XLSX Test Calamansi Juice", "0048000999001", CATEGORY.name, 55, 22.5, 30, 6],
-    ]);
+  it("imports a dish with its bill of materials, leaving out the old stock columns", async () => {
+    const file = await xlsxBase64(
+      [
+        ["Name", "Category", "Price", "Cost", "Stock qty"],
+        ["XLSX Test Calamansi Juice", CATEGORY.name, 55, 22.5, 30],
+      ],
+      [
+        ["Product", "Raw material", "Qty per serving"],
+        ["XLSX Test Calamansi Juice", RAW_MATERIALS.rice.name, 50],
+      ]
+    );
 
     const converted = await convert(file);
-    const result = await bulkImport(converted.body.csvText, false);
+    const result = await bulkImport(converted.body.csvText, false, converted.body.recipes.csvText);
 
-    expect(result.body).toMatchObject({ total: 1, created: 1, errors: 0 });
-    const saved = await prisma.product.findFirstOrThrow({ where: { name: "XLSX Test Calamansi Juice" }, include: { inventory: true } });
-    expect(saved).toMatchObject({ barcode: "0048000999001" });
+    expect(converted.body.ignoredColumns).toEqual(["Stock qty"]);
+    expect(result.body).toMatchObject({ total: 1, created: 1, errors: 0, recipes: { dishes: 1 } });
+    const saved = await prisma.product.findFirstOrThrow({
+      where: { name: "XLSX Test Calamansi Juice" },
+      include: { recipeItems: { include: { rawMaterial: true } } },
+    });
+    expect(saved).toMatchObject({ tracking: "recipe" });
     expect(saved.price.toString()).toBe("55");
     expect(saved.cost?.toString()).toBe("22.5");
-    expect(saved.inventory).toMatchObject({ stockQty: 30, minStockThreshold: 6 });
+    expect(saved.recipeItems.map((r) => [r.rawMaterial.name, r.qtyPerServing.toString()])).toEqual([[RAW_MATERIALS.rice.name, "50"]]);
   });
 
   it("refuses a request without a file", async () => {
@@ -107,9 +126,9 @@ describe("the Excel import template", () => {
     const res = await download();
 
     const converted = await convert(res.body.toString("base64"));
-    const preview = await bulkImport(converted.body.csvText, true);
+    const preview = await bulkImport(converted.body.csvText, true, converted.body.recipes.csvText);
 
-    expect(preview.body).toMatchObject({ total: 1, errors: 0 });
+    expect(preview.body).toMatchObject({ total: 1, errors: 0, recipes: { dishes: 1, errors: 0 } });
   });
 
   it("is still a CSV without ?format=xlsx", async () => {

@@ -4,27 +4,29 @@ import { useEffect, useRef, useState } from "react";
 import { ProductDetailsFields, type NutritionText } from "@/components/admin/ProductDetailsFields";
 import { apiFetch, apiUrl, ApiError } from "@/lib/api-client";
 import { ImageResizeError, resizeProductPhoto, type ResizedImage } from "@/lib/imageResize";
-import { useBarcodeScanner } from "@/hooks/useBarcodeScanner";
+import { instructionChipsFor } from "@/lib/instructionChips";
 import { AdmButton, admInputClass, admLabelClass, admModalActionsClass, admModalBackdropClass, admModalPanelClass } from "./ui";
 import { formatMaterialQty } from "@/lib/units";
-import type { Category, Product, RawMaterialDTO, StockTracking } from "@zaks/shared-types";
+import type { Category, Product, RawMaterialDTO } from "@zaks/shared-types";
 
-// Add/Edit Product modal — fields match the manuscript's wireframe (name, barcode,
-// category, price, stock quantity, minimum stock unit, description) plus a cost field
-// for the Visual Analytics "profitability analysis per item" requirement. A product is
-// either counted in units (bottled drinks) or made from a recipe of raw materials
-// (sizzling plates, rice dishes); see docs/design/raw-material-stock.md.
-const TRACKING_OPTIONS: [StockTracking, string][] = [
-  ["unit", "Count units"],
-  ["recipe", "Use a recipe"],
-];
+// Add/Edit Product modal: name, category, price, cost (for the profitability analysis),
+// description, and the dish's bill of materials. Every dish's stock comes from its
+// recipe of raw materials (panel feedback; docs/design/raw-material-stock.md), so the
+// recipe is required and there's no stock count of its own. The exception is the
+// built-in Ready-made category (bottled drinks sold as they are): those items have no
+// recipe and are counted in pieces, with a minimum. The special-instruction options the
+// kiosk offers are set per product here too.
 
-type FieldKey = "name" | "barcode" | "price" | "cost" | "prepMinutes" | "stockQty" | "minStockThreshold" | "recipe";
+type FieldKey = "name" | "price" | "cost" | "prepMinutes" | "stockQty" | "minStockThreshold" | "recipe" | "instructions";
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 // The order the fields appear in, so focus goes to the first problem on the form.
-const FIELD_ORDER: FieldKey[] = ["name", "barcode", "price", "cost", "prepMinutes", "stockQty", "minStockThreshold", "recipe"];
+const FIELD_ORDER: FieldKey[] = ["name", "price", "cost", "prepMinutes", "stockQty", "minStockThreshold", "recipe", "instructions"];
 const MAX_PREP_MINUTES = 120;
+const MAX_PIECES = 100_000;
+// Matches the API: up to 8 quick options of up to 30 characters each.
+const MAX_OPTIONS = 8;
+const MAX_OPTION_LENGTH = 30;
 
 const isWholeNumber = (value: string) => /^\d+$/.test(value.trim());
 
@@ -34,15 +36,13 @@ type PhotoChange = { kind: "keep" } | { kind: "new"; image: ResizedImage } | { k
 
 interface ProductFormProps {
   product: Product | null; // null = create mode
-  /** Create mode: a barcode to start with, e.g. one just scanned on the Barcode lookup page. */
-  initialBarcode?: string;
   categories: Category[];
   onClose: () => void;
   /** Called with the saved product; `created` is true for a new one. */
   onSaved: (saved: Product, created: boolean) => void;
 }
 
-export function ProductForm({ product, initialBarcode, categories, onClose, onSaved }: ProductFormProps) {
+export function ProductForm({ product, categories, onClose, onSaved }: ProductFormProps) {
   // The product as last saved here. A new product whose photo failed to upload is already
   // created, so saving again must update it rather than create a second one.
   const [savedProduct, setSavedProduct] = useState<Product | null>(product);
@@ -51,19 +51,27 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
   const [preparingPhoto, setPreparingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(product?.name ?? "");
-  const [barcode, setBarcode] = useState(product?.barcode ?? initialBarcode ?? "");
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? categories[0]?.id ?? 0);
   const [price, setPrice] = useState(product?.price.toString() ?? "");
   const [cost, setCost] = useState(product?.cost?.toString() ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [icon, setIcon] = useState(product?.icon ?? "🍽️");
   const [prepMinutes, setPrepMinutes] = useState(product?.prepMinutes.toString() ?? "10");
-  const [stockQty, setStockQty] = useState(product?.stockQty?.toString() ?? "0");
-  const [minStockThreshold, setMinStockThreshold] = useState(product?.minStockThreshold?.toString() ?? "5");
-  const [tracking, setTracking] = useState<StockTracking>(product?.tracking ?? "unit");
+  // A new dish starts with its category's usual options; editing them (or choosing a
+  // category on an existing dish) leaves them as they are.
+  const [instructionOptions, setInstructionOptions] = useState<string[]>(
+    product?.instructionOptions ?? instructionChipsFor(categories.find((c) => c.id === (categories[0]?.id ?? 0))?.name)
+  );
+  const [optionsEdited, setOptionsEdited] = useState(Boolean(product));
+  const [allowInstructions, setAllowInstructions] = useState(product?.allowInstructions ?? true);
   const [recipe, setRecipe] = useState<{ rawMaterialId: string; qty: string }[]>(
     product?.recipe?.map((r) => ({ rawMaterialId: r.rawMaterialId, qty: String(r.qtyPerServing) })) ?? []
   );
+  // Ready-made items only: pieces on hand and the minimum before it needs restocking.
+  const countedInPieces = product?.tracking === "unit";
+  const initialPieces = countedInPieces ? String(product?.stockQty ?? 0) : "0";
+  const [pieces, setPieces] = useState(initialPieces);
+  const [minPieces, setMinPieces] = useState(countedInPieces ? String(product?.minStockThreshold ?? 0) : "0");
   const [materials, setMaterials] = useState<RawMaterialDTO[]>([]);
   const [ingredients, setIngredients] = useState<string[]>(product?.ingredients ?? []);
   const [allergens, setAllergens] = useState<string[]>(product?.allergens ?? []);
@@ -76,7 +84,6 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [justScanned, setJustScanned] = useState(false);
 
   // Free the preview's memory when it's replaced or the form closes.
   const previewUrl = photo.kind === "new" ? photo.image.previewUrl : null;
@@ -106,6 +113,7 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
       .catch(() => setMaterials([]));
   }, []);
 
+  const readyMade = categories.find((c) => c.id === Number(categoryId))?.isReadyMade === true;
   const materialById = new Map(materials.map((m) => [m.id, m]));
   const recipeValid = recipe.length > 0 && recipe.every((r) => r.rawMaterialId && Number(r.qty) > 0);
   // Servings the current stock can make with this recipe, limited by the scarcest ingredient.
@@ -133,15 +141,13 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
     if (!isWholeNumber(prepMinutes) || Number(prepMinutes) > MAX_PREP_MINUTES) {
       errors.prepMinutes = `Enter whole minutes from 0 to ${MAX_PREP_MINUTES}.`;
     }
-    if (tracking === "unit") {
-      if (stockQty.trim() === "") errors.stockQty = "Enter how many are in stock.";
-      else if (!isWholeNumber(stockQty)) errors.stockQty = "Enter a whole number, 0 or more.";
-      if (minStockThreshold.trim() === "") errors.minStockThreshold = "Enter the minimum level.";
-      else if (!isWholeNumber(minStockThreshold)) errors.minStockThreshold = "Enter a whole number, 0 or more.";
+    if (readyMade) {
+      if (!isWholeNumber(pieces) || Number(pieces) > MAX_PIECES) errors.stockQty = "Enter whole pieces from 0 to 100,000.";
+      if (!isWholeNumber(minPieces) || Number(minPieces) > MAX_PIECES) errors.minStockThreshold = "Enter whole pieces from 0 to 100,000.";
     } else if (!recipeValid) {
       errors.recipe =
         recipe.length === 0
-          ? "Add at least one raw material."
+          ? "Add at least one raw material. Every dish's stock comes from its recipe."
           : "Choose a raw material and an amount per serving on every row, or remove the row.";
     }
     return errors;
@@ -150,6 +156,7 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
   // The recipe has no single control, so focus whatever needs filling in first.
   function focusField(key: FieldKey) {
     let id = `pf-${key}`;
+    if (key === "instructions") id = "pf-option-new";
     if (key === "recipe") {
       const index = recipe.findIndex((r) => !r.rawMaterialId || !(Number(r.qty) > 0));
       id = index === -1 ? "pf-recipe-add" : recipe[index].rawMaterialId ? `pf-recipe-qty-${index}` : `pf-recipe-material-${index}`;
@@ -167,13 +174,6 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
     };
   }
 
-  useBarcodeScanner((code) => {
-    setBarcode(code);
-    clearError("barcode");
-    setJustScanned(true);
-    setTimeout(() => setJustScanned(false), 1500);
-  });
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errors = validate();
@@ -189,17 +189,22 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
     try {
       const body = {
         name: name.trim(),
-        barcode: barcode.trim() || undefined,
         categoryId: Number(categoryId),
         price: Number(price),
         cost: cost === "" ? undefined : Number(cost),
         description: description || undefined,
         icon: icon || undefined,
         prepMinutes: Number(prepMinutes),
-        tracking,
-        ...(tracking === "unit"
-          ? { stockQty: Number(stockQty), minStockThreshold: Number(minStockThreshold) }
+        // A ready-made item is counted in pieces; the count is sent only when it was
+        // changed here, so a sale made while the form was open isn't written over.
+        ...(readyMade
+          ? {
+              ...(pieces.trim() !== initialPieces || !countedInPieces ? { stockQty: Number(pieces) } : {}),
+              minStockThreshold: Number(minPieces),
+            }
           : { recipe: recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) }),
+        instructionOptions,
+        allowInstructions,
         ingredients,
         allergens,
         // Blank = not known (the kiosk shows a dash).
@@ -231,12 +236,7 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
       }
       onSaved(saved, !product);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 409 && /barcode/i.test(err.message)) {
-        setFieldErrors({ barcode: `${err.message}. Scan or type a different one, or leave it blank.` });
-        focusField("barcode");
-      } else {
-        setError(err instanceof ApiError ? err.message : "Could not save the product.");
-      }
+      setError(err instanceof ApiError ? err.message : "Could not save the product.");
     } finally {
       setSaving(false);
     }
@@ -267,26 +267,16 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
           />
         </Field>
 
-        <Field label={`Barcode${justScanned ? " — scanned!" : ""}`} error={fieldErrors.barcode} errorId="pf-barcode-error">
-          <input
-            {...inputProps("barcode")}
-            maxLength={64}
-            value={barcode}
-            onChange={(e) => {
-              setBarcode(e.target.value);
-              clearError("barcode");
-            }}
-            placeholder="Scan with a barcode reader, or type manually"
-            className={`font-adm-mono ${admInputClass} ${justScanned ? "border-adm-ok!" : ""}`}
-          />
-        </Field>
-
         <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
           <Field label="Category" required>
             <select
               aria-required
               value={categoryId}
-              onChange={(e) => setCategoryId(Number(e.target.value))}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setCategoryId(next);
+                if (!optionsEdited) setInstructionOptions(instructionChipsFor(categories.find((c) => c.id === next)?.name));
+              }}
               className={admInputClass}
             >
               {categories.map((c) => (
@@ -374,59 +364,53 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
           </span>
         </Field>
 
-        <div className="mb-3">
-          <span className={admLabelClass}>How is stock counted?</span>
-          <div className="flex gap-1 rounded-[6px] border border-adm-line bg-adm-bg p-1">
-            {TRACKING_OPTIONS.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setTracking(value)}
-                aria-pressed={tracking === value}
-                className={`min-h-11 flex-1 rounded-[4px] text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-sm ${
-                  tracking === value ? "bg-adm-surface text-adm-ink shadow-sm" : "text-adm-ink-3"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {tracking === "unit" ? (
-          <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
-            <Field label="Stock qty" required error={fieldErrors.stockQty} errorId="pf-stockQty-error">
-              <input
-                {...inputProps("stockQty")}
-                aria-required
-                type="number"
-                inputMode="numeric"
-                min="0"
-                step="1"
-                value={stockQty}
-                onChange={(e) => {
-                  setStockQty(e.target.value);
-                  clearError("stockQty");
-                }}
-                className={`font-adm-mono ${admInputClass}`}
-              />
-            </Field>
-            <Field label="Minimum level" required error={fieldErrors.minStockThreshold} errorId="pf-minStockThreshold-error">
-              <input
-                {...inputProps("minStockThreshold")}
-                aria-required
-                type="number"
-                inputMode="numeric"
-                min="0"
-                step="1"
-                value={minStockThreshold}
-                onChange={(e) => {
-                  setMinStockThreshold(e.target.value);
-                  clearError("minStockThreshold");
-                }}
-                className={`font-adm-mono ${admInputClass}`}
-              />
-            </Field>
+        {readyMade ? (
+          <div role="group" aria-labelledby="pf-pieces-label" className="mb-3 rounded-[6px] border border-adm-line-soft bg-adm-bg p-3">
+            <span id="pf-pieces-label" className={admLabelClass}>
+              Stock (counted in pieces)
+            </span>
+            <p className="mb-2 text-base text-adm-ink-2 md:text-sm">
+              Ready-made items are sold as they are, so they have no recipe. Each order takes one piece, and the item shows as sold
+              out at 0. Restock it on Raw materials &rsaquo; Ready-made.
+            </p>
+            {product?.recipe && product.recipe.length > 0 && (
+              <p className="mb-2 text-base text-adm-warn md:text-sm">Saving removes this dish&apos;s recipe.</p>
+            )}
+            <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
+              <Field label="Pieces on hand" required error={fieldErrors.stockQty} errorId="pf-stockQty-error">
+                <input
+                  {...inputProps("stockQty")}
+                  aria-required
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  value={pieces}
+                  onChange={(e) => {
+                    setPieces(e.target.value);
+                    clearError("stockQty");
+                  }}
+                  className={`font-adm-mono ${admInputClass}`}
+                />
+              </Field>
+              <Field label="Minimum" required error={fieldErrors.minStockThreshold} errorId="pf-minStockThreshold-error">
+                <input
+                  {...inputProps("minStockThreshold")}
+                  aria-required
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  step="1"
+                  value={minPieces}
+                  onChange={(e) => {
+                    setMinPieces(e.target.value);
+                    clearError("minStockThreshold");
+                  }}
+                  className={`font-adm-mono ${admInputClass}`}
+                />
+              </Field>
+            </div>
+            <p className="text-sm text-adm-ink-3">At or below the minimum, it counts as needing restock on the dashboard.</p>
           </div>
         ) : (
           <div
@@ -436,12 +420,12 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
             className={`mb-3 rounded-[6px] border bg-adm-bg p-3 ${fieldErrors.recipe ? "border-adm-bad" : "border-adm-line-soft"}`}
           >
             <span id="pf-recipe-label" className={admLabelClass}>
-              Recipe
+              Recipe (bill of materials)
               <RequiredMark />
             </span>
             <p className="mb-2 text-base text-adm-ink-2 md:text-sm">
-              Raw materials used by <strong>one serving</strong>. Paying for an order deducts these, and the dish shows as sold out
-              when they can&apos;t make another serving.
+              Raw materials used by <strong>one serving</strong>. The dish&apos;s stock is the servings these can make: paying for an
+              order deducts them, and the dish shows as sold out when they can&apos;t make another serving.
             </p>
             {recipe.map((row, index) => {
               const material = materialById.get(row.rawMaterialId);
@@ -531,6 +515,19 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
           </div>
         )}
 
+        <InstructionOptionsField
+          options={instructionOptions}
+          allowed={allowInstructions}
+          error={fieldErrors.instructions}
+          onAllowedChange={setAllowInstructions}
+          onChange={(next) => {
+            setInstructionOptions(next);
+            setOptionsEdited(true);
+            clearError("instructions");
+          }}
+          onError={(message) => setFieldErrors((errors) => ({ ...errors, instructions: message }))}
+        />
+
         <Field label="Description">
           <textarea
             maxLength={2000}
@@ -548,10 +545,8 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
           nutrition={nutrition}
           onNutritionChange={setNutrition}
           productName={name}
-          recipeNames={tracking === "recipe" ? recipe.flatMap((r) => materialById.get(r.rawMaterialId)?.name ?? []) : null}
-          recipe={
-            tracking === "recipe" && recipeValid ? recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) : null
-          }
+          recipeNames={readyMade ? [] : recipe.flatMap((r) => materialById.get(r.rawMaterialId)?.name ?? [])}
+          recipe={!readyMade && recipeValid ? recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) : null}
         />
 
         {error && (
@@ -569,6 +564,102 @@ export function ProductForm({ product, initialBarcode, categories, onClose, onSa
           </AdmButton>
         </div>
       </form>
+    </div>
+  );
+}
+
+interface InstructionOptionsFieldProps {
+  options: string[];
+  allowed: boolean;
+  error?: string;
+  onAllowedChange: (allowed: boolean) => void;
+  onChange: (options: string[]) => void;
+  onError: (message: string) => void;
+}
+
+/**
+ * The quick special-instruction options the kiosk offers for this dish, as removable
+ * chips plus a field to add one, and a switch to offer no special instructions at all
+ * (the typed note is hidden too), e.g. for bottled drinks.
+ */
+function InstructionOptionsField({ options, allowed, error, onAllowedChange, onChange, onError }: InstructionOptionsFieldProps) {
+  const [draft, setDraft] = useState("");
+
+  function add() {
+    const text = draft.trim().replace(/\s+/g, " ");
+    if (!text) return;
+    if (options.some((o) => o.toLowerCase() === text.toLowerCase())) return onError(`"${text}" is already an option.`);
+    if (options.length >= MAX_OPTIONS) return onError(`Up to ${MAX_OPTIONS} options. Remove one to add another.`);
+    onChange([...options, text]);
+    setDraft("");
+  }
+
+  return (
+    <div
+      role="group"
+      aria-labelledby="pf-instructions-label"
+      className={`mb-3 rounded-[6px] border bg-adm-bg p-3 ${error ? "border-adm-bad" : "border-adm-line-soft"}`}
+    >
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span id="pf-instructions-label" className={`${admLabelClass} mb-0!`}>
+          Special instructions on the kiosk
+        </span>
+        <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-base md:min-h-0 md:text-sm">
+          <input type="checkbox" checked={allowed} onChange={(e) => onAllowedChange(e.target.checked)} className="h-4.5 w-4.5" />
+          Offer special instructions
+        </label>
+      </div>
+      {allowed ? (
+        <>
+          <p className="mb-2 text-base text-adm-ink-2 md:text-sm">
+            Quick options customers can tap, sent to the kitchen with the order. Customers can also type a note.
+          </p>
+          {options.length > 0 ? (
+            <ul className="mb-2 flex flex-wrap gap-1.5" aria-label="Options">
+              {options.map((option) => (
+                <li key={option} className="inline-flex items-center gap-1 rounded-full border border-adm-line bg-adm-surface py-0.5 pr-1 pl-3 text-sm">
+                  {option}
+                  <button
+                    type="button"
+                    onClick={() => onChange(options.filter((o) => o !== option))}
+                    aria-label={`Remove option ${option}`}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-adm-ink-3 hover:bg-adm-bg md:h-6 md:w-6"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mb-2 text-sm text-adm-ink-3">No quick options: customers can only type a note.</p>
+          )}
+          <div className="flex gap-2">
+            <input
+              id="pf-option-new"
+              value={draft}
+              maxLength={MAX_OPTION_LENGTH}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  add();
+                }
+              }}
+              placeholder="e.g. No onions"
+              aria-label="New special-instruction option"
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "pf-instructions-error" : undefined}
+              className={`min-w-0 flex-1 ${admInputClass}`}
+            />
+            <AdmButton type="button" variant="secondary" size="compact" onClick={add} disabled={!draft.trim()}>
+              Add
+            </AdmButton>
+          </div>
+        </>
+      ) : (
+        <p className="text-base text-adm-ink-2 md:text-sm">The kiosk won&apos;t offer special instructions for this dish.</p>
+      )}
+      {error && <FieldError id="pf-instructions-error" message={error} />}
     </div>
   );
 }

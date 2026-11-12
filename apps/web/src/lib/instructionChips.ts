@@ -1,11 +1,9 @@
-// Quick special-instruction chips offered in the kiosk's product sheet, chosen by the
-// dish's category so a dessert or plain rice never offers "Extra spicy" or "Well done"
-// (UI review #23). Category names are matched without regard to case; a category not
-// listed here (for example one an admin adds later) offers no chips, only the typed
-// note, which is always available.
-//
-// Renaming a category in the admin changes which set applies, so keep the names below
-// in step with the categories in apps/api/prisma/seed.ts.
+// Starting special-instruction options for a NEW dish, by category, so a dessert or
+// plain rice never starts with "Extra spicy" or "Well done" (UI review #23). Each dish
+// now keeps its own options, edited in the admin's product form (panel feedback), and
+// the kiosk shows those; these are only the defaults the form fills in. Existing dishes
+// got the same sets from the product_instructions_and_bom migration. Category names are
+// matched without regard to case; a category not listed here starts with none.
 
 const CHIPS_BY_CATEGORY: Record<string, string[]> = {
   "sizzling plates": ["Extra spicy", "Not spicy", "No onions", "Well done", "Sauce on the side"],

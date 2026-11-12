@@ -6,6 +6,8 @@
 // Mobile-first: unprefixed classes are the phone sizes (16px text, 44px touch targets);
 // md: restores the original dense desktop sizes.
 
+import Link from "next/link";
+
 export function PageHeader({
   eyebrow,
   title,
@@ -42,10 +44,18 @@ export function Card({ title, actions, children }: { title?: string; actions?: R
   );
 }
 
-export function KpiTile({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-[6px] border border-adm-line bg-adm-surface p-4">
-      <div className="font-adm-mono text-xs tracking-[.13em] text-adm-ink-3 uppercase">{label}</div>
+/** A dashboard number. With `href` the whole tile is a link (e.g. to the list behind the number). */
+export function KpiTile({ label, value, sub, color, href }: { label: string; value: string; sub?: string; color?: string; href?: string }) {
+  const content = (
+    <>
+      <div className="font-adm-mono flex items-center justify-between gap-2 text-xs tracking-[.13em] text-adm-ink-3 uppercase">
+        {label}
+        {href && (
+          <span aria-hidden="true" className="text-sm tracking-normal text-adm-ink-3 transition-transform group-hover:translate-x-0.5">
+            →
+          </span>
+        )}
+      </div>
       <div
         className="font-adm-mono text-2xl leading-none tracking-tight break-words md:text-[27px]"
         style={color ? { color } : undefined}
@@ -53,7 +63,15 @@ export function KpiTile({ label, value, sub, color }: { label: string; value: st
         {value}
       </div>
       {sub && <div className="text-sm text-adm-ink-3">{sub}</div>}
-    </div>
+    </>
+  );
+  const box = "flex min-w-0 flex-col gap-2 rounded-[6px] border border-adm-line bg-adm-surface p-4";
+  return href ? (
+    <Link href={href} className={`group ${box} transition-colors hover:border-adm-ink-3 focus-visible:border-adm-ink`}>
+      {content}
+    </Link>
+  ) : (
+    <div className={box}>{content}</div>
   );
 }
 

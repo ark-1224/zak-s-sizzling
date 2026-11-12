@@ -33,7 +33,7 @@ beforeAll(async () => {
   const { id: categoryId } = await prisma.category.findFirstOrThrow();
   lemonadeId = (
     await prisma.product.create({
-      data: { name: "LSF Test Lemonade", price: 35, categoryId, inventory: { create: { stockQty: 7, minStockThreshold: 5 } } },
+      data: { name: "LSF Test Lemonade", price: 35, categoryId, tracking: "unit", inventory: { create: { stockQty: 7, minStockThreshold: 5 } } },
     })
   ).id;
   // Send whatever other test files left waiting, so this file's emails hold only its own alerts.

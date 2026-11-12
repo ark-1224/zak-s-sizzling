@@ -25,8 +25,11 @@ function CategoryForm({
   submitLabel,
   onSave,
   onCancel,
+  nameLocked = false,
 }: {
   initial: Draft;
+  /** The built-in Ready-made category keeps its name. */
+  nameLocked?: boolean;
   saving: boolean;
   submitLabel: string;
   onSave: (draft: Draft) => void;
@@ -48,8 +51,10 @@ function CategoryForm({
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           maxLength={80}
           required
-          autoFocus
-          className={admInputClass}
+          autoFocus={!nameLocked}
+          readOnly={nameLocked}
+          aria-describedby={nameLocked ? "name-locked-hint" : undefined}
+          className={`${admInputClass} ${nameLocked ? "bg-adm-bg text-adm-ink-3" : ""}`}
         />
       </label>
       <label className="block">
@@ -77,6 +82,11 @@ function CategoryForm({
       <p id="icon-hint" className="text-sm text-adm-ink-3 sm:col-span-2 lg:col-span-4">
         One emoji, shown on the kiosk&apos;s category tile. On Windows, press Win + . to pick one.
       </p>
+      {nameLocked && (
+        <p id="name-locked-hint" className="text-sm text-adm-ink-3 sm:col-span-2 lg:col-span-4">
+          This is the built-in category for ready-made items, so its name stays the same.
+        </p>
+      )}
     </form>
   );
 }
@@ -210,6 +220,7 @@ export default function AdminCategoriesPage() {
                     initial={{ name: category.name, icon: category.icon ?? "", isNew: category.isNew }}
                     saving={busy}
                     submitLabel="Save"
+                    nameLocked={category.isReadyMade}
                     onSave={(draft) => handleEdit(category, draft)}
                     onCancel={() => setEditingId(null)}
                   />
@@ -224,9 +235,11 @@ export default function AdminCategoriesPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-medium break-words">{category.name}</span>
                           {category.isNew && <StatusPill tone="ok">NEW</StatusPill>}
+                          {category.isReadyMade && <StatusPill tone="warn">BUILT-IN</StatusPill>}
                         </div>
                         <div className="text-sm text-adm-ink-3">
                           {category.productCount ?? 0} product{category.productCount !== 1 ? "s" : ""}
+                          {category.isReadyMade && " · sold as they are, counted in pieces (no recipe)"}
                         </div>
                       </div>
                     </div>
@@ -263,6 +276,7 @@ export default function AdminCategoriesPage() {
                         <AdmButton variant="secondary" size="compact" disabled={busy} onClick={() => setEditingId(category.id)}>
                           Edit
                         </AdmButton>
+                        {!category.isReadyMade && (
                         <AdmButton
                           variant="danger"
                           size="compact"
@@ -278,6 +292,7 @@ export default function AdminCategoriesPage() {
                         >
                           Delete
                         </AdmButton>
+                        )}
                       </div>
                     )}
                   </div>

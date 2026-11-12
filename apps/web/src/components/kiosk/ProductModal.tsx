@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@zaks/shared-types";
 import { categoryBgColor } from "@/lib/categoryColors";
-import { instructionChipsFor, OPPOSITE_CHIP } from "@/lib/instructionChips";
+import { OPPOSITE_CHIP } from "@/lib/instructionChips";
 import { useCart } from "@/hooks/useCart";
 import { Icon } from "@/components/Icon";
 import { useToast } from "./Toast";
@@ -18,7 +18,8 @@ import { ProductPhoto } from "./ProductPhoto";
 //
 // Customizing = quick instruction chips plus an optional typed note. Both are combined
 // into the same single specialInstructions string the order has always sent, so nothing
-// changes for the cart, the API or the kitchen display.
+// changes for the cart, the API or the kitchen display. The chips are the dish's own
+// options, set in the admin's product form; a dish can also offer no instructions at all.
 const INSTRUCTIONS_MAX = 140; // matches the API/database limit for special instructions
 const SEPARATOR = ", ";
 
@@ -45,8 +46,9 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  // Chips fit the dish's category (lib/instructionChips.ts); desserts offer none.
-  const chipOptions = instructionChipsFor(product.category?.name);
+  // The dish's own quick options (product form); none when instructions are switched off.
+  const offersInstructions = product.allowInstructions !== false;
+  const chipOptions = offersInstructions ? (product.instructionOptions ?? []) : [];
   // Keep chips in their on-screen order regardless of the order they were tapped.
   const chipText = chipOptions.filter((c) => chips.includes(c)).join(SEPARATOR);
   const instructions = [chipText, note.trim()].filter(Boolean).join(SEPARATOR);
@@ -144,7 +146,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
             )}
 
-            {!out && (
+            {!out && offersInstructions && (
               <div className="mt-5">
                 <h3 className="text-base font-bold text-matcha-deep">Special instructions</h3>
                 {chipOptions.length > 0 && (

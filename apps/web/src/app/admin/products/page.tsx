@@ -53,14 +53,14 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Search by name, barcode or category, ignoring case, narrowed by the category
+  // Search by name or category, ignoring case, narrowed by the category
   // dropdown; the two work together (UI review #16).
   const search = query.trim().toLowerCase();
   const filtering = Boolean(search) || categoryFilter !== "all";
   const shown = products.filter(
     (p) =>
       (categoryFilter === "all" || p.categoryId === categoryFilter) &&
-      (!search || [p.name, p.barcode ?? "", p.category?.name ?? ""].some((field) => field.toLowerCase().includes(search)))
+      (!search || [p.name, p.category?.name ?? ""].some((field) => field.toLowerCase().includes(search)))
   );
   const countIn = (categoryId: number) => products.filter((p) => p.categoryId === categoryId).length;
   const filterLabel = [
@@ -101,8 +101,8 @@ export default function AdminProductsPage() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, barcode or category"
-            aria-label="Search products by name, barcode or category"
+            placeholder="Search name or category"
+            aria-label="Search products by name or category"
             className={`sm:max-w-96 ${admInputClass}`}
           />
           <select
@@ -151,10 +151,10 @@ export default function AdminProductsPage() {
                   <dd className="font-adm-mono">₱{p.price.toFixed(2)}</dd>
                   <dt className="text-sm text-adm-ink-3">Cost</dt>
                   <dd className="font-adm-mono text-adm-ink-2">{p.cost != null ? `₱${p.cost.toFixed(2)}` : "—"}</dd>
-                  <dt className="text-sm text-adm-ink-3">Stock</dt>
-                  <dd className="font-adm-mono">{p.stockQty ?? "—"}</dd>
-                  <dt className="text-sm text-adm-ink-3">Barcode</dt>
-                  <dd className="font-adm-mono min-w-0 break-all text-adm-ink-2">{p.barcode ?? "—"}</dd>
+                  <dt className="text-sm text-adm-ink-3">{isReadyMade(p) ? "Pieces" : "Servings"}</dt>
+                  <dd className="font-adm-mono">{p.stockQty ?? 0}</dd>
+                  <dt className="text-sm text-adm-ink-3">Recipe</dt>
+                  <dd className={recipeMissing(p) ? "text-adm-bad" : "text-adm-ink-2"}>{recipeSummary(p)}</dd>
                 </dl>
                 <div className="grid grid-cols-2 gap-2">
                   <AdmButton variant="secondary" onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
@@ -172,11 +172,11 @@ export default function AdminProductsPage() {
               <thead>
                 <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
                   <th className="px-4.5 py-2.75 font-medium">Product</th>
-                  <th className="px-3 py-2.75 font-medium">Barcode</th>
                   <th className="px-3 py-2.75 font-medium">Category</th>
+                  <th className="px-3 py-2.75 font-medium">Recipe</th>
                   <th className="px-3 py-2.75 text-right font-medium">Price</th>
                   <th className="px-3 py-2.75 text-right font-medium">Cost</th>
-                  <th className="px-3 py-2.75 text-right font-medium">Stock</th>
+                  <th className="px-3 py-2.75 text-right font-medium">Servings / pieces</th>
                   <th className="px-3 py-2.75 font-medium">Status</th>
                   <th className="px-4.5 py-2.75 text-right font-medium">Actions</th>
                 </tr>
@@ -187,15 +187,13 @@ export default function AdminProductsPage() {
                     <td className="px-4.5 py-3 font-medium">
                       {p.icon} {p.name}
                     </td>
-                    <td className="font-adm-mono px-3 py-3 text-sm text-adm-ink-2 whitespace-nowrap">
-                      {p.barcode ?? "—"}
-                    </td>
                     <td className="px-3 py-3 text-adm-ink-2 whitespace-nowrap">{p.category?.name}</td>
+                    <td className={`px-3 py-3 whitespace-nowrap ${recipeMissing(p) ? "text-adm-bad" : "text-adm-ink-2"}`}>{recipeSummary(p)}</td>
                     <td className="font-adm-mono px-3 py-3 text-right">₱{p.price.toFixed(2)}</td>
                     <td className="font-adm-mono px-3 py-3 text-right text-adm-ink-2">
                       {p.cost != null ? `₱${p.cost.toFixed(2)}` : "—"}
                     </td>
-                    <td className="font-adm-mono px-3 py-3 text-right">{p.stockQty ?? "—"}</td>
+                    <td className="font-adm-mono px-3 py-3 text-right">{p.stockQty ?? 0}</td>
                     <td className="px-3 py-3">
                       <StatusPill tone={p.isAvailable ? "ok" : "bad"}>
                         {p.isAvailable ? "IN STOCK" : "SOLD OUT"}
@@ -247,4 +245,17 @@ export default function AdminProductsPage() {
       )}
     </div>
   );
+}
+
+/** How many raw materials the dish's bill of materials has, or that it has none yet. */
+/** Items in the built-in Ready-made category are sold as they are and counted in pieces. */
+const isReadyMade = (p: Product) => p.category?.isReadyMade === true;
+
+/** A dish without a recipe can't be sold; a ready-made item never has one. */
+const recipeMissing = (p: Product) => !isReadyMade(p) && !p.recipe?.length;
+
+function recipeSummary(p: Product): string {
+  if (isReadyMade(p)) return "Ready-made (pieces)";
+  const count = p.recipe?.length ?? 0;
+  return count === 0 ? "No recipe yet" : `${count} raw material${count !== 1 ? "s" : ""}`;
 }

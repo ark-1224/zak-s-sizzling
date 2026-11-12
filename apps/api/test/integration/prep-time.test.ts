@@ -2,7 +2,7 @@ import request from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../../src/lib/prisma";
 import { countOrdersInKitchen, estimatePrepMinutes } from "../../src/modules/orders/prepTime";
-import { app, kioskToken, loginAs } from "./helpers";
+import { app, kioskToken, loginAs, plentifulRecipe } from "./helpers";
 
 // Estimated preparation time: the product's prep minutes, the estimate on a new order,
 // and the ready time set when the order reaches the kitchen. Other test files leave
@@ -21,7 +21,7 @@ async function createProduct(name: string, prepMinutes: number) {
   const res = await request(app)
     .post("/api/products")
     .set(auth(admin))
-    .send({ name, price: 100, categoryId, stockQty: 200, minStockThreshold: 0, prepMinutes });
+    .send({ name, price: 100, categoryId, recipe: await plentifulRecipe(name), prepMinutes });
   expect(res.status).toBe(201);
   return res.body.id as string;
 }
@@ -48,7 +48,7 @@ describe("a product's preparation time", () => {
   });
 
   it("defaults to 10 minutes when the form leaves it out", async () => {
-    const res = await request(app).post("/api/products").set(auth(admin)).send({ name: "Prep Test Default", price: 50, categoryId });
+    const res = await request(app).post("/api/products").set(auth(admin)).send({ name: "Prep Test Default", price: 50, categoryId, recipe: await plentifulRecipe("Prep default") });
 
     expect(res.status).toBe(201);
     expect(res.body.prepMinutes).toBe(10);

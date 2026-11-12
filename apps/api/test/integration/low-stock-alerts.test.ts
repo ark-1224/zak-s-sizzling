@@ -24,7 +24,7 @@ beforeAll(async () => {
 
   ids.juice = (
     await prisma.product.create({
-      data: { name: "LSA Test Juice", price: 40, categoryId, inventory: { create: { stockQty: 10, minStockThreshold: 5 } } },
+      data: { name: "LSA Test Juice", price: 40, categoryId, tracking: "unit", inventory: { create: { stockQty: 10, minStockThreshold: 5 } } },
     })
   ).id;
   ids.sugar = (await prisma.rawMaterial.create({ data: { name: "LSA Test Sugar", unit: "g", stockQty: 2000, minStockThreshold: 500 } })).id;

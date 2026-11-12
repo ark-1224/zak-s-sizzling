@@ -6,6 +6,9 @@ export interface Category {
   icon: string | null;
   sortOrder: number;
   isNew: boolean;
+  /** The built-in "Ready-made" category: its items are sold as they are (bottled drinks)
+   *  and counted in pieces, with no recipe. Its name is fixed and it can't be deleted. */
+  isReadyMade: boolean;
   /** How many products are in it (an empty category is the only kind that can be deleted).
    *  Sent by GET /api/categories; not on the category inside a product. */
   productCount?: number;
@@ -34,7 +37,6 @@ export interface Product {
   price: number;
   /** Sent to admins only; null means no cost recorded yet. */
   cost?: number | null;
-  barcode: string | null;
   categoryId: number;
   category?: Category;
   description: string | null;
@@ -45,14 +47,21 @@ export interface Product {
   allergens: string[];
   nutrition: Nutrition;
   isAvailable: boolean;
+  /** "recipe" for dishes, whose stock comes from their bill of materials; "unit" for
+   *  ready-made items (the Ready-made category), which are counted in pieces. */
   tracking: StockTracking;
   /** Minutes the kitchen needs for one serving; 0 for items served as they are. */
   prepMinutes: number;
-  /** Unit products: units on hand. Recipe products: servings the raw materials can still make. */
+  /** Servings the raw materials can still make; pieces on hand for a ready-made item. */
   stockQty?: number;
+  /** A ready-made item's minimum: at or below it, it needs restocking. */
   minStockThreshold?: number;
-  /** Recipe products only; sent to admins only, like cost. */
+  /** The dish's bill of materials; sent to admins only, like cost. */
   recipe?: RecipeItem[];
+  /** Quick special-instruction options the kiosk offers for this dish ("No onions"). */
+  instructionOptions: string[];
+  /** False hides special instructions (options and the typed note) for this dish on the kiosk. */
+  allowInstructions: boolean;
 }
 
 export interface AuthUser {
@@ -267,25 +276,46 @@ export interface UpdateUserInput {
   password?: string;
 }
 
+/** One row of the import's Products table. A name that matches an existing product updates it. */
 export interface BulkImportRowResult {
   row: number;
   status: "created" | "updated" | "error";
   name?: string;
   message?: string;
-  /** A row that can be imported but deserves a look first, e.g. a name another product already has. */
+  /** A row that can be imported but deserves a look first. */
+  warning?: string;
+}
+
+/** One row of the import's Recipes table (a raw material of a dish, per serving). */
+export interface BulkImportRecipeRowResult {
+  row: number;
+  status: "ok" | "error";
+  product?: string;
+  rawMaterial?: string;
+  message?: string;
   warning?: string;
 }
 
 export interface BulkImportSummary {
+  /** Rows in the Products table. */
   total: number;
   created: number;
   updated: number;
+  /** Rows with a problem, in both tables; nothing should be imported until it's 0. */
   errors: number;
-  /** Rows that can be imported but carry a warning (they are counted in created/updated too). */
+  /** Rows that can be imported but carry a warning. */
   warnings: number;
   /** True for a preview: rows were checked and nothing was saved. */
   dryRun: boolean;
   results: BulkImportRowResult[];
+  recipes: {
+    /** Rows in the Recipes table. */
+    total: number;
+    /** Dishes whose recipe the import sets (replacing any recipe they had). */
+    dishes: number;
+    errors: number;
+    results: BulkImportRecipeRowResult[];
+  };
 }
 
 export type AdjustmentReason = "restock" | "return" | "damaged" | "spoilage" | "correction" | "other";

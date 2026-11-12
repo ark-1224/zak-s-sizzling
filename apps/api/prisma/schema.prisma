@@ -149,45 +149,55 @@ model LoginCode {
 }
 
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique @db.VarChar(80)
-  icon      String?   @db.VarChar(8)
-  sortOrder Int       @default(0) @map("sort_order")
-  isNew     Boolean   @default(false) @map("is_new")
-  products  Product[]
+  id          Int       @id @default(autoincrement())
+  name        String    @unique @db.VarChar(80)
+  icon        String?   @db.VarChar(8)
+  sortOrder   Int       @default(0) @map("sort_order")
+  isNew       Boolean   @default(false) @map("is_new")
+  /// The one built-in "Ready-made" category: items sold as they are (bottled drinks), so
+  /// they are counted in pieces instead of being made from a recipe. Its name is fixed
+  /// and it can't be deleted (categories/service.ts).
+  isReadyMade Boolean   @default(false) @map("is_ready_made")
+  products    Product[]
 
   @@map("categories")
 }
 
 model Product {
-  id               String            @id @default(uuid()) @db.Uuid
-  name             String            @db.VarChar(150)
-  price            Decimal           @db.Decimal(10, 2)
-  barcode          String?           @db.VarChar(64)
-  categoryId       Int               @map("category_id")
-  category         Category          @relation(fields: [categoryId], references: [id])
-  description      String?
-  icon             String?           @db.VarChar(8)
-  cost             Decimal?          @db.Decimal(10, 2)
-  ingredients      String[]          @default([])
-  allergens        String[]          @default([])
-  calories         Int?
-  proteinG         Decimal?          @map("protein_g") @db.Decimal(6, 2)
-  carbsG           Decimal?          @map("carbs_g") @db.Decimal(6, 2)
-  sugarG           Decimal?          @map("sugar_g") @db.Decimal(6, 2)
-  isAvailable      Boolean           @default(true) @map("is_available")
-  tracking         StockTracking     @default(unit)
+  id                 String            @id @default(uuid()) @db.Uuid
+  name               String            @db.VarChar(150)
+  price              Decimal           @db.Decimal(10, 2)
+  barcode            String?           @db.VarChar(64)
+  categoryId         Int               @map("category_id")
+  category           Category          @relation(fields: [categoryId], references: [id])
+  description        String?
+  icon               String?           @db.VarChar(8)
+  cost               Decimal?          @db.Decimal(10, 2)
+  ingredients        String[]          @default([])
+  allergens          String[]          @default([])
+  calories           Int?
+  proteinG           Decimal?          @map("protein_g") @db.Decimal(6, 2)
+  carbsG             Decimal?          @map("carbs_g") @db.Decimal(6, 2)
+  sugarG             Decimal?          @map("sugar_g") @db.Decimal(6, 2)
+  isAvailable        Boolean           @default(true) @map("is_available")
+  // Every dish is made from a bill of materials (its recipe). `unit` is kept only so
+  // older rows and the stock engine's tests still load; the API no longer saves it.
+  tracking           StockTracking     @default(recipe)
+  // Quick special-instruction options the kiosk offers for this dish ("No onions"...),
+  // edited in the product form; allowInstructions off hides instructions entirely.
+  instructionOptions String[]          @default([]) @map("instruction_options")
+  allowInstructions  Boolean           @default(true) @map("allow_instructions")
   // Minutes the kitchen needs for one serving; 0 for items served as they are (drinks).
   // Orders use it for their estimated preparation time (orders/prepTime.ts).
-  prepMinutes      Int               @default(10) @map("prep_minutes")
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
-  inventory        Inventory?
-  orderItems       OrderItem[]
-  stockAdjustments StockAdjustment[]
-  recipeItems      RecipeItem[]
-  lowStockAlerts   LowStockAlert[]
-  image            ProductImage?
+  prepMinutes        Int               @default(10) @map("prep_minutes")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  inventory          Inventory?
+  orderItems         OrderItem[]
+  stockAdjustments   StockAdjustment[]
+  recipeItems        RecipeItem[]
+  lowStockAlerts     LowStockAlert[]
+  image              ProductImage?
 
   @@unique([barcode])
   @@index([categoryId])

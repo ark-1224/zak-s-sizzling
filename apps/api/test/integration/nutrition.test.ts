@@ -13,7 +13,7 @@ let admin: string;
 let staff: string;
 let porkId: string;
 let riceId: string;
-let iceTeaBefore: { ingredients: string[]; allergens: string[]; calories: number | null };
+let riceBowlBefore: { ingredients: string[]; allergens: string[]; calories: number | null };
 
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
 const linkPork = {
@@ -25,16 +25,16 @@ beforeAll(async () => {
   staff = await loginAs("staff");
   porkId = (await prisma.rawMaterial.findUniqueOrThrow({ where: { name: RAW_MATERIALS.pork.name } })).id;
   riceId = (await prisma.rawMaterial.findUniqueOrThrow({ where: { name: RAW_MATERIALS.rice.name } })).id;
-  const tea = await prisma.product.findUniqueOrThrow({ where: { id: PRODUCTS.icedTea.id } });
-  iceTeaBefore = { ingredients: tea.ingredients, allergens: tea.allergens, calories: tea.calories };
+  const bowl = await prisma.product.findUniqueOrThrow({ where: { id: PRODUCTS.riceBowl.id } });
+  riceBowlBefore = { ingredients: bowl.ingredients, allergens: bowl.allergens, calories: bowl.calories };
 });
 
 afterAll(async () => {
   const cleared = { fdcId: null, fdcDescription: null, kcalPer100g: null, proteinPer100g: null, carbsPer100g: null, sugarPer100g: null, gramsPerUnit: null };
   await prisma.rawMaterial.updateMany({ where: { id: { in: [porkId, riceId] } }, data: cleared });
   await prisma.product.update({
-    where: { id: PRODUCTS.icedTea.id },
-    data: { ingredients: iceTeaBefore.ingredients, allergens: iceTeaBefore.allergens, calories: iceTeaBefore.calories, proteinG: null, carbsG: null, sugarG: null },
+    where: { id: PRODUCTS.riceBowl.id },
+    data: { ingredients: riceBowlBefore.ingredients, allergens: riceBowlBefore.allergens, calories: riceBowlBefore.calories, proteinG: null, carbsG: null, sugarG: null },
   });
 });
 
@@ -106,7 +106,7 @@ describe("USDA search without a key", () => {
 describe("product ingredients, allergens and nutrition", () => {
   it("saves them and the kiosk receives them", async () => {
     const res = await request(app)
-      .put(`/api/products/${PRODUCTS.icedTea.id}`)
+      .put(`/api/products/${PRODUCTS.riceBowl.id}`)
       .set(auth(admin))
       .send({
         ingredients: ["Black tea", "Sugar", "Calamansi"],
@@ -114,14 +114,14 @@ describe("product ingredients, allergens and nutrition", () => {
         nutrition: { calories: 120, protein: 0, carbs: 30, sugar: 28.5 },
       });
     expect(res.status).toBe(200);
-    const kiosk = await request(app).get(`/api/products/${PRODUCTS.icedTea.id}`);
+    const kiosk = await request(app).get(`/api/products/${PRODUCTS.riceBowl.id}`);
     expect(kiosk.body.ingredients).toEqual(["Black tea", "Sugar", "Calamansi"]);
     expect(kiosk.body.allergens).toEqual(["Milk"]);
     expect(kiosk.body.nutrition).toEqual({ calories: 120, protein: 0, carbs: 30, sugar: 28.5 });
   });
 
   it("only accepts allergens from the checklist", async () => {
-    const res = await request(app).put(`/api/products/${PRODUCTS.icedTea.id}`).set(auth(admin)).send({ allergens: ["Pollen"] });
+    const res = await request(app).put(`/api/products/${PRODUCTS.riceBowl.id}`).set(auth(admin)).send({ allergens: ["Pollen"] });
     expect(res.status).toBe(400);
   });
 });

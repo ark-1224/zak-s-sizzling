@@ -78,17 +78,10 @@ describe("staff keep their day-to-day functions", () => {
 
     expect(res.status).toBe(200);
   });
-
-  it("lets staff look up a product by barcode", async () => {
-    const res = await request(app).get(`/api/products/barcode/${PRODUCTS.sisig.barcode}`).set(as(staff));
-
-    expect(res.status).toBe(200);
-  });
 });
 
 describe("product cost is admin-only", () => {
   const sisig = `/api/products/${PRODUCTS.sisig.id}`;
-  const barcode = `/api/products/barcode/${PRODUCTS.sisig.barcode}`;
 
   it.each([
     ["an anonymous visitor", "/api/products", undefined],
@@ -96,7 +89,6 @@ describe("product cost is admin-only", () => {
     ["a kiosk customer", "/api/products", "kiosk"],
     ["staff", "/api/products", "staff"],
     ["staff", sisig, "staff"],
-    ["staff", barcode, "staff"],
     ["staff", "/api/inventory/low-stock", "staff"],
   ] as const)("hides it from %s on %s", async (_who, path, role) => {
     const token = role === "kiosk" ? await kioskToken() : role ? await loginAs(role) : undefined;
@@ -107,7 +99,7 @@ describe("product cost is admin-only", () => {
     for (const product of [res.body].flat()) expect(product).not.toHaveProperty("cost");
   });
 
-  it.each(["/api/products", sisig, barcode])("shows it to an admin on %s", async (path) => {
+  it.each(["/api/products", sisig])("shows it to an admin on %s", async (path) => {
     const res = await request(app).get(path).set(as(admin));
 
     const product = [res.body].flat().find((p: { id: string }) => p.id === PRODUCTS.sisig.id);

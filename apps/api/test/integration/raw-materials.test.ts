@@ -244,7 +244,6 @@ describe("giving a dish a recipe (Administrator)", () => {
     ["no recipe at all", { tracking: "recipe" }, 400],
     ["the same raw material twice", { tracking: "recipe", recipe: [{ rawMaterialId: MISSING_ID, qtyPerServing: 1 }, { rawMaterialId: MISSING_ID, qtyPerServing: 2 }] }, 400],
     ["an amount of zero", { tracking: "recipe", recipe: [{ rawMaterialId: MISSING_ID, qtyPerServing: 0 }] }, 400],
-    ["a recipe on a unit-counted product", { tracking: "unit", recipe: [{ rawMaterialId: MISSING_ID, qtyPerServing: 1 }] }, 400],
     ["a raw material that does not exist", { tracking: "recipe", recipe: [{ rawMaterialId: MISSING_ID, qtyPerServing: 1 }] }, 404],
   ])("refuses a new product with %s", async (_label, extra, status) => {
     const res = await request(app).post("/api/products").set(as(admin)).send({ name: "RM Test Bad Dish", price: 100, categoryId, ...extra });
@@ -274,18 +273,19 @@ describe("giving a dish a recipe (Administrator)", () => {
     expect(res.body.error).toContain("Raw materials page");
   });
 
-  it("switches a recipe product back to counting units, dropping its recipe", async () => {
+  it("never switches a dish back to counting units: every dish is made from a bill of materials", async () => {
     const created = await request(app)
       .post("/api/products")
       .set(as(admin))
-      .send({ name: "RM Test Switch Dish", price: 50, categoryId, tracking: "recipe", recipe: [{ rawMaterialId: sauce.id, qtyPerServing: 10 }] });
+      .send({ name: "RM Test Switch Dish", price: 50, categoryId, recipe: [{ rawMaterialId: sauce.id, qtyPerServing: 10 }] });
 
     const res = await request(app).put(`/api/products/${created.body.id}`).set(as(admin)).send({ tracking: "unit", stockQty: 12 });
 
+    // The old fields are ignored: the dish keeps its recipe and its servings.
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ tracking: "unit", stockQty: 12, isAvailable: true });
-    expect(res.body).not.toHaveProperty("recipe");
-    expect(await prisma.recipeItem.count({ where: { productId: created.body.id } })).toBe(0);
+    expect(res.body).toMatchObject({ tracking: "recipe" });
+    expect(res.body.recipe).toHaveLength(1);
+    expect(await prisma.recipeItem.count({ where: { productId: created.body.id } })).toBe(1);
   });
 
   it("keeps an unrelated unit product counting its own stock", async () => {

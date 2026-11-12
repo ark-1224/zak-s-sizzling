@@ -5,14 +5,13 @@ import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { fromCSV, toCSV } from "../../lib/csv";
 import { createProductSchema, productIdSchema, updateProductSchema } from "./schema";
-import { bulkImportProducts } from "./bulkImport";
+import { IMPORT_HEADERS, RECIPE_HEADERS, bulkImportProducts, canonicalRows } from "./bulkImport";
 import { buildImportTemplateXlsx, xlsxToImportCsv } from "./xlsxImport";
 import { prisma } from "../../lib/prisma";
 import { deleteProductImage, getProductImage, saveProductImage, uploadImageSchema } from "./image";
 import {
   createProduct,
   deleteProduct,
-  getProductByBarcode,
   getProductById,
   listProducts,
   updateProduct,
@@ -38,48 +37,38 @@ productsRouter.get("/", optionalAuthenticate, async (req: AuthenticatedRequest, 
   }
 });
 
-// Barcode lookup for the admin scanner (Sprint 4) — before /:id so "barcode" isn't
-// swallowed as a product id.
-productsRouter.get("/barcode/:code", authenticate, authorize("admin", "staff"), async (req: AuthenticatedRequest, res, next) => {
-  try {
-    const product = await getProductByBarcode(req.params.code);
-    if (!product) throw new HttpError(404, "No product with that barcode");
-    res.json(withAdminFieldsForRole(product, req.user?.role));
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Reference sheet with required headers, used by /admin/import's "Download template" links.
-// Registered before GET /:id, which is public: otherwise "import-template" is taken as a
-// product id and this admin-only route is never reached (defect D-02).
-// ?format=xlsx gives the Excel version, with a category dropdown.
+// Import templates, used by /admin/import's "Download template" links. Registered
+// before GET /:id, which is public: otherwise "import-template" is taken as a product id
+// and this admin-only route is never reached (defect D-02).
+// ?format=xlsx gives the Excel workbook (Products and Recipes sheets, with dropdowns of
+// the categories and raw materials); otherwise CSV, ?type=recipes for the Recipes table.
 productsRouter.get("/import-template", authenticate, authorize("admin"), async (req, res, next) => {
-  if (req.query.format === "xlsx") {
-    try {
+  try {
+    const materials = await prisma.rawMaterial.findMany({ orderBy: { name: "asc" }, select: { name: true, unit: true } });
+    if (req.query.format === "xlsx") {
       const categories = await prisma.category.findMany({ orderBy: { sortOrder: "asc" }, select: { name: true } });
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       res.setHeader("Content-Disposition", 'attachment; filename="product_import_template.xlsx"');
-      res.send(await buildImportTemplateXlsx(categories));
-    } catch (err) {
-      next(err);
+      res.send(await buildImportTemplateXlsx(categories, materials));
+      return;
     }
-    return;
+    const csv =
+      req.query.type === "recipes"
+        ? toCSV(
+            (materials.length ? materials.slice(0, 2) : [{ name: "Iced tea mix", unit: "g" }]).map((m) => ({
+              product: "Sample Iced Tea",
+              rawMaterial: m.name,
+              qtyPerServing: m.unit === "pc" ? 1 : 100,
+            }))
+          )
+        : toCSV([{ name: "Sample Iced Tea", category: "Drinks", price: 45, cost: 12, description: "Optional" }]);
+    const file = req.query.type === "recipes" ? "recipe_import_template.csv" : "product_import_template.csv";
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${file}"`);
+    res.send(csv);
+  } catch (err) {
+    next(err);
   }
-  const sample = {
-    name: "Sample Iced Tea",
-    barcode: "",
-    category: "Drinks",
-    price: 45,
-    cost: 20,
-    stockQty: 25,
-    minStockThreshold: 5,
-    description: "Optional",
-  };
-  const csv = toCSV([sample]);
-  res.setHeader("Content-Type", "text/csv");
-  res.setHeader("Content-Disposition", 'attachment; filename="product_import_template.csv"');
-  res.send(csv);
 });
 
 productsRouter.get("/:id", optionalAuthenticate, async (req: AuthenticatedRequest, res, next) => {
@@ -133,26 +122,34 @@ productsRouter.delete("/:id/image", authenticate, authorize("admin"), async (req
   }
 });
 
+/** Parses one of the import's CSV texts; empty text is an empty table. */
+function parseImportTable(text: unknown, label: string, headers: readonly string[], required: readonly string[]) {
+  if (text === undefined || text === null || (typeof text === "string" && !text.trim())) return [];
+  if (typeof text !== "string") throw new HttpError(400, `${label} must be CSV text`);
+  const rows = canonicalRows(fromCSV(text), headers);
+  if (rows.length === 0) throw new HttpError(400, `No rows found in ${label}`);
+  const missing = required.filter((h) => !(h in rows[0]));
+  if (missing.length > 0) throw new HttpError(400, `${label} is missing required column(s): ${missing.join(", ")}`);
+  return rows;
+}
+
+// Body: { csvText (Products), recipesCsvText (Recipes), dryRun }. Either table may be
+// left out, but not both. dryRun: check every row and report what would happen, without
+// saving anything.
 productsRouter.post("/bulk-import", authenticate, authorize("admin"), async (req, res, next) => {
   try {
-    const csvText = req.body?.csvText;
-    if (typeof csvText !== "string" || !csvText.trim()) throw new HttpError(400, "csvText is required");
-
-    const rows = fromCSV(csvText);
-    if (rows.length === 0) throw new HttpError(400, "No rows found in the CSV");
-    const REQUIRED_HEADERS = ["name", "category", "price"] as const;
-    const missingHeaders = REQUIRED_HEADERS.filter((h) => !(h in rows[0]));
-    if (missingHeaders.length > 0) throw new HttpError(400, `Missing required column(s): ${missingHeaders.join(", ")}`);
-
-    // dryRun: check every row and report what would happen, without saving anything.
-    res.json(await bulkImportProducts(rows, { dryRun: req.body?.dryRun === true }));
+    const rows = parseImportTable(req.body?.csvText, "Products", IMPORT_HEADERS, ["name", "category", "price"]);
+    const recipeRows = parseImportTable(req.body?.recipesCsvText, "Recipes", RECIPE_HEADERS, RECIPE_HEADERS);
+    if (rows.length === 0 && recipeRows.length === 0) throw new HttpError(400, "Add products, recipes, or both to import");
+    res.json(await bulkImportProducts(rows, { dryRun: req.body?.dryRun === true, recipeRows }));
   } catch (err) {
     next(err);
   }
 });
 
-// Turns an uploaded Excel workbook into the CSV text the import page previews and
-// imports, so .xlsx files go through exactly the same checks as CSV. Nothing is saved.
+// Turns an uploaded Excel workbook's Products and Recipes sheets into the CSV texts the
+// import page previews and imports, so .xlsx files go through exactly the same checks as
+// CSV. Nothing is saved.
 productsRouter.post("/import-xlsx", authenticate, authorize("admin"), async (req, res, next) => {
   try {
     const fileBase64 = req.body?.fileBase64;

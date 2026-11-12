@@ -2,7 +2,7 @@ import request from "supertest";
 import { beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "../../src/lib/prisma";
 import { MAX_IMAGE_BYTES } from "../../src/modules/products/image";
-import { app, loginAs } from "./helpers";
+import { app, loginAs, plentifulRecipe } from "./helpers";
 
 // Product photos: upload, serve, replace and remove (products/image.ts). Uses its own
 // products, created here, so no other file sees a photo.
@@ -27,7 +27,7 @@ const upload = (id: string, bytes: Buffer, contentType: string, token = admin) =
   request(app).put(`/api/products/${id}/image`).set(auth(token)).send({ contentType, imageBase64: bytes.toString("base64") });
 
 async function newProduct(name: string) {
-  const res = await request(app).post("/api/products").set(auth(admin)).send({ name, price: 99, categoryId });
+  const res = await request(app).post("/api/products").set(auth(admin)).send({ name, price: 99, categoryId, recipe: await plentifulRecipe(name) });
   expect(res.status).toBe(201);
   return res.body.id as string;
 }
