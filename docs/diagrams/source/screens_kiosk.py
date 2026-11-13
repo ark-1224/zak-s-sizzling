@@ -1,8 +1,7 @@
 """Customer kiosk wireframes (01-09), drawn at the 1024 x 600 kiosk touchscreen size.
 
 Layout, labels, fields and buttons follow the components named in each header. Dish and
-category data are placeholders except the category names, which come from the seed data
-and lib/instructionChips.ts.
+category data are placeholders except the category names, which come from the seed data.
 """
 
 from wf import DARK, FILL2, FILL3, FILL4, INK, INK2, INK3, LINE, LINE_SOFT, WHITE, Wireframe, text_width
@@ -238,7 +237,7 @@ def menu_error():
 
 
 def item_sheet():
-    f = kiosk("04", "Item details sheet (popup)", "/  (popup over the menu)", K + "ProductModal.tsx, QtyStepper.tsx, NutritionGrid.tsx, lib/instructionChips.ts")
+    f = kiosk("04", "Item details sheet (popup)", "/  (popup over the menu)", K + "ProductModal.tsx, QtyStepper.tsx, NutritionGrid.tsx")
     menu_base(f)
     f.dim()
     x, y, w, h = 176, 24, 672, 552
@@ -269,7 +268,7 @@ def item_sheet():
     qty_stepper(f, x + 28, y + h - 64)
     f.btn(x + 188, y + h - 68, w - 216, 56, "Add to order · ₱000.00", kind="primary", r=28, size=17)
     f.add_note("The middle scrolls; the quantity stepper and Add to order stay fixed at the bottom. Below the note box (scrolled out of view here): the typed count “Sent to the kitchen display with your order · 11/140” and a collapsed “Ingredients & nutrition” section (ingredient tags, and calories / protein / carbs / sugar marked “Estimated values per serving.”).")
-    f.add_note("Instruction chips depend on the category (Sizzling Plates shown); opposite chips (Extra spicy / Not spicy) turn each other off. Chips and note together are limited to 140 characters.")
+    f.add_note("Instruction chips are each dish's own options, set in the product form (12b); a dish with special instructions switched off has no instructions section at all. Opposite chips (Extra spicy / Not spicy) turn each other off. Chips and note together are limited to 140 characters.")
     f.add_note("If the dish sells out while open: the pill reads “Currently unavailable”, instructions are hidden and the button reads “Unavailable” (disabled). Close: ×, a tap outside, or Esc.")
     return f
 

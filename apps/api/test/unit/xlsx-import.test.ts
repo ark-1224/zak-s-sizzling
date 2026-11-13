@@ -158,7 +158,9 @@ describe("turning a sheet into import CSV", () => {
   });
 });
 
-describe("files that would cost too much to read", () => {
+// These build deliberately oversized files, which takes a second or two; a busy computer
+// (the whole suite running) can take longer than Vitest's default 5 seconds.
+describe("files that would cost too much to read", { timeout: 20_000 }, () => {
   // A zip whose one entry unpacks to 30 MB of zeros, from about 30 KB.
   async function zipBomb(): Promise<Buffer> {
     const zip = new JSZip();
