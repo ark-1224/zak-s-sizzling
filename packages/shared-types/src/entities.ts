@@ -118,6 +118,8 @@ export interface OrderItemDTO {
   unitPrice: number;
   subtotal: number;
   specialInstructions: string | null;
+  /** The dish's progress in the kitchen; sent only with the paid orders list (GET /api/orders?inKitchen=1). */
+  kitchenStatus?: KitchenTaskStatus | null;
 }
 
 /** Which payment methods the kiosk can offer right now (GET /api/payments/options). */
@@ -130,7 +132,10 @@ export interface PaymentDTO {
   method: PaymentMethod;
   status: PaymentStatus;
   amount: number;
+  /** PayMongo's code for an online payment, or the GCash / Maya reference number staff typed in. */
   reference: string | null;
+  /** Cash the customer handed over at the counter, for the change (cash only). */
+  amountTendered: number | null;
   paidAt: string | null;
 }
 
@@ -139,6 +144,8 @@ export interface OrderDTO {
   orderNumber: string;
   status: OrderStatus;
   orderType: OrderType;
+  /** "kiosk", or "counter" for a walk-in order staff rang up on the POS. */
+  source: string;
   totalAmount: number;
   /** Staff must sort this order out (shown as NEEDS ATTENTION); the note says what to do. */
   stockIssue: boolean;
@@ -345,10 +352,22 @@ export interface AdjustStockInput {
 /** Raw materials are stored in base units only; the admin screens show kg or L for large amounts. */
 export type MaterialUnit = "g" | "ml" | "pc";
 
+/** What kind of raw material it is (the Raw materials page's category filter). */
+export type RawMaterialCategory =
+  | "meat_seafood"
+  | "produce"
+  | "rice_noodles"
+  | "sauces_seasonings"
+  | "oils_fats"
+  | "dairy_eggs"
+  | "drinks_ice"
+  | "others";
+
 export interface RawMaterialDTO {
   id: string;
   name: string;
   unit: MaterialUnit;
+  category: RawMaterialCategory;
   stockQty: number;
   minStockThreshold: number;
   /** Sent to admins only. */
@@ -395,6 +414,26 @@ export interface NutritionEstimate {
 }
 
 export type RawMaterialMovementType = "sale" | "adjustment" | "restock";
+
+/** One row of the Stock movements tab (GET /api/inventory/movements). */
+export interface StockMovementDTO {
+  id: string;
+  kind: "raw_material" | "ready_made";
+  /** The raw material's id, or the ready-made item's product id. */
+  itemId: string;
+  itemName: string;
+  unit: MaterialUnit;
+  delta: number;
+  /** Null for a ready-made item's sale, whose before/after counts aren't recorded. */
+  previousQty: number | null;
+  newQty: number | null;
+  type: "sale" | "restock" | "adjustment";
+  reason: AdjustmentReason | null;
+  note: string | null;
+  orderNumber: string | null;
+  adjustedByName: string | null;
+  createdAt: string;
+}
 
 export interface RawMaterialMovementDTO {
   id: string;

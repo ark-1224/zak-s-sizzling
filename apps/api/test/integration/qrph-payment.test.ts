@@ -386,7 +386,7 @@ describe("the payment.paid webhook", () => {
       const saved = await orderOf(order.id);
       expect(saved.stockIssueNote).toMatch(/second payment of ₱55\.00/);
       // The first refund, already made, is kept and marked as done.
-      expect(saved.stockIssueNote).toMatch(/Cancelled in the kitchen: Customer left\..*\(Sorted out\.\)/);
+      expect(saved.stockIssueNote).toMatch(/Cancelled while in the kitchen: Customer left\..*\(Sorted out\.\)/);
     });
 
     it("keeps both refunds on the note when a second payment arrives before the first is made", async () => {
@@ -403,7 +403,7 @@ describe("the payment.paid webhook", () => {
       await postEvent(second); // PayMongo repeats it: still listed once
 
       const { stockIssueNote: note } = await orderOf(order.id);
-      expect(note).toMatch(/Cancelled in the kitchen: Customer left\. Refund the customer ₱55\.00/);
+      expect(note).toMatch(/Cancelled while in the kitchen: Customer left\. Refund the customer ₱55\.00/);
       expect(note!.match(/second payment of ₱55\.00/g)).toHaveLength(1);
     });
 
@@ -423,7 +423,7 @@ describe("the payment.paid webhook", () => {
 
       const { stockIssueNote: note } = await orderOf(order.id);
       expect(note).toMatch(/second payment of ₱55\.00/);
-      expect(note).toMatch(/Cancelled in the kitchen: Customer left/);
+      expect(note).toMatch(/Cancelled while in the kitchen: Customer left/);
     });
 
     it("keeps its note when the kitchen cancels an order already flagged for a second payment", async () => {
@@ -439,7 +439,7 @@ describe("the payment.paid webhook", () => {
 
       const { stockIssueNote: note } = await orderOf(order.id);
       expect(note).toMatch(/second payment of ₱55\.00/);
-      expect(note).toMatch(/Cancelled in the kitchen: Customer left/);
+      expect(note).toMatch(/Cancelled while in the kitchen: Customer left/);
     });
   });
 });

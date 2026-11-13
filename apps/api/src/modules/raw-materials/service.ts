@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import type { AdjustmentReason, RawMaterialDTO, RawMaterialMovementDTO, RawMaterialNutrition, UserRole } from "@zaks/shared-types";
+import type { AdjustmentReason, RawMaterialCategory, RawMaterialDTO, RawMaterialMovementDTO, RawMaterialNutrition, UserRole } from "@zaks/shared-types";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
 import { refreshAvailability } from "../inventory/fulfillment";
@@ -20,6 +20,7 @@ function toRawMaterialDTO(m: RawMaterialWithRecipes): RawMaterialDTO {
     id: m.id,
     name: m.name,
     unit: m.unit,
+    category: m.category,
     stockQty: Number(m.stockQty),
     minStockThreshold: Number(m.minStockThreshold),
     costPerUnit: m.costPerUnit === null ? null : Number(m.costPerUnit),
@@ -68,6 +69,7 @@ export async function listRawMaterials(): Promise<RawMaterialDTO[]> {
 export interface CreateRawMaterialInput {
   name: string;
   unit: "g" | "ml" | "pc";
+  category?: RawMaterialCategory;
   stockQty: number;
   minStockThreshold: number;
   costPerUnit?: number;
@@ -81,6 +83,7 @@ export async function createRawMaterial(input: CreateRawMaterialInput, createdBy
         data: {
           name: input.name,
           unit: input.unit,
+          category: input.category,
           stockQty: decimal(input.stockQty),
           minStockThreshold: decimal(input.minStockThreshold),
           costPerUnit: input.costPerUnit,
@@ -111,6 +114,7 @@ export async function createRawMaterial(input: CreateRawMaterialInput, createdBy
 
 export interface UpdateRawMaterialInput {
   name?: string;
+  category?: RawMaterialCategory;
   minStockThreshold?: number;
   costPerUnit?: number | null;
   isActive?: boolean;
@@ -142,6 +146,7 @@ export async function updateRawMaterial(id: string, input: UpdateRawMaterialInpu
       where: { id },
       data: {
         name: input.name,
+        category: input.category,
         minStockThreshold: input.minStockThreshold === undefined ? undefined : decimal(input.minStockThreshold),
         costPerUnit: input.costPerUnit,
         isActive: input.isActive,

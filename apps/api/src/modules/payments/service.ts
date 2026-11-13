@@ -212,24 +212,46 @@ async function markPaymentPaidIfNotAlready(
   }
 }
 
+/** How the customer paid at the counter (the light POS): cash, or GCash / Maya recorded by hand. */
+export interface CounterPaymentInput {
+  method: "cash" | "gcash" | "maya";
+  /** The e-wallet's reference number, from the customer's phone. */
+  reference?: string;
+  /** Cash handed over, for the change on the receipt. */
+  amountTendered?: number;
+}
+
+const WALLET_NAME = { gcash: "GCash", maya: "Maya" } as const;
+
 /**
- * Staff confirm a counter order before collecting payment. Marking it paid, deducting
- * every unit and raw material it needs, confirming the order and sending it to the kitchen
- * happen in one transaction: if anything is short, StockShortageError (409) rolls it all
- * back, so nothing is deducted, the order stays unpaid, and staff can change it with the
- * customer before any money changes hands.
+ * Staff take payment for a counter order. Marking it paid, deducting every unit and raw
+ * material it needs, confirming the order and sending it to the kitchen happen in one
+ * transaction: if anything is short, StockShortageError (409) rolls it all back, so
+ * nothing is deducted, the order stays unpaid, and staff can change it with the customer.
+ * Cash is recorded as a counter payment with the amount handed over (it must cover the
+ * total); GCash and Maya, paid to the shop's own account, with their reference number,
+ * which can be used once.
  */
-export async function confirmCounterPayment(orderId: string) {
+export async function confirmCounterPayment(orderId: string, payment: CounterPaymentInput = { method: "cash" }) {
   const order = await loadPayableOrder(orderId);
+
+  if (payment.method === "cash" && payment.amountTendered !== undefined && payment.amountTendered < Number(order.totalAmount)) {
+    throw new HttpError(400, `The cash received is less than the total of ₱${Number(order.totalAmount).toFixed(2)}`);
+  }
+  if (payment.reference) {
+    const used = await prisma.payment.findFirst({ where: { reference: payment.reference }, include: { order: { select: { orderNumber: true } } } });
+    if (used) throw new HttpError(409, `That reference number is already recorded for ${used.order.orderNumber}. Check it with the customer.`);
+  }
+  const paid = {
+    method: payment.method === "cash" ? ("counter" as const) : payment.method,
+    reference: payment.method === "cash" ? undefined : payment.reference,
+    amountTendered: payment.method === "cash" ? payment.amountTendered : undefined,
+    paidAt: new Date(),
+  };
 
   const touched = await prisma
     .$transaction(async (tx) => {
-      const applied = await markPaymentPaidIfNotAlready(
-        tx,
-        order,
-        { method: "counter", paidAt: new Date() },
-        { method: "counter", paidAt: new Date() }
-      );
+      const applied = await markPaymentPaidIfNotAlready(tx, order, paid, paid);
       if (!applied) throw new HttpError(409, "Order is already paid");
 
       const touched = await deductStockForOrder(tx, order.id);
@@ -239,6 +261,10 @@ export async function confirmCounterPayment(orderId: string) {
     })
     .catch((err) => {
       if (err instanceof OrderCancelledError) throw new HttpError(409, cancelledMessage(order.orderNumber));
+      // Another payment took the same reference number in the meantime.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        throw new HttpError(409, `That ${WALLET_NAME[payment.method as "gcash" | "maya"] ?? ""} reference number is already recorded. Check it with the customer.`);
+      }
       throw err;
     });
 

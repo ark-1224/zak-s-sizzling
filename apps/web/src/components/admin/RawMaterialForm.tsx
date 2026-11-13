@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { UNIT_LABELS } from "@/lib/units";
+import { RAW_MATERIAL_CATEGORIES } from "@/lib/rawMaterialCategories";
 import {
   AdmButton,
   admInputClass,
@@ -11,7 +12,7 @@ import {
   admModalBackdropClass,
   admModalPanelClass,
 } from "@/components/admin/ui";
-import type { MaterialUnit, RawMaterialDTO } from "@zaks/shared-types";
+import type { MaterialUnit, RawMaterialCategory, RawMaterialDTO } from "@zaks/shared-types";
 
 // Add or edit a raw material (Administrator only). The unit is fixed once created,
 // because recipes and the movement log are written in it.
@@ -27,6 +28,7 @@ export function RawMaterialForm({
 }) {
   const [name, setName] = useState(material?.name ?? "");
   const [unit, setUnit] = useState<MaterialUnit>(material?.unit ?? "g");
+  const [category, setCategory] = useState<RawMaterialCategory>(material?.category ?? "others");
   const [stockQty, setStockQty] = useState("0");
   const [minStockThreshold, setMinStockThreshold] = useState(material?.minStockThreshold.toString() ?? "0");
   const [costPerUnit, setCostPerUnit] = useState(material?.costPerUnit?.toString() ?? "");
@@ -45,6 +47,7 @@ export function RawMaterialForm({
           auth: "staff",
           body: JSON.stringify({
             name,
+            category,
             minStockThreshold: Number(minStockThreshold),
             costPerUnit: costPerUnit === "" ? null : Number(costPerUnit),
             isActive,
@@ -58,6 +61,7 @@ export function RawMaterialForm({
           body: JSON.stringify({
             name,
             unit,
+            category,
             stockQty: Number(stockQty),
             minStockThreshold: Number(minStockThreshold),
             costPerUnit: costPerUnit === "" ? undefined : Number(costPerUnit),
@@ -82,6 +86,16 @@ export function RawMaterialForm({
 
         <Field label="Name">
           <input required maxLength={120} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Pork belly" className={admInputClass} />
+        </Field>
+
+        <Field label="Category">
+          <select value={category} onChange={(e) => setCategory(e.target.value as RawMaterialCategory)} className={admInputClass}>
+            {RAW_MATERIAL_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">

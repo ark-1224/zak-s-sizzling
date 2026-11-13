@@ -10,9 +10,13 @@ import type { OrderBoardDTO, OrderDTO, TransactionDTO, TransactionPageDTO } from
 import type { z } from "zod";
 import type { transactionQuerySchema } from "./schema";
 
-type OrderWithRelations = Prisma.OrderGetPayload<{
+type OrderRow = Prisma.OrderGetPayload<{
   include: { items: { include: { product: true } }; payment: true };
 }>;
+type OrderWithRelations = Omit<OrderRow, "items"> & {
+  // kitchenTask is included only where a screen needs each dish's kitchen progress (the paid orders list).
+  items: (OrderRow["items"][number] & { kitchenTask?: { status: "pending" | "in_progress" | "completed" } | null })[];
+};
 
 export function toOrderDTO(order: OrderWithRelations): OrderDTO {
   return {
@@ -20,6 +24,7 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
     orderNumber: order.orderNumber,
     status: order.status,
     orderType: order.orderType,
+    source: order.source,
     totalAmount: Number(order.totalAmount),
     stockIssue: order.stockIssue,
     stockIssueNote: order.stockIssueNote,
@@ -36,6 +41,7 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
       unitPrice: Number(item.unitPrice),
       subtotal: Number(item.subtotal),
       specialInstructions: item.specialInstructions,
+      ...(item.kitchenTask !== undefined ? { kitchenStatus: item.kitchenTask?.status ?? null } : {}),
     })),
     payment: order.payment
       ? {
@@ -43,6 +49,7 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
           status: order.payment.status,
           amount: Number(order.payment.amount),
           reference: order.payment.reference,
+          amountTendered: order.payment.amountTendered === null ? null : Number(order.payment.amountTendered),
           paidAt: order.payment.paidAt?.toISOString() ?? null,
         }
       : null,
@@ -55,6 +62,8 @@ interface CreateOrderInput {
   kioskSessionId?: string;
   paymentMethod?: "counter" | "qrph";
   orderType?: "dine_in" | "take_out";
+  /** "counter" for a walk-in order staff rang up on the POS; the kiosk's orders are "kiosk". */
+  source?: "kiosk" | "counter";
 }
 
 const ORDER_NUMBER_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
@@ -117,6 +126,7 @@ export async function createOrder(input: CreateOrderInput) {
           orderNumber: generateOrderNumber(),
           customerName: input.customerName,
           kioskSessionId: input.kioskSessionId,
+          source: input.source,
           orderType: input.orderType,
           totalAmount,
           estimatedPrepMinutes,
@@ -292,21 +302,24 @@ function toTransactionDTO(order: OrderWithTasks): TransactionDTO {
 }
 
 /** Staff/admin order oversight — e.g. the counter-payment queue on /staff/orders. */
-export async function listOrders(filter: { unpaidCounterOnly?: boolean } = {}): Promise<OrderDTO[]> {
+export async function listOrders(filter: { unpaidCounterOnly?: boolean; inKitchen?: boolean } = {}): Promise<OrderDTO[]> {
   const orders = await prisma.order.findMany({
     // Unpaid orders that weren't cancelled, plus paid orders flagged with a stock issue:
-    // staff still have to act on those.
-    where: filter.unpaidCounterOnly
-      ? {
-          OR: [
-            { status: { not: "cancelled" }, OR: [{ payment: null }, { payment: { status: { not: "paid" } } }] },
-            { stockIssue: true },
-          ],
-        }
-      : undefined,
-    include: { items: { include: { product: true } }, payment: true },
-    orderBy: { createdAt: "desc" },
-    take: 50,
+    // staff still have to act on those. `inKitchen`: paid orders not yet handed over, which
+    // staff can cancel (with each dish's kitchen progress, oldest first).
+    where: filter.inKitchen
+      ? { status: { in: ["confirmed", "preparing", "ready"] } }
+      : filter.unpaidCounterOnly
+        ? {
+            OR: [
+              { status: { not: "cancelled" }, OR: [{ payment: null }, { payment: { status: { not: "paid" } } }] },
+              { stockIssue: true },
+            ],
+          }
+        : undefined,
+    include: { items: { include: { product: true, ...(filter.inKitchen ? { kitchenTask: { select: { status: true } } } : {}) } }, payment: true },
+    orderBy: { createdAt: filter.inKitchen ? "asc" : "desc" },
+    take: filter.inKitchen ? 100 : 50,
   });
   return orders.map(toOrderDTO);
 }

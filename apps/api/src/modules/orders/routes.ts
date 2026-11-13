@@ -27,7 +27,12 @@ export const ordersRouter = Router();
 ordersRouter.post("/", authenticate, orderAddressLimit, orderPlacementLimit, async (req: AuthenticatedRequest, res, next) => {
   try {
     const body = createOrderSchema.parse(req.body);
-    const order = await createOrder({ ...body, kioskSessionId: req.kioskSessionId });
+    // Staff ringing up a walk-in customer on the POS (Orders awaiting payment > New order)
+    // place a counter order; the kiosk's own orders keep their session.
+    const atCounter = req.user?.role === "staff" || req.user?.role === "admin";
+    const order = await createOrder(
+      atCounter ? { ...body, paymentMethod: "counter", source: "counter" } : { ...body, kioskSessionId: req.kioskSessionId }
+    );
     res.status(201).json(order);
   } catch (err) {
     next(err);
@@ -64,11 +69,12 @@ ordersRouter.get("/history", authenticate, authorize("admin"), async (req, res, 
   }
 });
 
-// Staff/admin order oversight — currently used by /staff/orders to find counter
-// payments awaiting confirmation. Full filtering/pagination is Sprint 5 scope.
+// Staff/admin order oversight, for /staff/orders: ?unpaid=1 is the payment queue (counter
+// orders awaiting payment and orders that need attention); ?inKitchen=1 the paid orders
+// not yet handed over, which staff can cancel there.
 ordersRouter.get("/", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    const orders = await listOrders({ unpaidCounterOnly: req.query.unpaid === "1" });
+    const orders = await listOrders({ unpaidCounterOnly: req.query.unpaid === "1", inKitchen: req.query.inKitchen === "1" });
     res.json(orders);
   } catch (err) {
     next(err);

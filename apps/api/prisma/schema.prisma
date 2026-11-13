@@ -91,6 +91,20 @@ enum MaterialUnit {
   @@map("material_unit")
 }
 
+/// What kind of raw material it is, for finding it on the Raw materials page.
+enum RawMaterialCategory {
+  meat_seafood
+  produce
+  rice_noodles
+  sauces_seasonings
+  oils_fats
+  dairy_eggs
+  drinks_ice
+  others
+
+  @@map("raw_material_category")
+}
+
 enum MovementType {
   sale
   adjustment
@@ -314,6 +328,8 @@ model Payment {
   status         PaymentStatus @default(pending)
   amount         Decimal       @db.Decimal(10, 2)
   reference      String?       @unique @db.VarChar(100)
+  /// Cash the customer handed over at the counter, for the change on the receipt (cash only).
+  amountTendered Decimal?      @map("amount_tendered") @db.Decimal(10, 2)
   gatewayPayload Json?         @map("gateway_payload")
   paidAt         DateTime?     @map("paid_at")
   // When staff marked a cancelled, paid order as sorted out, having refunded the customer.
@@ -343,6 +359,7 @@ model RawMaterial {
   id                String                @id @default(uuid()) @db.Uuid
   name              String                @unique @db.VarChar(120)
   unit              MaterialUnit
+  category          RawMaterialCategory   @default(others)
   stockQty          Decimal               @default(0) @map("stock_qty") @db.Decimal(12, 3)
   minStockThreshold Decimal               @default(0) @map("min_stock_threshold") @db.Decimal(12, 3)
   costPerUnit       Decimal?              @map("cost_per_unit") @db.Decimal(10, 4)

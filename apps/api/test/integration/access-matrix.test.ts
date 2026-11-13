@@ -72,6 +72,7 @@ const MATRIX: Entry[] = [
   { method: "post", route: "/api/kitchen/orders/:id/handed-over", path: `/api/kitchen/orders/${MISSING}/handed-over`, expected: STAFF },
   { method: "get", route: "/api/inventory/low-stock", path: "/api/inventory/low-stock", expected: STAFF },
   { method: "get", route: "/api/inventory/adjustments", path: "/api/inventory/adjustments", expected: STAFF },
+  { method: "get", route: "/api/inventory/movements", path: "/api/inventory/movements", expected: STAFF },
   { method: "patch", route: "/api/inventory/:productId", path: `/api/inventory/${MISSING}`, body: {}, expected: STAFF },
   { method: "get", route: "/api/raw-materials/", path: "/api/raw-materials", expected: STAFF },
   { method: "get", route: "/api/raw-materials/movements", path: "/api/raw-materials/movements", expected: STAFF },

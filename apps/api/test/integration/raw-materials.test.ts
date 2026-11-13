@@ -337,3 +337,33 @@ describe("taking a raw material out of use", () => {
     expect((await listAs(staff)).find((m) => m.id === sauce.id)).toMatchObject({ isActive: false });
   });
 });
+
+describe("raw material categories (for the Raw materials page's filter)", () => {
+  const create = (body: object) => request(app).post("/api/raw-materials").set(as(admin)).send({ unit: "g", ...body });
+
+  it("saves the category given, or Others when none is", async () => {
+    const pork = await create({ name: "RM Test Category Pork", category: "meat_seafood" });
+    const other = await create({ name: "RM Test Category Plain" });
+
+    expect(pork.status).toBe(201);
+    expect(pork.body.category).toBe("meat_seafood");
+    expect(other.body.category).toBe("others");
+    const listed = (await request(app).get("/api/raw-materials").set(as(staff))).body.find((m: { id: string }) => m.id === pork.body.id);
+    expect(listed.category).toBe("meat_seafood");
+  });
+
+  it("changes a raw material's category", async () => {
+    const created = await create({ name: "RM Test Category Change", category: "others" });
+
+    const res = await request(app).put(`/api/raw-materials/${created.body.id}`).set(as(admin)).send({ category: "sauces_seasonings" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.category).toBe("sauces_seasonings");
+  });
+
+  it("refuses a category that isn't on the list", async () => {
+    const res = await create({ name: "RM Test Category Bad", category: "snacks" });
+
+    expect(res.status).toBe(400);
+  });
+});

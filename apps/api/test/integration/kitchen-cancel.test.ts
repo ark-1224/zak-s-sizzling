@@ -92,8 +92,8 @@ describe("cancelling an order nobody has started", () => {
     expect(saved).toMatchObject({ status: "cancelled", cancelReason: "Ran out of an ingredient", stockIssue: true });
     expect(saved.cancelledAt).not.toBeNull();
     expect(saved.payment?.status).toBe("paid");
-    expect(saved.stockIssueNote).toContain("Cancelled in the kitchen: Ran out of an ingredient");
-    expect(saved.stockIssueNote).toContain(`Refund the customer ₱${order.totalAmount.toFixed(2)} (paid at the counter)`);
+    expect(saved.stockIssueNote).toContain("Cancelled while in the kitchen: Ran out of an ingredient");
+    expect(saved.stockIssueNote).toContain(`Refund the customer ₱${order.totalAmount.toFixed(2)} (paid in cash)`);
 
     const queue = await request(app).get("/api/orders?unpaid=1").set(auth(staff));
     expect(queue.body.find((o: { id: string }) => o.id === order.id)).toMatchObject({

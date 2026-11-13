@@ -25,3 +25,19 @@ export const adjustStockSchema = z
   .refine((v) => (v.setQty === undefined && v.delta === undefined) || v.reason !== undefined, {
     message: "A reason is required when adjusting stock quantity",
   });
+
+const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date like 2026-11-13");
+
+// Filters for the Stock movements tab (GET /api/inventory/movements): raw materials,
+// ready-made items or both; one item; sales, restocks or other adjustments; Manila dates,
+// both included. Newest first, up to `limit`.
+export const stockMovementQuerySchema = z
+  .object({
+    kind: z.enum(["raw_material", "ready_made"]).optional(),
+    itemId: z.string().uuid().optional(),
+    type: z.enum(["sale", "restock", "adjustment"]).optional(),
+    from: day.optional(),
+    to: day.optional(),
+    limit: z.coerce.number().int().min(1).max(300).default(150),
+  })
+  .refine((v) => !v.from || !v.to || v.from <= v.to, { message: "The start date must be on or before the end date", path: ["from"] });

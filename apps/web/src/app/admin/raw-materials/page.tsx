@@ -7,13 +7,14 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { getStoredUser } from "@/lib/auth";
 import { getSocket } from "@/lib/websocket";
 import { formatMaterialQty } from "@/lib/units";
-import { PageHeader, Card, AdmButton, StatusPill } from "@/components/admin/ui";
+import { RAW_MATERIAL_CATEGORIES, RAW_MATERIAL_CATEGORY_LABEL } from "@/lib/rawMaterialCategories";
+import { PageHeader, Card, AdmButton, StatusPill, admInputClass, admLabelClass } from "@/components/admin/ui";
 import { SuccessMessage, useSuccessMessage } from "@/components/admin/SuccessMessage";
 import { AdjustStockModal, REASON_LABELS } from "@/components/admin/AdjustStockModal";
 import { RawMaterialAdjustModal } from "@/components/admin/RawMaterialAdjustModal";
 import { RawMaterialForm } from "@/components/admin/RawMaterialForm";
 import { RawMaterialNutritionModal } from "@/components/admin/RawMaterialNutritionModal";
-import type { Product, RawMaterialDTO, RawMaterialMovementDTO, StockAdjustmentDTO } from "@zaks/shared-types";
+import type { Product, RawMaterialCategory, RawMaterialDTO, StockMovementDTO } from "@zaks/shared-types";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleString("en-PH", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -25,13 +26,14 @@ function status(m: RawMaterialDTO): { tone: "ok" | "warn" | "bad"; label: string
   return { tone: "ok", label: "OK" };
 }
 
-function movementLabel(m: RawMaterialMovementDTO) {
+function movementLabel(m: StockMovementDTO) {
   if (m.type === "sale") return m.orderNumber ? `Sale · ${m.orderNumber}` : "Sale";
-  return m.reason ? REASON_LABELS[m.reason] : "Adjustment";
+  if (m.reason) return REASON_LABELS[m.reason];
+  return m.type === "restock" ? "Restock" : "Adjustment";
 }
 
 type Filter = "all" | "low" | "out";
-type Tab = "materials" | "dishes" | "ready-made";
+type Tab = "materials" | "dishes" | "ready-made" | "movements";
 
 const FILTER_LABELS: Record<Filter, string> = { all: "All", low: "Needs restock", out: "Out of stock" };
 
@@ -81,13 +83,16 @@ function FilterChips({
 
 // The whole inventory (panel feedback: every dish is made from a bill of materials, so
 // stock lives in raw materials; docs/design/raw-material-stock.md, Objective 3).
-// - Raw materials: what's on hand, what's running low, and every change with who made it
-//   and why. ?filter=low (at or below minimum) or ?filter=out (none left), which the
+// - Raw materials: what's on hand and what's running low, found by name (search) and
+//   category. ?filter=low (at or below minimum) or ?filter=out (none left), which the
 //   dashboard links to.
 // - Dishes (?tab=dishes): the servings each dish's recipe can make from that stock, and
 //   the raw material that limits it. This replaced the separate Inventory page.
 // - Ready-made (?tab=ready-made): items sold as they are (bottled drinks), which have no
 //   recipe and are counted in pieces. Same filters, restocked with Adjust stock.
+// - Stock movements (?tab=movements): one log of every stock change, for raw materials and
+//   ready-made items together (sales, restocks, adjustments, cancelled orders put back),
+//   filtered by item, kind of change and dates.
 // Staff restock and adjust here; adding or editing raw materials is Administrator-only.
 export default function AdminRawMaterialsPage() {
   // useSearchParams needs a Suspense boundary, so the page can still be prerendered.
@@ -103,7 +108,7 @@ function RawMaterialsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const tabParam = params.get("tab");
-  const tab: Tab = tabParam === "dishes" || tabParam === "ready-made" ? tabParam : "materials";
+  const tab: Tab = tabParam === "dishes" || tabParam === "ready-made" || tabParam === "movements" ? tabParam : "materials";
   const filterParam = params.get("filter");
   const filter: Filter = filterParam === "low" || filterParam === "out" ? filterParam : "all";
 
@@ -111,7 +116,7 @@ function RawMaterialsContent() {
   function navigate(next: { tab?: Tab; filter?: Filter }) {
     const query = new URLSearchParams();
     const nextTab = next.tab ?? tab;
-    const nextFilter = next.tab === "dishes" ? "all" : (next.filter ?? filter);
+    const nextFilter = next.tab === "dishes" || next.tab === "movements" ? "all" : (next.filter ?? filter);
     if (nextTab !== "materials") query.set("tab", nextTab);
     if (nextFilter !== "all") query.set("filter", nextFilter);
     const qs = query.toString();
@@ -121,8 +126,6 @@ function RawMaterialsContent() {
   const [materials, setMaterials] = useState<RawMaterialDTO[]>([]);
   const [products, setProducts] = useState<Product[] | null>(null);
   const [productsError, setProductsError] = useState<string | null>(null);
-  const [movements, setMovements] = useState<RawMaterialMovementDTO[]>([]);
-  const [logMaterialId, setLogMaterialId] = useState("all");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [adjusting, setAdjusting] = useState<RawMaterialDTO | null>(null);
@@ -130,6 +133,9 @@ function RawMaterialsContent() {
   const [nutritionOf, setNutritionOf] = useState<RawMaterialDTO | null>(null);
   const success = useSuccessMessage();
   const [isAdmin] = useState(() => getStoredUser()?.role === "admin");
+  // Finding a raw material: by name, and by category.
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState<RawMaterialCategory | "all">("all");
 
   // Bumped to refetch after a save or a live update. Each effect ignores the response
   // of a request it has since replaced, so a slow older response can't overwrite a newer one.
@@ -171,20 +177,6 @@ function RawMaterialsContent() {
     };
   }, [version]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const query = logMaterialId === "all" ? "" : `?rawMaterialId=${logMaterialId}`;
-    apiFetch<RawMaterialMovementDTO[]>(`/api/raw-materials/movements${query}`, { auth: "staff" })
-      .then((result) => {
-        if (!cancelled) setMovements(result);
-      })
-      .catch((err) => {
-        if (!cancelled) setMessage(err instanceof ApiError ? err.message : "Could not load the movement log.");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [logMaterialId, version]);
 
   // A sale or another session's adjustment changes stock: the public inventory:updated
   // event is used only as a "something changed" signal, then the staff-only data is refetched.
@@ -215,9 +207,18 @@ function RawMaterialsContent() {
     refresh();
   }
 
-  const low = materials.filter((m) => m.isActive && m.isLow);
-  const out = materials.filter((m) => m.isActive && m.stockQty <= 0);
-  const shown = filter === "low" ? low : filter === "out" ? out : materials;
+  // Every raw material at or below its minimum, for the warning, whatever is searched.
+  const lowAll = materials.filter((m) => m.isActive && m.isLow);
+  const q = search.trim().toLowerCase();
+  const narrowed = q !== "" || category !== "all";
+  const matching = materials.filter((m) => (category === "all" || m.category === category) && (q === "" || m.name.toLowerCase().includes(q)));
+  const low = matching.filter((m) => m.isActive && m.isLow);
+  const out = matching.filter((m) => m.isActive && m.stockQty <= 0);
+  const shown = filter === "low" ? low : filter === "out" ? out : matching;
+  const clearSearch = () => {
+    setSearch("");
+    setCategory("all");
+  };
   const readyMade = (products ?? []).filter(isReadyMade);
   const readyMadeMatching = filter === "low" ? readyMade.filter(readyMadeIsLow) : filter === "out" ? readyMade.filter((p) => (p.stockQty ?? 0) <= 0) : [];
 
@@ -244,6 +245,7 @@ function RawMaterialsContent() {
             ["materials", "Raw materials"],
             ["dishes", "Dishes (servings)"],
             ["ready-made", "Ready-made (pieces)"],
+            ["movements", "Stock movements"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -263,12 +265,13 @@ function RawMaterialsContent() {
 
       {tab === "dishes" ? (
         <DishServings materials={materials} products={products} error={productsError} isAdmin={isAdmin} />
+      ) : tab === "movements" ? (
+        <StockMovements materials={materials} readyMade={readyMade} version={version} />
       ) : tab === "ready-made" ? (
         <ReadyMadeStock
           items={products && readyMade}
           error={productsError}
           filter={filter}
-          version={version}
           isAdmin={isAdmin}
           onFilter={(next) => navigate({ filter: next })}
           onAdjusted={(before, after) => {
@@ -278,20 +281,49 @@ function RawMaterialsContent() {
         />
       ) : (
       <>
-      {low.length > 0 && filter === "all" && (
+      {lowAll.length > 0 && filter === "all" && !narrowed && (
         <div className="rounded-[6px] border border-adm-warn bg-adm-warn-soft p-4">
           <div className="mb-1 font-medium text-adm-ink">
-            {low.length} raw material{low.length !== 1 ? "s" : ""} at or below minimum level
+            {lowAll.length} raw material{lowAll.length !== 1 ? "s" : ""} at or below minimum level
           </div>
           <div className="text-base break-words text-adm-ink-2 md:text-sm">
-            {low.map((m) => `${m.name} (${formatMaterialQty(m.stockQty, m.unit)} left)`).join(", ")}
+            {lowAll.map((m) => `${m.name} (${formatMaterialQty(m.stockQty, m.unit)} left)`).join(", ")}
           </div>
         </div>
       )}
 
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center" role="search" aria-label="Find raw materials">
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search raw materials"
+          aria-label="Search raw materials by name"
+          className={`sm:max-w-72 ${admInputClass}`}
+        />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as RawMaterialCategory | "all")}
+          aria-label="Category"
+          className={`sm:w-auto ${admInputClass}`}
+        >
+          <option value="all">All categories</option>
+          {RAW_MATERIAL_CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label} ({materials.filter((m) => m.category === c.value).length})
+            </option>
+          ))}
+        </select>
+        {narrowed && (
+          <AdmButton variant="secondary" onClick={clearSearch}>
+            Clear
+          </AdmButton>
+        )}
+      </div>
+
       <FilterChips
         filter={filter}
-        counts={{ all: materials.length, low: low.length, out: out.length }}
+        counts={{ all: matching.length, low: low.length, out: out.length }}
         onChange={(next) => navigate({ filter: next })}
         explain={`Raw materials in use ${filter === "low" ? "at or below their minimum level" : "with none left"}.`}
       />
@@ -308,6 +340,16 @@ function RawMaterialsContent() {
 
       {loading ? (
         <div className="text-adm-ink-3">Loading…</div>
+      ) : narrowed && shown.length === 0 && materials.length > 0 ? (
+        <Card>
+          <div className="p-4 text-base text-adm-ink-3 md:text-sm">
+            No raw material {q ? <>matches &ldquo;{search.trim()}&rdquo;</> : "is in this category"}
+            {filter !== "all" ? (filter === "low" ? " and needs restocking" : " and has run out") : ""}.{" "}
+            <button type="button" onClick={clearSearch} className="text-adm-ink underline underline-offset-2">
+              Clear the search
+            </button>
+          </div>
+        </Card>
       ) : filter !== "all" && shown.length === 0 ? (
         <Card>
           <div className="p-4 text-base text-adm-ink-3 md:text-sm">
@@ -334,6 +376,7 @@ function RawMaterialsContent() {
                     <div className="flex flex-wrap items-center gap-2 text-base font-medium break-words">
                       {m.name} <StatusPill tone={s.tone}>{s.label}</StatusPill>
                     </div>
+                    <div className="text-sm text-adm-ink-3">{RAW_MATERIAL_CATEGORY_LABEL[m.category]}</div>
                     <div className="font-adm-mono text-sm text-adm-ink-3">
                       <span className="font-bold text-adm-ink">{formatMaterialQty(m.stockQty, m.unit)}</span> · min{" "}
                       {formatMaterialQty(m.minStockThreshold, m.unit)}
@@ -379,6 +422,7 @@ function RawMaterialsContent() {
                       <td className="px-4.5 py-3 font-medium">
                         {m.name}
                         {!m.isActive && <span className="ml-2 text-xs font-normal text-adm-ink-3">(not in use)</span>}
+                        <div className="text-xs font-normal text-adm-ink-3">{RAW_MATERIAL_CATEGORY_LABEL[m.category]}</div>
                       </td>
                       <td className={`font-adm-mono px-3 py-3 text-right font-bold whitespace-nowrap ${s.tone === "ok" ? "" : "text-adm-bad"}`}>
                         {formatMaterialQty(m.stockQty, m.unit)}
@@ -428,65 +472,6 @@ function RawMaterialsContent() {
         </Card>
       )}
 
-      <Card
-        title="Stock movements"
-        actions={
-          <select
-            value={logMaterialId}
-            onChange={(e) => setLogMaterialId(e.target.value)}
-            aria-label="Filter movements by raw material"
-            className="min-h-11 w-full min-w-0 rounded-[4px] border border-adm-line bg-adm-surface px-2 text-base md:min-h-0 md:w-auto md:py-1 md:text-sm"
-          >
-            <option value="all">All raw materials</option>
-            {materials.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        }
-      >
-        {movements.length === 0 ? (
-          <div className="p-4 text-base text-adm-ink-3 md:text-sm">No stock movements recorded yet.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-base md:text-sm">
-              <thead>
-                <tr className="text-left text-xs tracking-[.07em] text-adm-ink-3 uppercase">
-                  <th className="px-4.5 py-2.75 font-medium">When</th>
-                  <th className="px-3 py-2.75 font-medium">Raw material</th>
-                  <th className="px-3 py-2.75 text-right font-medium">Change</th>
-                  <th className="px-3 py-2.75 font-medium">Why</th>
-                  <th className="px-3 py-2.75 font-medium">Note</th>
-                  <th className="px-4.5 py-2.75 font-medium">By</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movements.map((m) => (
-                  <tr key={m.id} className="border-t border-adm-line-soft">
-                    <td className="font-adm-mono px-4.5 py-2.75 whitespace-nowrap text-adm-ink-3">{formatTime(m.createdAt)}</td>
-                    <td className="px-3 py-2.75">{m.rawMaterialName}</td>
-                    <td className="font-adm-mono px-3 py-2.75 text-right whitespace-nowrap">
-                      <span className={m.delta > 0 ? "text-adm-ok" : "text-adm-bad"}>
-                        {m.delta > 0 ? "+" : "−"}
-                        {formatMaterialQty(Math.abs(m.delta), m.unit)}
-                      </span>
-                      <span className="ml-1.5 text-adm-ink-3">
-                        ({formatMaterialQty(m.previousQty, m.unit)}→{formatMaterialQty(m.newQty, m.unit)})
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.75 whitespace-nowrap text-adm-ink-2">{movementLabel(m)}</td>
-                    <td className="max-w-50 truncate px-3 py-2.75 text-adm-ink-3" title={m.note ?? undefined}>
-                      {m.note ?? "—"}
-                    </td>
-                    <td className="px-4.5 py-2.75 text-adm-ink-2">{m.adjustedByName ?? (m.type === "sale" ? "Kiosk sale" : "—")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
       </>
       )}
 
@@ -598,7 +583,6 @@ function ReadyMadeStock({
   items,
   error,
   filter,
-  version,
   isAdmin,
   onFilter,
   onAdjusted,
@@ -606,36 +590,17 @@ function ReadyMadeStock({
   items: Product[] | null;
   error: string | null;
   filter: Filter;
-  version: number;
   isAdmin: boolean;
   onFilter: (filter: Filter) => void;
   onAdjusted: (before: Product, after: Product) => void;
 }) {
   const [adjusting, setAdjusting] = useState<Product | null>(null);
-  const [log, setLog] = useState<StockAdjustmentDTO[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    apiFetch<StockAdjustmentDTO[]>("/api/inventory/adjustments?limit=30", { auth: "staff" })
-      .then((result) => {
-        if (!cancelled) setLog(result);
-      })
-      .catch(() => {
-        if (!cancelled) setLog([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [version]);
-
   if (error) return <div className="text-base text-adm-bad md:text-sm">{error}</div>;
   if (!items) return <div className="text-adm-ink-3">Loading…</div>;
 
   const low = items.filter(readyMadeIsLow);
   const out = items.filter((p) => (p.stockQty ?? 0) <= 0);
   const shown = filter === "low" ? low : filter === "out" ? out : items;
-  const itemIds = new Set(items.map((p) => p.id));
-  const itemLog = log.filter((a) => itemIds.has(a.productId));
 
   return (
     <>
@@ -706,9 +671,148 @@ function ReadyMadeStock({
         )}
       </Card>
 
-      <Card title="Ready-made stock changes">
-        {itemLog.length === 0 ? (
-          <div className="p-4 text-base text-adm-ink-3 md:text-sm">No adjustments recorded yet. Sales are listed on Transactions.</div>
+      {adjusting && (
+        <AdjustStockModal
+          product={adjusting}
+          onClose={() => setAdjusting(null)}
+          onSaved={(updated) => {
+            onAdjusted(adjusting, updated);
+            setAdjusting(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+const TYPE_LABELS = { sale: "Sales", restock: "Restocks", adjustment: "Other adjustments" } as const;
+type MovementType = keyof typeof TYPE_LABELS;
+
+/**
+ * Every stock change, newest first, for raw materials and ready-made items together:
+ * sales (a dish's raw materials, a ready-made item's pieces), restocks, corrections,
+ * spoilage and cancelled orders put back, each with who made it and why where recorded.
+ * Filtered by kind of item, one item, kind of change and Manila dates (GET /api/inventory/movements).
+ */
+function StockMovements({ materials, readyMade, version }: { materials: RawMaterialDTO[]; readyMade: Product[]; version: number }) {
+  const [kind, setKind] = useState<"all" | "raw_material" | "ready_made">("all");
+  const [itemId, setItemId] = useState("all");
+  const [type, setType] = useState<"all" | MovementType>("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [rows, setRows] = useState<StockMovementDTO[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const query = new URLSearchParams();
+    if (kind !== "all") query.set("kind", kind);
+    if (itemId !== "all") query.set("itemId", itemId);
+    if (type !== "all") query.set("type", type);
+    if (from) query.set("from", from);
+    if (to) query.set("to", to);
+    apiFetch<StockMovementDTO[]>(`/api/inventory/movements?${query}`, { auth: "staff" })
+      .then((result) => {
+        if (!cancelled) {
+          setRows(result);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err instanceof ApiError ? err.message : "Could not load the stock movements.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [kind, itemId, type, from, to, version]);
+
+  const filtered = kind !== "all" || itemId !== "all" || type !== "all" || from !== "" || to !== "";
+  const selectClass = `md:w-auto ${admInputClass}`;
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end" role="group" aria-label="Filter stock movements">
+        <label className="block">
+          <span className={admLabelClass}>Show</span>
+          <select
+            value={kind}
+            onChange={(e) => {
+              setKind(e.target.value as typeof kind);
+              setItemId("all");
+            }}
+            className={selectClass}
+          >
+            <option value="all">Raw materials and ready-made</option>
+            <option value="raw_material">Raw materials</option>
+            <option value="ready_made">Ready-made items</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className={admLabelClass}>Item</span>
+          <select value={itemId} onChange={(e) => setItemId(e.target.value)} className={selectClass}>
+            <option value="all">All items</option>
+            {kind !== "ready_made" && (
+              <optgroup label="Raw materials">
+                {materials.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {kind !== "raw_material" && readyMade.length > 0 && (
+              <optgroup label="Ready-made">
+                {readyMade.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </label>
+        <label className="block">
+          <span className={admLabelClass}>Change</span>
+          <select value={type} onChange={(e) => setType(e.target.value as typeof type)} className={selectClass}>
+            <option value="all">All changes</option>
+            {(Object.keys(TYPE_LABELS) as MovementType[]).map((t) => (
+              <option key={t} value={t}>
+                {TYPE_LABELS[t]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className={admLabelClass}>From</span>
+          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={selectClass} />
+        </label>
+        <label className="block">
+          <span className={admLabelClass}>To</span>
+          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={selectClass} />
+        </label>
+        {filtered && (
+          <AdmButton
+            variant="secondary"
+            onClick={() => {
+              setKind("all");
+              setItemId("all");
+              setType("all");
+              setFrom("");
+              setTo("");
+            }}
+          >
+            Clear filters
+          </AdmButton>
+        )}
+      </div>
+
+      {error && <div className="text-base text-adm-bad md:text-sm">{error}</div>}
+
+      <Card title={rows ? `${rows.length} movement${rows.length !== 1 ? "s" : ""}${rows.length >= 150 ? " (the latest 150)" : ""}` : "Stock movements"}>
+        {rows === null ? (
+          <div className="p-4 text-adm-ink-3">Loading…</div>
+        ) : rows.length === 0 ? (
+          <div className="p-4 text-base text-adm-ink-3 md:text-sm">{filtered ? "No stock movement matches these filters." : "No stock movements recorded yet."}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-base md:text-sm">
@@ -723,24 +827,29 @@ function ReadyMadeStock({
                 </tr>
               </thead>
               <tbody>
-                {itemLog.map((a) => (
-                  <tr key={a.id} className="border-t border-adm-line-soft">
-                    <td className="font-adm-mono px-4.5 py-2.75 whitespace-nowrap text-adm-ink-3">{formatTime(a.createdAt)}</td>
-                    <td className="px-3 py-2.75">{a.productName}</td>
+                {rows.map((m) => (
+                  <tr key={m.id} className="border-t border-adm-line-soft">
+                    <td className="font-adm-mono px-4.5 py-2.75 whitespace-nowrap text-adm-ink-3">{formatTime(m.createdAt)}</td>
+                    <td className="px-3 py-2.75">
+                      {m.itemName}
+                      {m.kind === "ready_made" && <span className="ml-1.5 text-xs text-adm-ink-3">(ready-made)</span>}
+                    </td>
                     <td className="font-adm-mono px-3 py-2.75 text-right whitespace-nowrap">
-                      <span className={a.delta > 0 ? "text-adm-ok" : "text-adm-bad"}>
-                        {a.delta > 0 ? "+" : "−"}
-                        {Math.abs(a.delta)}
+                      <span className={m.delta > 0 ? "text-adm-ok" : "text-adm-bad"}>
+                        {m.delta > 0 ? "+" : "−"}
+                        {formatMaterialQty(Math.abs(m.delta), m.unit)}
                       </span>
-                      <span className="ml-1.5 text-adm-ink-3">
-                        ({a.previousQty}→{a.newQty})
-                      </span>
+                      {m.previousQty !== null && m.newQty !== null && (
+                        <span className="ml-1.5 text-adm-ink-3">
+                          ({formatMaterialQty(m.previousQty, m.unit)}→{formatMaterialQty(m.newQty, m.unit)})
+                        </span>
+                      )}
                     </td>
-                    <td className="px-3 py-2.75 whitespace-nowrap text-adm-ink-2">{REASON_LABELS[a.reason]}</td>
-                    <td className="max-w-50 truncate px-3 py-2.75 text-adm-ink-3" title={a.note ?? undefined}>
-                      {a.note ?? "—"}
+                    <td className="px-3 py-2.75 whitespace-nowrap text-adm-ink-2">{movementLabel(m)}</td>
+                    <td className="max-w-50 truncate px-3 py-2.75 text-adm-ink-3" title={m.note ?? undefined}>
+                      {m.note ?? "—"}
                     </td>
-                    <td className="px-4.5 py-2.75 text-adm-ink-2">{a.adjustedByName ?? "—"}</td>
+                    <td className="px-4.5 py-2.75 text-adm-ink-2">{m.adjustedByName ?? (m.type === "sale" ? "Sale" : "—")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -748,17 +857,6 @@ function ReadyMadeStock({
           </div>
         )}
       </Card>
-
-      {adjusting && (
-        <AdjustStockModal
-          product={adjusting}
-          onClose={() => setAdjusting(null)}
-          onSaved={(updated) => {
-            onAdjusted(adjusting, updated);
-            setAdjusting(null);
-          }}
-        />
-      )}
     </>
   );
 }

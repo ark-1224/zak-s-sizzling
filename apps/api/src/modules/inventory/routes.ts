@@ -3,14 +3,24 @@ import { authenticate, type AuthenticatedRequest } from "../../middleware/authen
 import { authorize } from "../../middleware/authorize";
 import { parseId } from "../../lib/ids";
 import { withAdminFieldsForRole } from "../products/service";
-import { adjustStockSchema } from "./schema";
+import { adjustStockSchema, stockMovementQuerySchema } from "./schema";
 import { adjustStock, listLowStock, listStockAdjustments } from "./service";
+import { listStockMovements } from "./movements";
 
 export const inventoryRouter = Router();
 
 inventoryRouter.get("/low-stock", authenticate, authorize("admin", "staff"), async (req: AuthenticatedRequest, res, next) => {
   try {
     res.json(withAdminFieldsForRole(await listLowStock(), req.user?.role));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// The Stock movements tab: every stock change of raw materials and ready-made items, newest first.
+inventoryRouter.get("/movements", authenticate, authorize("admin", "staff"), async (req, res, next) => {
+  try {
+    res.json(await listStockMovements(stockMovementQuerySchema.parse(req.query)));
   } catch (err) {
     next(err);
   }

@@ -1,19 +1,29 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getSocket } from "@/lib/websocket";
 import { PageHeader, Card, AdmButton, StatusPill, admInputClass } from "@/components/admin/ui";
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { formatDateTime, timeAgo } from "@/lib/time";
-import { aboutMinutes, clockTime } from "@/lib/prepTime";
+import { aboutMinutes } from "@/lib/prepTime";
+import { PaymentPanel } from "@/components/staff/PaymentPanel";
+import { CounterReceipt } from "@/components/staff/CounterReceipt";
+import { PosNewOrder } from "@/components/staff/PosNewOrder";
+import { PaidOrders } from "@/components/staff/PaidOrders";
 import type { OrderDTO } from "@zaks/shared-types";
 
-// New in Sprint 3 — lets front-desk staff find counter orders awaiting payment and
-// confirm them, per the manuscript's "Billing and Payment Processing" staff requirement.
-// Staff confirm first and collect the money after: confirming checks and deducts the
-// stock, so a short order is caught before any money changes hands
-// (docs/design/raw-material-stock.md 3.2). Payments staff must sort out are listed too,
+// The counter's light POS, per the manuscript's "Billing and Payment Processing" staff
+// requirement, in three tabs (?tab=…):
+// - Queue: counter orders awaiting payment. Take payment opens the payment step: cash with
+//   the change worked out, or GCash / Maya recorded with its reference number. Confirming
+//   checks and deducts the stock first, so a short order is caught before the money is
+//   kept (docs/design/raw-material-stock.md 3.2), then shows the receipt to print.
+// - New order (?tab=new): ring up a walk-in customer (components/staff/PosNewOrder.tsx).
+// - Paid orders (?tab=paid): paid orders in the kitchen, which staff can cancel with a
+//   reason (the kitchen display no longer cancels; panel feedback).
+// In the Queue, payments staff must sort out are listed too,
 // marked NEEDS ATTENTION with the server's note on what happened and what to do: paid
 // after the stock ran out or after the order was cancelled, a wrong amount, paid twice, or
 // cancelled by the kitchen after being paid. Once staff have dealt with it, Mark as sorted
@@ -49,14 +59,33 @@ function PaymentMethodText({ order }: { order: OrderDTO }) {
   );
 }
 
+type Tab = "queue" | "new" | "paid";
+
 export default function StaffOrdersPage() {
+  // useSearchParams needs a Suspense boundary, so the page can still be prerendered.
+  return (
+    <Suspense fallback={<div className="text-adm-ink-3">Loading…</div>}>
+      <OrdersContent />
+    </Suspense>
+  );
+}
+
+function OrdersContent() {
+  const params = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const tabParam = params.get("tab");
+  const tab: Tab = tabParam === "new" || tabParam === "paid" ? tabParam : "queue";
+  const showTab = (next: Tab) => router.replace(next === "queue" ? pathname : `${pathname}?tab=${next}`, { scroll: false });
+  // The order being paid for, and the receipt shown once it is.
+  const [paying, setPaying] = useState<OrderDTO | null>(null);
+  const [receipt, setReceipt] = useState<OrderDTO | null>(null);
   const [orders, setOrders] = useState<OrderDTO[]>([]);
   // `loaded` turns true after the first successful load and stays true, so a later
   // refresh never blanks the list; a failed load sets `loadError` instead of looking empty.
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   // The order whose "Cancel order" was clicked once and now asks to be sure.
   const [cancelAskId, setCancelAskId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -117,27 +146,19 @@ export default function StaffOrdersPage() {
   const search = normalize(query);
   const shown = search ? orders.filter((o) => normalize(o.orderNumber).includes(search)) : orders;
 
-  async function handleConfirm(order: OrderDTO) {
-    setConfirmingId(order.id);
-    try {
-      const confirmed = await apiFetch<OrderDTO>(`/api/payments/counter/${order.id}/confirm`, { method: "POST", auth: "staff" });
-      const ready =
-        confirmed.estimatedReadyAt && confirmed.estimatedPrepMinutes
-          ? ` Tell the customer it will be ready at about ${clockTime(confirmed.estimatedReadyAt)}.`
-          : "";
-      setMessage({
-        text: `${order.orderNumber} confirmed and sent to the kitchen. Collect ₱${order.totalAmount.toFixed(2)} from the customer.${ready}`,
-        error: false,
-      });
-      await load();
-    } catch (err) {
-      // A 409 here is usually a shortage: nothing was deducted and the order is still
-      // unpaid, so the customer can change their order before paying.
-      const text = err instanceof ApiError ? err.message : "Could not confirm the order.";
-      setMessage({ text: `${order.orderNumber}: ${text} Ask the customer to change the order before collecting payment.`, error: true });
-    } finally {
-      setConfirmingId(null);
-    }
+  function handlePaid(paid: OrderDTO) {
+    setPaying(null);
+    setReceipt(paid);
+    setMessage({ text: `${paid.orderNumber} is paid and in the kitchen.`, error: false });
+    load();
+  }
+
+  /** The payment step was closed without paying: the order waits in the Queue. */
+  function handleNotPaid(order: OrderDTO) {
+    setPaying(null);
+    // A walk-in order was just placed on New order: say where it went.
+    if (tab === "new") setMessage({ text: `${order.orderNumber} is waiting in the Queue, unpaid. Take payment when the customer is ready.`, error: false });
+    load();
   }
 
   async function handleSortedOut(order: OrderDTO, resolution?: "refunded" | "placed_again") {
@@ -183,13 +204,29 @@ export default function StaffOrdersPage() {
 
   return (
     <div className="flex flex-col gap-4.5">
-      <div>
-        <PageHeader eyebrow="Billing & payment" title="Orders awaiting payment" />
-        <p className="text-base text-adm-ink-2 md:text-sm">
-          Counter orders show up here as soon as they are placed; the list updates by itself. <strong>Confirm, then collect payment:</strong> confirming checks the stock
-          first, so if something has run out you can change the order before the customer pays. Cancel an order the customer
-          never came back to pay for.
-        </p>
+      <PageHeader eyebrow="Billing & payment · point of sale" title="Orders awaiting payment" />
+
+      <div role="tablist" aria-label="Counter" className="flex flex-wrap gap-1 self-start rounded-[6px] border border-adm-line bg-adm-surface p-1">
+        {(
+          [
+            ["queue", `Queue${loaded ? ` (${orders.length})` : ""}`],
+            ["new", "New order"],
+            ["paid", "Paid orders"],
+          ] as const
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            role="tab"
+            type="button"
+            aria-selected={tab === value}
+            onClick={() => showTab(value)}
+            className={`min-h-11 rounded-[4px] px-4 text-base font-medium transition-colors md:min-h-0 md:py-1.5 md:text-sm ${
+              tab === value ? "bg-adm-ink text-adm-surface" : "text-adm-ink-2 hover:bg-adm-bg"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {message && (
@@ -197,6 +234,23 @@ export default function StaffOrdersPage() {
           {message.text}
         </div>
       )}
+
+      {tab === "new" ? (
+        <PosNewOrder onPlaced={(order) => setPaying(order)} />
+      ) : tab === "paid" ? (
+        <PaidOrders
+          onCancelled={(text) => {
+            setMessage({ text, error: false });
+            showTab("queue");
+          }}
+        />
+      ) : (
+      <>
+      <p className="text-base text-adm-ink-2 md:text-sm">
+        Counter orders show up here as soon as they are placed; the list updates by itself. <strong>Take payment</strong> checks the
+        stock first, so if something has run out you can change the order before keeping the money. Cancel an order the customer
+        never came back to pay for.
+      </p>
 
       {loadError && <LoadErrorAlert what="the orders" detail={loadError} onRetry={retry} retrying={retrying} stale={loaded} />}
 
@@ -247,6 +301,7 @@ export default function StaffOrdersPage() {
                           )}
                           {order.stockIssue && <StatusPill tone="bad">NEEDS ATTENTION</StatusPill>}
                           {order.status === "cancelled" && <StatusPill tone="warn">CANCELLED</StatusPill>}
+                          {order.source === "counter" && <StatusPill tone="ok">WALK-IN</StatusPill>}
                         </div>
                         <div className="text-base break-words text-adm-ink-2 md:text-sm">
                           {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
@@ -260,7 +315,7 @@ export default function StaffOrdersPage() {
                             placed {timeAgo(order.createdAt, now)}
                           </time>
                           {order.estimatedPrepMinutes !== null && awaitingPayment && (
-                            <> · ready {order.estimatedPrepMinutes === 0 ? "right away" : `${aboutMinutes(order.estimatedPrepMinutes)} after confirming`}</>
+                            <> · ready {order.estimatedPrepMinutes === 0 ? "right away" : `${aboutMinutes(order.estimatedPrepMinutes)} after payment`}</>
                           )}
                         </div>
                         {order.stockIssue && (
@@ -342,21 +397,11 @@ export default function StaffOrdersPage() {
                           </div>
                         ) : (
                           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                            <AdmButton
-                              variant="secondary"
-                              className="w-full sm:w-auto"
-                              disabled={confirmingId === order.id}
-                              onClick={() => setCancelAskId(order.id)}
-                            >
+                            <AdmButton variant="secondary" className="w-full sm:w-auto" onClick={() => setCancelAskId(order.id)}>
                               Cancel order
                             </AdmButton>
-                            <AdmButton
-                              variant="primary"
-                              className="w-full sm:w-auto"
-                              disabled={confirmingId === order.id}
-                              onClick={() => handleConfirm(order)}
-                            >
-                              {confirmingId === order.id ? "Checking stock…" : "Confirm order"}
+                            <AdmButton variant="primary" className="w-full sm:w-auto" onClick={() => setPaying(order)}>
+                              Take payment
                             </AdmButton>
                           </div>
                         ))}
@@ -368,6 +413,11 @@ export default function StaffOrdersPage() {
           )}
         </>
       )}
+      </>
+      )}
+
+      {paying && <PaymentPanel order={paying} onClose={() => handleNotPaid(paying)} onPaid={handlePaid} />}
+      {receipt && <CounterReceipt order={receipt} onClose={() => setReceipt(null)} />}
     </div>
   );
 }

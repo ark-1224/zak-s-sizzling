@@ -6,7 +6,7 @@ import { parseId } from "../../lib/ids";
 import { paymentStartAddressLimit, paymentStartLimit } from "../../middleware/rateLimit";
 import { isPaymongoConfigured, PaymongoNotConfiguredError } from "../../lib/paymongo";
 import { getOrderOwnerSessionId } from "../orders/service";
-import { createPaymentIntentSchema } from "./schema";
+import { createPaymentIntentSchema, confirmCounterPaymentSchema } from "./schema";
 import { checkQrPhPayment, confirmCounterPayment, createQrPhPayment, handleWebhook, switchToCounterPayment } from "./service";
 import type { PaymentOptions } from "@zaks/shared-types";
 
@@ -64,9 +64,12 @@ paymentsRouter.post("/qrph/:orderId/counter", authenticate, async (req: Authenti
   }
 });
 
+// Staff take payment at the counter: cash (with the amount handed over), or GCash / Maya
+// recorded with its reference number. An empty body is cash.
 paymentsRouter.post("/counter/:orderId/confirm", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
-    const order = await confirmCounterPayment(parseId(req.params.orderId, "Order not found"));
+    const orderId = parseId(req.params.orderId, "Order not found");
+    const order = await confirmCounterPayment(orderId, confirmCounterPaymentSchema.parse(req.body ?? {}));
     res.json(order);
   } catch (err) {
     next(err);

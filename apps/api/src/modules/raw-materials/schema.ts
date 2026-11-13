@@ -5,9 +5,22 @@ import { adjustmentReasonSchema } from "../inventory/schema";
 // matching the Decimal(12, 3) columns. See docs/design/raw-material-stock.md.
 const amount = z.number().nonnegative().max(100_000_000);
 
+// What kind of raw material it is, for the Raw materials page's category filter.
+export const rawMaterialCategorySchema = z.enum([
+  "meat_seafood",
+  "produce",
+  "rice_noodles",
+  "sauces_seasonings",
+  "oils_fats",
+  "dairy_eggs",
+  "drinks_ice",
+  "others",
+]);
+
 export const createRawMaterialSchema = z.object({
   name: z.string().trim().min(1).max(120),
   unit: z.enum(["g", "ml", "pc"]),
+  category: rawMaterialCategorySchema.default("others"),
   stockQty: amount.default(0),
   minStockThreshold: amount.default(0),
   costPerUnit: z.number().nonnegative().max(1_000_000).optional(),
@@ -29,6 +42,7 @@ export const rawMaterialNutritionSchema = z.object({
 // The unit can't change after creation: recipes and the movement log are written in it.
 export const updateRawMaterialSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
+  category: rawMaterialCategorySchema.optional(),
   minStockThreshold: amount.optional(),
   costPerUnit: z.number().nonnegative().max(1_000_000).nullable().optional(),
   isActive: z.boolean().optional(),

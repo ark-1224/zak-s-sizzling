@@ -130,7 +130,8 @@ export async function handOverOrder(orderId: string): Promise<void> {
 }
 
 /**
- * The kitchen cancels a paid order at any point before it is handed over. Dishes nobody
+ * Staff cancel a paid order (on Orders awaiting payment > Paid orders) at any point before
+ * the kitchen hands it over. Dishes nobody
  * has started go back into stock; a dish already started or done counts as used. The
  * system can't send the money back, so the order goes to the payment queue as NEEDS
  * ATTENTION until staff have refunded the customer. All or nothing, and the status is one
@@ -145,8 +146,8 @@ export async function cancelKitchenOrder(orderId: string, reason: string, userId
     });
     if (!order) throw new HttpError(404, "Order not found");
 
-    const paidBy = order.payment?.method === "counter" ? "paid at the counter" : "paid online";
-    const refundNote = `Cancelled in the kitchen: ${reason}. Refund the customer ₱${Number(order.totalAmount).toFixed(2)} (${paidBy}).`;
+    const paidBy = { counter: "paid in cash", gcash: "paid by GCash", maya: "paid by Maya", qrph: "paid online" }[order.payment?.method ?? "counter"];
+    const refundNote = `Cancelled while in the kitchen: ${reason}. Refund the customer ₱${Number(order.totalAmount).toFixed(2)} (${paidBy}).`;
     const result = await tx.order.updateMany({
       where: { id: orderId, status: { in: ["confirmed", "preparing", "ready"] } },
       data: {
@@ -167,7 +168,7 @@ export async function cancelKitchenOrder(orderId: string, reason: string, userId
       where: { orderId, kitchenTask: { status: "pending" } },
       include: { product: { include: { recipeItems: { include: { rawMaterial: true } } } } },
     });
-    return returnStockForLines(tx, unstarted, { orderId, userId, note: `Order ${order.orderNumber} cancelled in the kitchen` });
+    return returnStockForLines(tx, unstarted, { orderId, userId, note: `Order ${order.orderNumber} cancelled while in the kitchen` });
   });
 
   await refreshAvailability(touched);
