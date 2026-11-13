@@ -308,6 +308,48 @@ order is paid. Offline/PWA support was removed from scope.
   ready-made item, Adjust stock on a ready-made item, the kiosk's options and Ready-made
   category, and the import preview.
 
+- **Counter POS, stock movements, raw material categories (13 November 2026)** — more
+  panel feedback:
+  - **Orders awaiting payment is the counter's light POS**, in three tabs (`?tab=`):
+    **Queue** (as before; **Take payment** replaces Confirm order), **New order** and
+    **Paid orders**. Take payment opens a payment step: **cash**, with the cash received
+    (quick amounts) and the change worked out, refusing an amount short of the total; or
+    **GCash / Maya** paid to the shop's own account, recorded with the reference number
+    from the customer's phone (no PayMongo; a reference can be used once). Stock is still
+    checked first, so a short order is refused before the money is kept. Then a receipt
+    on screen (items, total, method, cash received and change or the reference, ready
+    time) whose **Print receipt** prints on the counter computer's own printer (the
+    thermal printers stay with the kiosk and the kitchen). `POST
+    /api/payments/counter/:orderId/confirm` takes `{ method, amountTendered | reference }`;
+    an empty body is cash, as before; migration `counter_pos_payment` adds
+    `payments.amount_tendered`.
+  - **New order** rings up a walk-in customer: a menu grid with search and category
+    chips (sold-out dishes greyed out, live), each dish's quantity, special-instruction
+    options and note, dine in or take out, then **Charge**, which places a counter order
+    (`source = "counter"`, shown as WALK-IN) and opens the payment step.
+  - **Paid orders** lists the paid orders not yet handed over (`GET
+    /api/orders?inKitchen=1`), with each dish's kitchen progress, a Receipt button and
+    **Cancel order** with a reason. The **kitchen display no longer cancels**; the rules
+    are the same as before (see "Cancelling a paid order" under Payments).
+  - **Stock movements tab** on Raw materials: one log of every stock change for raw
+    materials and ready-made items (sales, restocks, adjustments, cancelled orders put
+    back), filtered by kind of item, one item, kind of change and dates (`GET
+    /api/inventory/movements`). It replaces the logs on the Raw materials and Ready-made
+    tabs. A ready-made item's sale shows the pieces sold but not the count before and
+    after, which isn't recorded.
+  - **Raw materials search and categories**: a search bar and a category filter on the
+    Raw materials list. Each raw material has a category from a fixed list (Meat &
+    seafood, Vegetables & fruit, Rice & noodles, Sauces & seasonings, Oils & fats, Dairy &
+    eggs, Drinks & ice, Others), set in its form; migration `raw_material_category`
+    sorts the existing ones by name.
+
+  Verified with integration tests (`counter-pos.test.ts`, the category cases in
+  `raw-materials.test.ts`) and in the browser: a walk-in order paid in cash with change,
+  its receipt, cancelling it from Paid orders (it moved to the Queue for a refund, and
+  its sale and returned stock showed in Stock movements), the movements filters, the
+  raw materials search and category filter, and the New order tab at phone width.
+  Printing a receipt wasn't tried in the browser pane.
+
 ## Prerequisites
 
 - Node.js 20+ and npm
@@ -543,9 +585,10 @@ substituted or collected the difference; the note stays in the transaction histo
 a QR code is out for an order, its items can't be changed, so the code always matches the
 total.
 
-**Cancelling from the kitchen.** Until an order is handed over, Staff or an Administrator
-can press **Cancel order** on its card on the kitchen display and give a reason
-(`POST /api/kitchen/orders/:id/cancel`). Dishes still Pending go back into stock, logged
+**Cancelling a paid order.** Until an order is handed over, Staff or an Administrator
+can press **Cancel order** on it in Orders awaiting payment > Paid orders and give a
+reason (`POST /api/kitchen/orders/:id/cancel`; the kitchen display had this button until
+November 2026). Dishes still Pending go back into stock, logged
 under that person with the reason `return`; a dish started or done counts as used. The
 order leaves the display and the status board, and goes to the payment queue as NEEDS
 ATTENTION, since the system can't send money back. Once the customer has been refunded,
@@ -559,7 +602,7 @@ that button clears the flag: confirming an order at the counter leaves it. A pay
 flag are written in one transaction, so if the flag can't be written, PayMongo's next delivery
 does both. An order's kitchen tasks are written in the same transaction as its payment, so a
 paid order always reaches the kitchen: if they can't be written, nothing is recorded and the
-next delivery, or pressing Confirm again, does it all. Transactions shows the reason and
+next delivery, or taking the payment again, does it all. Transactions shows the reason and
 when it was refunded; cancelled orders don't count in sales.
 
 To test the real gateway path:
