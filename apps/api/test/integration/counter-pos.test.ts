@@ -18,6 +18,9 @@ const materialNames = Object.values(RAW_MATERIALS).map((m) => m.name);
 let customer: string;
 let staff: string;
 let waterBefore: number;
+// Orders this file places: the paid ones are handed over afterwards, so they don't stay in
+// the kitchen and crowd later files' orders off the status board (it shows the oldest 30).
+const placedIds: string[] = [];
 let materialsBefore: { name: string; stockQty: number }[];
 
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
@@ -34,6 +37,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await prisma.order.updateMany({
+    where: { id: { in: placedIds }, status: { in: ["confirmed", "preparing", "ready"] } },
+    data: { status: "completed", handedOverAt: new Date() },
+  });
   await prisma.inventory.update({ where: { productId: water.id }, data: { stockQty: waterBefore } });
   for (const { name, stockQty } of materialsBefore) await prisma.rawMaterial.update({ where: { name }, data: { stockQty } });
   await refreshAvailability({ productIds: [water.id, bowl.id], materialIds: [] });
@@ -43,6 +50,7 @@ afterAll(async () => {
 async function kioskOrder(items: { productId: string; qty: number }[] = [{ productId: water.id, qty: 2 }]) {
   const res = await request(app).post("/api/orders").set(auth(customer)).send({ items, paymentMethod: "counter" });
   expect(res.status).toBe(201);
+  placedIds.push(res.body.id);
   return res.body as { id: string; orderNumber: string; totalAmount: number };
 }
 
