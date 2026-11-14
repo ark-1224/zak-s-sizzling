@@ -161,6 +161,33 @@ export async function updateRawMaterial(id: string, input: UpdateRawMaterialInpu
   return getRawMaterialDTO(id);
 }
 
+/**
+ * Removes a raw material for good, with its movement log and any low-stock alerts.
+ * One still in a dish's recipe is refused (the recipe would lose an ingredient without
+ * anyone deciding it), naming the dishes, so the admin edits those recipes first.
+ */
+export async function deleteRawMaterial(id: string): Promise<void> {
+  const existing = await prisma.rawMaterial.findUnique({ where: { id }, include: RAW_MATERIAL_INCLUDE });
+  if (!existing) throw new HttpError(404, "Raw material not found");
+  if (existing.recipeItems.length > 0) throw new HttpError(409, usedByMessage(existing.name, existing.recipeItems.map((r) => r.product.name)));
+  try {
+    await prisma.rawMaterial.delete({ where: { id } });
+  } catch (err) {
+    // Added to a recipe between the check and the delete: the database's RESTRICT rule stops it.
+    const restricted =
+      (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") ||
+      (err instanceof Prisma.PrismaClientUnknownRequestError && err.message.includes("foreign key constraint"));
+    if (restricted) throw new HttpError(409, `${existing.name} was just added to a recipe, so it can't be removed`);
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") throw new HttpError(404, "Raw material not found");
+    throw err;
+  }
+}
+
+function usedByMessage(name: string, dishes: string[]): string {
+  const listed = dishes.length <= 3 ? dishes.join(", ") : `${dishes.slice(0, 3).join(", ")} and ${dishes.length - 3} more`;
+  return `${name} is in the recipe of ${listed}. Take it out of ${dishes.length === 1 ? "that recipe" : "those recipes"} first, or untick In use.`;
+}
+
 export interface AdjustRawMaterialInput {
   setQty?: number;
   delta?: number;

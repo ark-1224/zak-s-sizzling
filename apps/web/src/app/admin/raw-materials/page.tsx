@@ -201,6 +201,12 @@ function RawMaterialsContent() {
     refresh();
   }
 
+  function handleRemoved(removed: RawMaterialDTO) {
+    success.show(`${removed.name} removed`);
+    setEditing(null);
+    refresh();
+  }
+
   function handleSaved(saved: RawMaterialDTO, created: boolean) {
     success.show(created ? `${saved.name} added` : `${saved.name} saved`);
     setEditing(null);
@@ -476,7 +482,7 @@ function RawMaterialsContent() {
       )}
 
       {adjusting && <RawMaterialAdjustModal material={adjusting} onClose={() => setAdjusting(null)} onSaved={handleAdjusted} />}
-      {editing && <RawMaterialForm material={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
+      {editing && <RawMaterialForm material={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={handleSaved} onRemoved={handleRemoved} />}
       {nutritionOf && <RawMaterialNutritionModal material={nutritionOf} onClose={() => setNutritionOf(null)} onSaved={handleNutritionSaved} />}
     </div>
   );

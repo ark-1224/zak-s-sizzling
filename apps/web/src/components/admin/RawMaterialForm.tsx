@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
-import { UNIT_LABELS } from "@/lib/units";
+import { formatMaterialQty, UNIT_LABELS } from "@/lib/units";
 import { RAW_MATERIAL_CATEGORIES } from "@/lib/rawMaterialCategories";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
   AdmButton,
   admInputClass,
@@ -14,17 +15,21 @@ import {
 } from "@/components/admin/ui";
 import type { MaterialUnit, RawMaterialCategory, RawMaterialDTO } from "@zaks/shared-types";
 
-// Add or edit a raw material (Administrator only). The unit is fixed once created,
-// because recipes and the movement log are written in it.
+// Add, edit or remove a raw material (Administrator only). The unit is fixed once
+// created, because recipes and the movement log are written in it. Removing asks first,
+// and one still in a dish's recipe can't be removed (the server refuses it too).
 export function RawMaterialForm({
   material,
   onClose,
   onSaved,
+  onRemoved,
 }: {
   material: RawMaterialDTO | null; // null = create mode
   onClose: () => void;
   /** Called with the saved raw material; `created` is true for a new one. */
   onSaved: (saved: RawMaterialDTO, created: boolean) => void;
+  /** Called once the raw material has been removed. */
+  onRemoved: (removed: RawMaterialDTO) => void;
 }) {
   const [name, setName] = useState(material?.name ?? "");
   const [unit, setUnit] = useState<MaterialUnit>(material?.unit ?? "g");
@@ -35,6 +40,29 @@ export function RawMaterialForm({
   const [isActive, setIsActive] = useState(material?.isActive ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+
+  function askToRemove() {
+    if (!material) return;
+    if (material.usedBy.length > 0) {
+      const dishes = material.usedBy.map((u) => u.productName);
+      setError(`${material.name} is in the recipe of ${dishes.join(", ")}. Take it out of ${dishes.length === 1 ? "that recipe" : "those recipes"} first (Products → Edit), or untick In use.`);
+      return;
+    }
+    setError(null);
+    setConfirmingRemove(true);
+  }
+
+  async function handleRemove() {
+    if (!material) return;
+    try {
+      await apiFetch(`/api/raw-materials/${material.id}`, { method: "DELETE", auth: "staff" });
+      onRemoved(material);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not remove the raw material.");
+      setConfirmingRemove(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -154,6 +182,11 @@ export function RawMaterialForm({
         {error && <p className="mb-3 text-base text-adm-bad md:text-sm">{error}</p>}
 
         <div className={`mt-2 ${admModalActionsClass}`}>
+          {material && (
+            <AdmButton type="button" variant="danger" onClick={askToRemove} disabled={saving} className="sm:mr-auto">
+              Remove item
+            </AdmButton>
+          )}
           <AdmButton type="button" variant="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </AdmButton>
@@ -162,6 +195,17 @@ export function RawMaterialForm({
           </AdmButton>
         </div>
       </form>
+
+      {confirmingRemove && material && (
+        <ConfirmDialog
+          title={`Remove ${material.name}?`}
+          detail={`It leaves the raw materials list with its ${formatMaterialQty(material.stockQty, material.unit)} on hand, and its stock movement history is deleted too. This can't be undone. To keep the history, untick In use instead.`}
+          confirmLabel="Yes, remove"
+          danger
+          onCancel={() => setConfirmingRemove(false)}
+          onConfirm={handleRemove}
+        />
+      )}
     </div>
   );
 }

@@ -367,3 +367,47 @@ describe("raw material categories (for the Raw materials page's filter)", () => 
     expect(res.status).toBe(400);
   });
 });
+
+describe("removing a raw material (Administrator)", () => {
+  const remove = (id: string, token = admin) => request(app).delete(`/api/raw-materials/${id}`).set(as(token));
+
+  it("removes one no recipe uses, with its movement log", async () => {
+    const created = await createMaterial({ name: "RM Test Remove Me", unit: "g", stockQty: 500 });
+    await adjust(created.body.id, { delta: 100, reason: "restock" });
+
+    const res = await remove(created.body.id);
+
+    expect(res.status).toBe(204);
+    expect((await listAs(admin)).some((m) => m.id === created.body.id)).toBe(false);
+    expect(await prisma.rawMaterialMovement.count({ where: { rawMaterialId: created.body.id } })).toBe(0);
+  });
+
+  it("refuses one still in a dish's recipe, naming the dish, and keeps it", async () => {
+    const res = await remove(chicken.id);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toContain("RM Test Chicken Sizzler");
+    expect(await prisma.rawMaterial.count({ where: { id: chicken.id } })).toBe(1);
+  });
+
+  it("frees the name for a new raw material once removed", async () => {
+    const first = await createMaterial({ name: "RM Test Reused Name", unit: "pc" });
+    await remove(first.body.id);
+
+    const again = await createMaterial({ name: "RM Test Reused Name", unit: "g" });
+
+    expect(again.status).toBe(201);
+  });
+
+  it("returns 404 for a raw material that doesn't exist, or a malformed id", async () => {
+    expect((await remove(MISSING_ID)).status).toBe(404);
+    expect((await remove("not-a-uuid")).status).toBe(404);
+  });
+
+  it("doesn't let staff remove one", async () => {
+    const created = await createMaterial({ name: "RM Test Staff Cannot Remove", unit: "g" });
+
+    expect((await remove(created.body.id, staff)).status).toBe(403);
+    expect(await prisma.rawMaterial.count({ where: { id: created.body.id } })).toBe(1);
+  });
+});

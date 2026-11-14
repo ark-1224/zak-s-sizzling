@@ -6,6 +6,7 @@ import { adjustRawMaterialSchema, createRawMaterialSchema, rawMaterialIdSchema, 
 import {
   adjustRawMaterialStock,
   createRawMaterial,
+  deleteRawMaterial,
   listRawMaterialMovements,
   listRawMaterials,
   updateRawMaterial,
@@ -53,6 +54,15 @@ rawMaterialsRouter.put("/:id", authenticate, authorize("admin"), async (req, res
   try {
     const body = updateRawMaterialSchema.parse(req.body);
     res.json(await updateRawMaterial(parseId(req.params.id), body));
+  } catch (err) {
+    next(err);
+  }
+});
+
+rawMaterialsRouter.delete("/:id", authenticate, authorize("admin"), async (req, res, next) => {
+  try {
+    await deleteRawMaterial(parseId(req.params.id));
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
