@@ -1,12 +1,13 @@
 # Print service (receipt and kitchen printers)
 
 A small program that drives a 58 mm thermal printer (RP21UB-Y, USB). The same program runs
-on two devices, each with its own printer:
+on each device that has a printer:
 
 | Device | Printer prints | Sent by |
 |---|---|---|
 | The in-store kiosk's Raspberry Pi | **Customer receipt** (`POST /print`) once an order is placed, or once a QR Ph payment arrives: restaurant name, order number, dine in / take out, date and time, items with prices, total, how it was paid ("PAID - QR Ph", "PAID at the counter") or "Please pay at the counter", and the estimated preparation time | The kiosk page (`apps/web/src/lib/receiptPrinter.ts`) |
 | The device in the kitchen that shows the kitchen display (`/kitchen`) | **Kitchen ticket** (`POST /print/kitchen`): a large order number and the dishes with their quantities and special instructions, nothing else | The kitchen display (`apps/web/src/app/kitchen/page.tsx`) |
+| The counter computer, where staff use Orders awaiting payment (`/staff/orders`) | **Counter receipt** (`POST /print`) when staff press **Print receipt** after taking a payment: the customer receipt plus "PAID - Cash" with the cash received and the change, or "PAID - GCash / Maya" with the reference number, and any dishes cancelled after paying with the amount refunded | The receipt on Orders awaiting payment (`apps/web/src/components/staff/CounterReceipt.tsx`) |
 
 The kitchen ticket prints when an order first appears on the kitchen display, which is
 once it is paid (a counter order after staff confirm it, a QR Ph order once the payment
@@ -41,8 +42,13 @@ Customer receipt, `POST /print`:
 }
 ```
 
-`price` is the line's amount (qty × unit price). `paymentMethod` (`qrph` or `counter`)
-only matters when `paid` is true: it picks the "PAID" line.
+`price` is the line's amount (qty × unit price). `paymentMethod` (`qrph`, `counter` for
+cash, `gcash` or `maya`) only matters when `paid` is true: it picks the "PAID" line.
+
+The counter adds, all optional: `amountTendered` and `change` (cash, printed as "Cash
+received" and "Change"), `reference` (the GCash / Maya reference number, cut to 40
+characters) and `cancelledAmount` (dishes cancelled after paying, printed above the total
+as "Cancelled (refund)"; the total is what is left).
 
 Kitchen ticket, `POST /print/kitchen`:
 
@@ -61,8 +67,9 @@ printer, or `{ "ok": false, "error": "…" }` with status 400, 403 or 500.
 
 ## Setup on each device
 
-The steps are the same on the kiosk's Pi and on the kitchen device (a Raspberry Pi or
-another Linux computer with Node.js).
+The steps are the same on the kiosk's Pi, the kitchen device and the counter computer (a
+Raspberry Pi or another Linux computer with Node.js; the printer is reached at
+`/dev/usb/lp0`, which Windows doesn't have).
 
 1. Copy this folder to the device (for example `~/print-service`), then install its
    packages:
@@ -91,6 +98,13 @@ another Linux computer with Node.js).
      appears first, sign in; it brings you back to that address. The page then shows
      "Ticket printer on" under its title. Orders already on screen at that
      moment don't print; every order that arrives after does.
+
+   - on the counter computer, open Orders awaiting payment with `?printer=1`:
+     `https://zaks-sizzling-hub-admin.up.railway.app/staff/orders?printer=1`, signing in
+     if asked. **Print receipt** on a payment's receipt then prints on this printer; if the
+     printer doesn't answer, the receipt says so and offers **Print with this computer**
+     (the browser's own printing). Without `?printer=1`, Print receipt uses the browser's
+     printing, as before.
 
    `?printer=0` switches it off again. Only switch it on for one kitchen display, or each
    ticket prints once per display.
@@ -176,6 +190,12 @@ Run these on the device itself. A customer receipt (kiosk's Pi):
 
 ```bash
 curl -X POST http://127.0.0.1:4000/print -H "Content-Type: application/json" -d '{"orderNumber":"TEST-1","items":[{"qty":2,"name":"Pork Sisig","price":240}],"total":240,"orderType":"dine_in","paid":false,"estimatedPrepMinutes":15}'
+```
+
+A counter receipt (counter computer), paid in cash with change:
+
+```bash
+curl -X POST http://127.0.0.1:4000/print -H "Content-Type: application/json" -d '{"orderNumber":"TEST-2","items":[{"qty":1,"name":"Beef Tapa","price":220}],"total":220,"orderType":"dine_in","paid":true,"paymentMethod":"counter","amountTendered":500,"change":280,"estimatedPrepMinutes":10}'
 ```
 
 A kitchen ticket (kitchen device):

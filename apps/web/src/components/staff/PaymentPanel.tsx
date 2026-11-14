@@ -4,6 +4,7 @@ import { useState } from "react";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { AdmButton, admInputClass, admLabelClass, admModalActionsClass, admModalBackdropClass, admModalPanelClass } from "@/components/admin/ui";
 import type { OrderDTO } from "@zaks/shared-types";
+import { itemText } from "@/lib/orderItems";
 
 // The light POS's payment step (Orders awaiting payment): staff take the money for a
 // counter order. Cash shows the change for what the customer hands over; GCash and Maya
@@ -75,7 +76,7 @@ export function PaymentPanel({
           <span className="font-adm-mono text-2xl">{peso(total)}</span>
         </h2>
         <p className="mb-4 text-sm break-words text-adm-ink-3">
-          {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")} · {order.orderType === "take_out" ? "Take out" : "Dine in"}
+          {order.items.map(itemText).join(", ")} · {order.orderType === "take_out" ? "Take out" : "Dine in"}
         </p>
 
         <div role="radiogroup" aria-label="Payment method" className="mb-4 grid grid-cols-3 gap-1 rounded-[6px] border border-adm-line bg-adm-bg p-1">

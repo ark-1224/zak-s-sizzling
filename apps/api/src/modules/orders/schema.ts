@@ -45,6 +45,17 @@ export const sortedOutSchema = z.object({
   resolution: z.enum(["refunded", "placed_again"]).optional(),
 });
 
+// Staff cancel some dishes of an order (cancelItems.ts): which lines, and how many of each.
+// The reason is required for a paid order (checked in the service, which knows if it is paid).
+export const cancelItemsSchema = z.object({
+  items: z
+    .array(z.object({ itemId: z.string().uuid(), qty: z.number().int().min(1).max(999) }))
+    .min(1, "Choose at least one dish to cancel")
+    .max(100)
+    .refine((items) => new Set(items.map((i) => i.itemId)).size === items.length, { message: "Each dish can be listed once" }),
+  reason: z.string().trim().min(1).max(200).optional(),
+});
+
 // The cart shown at checkout, for its estimated preparation time (prepTime.ts).
 export const estimateOrderSchema = z.object({
   items: z

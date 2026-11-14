@@ -38,7 +38,8 @@ function toTaskDTO(task: TaskWithRelations): KitchenTaskDTO {
  *  manuscript's payment-before-prep flow. The caller announces it once committed. */
 export async function createKitchenTasksForOrder(tx: Prisma.TransactionClient, orderId: string): Promise<void> {
   await setEstimateOnReachingKitchen(orderId, tx);
-  const items = await tx.orderItem.findMany({ where: { orderId } });
+  // A dish cancelled whole after payment (qty 0) never comes back to the kitchen.
+  const items = await tx.orderItem.findMany({ where: { orderId, qty: { gt: 0 } } });
   await tx.kitchenTask.createMany({ data: items.map((item) => ({ orderItemId: item.id })) });
 }
 
@@ -95,7 +96,7 @@ export async function updateTaskStatus(
  * every dish is done (confirmed again if every dish went back to pending). Only orders in
  * the kitchen change: never an unpaid, handed-over or cancelled one.
  */
-async function syncOrderStatus(orderId: string) {
+export async function syncOrderStatus(orderId: string) {
   const tasks = await prisma.kitchenTask.findMany({ where: { orderItem: { orderId } }, select: { status: true } });
   if (tasks.length === 0) return;
   const next = tasks.every((t) => t.status === "completed")

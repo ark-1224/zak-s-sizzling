@@ -12,6 +12,10 @@ import { PaymentPanel } from "@/components/staff/PaymentPanel";
 import { CounterReceipt } from "@/components/staff/CounterReceipt";
 import { PosNewOrder } from "@/components/staff/PosNewOrder";
 import { PaidOrders } from "@/components/staff/PaidOrders";
+import { CancelDishes, type CancelChoice } from "@/components/staff/CancelDishes";
+import { peso } from "@/components/staff/PaymentPanel";
+import { itemText } from "@/lib/orderItems";
+import { rememberPrinterSetting } from "@/lib/receiptPrinter";
 import type { OrderDTO } from "@zaks/shared-types";
 
 // The counter's light POS, per the manuscript's "Billing and Payment Processing" staff
@@ -29,8 +33,9 @@ import type { OrderDTO } from "@zaks/shared-types";
 // cancelled by the kitchen after being paid. Once staff have dealt with it, Mark as sorted
 // out takes it off the list.
 // Each order shows how long ago it was placed, and the list can be searched by order
-// number (the customer reads it off their receipt screen). An abandoned unpaid order
-// can be cancelled, after a second click to make sure (UI review #15). The list reloads
+// number (the customer reads it off their receipt screen). Cancel order asks which dishes
+// to cancel (all ticked, so an abandoned order is still one more click, UI review #15):
+// some of them come off the order and lower the total, all of them cancel it. The list reloads
 // by itself when an order is placed, paid, edited or cancelled (orders:changed), and an
 // order that arrives while the page is open is marked NEW for a minute.
 const NEW_FOR_MS = 60_000;
@@ -86,7 +91,7 @@ function OrdersContent() {
   const [loaded, setLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
-  // The order whose "Cancel order" was clicked once and now asks to be sure.
+  // The order whose "Cancel order" was clicked and now asks which dishes.
   const [cancelAskId, setCancelAskId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [sortingOutId, setSortingOutId] = useState<string | null>(null);
@@ -97,6 +102,12 @@ function OrdersContent() {
   // first load aren't new.
   const [arrivedAt, setArrivedAt] = useState<Record<string, number>>({});
   const knownIds = useRef<Set<string> | null>(null);
+
+  // The counter computer with the receipt printer is set up by opening this page once
+  // with ?printer=1 (?printer=0 switches it off); Print receipt then prints on it.
+  useEffect(() => {
+    rememberPrinterSetting("counter");
+  }, []);
 
   // Keep "placed X min ago" current without refetching.
   useEffect(() => {
@@ -184,11 +195,22 @@ function OrdersContent() {
     }
   }
 
-  async function handleCancel(order: OrderDTO) {
+  async function handleCancel(order: OrderDTO, choice: CancelChoice) {
     setCancellingId(order.id);
     try {
-      await apiFetch(`/api/orders/${order.id}/cancel`, { method: "POST", auth: "staff" });
-      setMessage({ text: `${order.orderNumber} was cancelled and removed from the queue.`, error: false });
+      const saved = await apiFetch<OrderDTO>(`/api/orders/${order.id}/cancel-items`, {
+        method: "POST",
+        auth: "staff",
+        body: JSON.stringify({ items: choice.items }),
+      });
+      const dishes = choice.items.reduce((n, i) => n + i.qty, 0);
+      setMessage({
+        text:
+          saved.status === "cancelled"
+            ? `${order.orderNumber} was cancelled and removed from the queue.`
+            : `${dishes} dish${dishes === 1 ? " was" : "es were"} taken off ${order.orderNumber}; the total is now ${peso(saved.totalAmount)}.`,
+        error: false,
+      });
       setCancelAskId(null);
       await load();
     } catch (err) {
@@ -248,8 +270,8 @@ function OrdersContent() {
       <>
       <p className="text-base text-adm-ink-2 md:text-sm">
         Counter orders show up here as soon as they are placed; the list updates by itself. <strong>Take payment</strong> checks the
-        stock first, so if something has run out you can change the order before keeping the money. Cancel an order the customer
-        never came back to pay for.
+        stock first, so if something has run out you can take that dish off with <strong>Cancel order</strong> before keeping the
+        money. Cancel order also removes an order the customer never came back to pay for.
       </p>
 
       {loadError && <LoadErrorAlert what="the orders" detail={loadError} onRetry={retry} retrying={retrying} stale={loaded} />}
@@ -304,7 +326,7 @@ function OrdersContent() {
                           {order.source === "counter" && <StatusPill tone="ok">WALK-IN</StatusPill>}
                         </div>
                         <div className="text-base break-words text-adm-ink-2 md:text-sm">
-                          {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
+                          {order.items.map(itemText).join(", ")}
                         </div>
                         <div className="mt-1 text-sm text-adm-ink-3">
                           {order.orderType === "take_out" ? "Take out" : "Dine in"} · <PaymentMethodText order={order} /> · ₱
@@ -366,35 +388,13 @@ function OrdersContent() {
                       </div>
                       {awaitingPayment &&
                         (cancelAskId === order.id ? (
-                          <div
-                            role="group"
-                            aria-label={`Cancel ${order.orderNumber}?`}
-                            className="flex shrink-0 flex-col gap-2 rounded-[6px] border border-adm-bad bg-adm-bad-soft p-3 sm:max-w-72"
-                          >
-                            <span className="text-base text-adm-ink md:text-sm">
-                              Cancel <strong className="font-adm-mono">{order.orderNumber}</strong>? It leaves the queue and can&apos;t be
-                              paid any more.
-                            </span>
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                              <AdmButton
-                                variant="danger"
-                                size="compact"
-                                className="bg-adm-surface"
-                                disabled={cancellingId === order.id}
-                                onClick={() => handleCancel(order)}
-                              >
-                                {cancellingId === order.id ? "Cancelling…" : "Yes, cancel order"}
-                              </AdmButton>
-                              <AdmButton
-                                variant="secondary"
-                                size="compact"
-                                disabled={cancellingId === order.id}
-                                onClick={() => setCancelAskId(null)}
-                              >
-                                Keep order
-                              </AdmButton>
-                            </div>
-                          </div>
+                          <CancelDishes
+                            order={order}
+                            paid={false}
+                            busy={cancellingId === order.id}
+                            onConfirm={(choice) => handleCancel(order, choice)}
+                            onKeep={() => setCancelAskId(null)}
+                          />
                         ) : (
                           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
                             <AdmButton variant="secondary" className="w-full sm:w-auto" onClick={() => setCancelAskId(order.id)}>

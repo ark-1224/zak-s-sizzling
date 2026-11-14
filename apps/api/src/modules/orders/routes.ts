@@ -7,7 +7,8 @@ import { HttpError } from "../../middleware/errorHandler";
 import { prisma } from "../../lib/prisma";
 import { parseId } from "../../lib/ids";
 import { emitOrdersChanged } from "../../websocket";
-import { createOrderSchema, estimateOrderSchema, sortedOutSchema, transactionQuerySchema } from "./schema";
+import { cancelItemsSchema, createOrderSchema, estimateOrderSchema, sortedOutSchema, transactionQuerySchema } from "./schema";
+import { cancelOrderItems } from "./cancelItems";
 import { estimateForCart } from "./prepTime";
 import {
   cancelOrder,
@@ -165,6 +166,17 @@ ordersRouter.post("/:id/cancel", authenticate, authorize("admin", "staff"), asyn
   }
 });
 
+// Staff cancel some dishes of an order: unpaid in the Queue, or paid and in the kitchen
+// (Paid orders), with a reason and a refund flagged for the paid ones.
+ordersRouter.post("/:id/cancel-items", authenticate, authorize("admin", "staff"), async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const orderId = parseId(req.params.id, ORDER_NOT_FOUND);
+    res.json(await cancelOrderItems(orderId, cancelItemsSchema.parse(req.body), req.user!.id));
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Staff have sorted out an order marked NEEDS ATTENTION; it leaves the payment queue.
 ordersRouter.post("/:id/sorted-out", authenticate, authorize("admin", "staff"), async (req, res, next) => {
   try {
@@ -207,5 +219,7 @@ async function recomputeOrderTotal(orderId: string) {
   const items = await prisma.orderItem.findMany({ where: { orderId } });
   const total = items.reduce((sum, i) => sum.add(i.subtotal), new Prisma.Decimal(0));
   await prisma.order.update({ where: { id: orderId }, data: { totalAmount: total } });
+  // The waiting payment was made for the old total; taking payment records this amount.
+  await prisma.payment.updateMany({ where: { orderId, status: { not: "paid" } }, data: { amount: total } });
   emitOrdersChanged();
 }

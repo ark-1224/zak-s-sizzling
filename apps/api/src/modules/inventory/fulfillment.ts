@@ -156,7 +156,7 @@ export interface TouchedStock {
  */
 export async function deductStockForOrder(tx: Db, orderId: string): Promise<TouchedStock> {
   const items = await tx.orderItem.findMany({
-    where: { orderId },
+    where: { orderId, qty: { gt: 0 } },
     include: { product: { include: { recipeItems: { include: { rawMaterial: true } } } } },
   });
   const needs = computeStockNeeds(items);

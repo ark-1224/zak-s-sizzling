@@ -114,7 +114,8 @@ export async function listStockMovements(query: Query): Promise<StockMovementDTO
       itemId: r.productId,
       itemName: r.product.name,
       unit: "pc" as const,
-      delta: -r.qty,
+      // What was deducted at payment; dishes cancelled afterwards show as their own return.
+      delta: -(r.qty + r.cancelledQty),
       previousQty: null,
       newQty: null,
       type: "sale" as const,

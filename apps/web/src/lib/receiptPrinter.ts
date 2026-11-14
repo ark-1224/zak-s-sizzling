@@ -1,22 +1,26 @@
 import type { OrderDTO } from "@zaks/shared-types";
 
-// Printing on the 58 mm thermal printers (RP21UB-Y, USB). There are two, each plugged into
-// a device running the print service (print-service/ in this repo):
+// Printing on the 58 mm thermal printers (RP21UB-Y, USB). Each is plugged into a device
+// running the print service (print-service/ in this repo):
 // - the in-store kiosk's Raspberry Pi prints the customer's receipt once an order is
 //   placed: POST /print with { orderNumber, items: [{ qty, name, price }], total, ... }.
 // - the device showing the kitchen display prints a kitchen ticket (order number and
 //   dishes) once a paid order reaches the kitchen: POST /print/kitchen.
+// - the counter computer, with its own printer, prints the receipt for a payment taken on
+//   Orders awaiting payment (Print receipt): POST /print, with the cash received and the
+//   change, or the GCash / Maya reference number.
 // The service listens on the device itself, so only a page open on that device reaches it.
 //
 // Phones that open the kiosk from the QR code, and other staff screens, must never print
 // (or try to reach the service), so printing is switched on per device and page: the
-// kiosk (or the kitchen display) is opened once with ?printer=1 in the address, and the
-// page remembers that on the device. ?printer=0 switches it off again.
+// kiosk (or the kitchen display, or Orders awaiting payment on the counter computer) is
+// opened once with ?printer=1 in the address, and the page remembers that on the device.
+// ?printer=0 switches it off again.
 const PRINT_URL = process.env.NEXT_PUBLIC_PRINT_SERVICE_URL || "http://127.0.0.1:4000/print";
 const PRINT_TIMEOUT_MS = 8000;
 
-export type PrinterPlace = "kiosk" | "kitchen";
-const PRINTER_KEY: Record<PrinterPlace, string> = { kiosk: "zaks.kiosk.printer", kitchen: "zaks.kitchen.printer" };
+export type PrinterPlace = "kiosk" | "kitchen" | "counter";
+const PRINTER_KEY: Record<PrinterPlace, string> = { kiosk: "zaks.kiosk.printer", kitchen: "zaks.kitchen.printer", counter: "zaks.counter.printer" };
 // Orders whose kitchen ticket has printed on this device, so a reload doesn't print again.
 const KITCHEN_PRINTED_KEY = "zaks.kitchen.printed";
 const KITCHEN_PRINTED_KEEP = 200;
@@ -84,6 +88,31 @@ export function printReceipt(order: OrderDTO): Promise<boolean> {
     paid: order.payment?.status === "paid",
     estimatedPrepMinutes: order.estimatedPrepMinutes,
     createdAt: order.createdAt,
+  });
+}
+
+/**
+ * Prints the receipt for a payment taken at the counter on the counter's printer: the
+ * dishes still ordered, the total, how it was paid, the cash received and the change (or
+ * the GCash / Maya reference number), and any dishes cancelled after paying.
+ */
+export function printCounterReceipt(order: OrderDTO): Promise<boolean> {
+  const payment = order.payment;
+  const charged = payment?.amount ?? order.totalAmount;
+  return sendToPrinter(PRINT_URL, {
+    orderNumber: order.orderNumber,
+    items: order.items.filter((item) => item.qty > 0).map((item) => ({ qty: item.qty, name: item.productName, price: item.subtotal })),
+    total: order.totalAmount,
+    orderType: order.orderType,
+    paymentMethod: payment?.method ?? null,
+    paid: payment?.status === "paid",
+    amountTendered: payment?.amountTendered ?? null,
+    change: payment?.amountTendered != null ? Math.max(0, payment.amountTendered - charged) : null,
+    reference: payment && payment.method !== "qrph" ? payment.reference : null,
+    // Dishes cancelled after paying: the amount to give back.
+    cancelledAmount: Math.max(0, charged - order.totalAmount),
+    estimatedPrepMinutes: order.estimatedPrepMinutes,
+    createdAt: payment?.paidAt ?? order.createdAt,
   });
 }
 

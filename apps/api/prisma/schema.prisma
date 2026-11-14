@@ -308,7 +308,10 @@ model OrderItem {
   order               Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId           String       @map("product_id") @db.Uuid
   product             Product      @relation(fields: [productId], references: [id])
+  // What is still ordered. Staff can cancel some of a line (POST /api/orders/:id/cancel-items):
+  // qty goes down and cancelledQty up, so a line cancelled whole stays with qty 0.
   qty                 Int
+  cancelledQty        Int          @default(0) @map("cancelled_qty")
   unitPrice           Decimal      @map("unit_price") @db.Decimal(10, 2)
   subtotal            Decimal      @db.Decimal(10, 2)
   specialInstructions String?      @map("special_instructions") @db.VarChar(140)

@@ -67,7 +67,7 @@ export async function estimateForCart(items: { productId: string; qty: number }[
  * moment; for a counter order the customer may pay much later.
  */
 export async function setEstimateOnReachingKitchen(orderId: string, db: Db = prisma, now = new Date()): Promise<void> {
-  const items = await db.orderItem.findMany({ where: { orderId }, select: { qty: true, product: { select: { prepMinutes: true } } } });
+  const items = await db.orderItem.findMany({ where: { orderId, qty: { gt: 0 } }, select: { qty: true, product: { select: { prepMinutes: true } } } });
   const minutes = estimatePrepMinutes(
     items.map((item) => ({ qty: item.qty, prepMinutes: item.product.prepMinutes })),
     await countOrdersInKitchen(orderId, db)

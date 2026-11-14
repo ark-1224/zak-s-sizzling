@@ -114,7 +114,10 @@ export interface OrderItemDTO {
   productId: string;
   productName: string;
   productIcon: string | null;
+  /** What is still ordered (0 for a dish cancelled whole after payment). */
   qty: number;
+  /** How many were cancelled after payment (Paid orders > Cancel order); their amount was refunded. */
+  cancelledQty: number;
   unitPrice: number;
   subtotal: number;
   specialInstructions: string | null;

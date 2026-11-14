@@ -7,6 +7,7 @@ import { PageHeader, Card, AdmButton, StatusPill, admInputClass, admLabelClass }
 import { LoadErrorAlert } from "@/components/LoadErrorAlert";
 import { formatDateTime } from "@/lib/time";
 import type { OrderStatus, OrderTimeline, TransactionDTO, TransactionPageDTO } from "@zaks/shared-types";
+import { itemText } from "@/lib/orderItems";
 
 // Transaction history (Administrator only): every order in a date range, today by
 // default, newest first, filtered by status, payment method, paid or unpaid, and order
@@ -227,7 +228,7 @@ function TransactionRow({ order }: { order: TransactionDTO }) {
               {order.stockIssue && <StatusPill tone="bad">NEEDS ATTENTION</StatusPill>}
             </div>
             <div className="text-base break-words text-adm-ink-2 md:text-sm">
-              {order.items.map((i) => `${i.qty}× ${i.productName}`).join(", ")}
+              {order.items.map(itemText).join(", ")}
             </div>
           </div>
           <div className="shrink-0 text-sm text-adm-ink-3 sm:text-right">
@@ -245,7 +246,7 @@ function TransactionRow({ order }: { order: TransactionDTO }) {
               {order.items.map((item) => (
                 <li key={item.id} className="flex justify-between gap-3">
                   <span className="min-w-0 break-words">
-                    {item.qty}× {item.productName}
+                    {itemText(item)}
                     {item.specialInstructions && <span className="block text-adm-ink-3 italic">&ldquo;{item.specialInstructions}&rdquo;</span>}
                   </span>
                   <span className="font-adm-mono shrink-0">{peso(item.subtotal)}</span>

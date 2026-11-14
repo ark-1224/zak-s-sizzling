@@ -1,14 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { AdmButton, admModalActionsClass, admModalBackdropClass, admModalPanelClass } from "@/components/admin/ui";
 import { formatDateTime } from "@/lib/time";
 import { clockTime } from "@/lib/prepTime";
+import { itemText } from "@/lib/orderItems";
+import { hasPrinter, printCounterReceipt } from "@/lib/receiptPrinter";
 import { peso } from "./PaymentPanel";
 import type { OrderDTO } from "@zaks/shared-types";
 
 // The receipt for a payment taken at the counter (the light POS): shown on screen, and
-// printed through the counter computer's own printer with the browser's Print. The
-// thermal printers belong to the kiosk and the kitchen, so they aren't used here.
+// printed on the counter's thermal receipt printer when this computer has one (Orders
+// awaiting payment opened once with ?printer=1, lib/receiptPrinter.ts). Without it, or if
+// that printer doesn't answer, the browser's Print uses the computer's own printer.
 
 const METHOD_TEXT: Record<string, string> = { counter: "Cash", gcash: "GCash", maya: "Maya", qrph: "QR Ph" };
 
@@ -19,12 +23,20 @@ interface ReceiptLines {
 
 function paymentRows(order: OrderDTO): ReceiptLines {
   const p = order.payment;
-  const rows: ReceiptLines["rows"] = [{ label: "TOTAL", value: peso(order.totalAmount), bold: true }];
+  // What was charged; more than the total once dishes are cancelled after paying.
+  const charged = p?.amount ?? order.totalAmount;
+  const cancelled = Math.max(0, charged - order.totalAmount);
+  const rows: ReceiptLines["rows"] = [];
+  if (cancelled > 0) {
+    rows.push({ label: "Charged", value: peso(charged) });
+    rows.push({ label: "Cancelled dishes (refund)", value: `−${peso(cancelled)}` });
+  }
+  rows.push({ label: "TOTAL", value: peso(order.totalAmount), bold: true });
   if (p) {
     rows.push({ label: "Paid by", value: METHOD_TEXT[p.method] ?? p.method });
     if (p.method === "counter" && p.amountTendered !== null) {
       rows.push({ label: "Cash received", value: peso(p.amountTendered) });
-      rows.push({ label: "Change", value: peso(Math.max(0, p.amountTendered - order.totalAmount)) });
+      rows.push({ label: "Change", value: peso(Math.max(0, p.amountTendered - charged)) });
     }
     if (p.reference && p.method !== "qrph") rows.push({ label: "Reference no.", value: p.reference });
   }
@@ -34,13 +46,13 @@ function paymentRows(order: OrderDTO): ReceiptLines {
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 /** Opens the receipt in a small window sized for a receipt and asks the browser to print it. */
-function printReceipt(order: OrderDTO) {
+function printInBrowser(order: OrderDTO) {
   const { rows, readyAt } = paymentRows(order);
   const when = formatDateTime(order.payment?.paidAt ?? order.createdAt);
   const items = order.items
     .map(
       (i) =>
-        `<tr><td>${i.qty}× ${escapeHtml(i.productName)}${i.specialInstructions ? `<div class="note">${escapeHtml(i.specialInstructions)}</div>` : ""}</td><td class="r">${peso(i.subtotal)}</td></tr>`
+        `<tr><td>${escapeHtml(itemText(i))}${i.specialInstructions ? `<div class="note">${escapeHtml(i.specialInstructions)}</div>` : ""}</td><td class="r">${peso(i.subtotal)}</td></tr>`
     )
     .join("");
   const totals = rows.map((r) => `<tr class="${r.bold ? "b" : ""}"><td>${escapeHtml(r.label)}</td><td class="r">${escapeHtml(r.value)}</td></tr>`).join("");
@@ -76,8 +88,19 @@ function printReceipt(order: OrderDTO) {
   document.body.appendChild(frame);
 }
 
+type PrintState = "idle" | "printing" | "printed" | "failed";
+
 export function CounterReceipt({ order, onClose }: { order: OrderDTO; onClose: () => void }) {
   const { rows, readyAt } = paymentRows(order);
+  // Read once: the setting lives on this computer and changes only through the address.
+  const [thermal] = useState(() => hasPrinter("counter"));
+  const [printState, setPrintState] = useState<PrintState>("idle");
+
+  async function handlePrint() {
+    if (!thermal) return printInBrowser(order);
+    setPrintState("printing");
+    setPrintState((await printCounterReceipt(order)) ? "printed" : "failed");
+  }
   return (
     <div className={admModalBackdropClass}>
       <div role="dialog" aria-modal="true" aria-labelledby="receipt-title" className={`${admModalPanelClass} max-w-sm`}>
@@ -90,9 +113,9 @@ export function CounterReceipt({ order, onClose }: { order: OrderDTO; onClose: (
         </p>
         <ul className="mb-3 divide-y divide-adm-line-soft border-y border-adm-line-soft">
           {order.items.map((i) => (
-            <li key={i.id} className="flex justify-between gap-3 py-2 text-base md:text-sm">
+            <li key={i.id} className={`flex justify-between gap-3 py-2 text-base md:text-sm ${i.qty === 0 ? "text-adm-ink-3 line-through" : ""}`}>
               <span className="min-w-0">
-                {i.qty}× {i.productName}
+                {itemText(i)}
                 {i.specialInstructions && <span className="block text-sm text-adm-ink-3">{i.specialInstructions}</span>}
               </span>
               <span className="font-adm-mono shrink-0">{peso(i.subtotal)}</span>
@@ -112,12 +135,26 @@ export function CounterReceipt({ order, onClose }: { order: OrderDTO; onClose: (
             Sent to the kitchen. Tell the customer it will be ready at about <strong>{readyAt}</strong>.
           </p>
         )}
+        {printState !== "idle" && (
+          <p role="status" className={`mb-3 text-center text-base md:text-sm ${printState === "failed" ? "text-adm-bad" : "text-adm-ink-2"}`}>
+            {printState === "printing"
+              ? "Printing on the receipt printer…"
+              : printState === "printed"
+                ? "Printed on the receipt printer."
+                : "The receipt printer didn't answer. Check its paper and cable, then try again, or print with this computer's printer."}
+          </p>
+        )}
         <div className={admModalActionsClass}>
           <AdmButton type="button" variant="secondary" onClick={onClose}>
             Done
           </AdmButton>
-          <AdmButton type="button" variant="primary" onClick={() => printReceipt(order)}>
-            Print receipt
+          {printState === "failed" && (
+            <AdmButton type="button" variant="secondary" onClick={() => printInBrowser(order)}>
+              Print with this computer
+            </AdmButton>
+          )}
+          <AdmButton type="button" variant="primary" disabled={printState === "printing"} onClick={handlePrint}>
+            {printState === "printing" ? "Printing…" : printState === "failed" ? "Try again" : "Print receipt"}
           </AdmButton>
         </div>
       </div>

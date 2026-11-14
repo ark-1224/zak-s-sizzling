@@ -1,10 +1,13 @@
 // Print service for the 58 mm thermal printers (RP21UB-Y, USB). The same program runs on
-// two devices, each next to its own printer:
+// each device that has a printer:
 // - the kiosk's Raspberry Pi: POST /print prints the customer's receipt once an order is
 //   placed (or paid with QR Ph); sent by apps/web/src/lib/receiptPrinter.ts.
 // - the device showing the kitchen display: POST /print/kitchen prints a kitchen ticket
 //   (order number and items) once a paid order reaches the kitchen; sent by
 //   apps/web/src/app/kitchen/page.tsx.
+// - the counter computer: POST /print prints the receipt for a payment taken on Orders
+//   awaiting payment, with the cash received and the change, or the GCash / Maya
+//   reference number; sent by apps/web/src/components/staff/CounterReceipt.tsx.
 //
 // It listens on 127.0.0.1 only, so just a page open on that device can reach it.
 const express = require("express");
@@ -39,9 +42,12 @@ app.use(express.json());
 
 const ORDER_TYPE = { dine_in: "DINE IN", take_out: "TAKE OUT" };
 // How a paid order was paid, as printed on the receipt (GCash and Maya: older orders).
-const PAID_LINE = { qrph: "PAID - QR Ph", counter: "PAID at the counter", gcash: "PAID - GCash", maya: "PAID - Maya" };
+// "counter" is cash taken at the counter.
+const PAID_LINE = { qrph: "PAID - QR Ph", counter: "PAID - Cash", gcash: "PAID - GCash", maya: "PAID - Maya" };
 const paidLine = (method) => (Object.hasOwn(PAID_LINE, method) ? PAID_LINE[method] : "PAID");
 const peso = (n) => (Number(n) || 0).toFixed(2);
+// A money amount sent with the receipt, or null when it isn't there (or isn't a number).
+const amountOrNull = (n) => (n === null || n === undefined || !Number.isFinite(Number(n)) ? null : Math.max(0, Number(n)));
 const count = (n) => Math.max(0, Math.floor(Number(n) || 0));
 // Text that reaches the printer must not carry control characters: ESC/POS commands are
 // control sequences, and special instructions are typed by customers.
@@ -80,9 +86,17 @@ function customerReceipt(printer, order) {
   printer.alignLeft();
   order.items.forEach((item) => printer.leftRight(`${count(item.qty)}x ${clean(item.name, 60)}`, peso(item.price)));
   printer.drawLine();
+  // Dishes cancelled after paying (counter receipts): the amount given back.
+  if (order.cancelledAmount > 0) printer.leftRight("Cancelled (refund)", "-" + peso(order.cancelledAmount));
   printer.bold(true);
   printer.leftRight("TOTAL", peso(order.total));
   printer.bold(false);
+  // Counter receipts: the cash received and the change, or the e-wallet reference.
+  if (order.paid && order.amountTendered !== null) {
+    printer.leftRight("Cash received", peso(order.amountTendered));
+    if (order.change !== null) printer.leftRight("Change", peso(order.change));
+  }
+  if (order.paid && order.reference) printer.leftRight("Ref. no.", order.reference);
   printer.alignCenter();
   printer.println(order.paid ? paidLine(order.paymentMethod) : "Please pay at the counter");
   if (order.estimatedPrepMinutes) printer.println(`Ready in about ${order.estimatedPrepMinutes} min`);
@@ -116,7 +130,14 @@ function hasOrder(body) {
 // pages open on the device) would otherwise interleave their bytes on the USB device.
 let printQueue = Promise.resolve();
 function print(res, layout) {
-  const job = printQueue.then(() => printNow(res, layout));
+  // The page gave up if the connection closes before the answer is sent. (Not
+  // req.destroyed: newer Node versions set it as soon as the request body is read, which
+  // made every job look abandoned, so nothing printed and nothing answered.)
+  let pageGaveUp = false;
+  res.on("close", () => {
+    if (!res.writableFinished) pageGaveUp = true;
+  });
+  const job = printQueue.then(() => printNow(res, layout, () => pageGaveUp));
   printQueue = job;
   return job;
 }
@@ -128,10 +149,10 @@ const timeout = (ms) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(`the printer didn't answer within ${ms / 1000} s`)), ms).unref());
 
 // Never rejects: errors are answered as a 500, so the queue keeps going.
-async function printNow(res, layout) {
+async function printNow(res, layout, pageGaveUp) {
   // The page stopped waiting while this job queued; it will send the job again, so
   // printing it now would print it twice.
-  if (res.req.destroyed) return;
+  if (pageGaveUp()) return;
   try {
     const printer = newPrinter();
     layout(printer);
@@ -147,7 +168,22 @@ async function printNow(res, layout) {
 app.post("/print", async (req, res) => {
   if (!hasOrder(req.body)) return res.status(400).json({ ok: false, error: "orderNumber and at least one item are required" });
   const { orderNumber, items, total = 0, orderType, paid = false, paymentMethod, estimatedPrepMinutes, createdAt } = req.body;
-  const order = { orderNumber, items, total, orderType, paid: paid === true, paymentMethod, estimatedPrepMinutes, createdAt };
+  const order = {
+    orderNumber,
+    items,
+    total,
+    orderType,
+    paid: paid === true,
+    paymentMethod,
+    estimatedPrepMinutes,
+    createdAt,
+    // Sent by the counter only (optional): cash received and change, the GCash / Maya
+    // reference number, and the amount of dishes cancelled after paying.
+    amountTendered: amountOrNull(req.body.amountTendered),
+    change: amountOrNull(req.body.change),
+    reference: clean(req.body.reference, 40),
+    cancelledAmount: amountOrNull(req.body.cancelledAmount) ?? 0,
+  };
   await print(res, (printer) => customerReceipt(printer, order));
 });
 

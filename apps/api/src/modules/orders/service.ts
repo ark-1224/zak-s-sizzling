@@ -38,6 +38,7 @@ export function toOrderDTO(order: OrderWithRelations): OrderDTO {
       productName: item.product.name,
       productIcon: item.product.icon,
       qty: item.qty,
+      cancelledQty: item.cancelledQty,
       unitPrice: Number(item.unitPrice),
       subtotal: Number(item.subtotal),
       specialInstructions: item.specialInstructions,
