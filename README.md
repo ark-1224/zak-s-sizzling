@@ -350,6 +350,22 @@ order is paid. Offline/PWA support was removed from scope.
   raw materials search and category filter, and the New order tab at phone width.
   Printing a receipt wasn't tried in the browser pane.
 
+- **Removing a raw material (14 November 2026)** — the raw material form (Edit) has a
+  **Remove item** button. It asks first ("Remove …?"), warning that the raw material's
+  stock movement history goes with it and can't be brought back, and pointing to
+  unticking **In use** to keep the history instead. A raw material still in a dish's
+  recipe can't be removed: the form names the dishes to take it out of first (`DELETE
+  /api/raw-materials/:id`, Administrator only, answers 409 with the dish names; the
+  database's RESTRICT rule on recipe items backs this up). Verified with integration
+  tests (the removal cases in `raw-materials.test.ts`, plus the access matrix row) and in
+  the browser: Remove on Garlic named its three dishes, and a new raw material was
+  removed after the confirmation.
+
+  The live data was restocked on the same day: every raw material in a recipe now holds
+  enough for 50 servings of every dish that uses it (shared ones get the total), with
+  its minimum level at 10 servings' worth. Each restock is in Stock movements with the
+  note "Restocked for 50 servings of every dish".
+
 ## Prerequisites
 
 - Node.js 20+ and npm
