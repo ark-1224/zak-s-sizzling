@@ -164,12 +164,14 @@ def counter_payment():
     f = Flow("counter-payment", "04", "Counter point of sale: taking payment and walk-in orders",
              ["Customer", "Staff (cashier)", "API server"],
              W + "app/staff/orders/page.tsx, " + W + "components/staff/PosNewOrder.tsx, " + W + "components/staff/PaymentPanel.tsx, " + W + "components/staff/CounterReceipt.tsx, "
-             + API + "orders/routes.ts, " + API + "payments/service.ts (confirmCounterPayment), " + API + "inventory/fulfillment.ts (deductStockForOrder), " + API + "orders/service.ts (listOrders, cancelOrder)",
+             + W + "components/staff/CancelDishes.tsx, " + W + "lib/receiptPrinter.ts, "
+             + API + "orders/routes.ts, " + API + "payments/service.ts (confirmCounterPayment), " + API + "inventory/fulfillment.ts (deductStockForOrder), "
+             + API + "orders/cancelItems.ts (cancelOrderItems), " + API + "orders/service.ts (listOrders, cancelOrder)",
              notes=[
                  "Taking payment checks and deducts the stock before the money is kept: marking paid, deducting each dish's raw materials (or a ready-made item's pieces) and confirming happen in one database transaction; a shortage rolls all of it back.",
                  "Cash records the cash received, for the change on the receipt. GCash and Maya are paid to the shop's own account and recorded with the reference number from the customer's phone (no PayMongo); a reference number can be recorded once.",
-                 "PARTIAL: the message asks staff to change the order with the customer, but no screen edits an existing order (the API has endpoints to change or remove order items, unused by the web app). In practice the order is cancelled and placed again.",
-                 "The Queue reloads by itself when an order is placed, paid, edited or cancelled (orders:changed). A paid order that has to be cancelled later is Flow 11.",
+                 "Print receipt prints on the counter's own thermal receipt printer (print-service/ on the counter computer, set up once with ?printer=1); without it, or if it doesn't answer, on the computer's own printer through the browser.",
+                 "Cancel order asks which dishes, and how many of each, to cancel; every dish starts ticked. Before payment nothing was deducted, so nothing goes back into stock. An order being paid by QR Ph can only be cancelled whole. The Queue reloads by itself when an order is placed, paid, edited or cancelled (orders:changed). Cancelling dishes of a paid order is Flow 11.",
              ])
     C, S, A = f.lanes
     f.n("start", C, 0, "start", "Comes to the counter, with an order number from the kiosk (08) or to order")
@@ -188,20 +190,23 @@ def counter_payment():
     f.n("txn", A, 10, "process", "In one transaction: mark paid (cash, GCash or Maya); deduct each dish's raw materials, or a ready-made item's pieces")
     f.n("end1", S, 11, "end", "End")
     f.n("enough", A, 11, "decision", "Enough stock for every dish?")
-    f.n("short", S, 12, "io", "Nothing deducted, order stays unpaid: hand the money back and change the order")
+    f.n("short", S, 12, "io", "Nothing deducted, order stays unpaid: hand the money back")
     f.n("ok", A, 12, "process", "Confirm the order; create one kitchen task per dish and the ready time; update the kiosk menu live")
-    f.n("change", S, 13, "process", "Change the order with the customer (no screen for it: cancel and order again)", partial=True)
+    f.n("change", S, 13, "process", "Take the short dish off with Cancel order (below), then take payment again for the new total")
     f.n("kitchen", A, 13, "sub", "Kitchen fulfilment (Flow 06)")
-    f.n("receipt", S, 14, "io", "Receipt (19d): items, total, how it was paid, change; Print receipt on the counter printer")
+    f.n("receipt", S, 14, "io", "Receipt (19d): items, total, how it was paid, change; Print receipt on the counter's receipt printer (or this computer's printer)")
     f.n("wait", C, 15, "io", "Takes the receipt; watches the screen at the counter for the order number (24)")
     f.n("end3", C, 16, "end", "End")
-    f.n("never", S, 17, "start", "An order in the Queue is never paid for")
-    f.n("cancel", S, 18, "process", "Press Cancel order, then “Yes, cancel order”")
-    f.n("cancelok", A, 19, "decision", "Still pending and unpaid?")
-    f.n("msg2", S, 20, "io", "Show “… already paid / already cancelled”")
-    f.n("cancelled", A, 20, "process", "Mark the order cancelled; it leaves the Queue (no stock was deducted)")
+    f.n("never", S, 17, "start", "An unpaid order loses a dish (ran out, changed mind), or is never paid for")
+    f.n("cancel", S, 18, "io", "Press Cancel order; untick the dishes the customer keeps, set how many (all ticked = the whole order); press Yes, cancel … (19)")
+    f.n("cancelok", A, 19, "decision", "Still pending and unpaid, not being paid by QR Ph?")
+    f.n("msg2", S, 20, "io", "Show “… already paid / already cancelled / being paid by QR Ph”")
+    f.n("all", A, 20, "decision", "Every dish left chosen?")
     f.n("end2", S, 21, "end", "End")
-    f.n("end4", A, 21, "end", "End")
+    f.n("cancelled", A, 21, "process", "Mark the order cancelled; it leaves the Queue (no stock was deducted)")
+    f.n("end4", S, 22, "end", "End")
+    f.n("lower", A, 23, "process", "Take the chosen dishes off; lower the total and the payment waiting for it; the order stays in the Queue")
+    f.n("end5", A, 24, "end", "End")
     f.e("start", "kiosk")
     f.e("kiosk", "pick", "No (walk-in)")
     f.e("kiosk", "find", "Yes", exit="l", entry="l")
@@ -229,9 +234,12 @@ def counter_payment():
     f.e("never", "cancel")
     f.e("cancel", "cancelok", exit="r")
     f.e("cancelok", "msg2", "No", exit="l")
-    f.e("cancelok", "cancelled", "Yes")
-    f.e("cancelled", "end4")
+    f.e("cancelok", "all", "Yes")
     f.e("msg2", "end2")
+    f.e("all", "cancelled", "Yes")
+    f.e("all", "lower", "No", exit="r", side="r")
+    f.e("cancelled", "end4", exit="l", entry="t")
+    f.e("lower", "end5")
     return f
 
 

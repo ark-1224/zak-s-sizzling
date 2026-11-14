@@ -1,19 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1164" viewBox="0 0 1328 1164">
-<rect x="0" y="0" width="1328" height="1164" fill="#ffffff"/>
-<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">19f  Orders awaiting payment: Paid orders (cancelling one)</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1262" viewBox="0 0 1328 1262">
+<rect x="0" y="0" width="1328" height="1262" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">19f  Orders awaiting payment: Paid orders (cancelling some dishes)</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /staff/orders?tab=paid   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
-<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/staff/PaidOrders.tsx, apps/web/src/app/staff/orders/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
-<text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Paid orders not yet handed over (GET /api/orders?inKitchen=1), oldest first, each dish with its kitchen progress (not started, cooking, done), the order&#x27;s status and how it was paid;</text>
-<text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   updates live as the kitchen works. Receipt shows the receipt again (19d).</text>
-<text x="24" y="1080" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Cancel order (moved here from the kitchen display, per the panel) asks for a reason, a quick choice or typed (Yes, cancel order stays disabled until there is one); POST</text>
-<text x="24" y="1099" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   /api/kitchen/orders/:id/cancel. Dishes still not started go back into stock, logged under the person who cancelled with the reason “return”; a dish started or done counts as used.</text>
-<text x="24" y="1118" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The system can&#x27;t send money back, so the order moves to the Queue as NEEDS ATTENTION with a note to refund the customer (how it was paid included), until staff press Refunded: mark as</text>
-<text x="24" y="1137" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   sorted out (19). The reason and refund time show in Transactions (23).</text>
-<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="900"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="900" fill="#ffffff"/>
-<rect x="0" y="0" width="1280" height="900" rx="0" fill="#f3f3f3" stroke="none"/>
-<rect x="0" y="0" width="256" height="900" rx="0" fill="#ffffff" stroke="none"/>
-<line x1="256" y1="0" x2="256" y2="900" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/staff/PaidOrders.tsx, apps/web/src/components/staff/CancelDishes.tsx, apps/web/src/app/staff/orders/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
+<text x="24" y="1082" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="1102" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Paid orders not yet handed over (GET /api/orders?inKitchen=1), oldest first, each dish with its kitchen progress (not started, cooking, done), the order&#x27;s status and how it was paid;</text>
+<text x="24" y="1121" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   updates live as the kitchen works. Receipt shows the receipt again (19d, 19g).</text>
+<text x="24" y="1140" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Cancel order (moved here from the kitchen display, per the panel) asks which dishes, all ticked at first, and how many of each (− / +), and a reason, a quick choice or typed (the button</text>
+<text x="24" y="1159" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   stays disabled until there is one); POST /api/orders/:id/cancel-items. Dishes chosen that the kitchen hasn&#x27;t started go back into stock, logged under the person who cancelled with the</text>
+<text x="24" y="1178" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   reason “return”; a started or done dish counts as used.</text>
+<text x="24" y="1197" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Some dishes: the rest stays on the kitchen display (a dish cancelled whole leaves it; the order is ready once every dish left is done), the total goes down, and the Queue shows NEEDS</text>
+<text x="24" y="1216" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   ATTENTION with a note to refund their amount; Mark as sorted out keeps the payment as paid. Every dish left: the whole order is cancelled, as before, and Refunded: mark as sorted out</text>
+<text x="24" y="1235" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   records the payment as refunded (19). Reasons and refunds show in Transactions (23).</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="960"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="960" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="960" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="256" height="960" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="256" y1="0" x2="256" y2="960" stroke="#9a9a9a" stroke-width="1"/>
 <rect x="20" y="20" width="32" height="32" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
 <line x1="20" y1="20" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
 <line x1="52" y1="20" x2="20" y2="52" stroke="#c9c9c9" stroke-width="1"/>
@@ -46,15 +48,15 @@
 <text x="56" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
 <circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
 <text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
-<rect x="12" y="744" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="24" y="766" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
-<circle cx="40" cy="796" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
-<text x="40" y="800" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
-<text x="64" y="792" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
-<text x="64" y="810" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
-<rect x="24" y="828" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="128.0" y="852.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
-<circle cx="84" cy="848" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<rect x="12" y="804" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="826" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
+<circle cx="40" cy="856" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="40" y="860" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
+<text x="64" y="852" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
+<text x="64" y="870" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="24" y="888" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="128.0" y="912.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
+<circle cx="84" cy="908" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
 <text x="280" y="36" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">BILLING &amp; PAYMENT · POINT OF SALE</text>
 <text x="280" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">Orders awaiting payment</text>
 <rect x="280" y="94" width="318.89" height="44" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
@@ -62,11 +64,11 @@
 <text x="432.03499999999997" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">New order</text>
 <rect x="481.38" y="98" width="113.50999999999999" height="36" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
 <text x="538.135" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Paid orders</text>
-<text x="280" y="158" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Paid orders the kitchen hasn&#x27;t handed over yet. Cancel one if the customer leaves or a dish can&#x27;t be made: dishes not started go back into</text>
-<text x="280" y="175.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">stock, and the order moves to the Queue until you refund the customer.</text>
+<text x="280" y="158" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Paid orders the kitchen hasn&#x27;t handed over yet. Cancel the order, or only some of its dishes, if the customer leaves or a dish can&#x27;t be made:</text>
+<text x="280" y="175.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">dishes not started go back into stock, and the amount moves to the Queue until you refund the customer.</text>
 <rect x="280" y="201.10000000000002" width="320" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <text x="290" y="224.78000000000003" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">Search order number</text>
-<rect x="280" y="255.10000000000002" width="976" height="620.9" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="280" y="255.10000000000002" width="976" height="680.9" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <text x="298" y="287.1" font-family="Arial, Helvetica, sans-serif" font-size="17" font-weight="700" text-anchor="start" fill="#222222">ZK-XXXXXX</text>
 <rect x="408" y="272.1" width="71.3" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
 <text x="443.65" y="285.20000000000005" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">PREPARING</text>
@@ -84,23 +86,39 @@
 <rect x="513.8" y="384.1" width="59.9" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
 <text x="543.75" y="397.20000000000005" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">WALK-IN</text>
 <text x="298" y="423.1" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">2× Dish name · not started</text>
-<text x="298" y="451.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · ₱000.00 · GCash · paid just now</text>
-<rect x="908" y="379.1" width="330" height="296" rx="6" fill="#ffffff" stroke="#222222" stroke-width="1.5"/>
-<text x="922" y="401.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Cancel ZK-XXXXXX? Dishes not started go back</text>
-<text x="922" y="417.3" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">into stock; you then refund the customer.</text>
-<rect x="922" y="441.1" width="112.91999999999999" height="28" rx="14" fill="#c9c9c9" stroke="#555555" stroke-width="2"/>
-<text x="978.46" y="459.42" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#222222">Customer left</text>
-<rect x="922" y="477.1" width="188.16" height="28" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="1016.08" y="495.42" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Ran out of an ingredient</text>
-<rect x="922" y="513.1" width="153.95999999999998" height="28" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="998.98" y="531.4200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Order was a mistake</text>
-<text x="922" y="566.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Reason</text>
-<rect x="922" y="573.1" width="302" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="932" y="594.4200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Customer left</text>
-<rect x="1123.6" y="623.1" width="100.39999999999999" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="1173.8" y="643.4200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Keep order</text>
-<rect x="965.3199999999999" y="623.1" width="148.27999999999997" height="32" rx="4" fill="#ffffff" stroke="#222222" stroke-width="2"/>
-<text x="1039.46" y="643.4200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#222222">Yes, cancel order</text>
+<text x="298" y="443.1" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">1× Ready-made item · cooking</text>
+<text x="298" y="471.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Take out · ₱000.00 · GCash · paid just now</text>
+<text x="872" y="401.1" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Cancel which dishes of ZK-XXXXXX? Untick what the</text>
+<text x="872" y="417.3" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">customer keeps.</text>
+<rect x="872" y="435.5" width="352" height="36" rx="5" fill="#f3f3f3" stroke="#cfcfcf" stroke-width="1"/>
+<rect x="882" y="445.5" width="14" height="14" rx="2" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<path d="M885 453.5 l4 4 l7 -8" fill="none" stroke="#222222" stroke-width="2"/>
+<text x="904" y="458.5" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name · not started</text>
+<rect x="1108" y="441.5" width="24" height="24" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1120.0" y="457.82" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">−</text>
+<text x="1161" y="458.5" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#222222">1 of 2</text>
+<rect x="1190" y="441.5" width="24" height="24" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1202.0" y="457.82" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">+</text>
+<rect x="872" y="477.5" width="352" height="36" rx="5" fill="#f3f3f3" stroke="#cfcfcf" stroke-width="1"/>
+<rect x="882" y="487.5" width="14" height="14" rx="2" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="904" y="500.5" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item · cooking</text>
+<text x="1214" y="500.5" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#8a8a8a">1×</text>
+<text x="872" y="533.5" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dishes not started go back into stock; refund the</text>
+<text x="872" y="549.7" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">customer ₱000.00. The rest stays in the kitchen.</text>
+<rect x="872" y="569.9000000000001" width="112.91999999999999" height="28" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="928.46" y="588.2200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Customer left</text>
+<rect x="990.92" y="569.9000000000001" width="208.67999999999998" height="28" rx="14" fill="#c9c9c9" stroke="#555555" stroke-width="2"/>
+<text x="1095.26" y="588.2200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#222222">Customer changed their mind</text>
+<rect x="872" y="603.9000000000001" width="188.16" height="28" rx="14" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="966.08" y="622.2200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Ran out of an ingredient</text>
+<text x="872" y="652.9000000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Reason</text>
+<rect x="872" y="659.9000000000001" width="352" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="882" y="681.2200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Customer changed their mind</text>
+<rect x="1123.6" y="707.9000000000001" width="100.39999999999999" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1173.8" y="727.2200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Keep order</text>
+<rect x="958.4799999999999" y="707.9000000000001" width="155.12" height="30" rx="4" fill="#ffffff" stroke="#222222" stroke-width="2"/>
+<text x="1036.04" y="727.2200000000001" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#222222">Yes, cancel 1 dish</text>
+<rect x="858" y="379.1" width="380" height="372.80000000000007" rx="6" fill="none" stroke="#222222" stroke-width="1.5"/>
 <line x1="280" y1="367.1" x2="1256" y2="367.1" stroke="#cfcfcf" stroke-width="1"/>
-</g><rect x="0" y="0" width="1280" height="900" fill="none" stroke="#222222" stroke-width="2"/></g>
+</g><rect x="0" y="0" width="1280" height="960" fill="none" stroke="#222222" stroke-width="2"/></g>
 </svg>

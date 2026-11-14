@@ -896,8 +896,47 @@ def orders_header(f, tab, queue=3):
     return tabbar(f, CX, y, [f"Queue ({queue})", "New order", "Paid orders"], tab) + 16
 
 
+def cancel_panel(f, bx, y, w, paid):
+    """The panel Cancel order opens (CancelDishes.tsx): the dishes, all ticked at first, with
+    how many of each; a reason for a paid order. Returns its height."""
+    top = y
+    yy = f.wrap(bx + 14, y + 22, w - 28, "Cancel which dishes of ZK-XXXXXX? Untick what the customer keeps.", size=12)
+    rows = ([("Dish name · not started", True, "1 of 2"), ("Ready-made item · cooking", False, None)] if paid
+            else [("Dish name", True, "2 of 3"), ("Ready-made item", False, None)])
+    yy += 2
+    for label, ticked, count in rows:
+        f.rect(bx + 14, yy, w - 28, 36, fill=FILL2, stroke=LINE_SOFT, r=5)
+        f.checkbox(bx + 24, yy + 10, checked=ticked, size=14)
+        f.text(bx + 46, yy + 23, label, size=12)
+        if count:
+            sx = bx + w - 24 - 106
+            f.btn(sx, yy + 6, 24, 24, "\u2212", size=12)
+            f.text(sx + 53, yy + 23, count, size=12, anchor="middle")
+            f.btn(sx + 82, yy + 6, 24, 24, "+", size=12)
+        else:
+            f.text(bx + w - 24, yy + 23, "1\u00d7", size=12, anchor="end", fill=INK3)
+        yy += 42
+    summary = ("Dishes not started go back into stock; refund the customer \u20b1000.00. The rest stays in the kitchen." if paid
+               else "The total goes down by \u20b1000.00, to \u20b1000.00.")
+    yy = f.wrap(bx + 14, yy + 14, w - 28, summary, size=12) + 4
+    if paid:
+        cx2 = bx + 14
+        for reason in ("Customer left", "Customer changed their mind", "Ran out of an ingredient"):
+            rw = text_width(reason, 12, True) + 24
+            if cx2 + rw > bx + w - 14:
+                cx2, yy = bx + 14, yy + 34
+            f.btn(cx2, yy, rw, 28, reason, kind="selected" if reason == "Customer changed their mind" else "secondary", r=14, size=12)
+            cx2 += rw + 6
+        f.inp(bx + 14, yy + 56, w - 28, 34, label="Reason", value="Customer changed their mind", size=12)
+        yy += 104
+    f.btn_row(bx + w - 14, yy, [("Yes, cancel 1 dish" if paid else "Yes, cancel 2 dishes", "danger"), ("Keep order", "secondary")], h=30, size=12)
+    yy += 44
+    f.rect(bx, top, w, yy - top, fill="none", stroke=INK, r=6, sw=1.5)
+    return yy - top
+
+
 def queue_list(f, y, empty=False):
-    y = f.wrap(CX, y + 4, CW, "Counter orders show up here as soon as they are placed; the list updates by itself. Take payment checks the stock first, so if something has run out you can change the order before keeping the money. Cancel an order the customer never came back to pay for.", size=13, fill=INK2)
+    y = f.wrap(CX, y + 4, CW, "Counter orders show up here as soon as they are placed; the list updates by itself. Take payment checks the stock first, so if something has run out you can take that dish off with Cancel order before keeping the money. Cancel order also removes an order the customer never came back to pay for.", size=13, fill=INK2)
     y += 8
     if empty:
         f.text(CX, y + 16, "Nothing awaiting payment right now.", size=14, fill=INK3)
@@ -915,13 +954,10 @@ def queue_list(f, y, empty=False):
     f.line(CX, y, CX + CW, y, stroke=LINE_SOFT)
     f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
     f.pill(CX + 128, y + 17, "WALK-IN", size=10)
-    f.text(CX + 18, y + 54, "1× Dish name", size=13, fill=INK2)
+    f.text(CX + 18, y + 54, "3× Dish name, 1× Ready-made item", size=13, fill=INK2)
     f.text(CX + 18, y + 74, "Take out · Counter · ₱000.00 · placed 1 min ago", size=12, fill=INK3)
-    bx = CX + CW - 18 - 300
-    f.rect(bx, y + 12, 300, 92, fill=WHITE, stroke=INK, r=6, sw=1.5)
-    f.wrap(bx + 12, y + 32, 276, "Cancel ZK-XXXXXX? It leaves the queue and can't be paid any more.", size=12)
-    f.btn_row(bx + 288, y + 64, [("Yes, cancel order", "danger"), ("Keep order", "secondary")], h=30, size=12)
-    y += 118
+    ph = cancel_panel(f, CX + CW - 18 - 360, y + 12, 360, paid=False)
+    y += ph + 26
     f.line(CX, y, CX + CW, y, stroke=LINE_SOFT)
     f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
     x = CX + 128 + f.pill(CX + 128, y + 17, "NEEDS ATTENTION", size=10, filled=True) + 6
@@ -934,11 +970,12 @@ def queue_list(f, y, empty=False):
 
 
 def orders():
-    f = admin_page("19", "Orders awaiting payment: Queue", "/staff/orders", POS_FILES, h=860, active="/staff/orders")
+    f = admin_page("19", "Orders awaiting payment: Queue (cancelling some dishes)", "/staff/orders", POS_FILES + ", " + SC + "CancelDishes.tsx", h=1000, active="/staff/orders")
     y = orders_header(f, 0)
     queue_list(f, y)
     f.add_note("The counter's light point of sale (panel feedback), in three tabs kept in the address: Queue, New order (19e, ?tab=new) and Paid orders (19f, ?tab=paid). The Queue lists unpaid, not-cancelled orders plus orders flagged for attention (newest first, up to 50); search ignores spaces and dashes; a walk-in order rung up on New order is tagged WALK-IN.")
-    f.add_note("Take payment opens the payment step (19c); paying shows the receipt (19d). Taking payment checks the stock, deducts it and sends the order to the kitchen in one step; if stock is short nothing changes and staff are told to hand the money back and change the order. Cancel order asks first (second row).")
+    f.add_note("Take payment opens the payment step (19c); paying shows the receipt (19d). Taking payment checks the stock, deducts it and sends the order to the kitchen in one step; if stock is short nothing changes and staff are told to hand the money back and take that dish off.")
+    f.add_note("Cancel order (second row) asks which dishes to cancel: every dish starts ticked, staff untick what the customer keeps and set how many of a dish (− / +). Some dishes: they come off the order and the total, and the payment waiting for it, goes down (POST /api/orders/:id/cancel-items). Every dish left: the order is cancelled and leaves the Queue. Refused for an order being paid by QR Ph, whose code was made for its total.")
     f.add_note("NEEDS ATTENTION marks an order staff must sort out, with the note on what happened and what to do: paid online after the stock ran out or after the order was cancelled, a wrong amount, paid twice, or a paid order cancelled from Paid orders (third row). Refunded: mark as sorted out records the payment as refunded; the note stays in Transactions (23).")
     return f
 
@@ -952,7 +989,7 @@ def orders_empty():
 
 
 def payment_panel():
-    f = admin_page("19c", "Take payment (popup)", "/staff/orders  (popup)", SC + "PaymentPanel.tsx, " + POS_FILES, h=860, active="/staff/orders")
+    f = admin_page("19c", "Take payment (popup)", "/staff/orders  (popup)", SC + "PaymentPanel.tsx, " + POS_FILES, h=1000, active="/staff/orders")
     y = orders_header(f, 0)
     queue_list(f, y)
     x, y, w = modal(f, 448, 470, y=170)
@@ -976,7 +1013,7 @@ def payment_panel():
 
 
 def counter_receipt():
-    f = admin_page("19d", "Counter receipt (popup)", "/staff/orders  (popup)", SC + "CounterReceipt.tsx", h=860, active="/staff/orders")
+    f = admin_page("19d", "Counter receipt (popup)", "/staff/orders  (popup)", SC + "CounterReceipt.tsx, apps/web/src/lib/receiptPrinter.ts", h=1000, active="/staff/orders")
     y = orders_header(f, 0)
     queue_list(f, y)
     x, y, w = modal(f, 384, 560, y=150)
@@ -999,7 +1036,37 @@ def counter_receipt():
     f.wrap(x + 14, y + 354, w - 28, "Sent to the kitchen. Tell the customer it will be ready at about 9:56 PM.", size=12)
     f.btn_row(x + w, y + 414, [("Done", "secondary"), ("Print receipt", "primary")], h=38)
     f.add_note("Shown after a payment is taken (and from Receipt on Paid orders, 19f). Items with their instructions, the total, how it was paid, the cash received and change (cash) or the reference number (GCash, Maya), and the ready time.")
-    f.add_note("Print receipt prints only the receipt (a 72 mm-wide page) through the counter computer's own printer and the browser's print dialog; the thermal printers belong to the kiosk and the kitchen (print-service/), so they aren't used here.")
+    f.add_note("Print receipt prints on the counter's thermal receipt printer (58 mm, through print-service/ on the counter computer) once Orders awaiting payment has been opened there with ?printer=1: the dishes, total, “PAID - Cash” with the cash received and change, or “PAID - GCash / Maya” with the reference number. It then says “Printed on the receipt printer.”; if the printer doesn't answer, it says so and offers Try again and Print with this computer.")
+    f.add_note("Without ?printer=1 (any other computer), Print receipt prints only the receipt (a 72 mm-wide page) through the computer's own printer and the browser's print dialog.")
+    return f
+
+
+def counter_receipt_cancelled():
+    f = admin_page("19g", "Counter receipt after a dish is cancelled (printed)", "/staff/orders?tab=paid  (popup)", SC + "CounterReceipt.tsx, apps/web/src/lib/receiptPrinter.ts", h=1000, active="/staff/orders")
+    y = orders_header(f, 2)
+    paid_list(f, y, cancelling=False)
+    x, y, w = modal(f, 384, 540, y=150)
+    f.text(x + w / 2, y + 12, "RECEIPT · PAID", size=11, fill=INK3, bold=True, anchor="middle")
+    f.text(x + w / 2, y + 46, "ZK-XXXXXX", size=24, bold=True, anchor="middle")
+    f.text(x + w / 2, y + 68, "Nov 15, 2:23 AM · Dine in", size=12, fill=INK3, anchor="middle")
+    f.line(x, y + 84, x + w, y + 84, stroke=LINE_SOFT)
+    f.text(x, y + 108, "1× Dish name", size=13)
+    f.text(x + w, y + 108, "₱145.00", size=13, anchor="end")
+    f.text(x, y + 146, "Ready-made item (cancelled)", size=13, fill=INK3)
+    f.line(x, y + 141, x + text_width("Ready-made item (cancelled)", 13), y + 141, stroke=INK3)
+    f.text(x + w, y + 146, "₱0.00", size=13, anchor="end", fill=INK3)
+    f.line(x, y + 164, x + w, y + 164, stroke=LINE_SOFT)
+    for i, (label, value, bold) in enumerate([("Charged", "₱180.00", False), ("Cancelled dishes (refund)", "−₱35.00", False), ("TOTAL", "₱145.00", True),
+                                              ("Paid by", "Cash", False), ("Cash received", "₱200.00", False), ("Change", "₱20.00", False)]):
+        ry = y + 192 + i * 26
+        f.text(x, ry, label, size=15 if bold else 13, bold=bold, fill=INK if bold else INK2)
+        f.text(x + w, ry, value, size=15 if bold else 13, bold=bold, anchor="end")
+    f.rect(x, y + 356, w, 60, fill=FILL2, stroke=None, r=6)
+    f.wrap(x + 14, y + 380, w - 28, "Sent to the kitchen. Tell the customer it will be ready at about 2:43 AM.", size=12)
+    f.text(x + w / 2, y + 448, "Printed on the receipt printer.", size=13, fill=INK2, anchor="middle")
+    f.btn_row(x + w, y + 470, [("Done", "secondary"), ("Print receipt", "primary")], h=38)
+    f.add_note("The receipt of a paid order some of whose dishes were cancelled (Receipt on Paid orders, 19f): the cancelled dish is struck through, Charged is what the customer paid, Cancelled dishes (refund) what is owed back, and TOTAL what is left. The change is worked out from what was charged.")
+    f.add_note("Printed on the counter's receipt printer (?printer=1): the slip shows “Cancelled (refund) -35.00” above the total, then the cash received and the change. Dishes cancelled whole aren't printed.")
     return f
 
 
@@ -1045,17 +1112,15 @@ def new_order():
     return f
 
 
-def paid_orders():
-    f = admin_page("19f", "Orders awaiting payment: Paid orders (cancelling one)", "/staff/orders?tab=paid", SC + "PaidOrders.tsx, " + POS_FILES, h=860, active="/staff/orders")
-    y = orders_header(f, 2)
-    y = f.wrap(CX, y + 4, CW, "Paid orders the kitchen hasn't handed over yet. Cancel one if the customer leaves or a dish can't be made: dishes not started go back into stock, and the order moves to the Queue until you refund the customer.", size=13, fill=INK2)
+def paid_list(f, y, cancelling=True):
+    y = f.wrap(CX, y + 4, CW, "Paid orders the kitchen hasn't handed over yet. Cancel the order, or only some of its dishes, if the customer leaves or a dish can't be made: dishes not started go back into stock, and the amount moves to the Queue until you refund the customer.", size=13, fill=INK2)
     y += 8
     f.inp(CX, y, 320, 38, placeholder="Search order number")
     y += 54
     card(f, CX, y, CW, f.h - y - 24)
     for i, (status, walkin, dishes, meta) in enumerate([
         ("PREPARING", False, ["1× Dish name · cooking", "1× Ready-made item · not started"], "Dine in · ₱000.00 · Cash · paid 6 min ago"),
-        ("IN THE KITCHEN", True, ["2× Dish name · not started"], "Take out · ₱000.00 · GCash · paid just now"),
+        ("IN THE KITCHEN", True, ["2× Dish name · not started", "1× Ready-made item · cooking"], "Take out · ₱000.00 · GCash · paid just now"),
     ]):
         f.text(CX + 18, y + 32, "ZK-XXXXXX", size=17, bold=True)
         px = CX + 128 + f.pill(CX + 128, y + 17, status, size=10) + 6
@@ -1064,27 +1129,21 @@ def paid_orders():
         for j, d in enumerate(dishes):
             f.text(CX + 18, y + 56 + j * 20, d, size=13, fill=INK2)
         f.text(CX + 18, y + 64 + len(dishes) * 20, meta, size=12, fill=INK3)
-        if i == 0:
+        if i == 0 or not cancelling:
             f.btn_row(CX + CW - 18, y + 30, [("Receipt", "secondary"), ("Cancel order", "danger")], h=38)
             y += 112
         else:
-            bx = CX + CW - 18 - 330
-            f.rect(bx, y + 12, 330, 296, fill=WHITE, stroke=INK, r=6, sw=1.5)
-            f.wrap(bx + 14, y + 34, 300, "Cancel ZK-XXXXXX? Dishes not started go back into stock; you then refund the customer.", size=12)
-            cy = y + 74
-            cx2 = bx + 14
-            for reason in ("Customer left", "Ran out of an ingredient", "Order was a mistake"):
-                rw = text_width(reason, 12, True) + 24
-                if cx2 + rw > bx + 316:
-                    cx2, cy = bx + 14, cy + 36
-                f.btn(cx2, cy, rw, 28, reason, kind="selected" if reason == "Customer left" else "secondary", r=14, size=12)
-                cx2 += rw + 6
-            f.inp(bx + 14, cy + 60, 302, 34, label="Reason", value="Customer left", size=12)
-            f.btn_row(bx + 316, cy + 110, [("Yes, cancel order", "danger"), ("Keep order", "secondary")], h=32, size=12)
+            cancel_panel(f, CX + CW - 18 - 380, y + 12, 380, paid=True)
         f.line(CX, y, CX + CW, y, stroke=LINE_SOFT)
-    f.add_note("Paid orders not yet handed over (GET /api/orders?inKitchen=1), oldest first, each dish with its kitchen progress (not started, cooking, done), the order's status and how it was paid; updates live as the kitchen works. Receipt shows the receipt again (19d).")
-    f.add_note("Cancel order (moved here from the kitchen display, per the panel) asks for a reason, a quick choice or typed (Yes, cancel order stays disabled until there is one); POST /api/kitchen/orders/:id/cancel. Dishes still not started go back into stock, logged under the person who cancelled with the reason “return”; a dish started or done counts as used.")
-    f.add_note("The system can't send money back, so the order moves to the Queue as NEEDS ATTENTION with a note to refund the customer (how it was paid included), until staff press Refunded: mark as sorted out (19). The reason and refund time show in Transactions (23).")
+
+
+def paid_orders():
+    f = admin_page("19f", "Orders awaiting payment: Paid orders (cancelling some dishes)", "/staff/orders?tab=paid", SC + "PaidOrders.tsx, " + SC + "CancelDishes.tsx, " + POS_FILES, h=960, active="/staff/orders")
+    y = orders_header(f, 2)
+    paid_list(f, y)
+    f.add_note("Paid orders not yet handed over (GET /api/orders?inKitchen=1), oldest first, each dish with its kitchen progress (not started, cooking, done), the order's status and how it was paid; updates live as the kitchen works. Receipt shows the receipt again (19d, 19g).")
+    f.add_note("Cancel order (moved here from the kitchen display, per the panel) asks which dishes, all ticked at first, and how many of each (− / +), and a reason, a quick choice or typed (the button stays disabled until there is one); POST /api/orders/:id/cancel-items. Dishes chosen that the kitchen hasn't started go back into stock, logged under the person who cancelled with the reason “return”; a started or done dish counts as used.")
+    f.add_note("Some dishes: the rest stays on the kitchen display (a dish cancelled whole leaves it; the order is ready once every dish left is done), the total goes down, and the Queue shows NEEDS ATTENTION with a note to refund their amount; Mark as sorted out keeps the payment as paid. Every dish left: the whole order is cancelled, as before, and Refunded: mark as sorted out records the payment as refunded (19). Reasons and refunds show in Transactions (23).")
     return f
 
 
@@ -1355,7 +1414,7 @@ def status_board():
 SCREENS = [login, login_error, login_code, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_form_ready,
            product_delete, raw_materials, raw_adjust, raw_form, raw_form_edit, raw_remove, raw_nutrition, raw_dishes, raw_ready, adjust_stock, raw_movements,
            bulk_import, bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, payment_panel, counter_receipt,
-           new_order, paid_orders, users, invite_user, confirm_change, edit_user, kiosk_qr, kiosk_qr_invalid, categories, transactions,
+           new_order, paid_orders, counter_receipt_cancelled, users, invite_user, confirm_change, edit_user, kiosk_qr, kiosk_qr_invalid, categories, transactions,
            status_board]
 
 SLUGS = {
@@ -1366,6 +1425,6 @@ SLUGS = {
     "14i": "raw-material-remove",
     "16": "bulk-import-preview", "16b": "bulk-import-result", "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty",
     "19": "orders-awaiting-payment", "19b": "orders-awaiting-payment-empty", "19c": "take-payment", "19d": "counter-receipt",
-    "19e": "new-order", "19f": "paid-orders", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",
+    "19e": "new-order", "19f": "paid-orders", "19g": "counter-receipt-cancelled-dish", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",
     "20d": "edit-user", "21": "kiosk-qr", "21b": "kiosk-qr-invalid", "22": "categories", "23": "transactions", "24": "order-status-board",
 }

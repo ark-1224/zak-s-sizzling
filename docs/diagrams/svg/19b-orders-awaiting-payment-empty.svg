@@ -59,7 +59,8 @@
 <text x="432.03499999999997" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">New order</text>
 <text x="538.135" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Paid orders</text>
 <text x="280" y="158" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Counter orders show up here as soon as they are placed; the list updates by itself. Take payment checks the stock first, so if something has run</text>
-<text x="280" y="175.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">out you can change the order before keeping the money. Cancel an order the customer never came back to pay for.</text>
-<text x="280" y="217.10000000000002" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#8a8a8a">Nothing awaiting payment right now.</text>
+<text x="280" y="175.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">out you can take that dish off with Cancel order before keeping the money. Cancel order also removes an order the customer never came back to</text>
+<text x="280" y="193.10000000000002" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">pay for.</text>
+<text x="280" y="234.65000000000003" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#8a8a8a">Nothing awaiting payment right now.</text>
 </g><rect x="0" y="0" width="1280" height="900" fill="none" stroke="#222222" stroke-width="2"/></g>
 </svg>

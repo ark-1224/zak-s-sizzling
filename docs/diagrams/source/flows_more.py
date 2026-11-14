@@ -403,39 +403,47 @@ def users():
 
 
 def cancel_paid():
-    f = Flow("cancel-paid-order", "11", "Cancelling a paid order and the refund",
+    f = Flow("cancel-paid-order", "11", "Cancelling a paid order, or some of its dishes, and the refund",
              ["Customer", "Staff (cashier)", "API server"],
-             W + "components/staff/PaidOrders.tsx, " + W + "app/staff/orders/page.tsx, " + API + "kitchen/service.ts (cancelKitchenOrder), "
+             W + "components/staff/PaidOrders.tsx, " + W + "components/staff/CancelDishes.tsx, " + W + "app/staff/orders/page.tsx, "
+             + API + "orders/cancelItems.ts (cancelOrderItems), " + API + "kitchen/service.ts (cancelKitchenOrder), "
              + API + "inventory/fulfillment.ts (returnStockForLines), " + API + "orders/service.ts (markAttentionSortedOut)",
              notes=[
-                 "Staff cancel paid orders on Orders awaiting payment › Paid orders (19f); the kitchen display no longer has Cancel order (panel feedback). Any signed-in Staff or Admin can do it, until the kitchen presses Handed over.",
-                 "Dishes still not started go back into stock, logged as a customer return under the person who cancelled; a dish started or done counts as used. The returns show in Stock movements (14g).",
-                 "The system can't send money back, so the refund happens outside it (cash from the drawer, or GCash / Maya back to the customer), and staff record it. A late or repeated online payment event can't undo a refund.",
+                 "Staff cancel paid orders, or some of their dishes, on Orders awaiting payment › Paid orders (19f); the kitchen display no longer has Cancel order (panel feedback). Any signed-in Staff or Admin can do it, until the kitchen presses Handed over.",
+                 "Chosen dishes still not started go back into stock, logged as a customer return under the person who cancelled; a dish started or done counts as used. The returns show in Stock movements (14g).",
+                 "The system can't send money back, so the refund happens outside it (cash from the drawer, or GCash / Maya back to the customer), and staff record it. A late or repeated online payment event can't undo a refund. Each cancel adds its own line to the order's note, so every amount owed stays on screen.",
              ])
     C, S, A = f.lanes
-    f.n("start", C, 0, "start", "Leaves after paying, or a dish can't be made")
+    f.n("start", C, 0, "start", "Leaves after paying, changes their mind about a dish, or a dish can't be made")
     f.n("open", S, 1, "io", "Paid orders (19f): find the order; each dish shows not started, cooking or done")
-    f.n("press", S, 2, "io", "Press Cancel order; pick or type a reason; press Yes, cancel order")
+    f.n("press", S, 2, "io", "Press Cancel order; untick the dishes the customer keeps, set how many (all ticked = the whole order); pick or type a reason; press Yes, cancel …")
     f.n("still", A, 3, "decision", "Still in the kitchen (not handed over, not cancelled)?")
     f.n("msg", S, 4, "io", "Show “… was already handed over / is already cancelled”")
-    f.n("txn", A, 4, "process", "In one transaction: cancel with the reason; put back the stock of dishes not started; flag NEEDS ATTENTION: refund ₱… (how it was paid)")
+    f.n("all", A, 4, "decision", "Every dish left chosen?")
     f.n("end1", S, 5, "end", "End")
-    f.n("live", A, 5, "process", "The order leaves the kitchen display and the board; update the kiosk menu live")
-    f.n("queue", S, 6, "io", "The order shows in the Queue (19) as NEEDS ATTENTION with the refund note")
-    f.n("refund", C, 7, "io", "Is refunded at the counter (outside the system)")
-    f.n("sorted", S, 8, "process", "Press Refunded: mark as sorted out")
-    f.n("same", A, 9, "decision", "Note unchanged since staff read it?")
-    f.n("newnote", S, 10, "io", "Show the new note to read first")
-    f.n("save", A, 10, "process", "Record the payment as refunded, with the time; the order leaves the Queue (the note stays in Transactions, 23)")
-    f.n("end2", A, 11, "end", "End")
+    f.n("txn", A, 6, "process", "In one transaction: cancel the order with the reason; put back the stock of dishes not started; flag NEEDS ATTENTION: refund ₱… (how it was paid)")
+    f.n("live", A, 7, "process", "The order leaves the kitchen display and the board; update the kiosk menu live")
+    f.n("part", A, 9, "process", "In one transaction: take the chosen dishes off and lower the total; put back the stock of those not started; flag NEEDS ATTENTION: refund ₱… for them")
+    f.n("rest", A, 11, "process", "The rest stays on the kitchen display (a dish cancelled whole leaves it); the order is ready once every dish left is done")
+    f.n("queue", S, 12, "io", "The order shows in the Queue (19) as NEEDS ATTENTION with the refund note")
+    f.n("refund", C, 13, "io", "Is refunded at the counter (outside the system)")
+    f.n("sorted", S, 14, "process", "Press Refunded: mark as sorted out (whole order) or Mark as sorted out (some dishes)")
+    f.n("same", A, 15, "decision", "Note unchanged since staff read it?")
+    f.n("newnote", S, 17, "io", "Show the new note to read first")
+    f.n("save", A, 17, "process", "Whole order: record the payment as refunded, with the time. Some dishes: the payment stays paid. It leaves the Queue (the note stays in Transactions, 23)")
+    f.n("end2", A, 18, "end", "End")
     f.e("start", "open")
     f.e("open", "press")
     f.e("press", "still", exit="r")
     f.e("still", "msg", "No", exit="l")
-    f.e("still", "txn", "Yes")
+    f.e("still", "all", "Yes")
     f.e("msg", "end1")
+    f.e("all", "txn", "Yes")
+    f.e("all", "part", "No", exit="r", side="r")
     f.e("txn", "live")
-    f.e("live", "queue", exit="l", entry="r")
+    f.e("live", "queue", exit="l", entry="t")
+    f.e("part", "rest")
+    f.e("rest", "queue", exit="l", entry="r")
     f.e("queue", "refund", exit="l", entry="t")
     f.e("refund", "sorted", exit="r", entry="l")
     f.e("sorted", "same", exit="r")
