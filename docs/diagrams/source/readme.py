@@ -86,6 +86,7 @@ FLOW_DESC = {
     "12": "Loading analytics for a period and exporting a report as CSV, Excel or PDF.",
     "13": "The 60 + 20 second idle timer that resets the kiosk for the next customer.",
     "14": "Generating, printing or downloading the kiosk QR code, and a customer scanning it.",
+    "15": "Admin adds or edits a raw material (name, category, unit, minimum, cost, In use) or removes one after a confirmation; refused while a recipe uses it.",
 }
 
 
@@ -176,7 +177,7 @@ def main():
         "| `source/screens_kiosk.py` | wireframes 01–09 |",
         "| `source/screens_admin.py` | wireframes 10–21 |",
         "| `source/swimlane.py` | swimlane layout, symbols and connector routing |",
-        "| `source/flows.py`, `source/flows_more.py` | process flows 01–14 |",
+        "| `source/flows.py`, `source/flows_more.py` | process flows 01–15 |",
         "| `source/export.py` | writes the SVG and makes the PNG with headless Edge |",
         "| `source/crop.py` | close-up of part of a PNG, for checking by eye |",
         "",

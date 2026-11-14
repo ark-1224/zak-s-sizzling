@@ -97,6 +97,7 @@ Code paths in the wireframe table are relative to `apps/web/src/`.
 | [flow-12-reports.png](png/flow-12-reports.png) | Analytics and report export (Admin) | Loading analytics for a period and exporting a report as CSV, Excel or PDF. | apps/web/src/app/admin/analytics/page.tsx, apps/web/src/lib/download.ts, apps/api/src/modules/reports/routes.ts, apps/api/src/modules/reports/service.ts, apps/api/src/modules/reports/export.ts |
 | [flow-13-kiosk-idle-reset.png](png/flow-13-kiosk-idle-reset.png) | Kiosk idle reset | The 60 + 20 second idle timer that resets the kiosk for the next customer. | apps/web/src/hooks/useIdleTimer.ts, apps/web/src/components/kiosk/IdleTimeoutOverlay.tsx, apps/web/src/app/page.tsx, apps/web/src/app/checkout/page.tsx, apps/web/src/app/checkout/success/page.tsx |
 | [flow-14-kiosk-qr-code.png](png/flow-14-kiosk-qr-code.png) | Kiosk QR code (Admin) | Generating, printing or downloading the kiosk QR code, and a customer scanning it. | apps/web/src/app/admin/kiosk-qr/page.tsx (qrcode package, generated in the browser) |
+| [flow-15-raw-material-management.png](png/flow-15-raw-material-management.png) | Adding, editing and removing raw materials (Admin) | Admin adds or edits a raw material (name, category, unit, minimum, cost, In use) or removes one after a confirmation; refused while a recipe uses it. | apps/web/src/app/admin/raw-materials/page.tsx, apps/web/src/components/admin/RawMaterialForm.tsx, apps/web/src/components/admin/ConfirmDialog.tsx, apps/api/src/modules/raw-materials/routes.ts, apps/api/src/modules/raw-materials/service.ts (createRawMaterial, updateRawMaterial, deleteRawMaterial) |
 
 ## What is partial or unclear in the code
 
@@ -127,6 +128,6 @@ python docs/diagrams/source/build.py
 | `source/screens_kiosk.py` | wireframes 01–09 |
 | `source/screens_admin.py` | wireframes 10–21 |
 | `source/swimlane.py` | swimlane layout, symbols and connector routing |
-| `source/flows.py`, `source/flows_more.py` | process flows 01–14 |
+| `source/flows.py`, `source/flows_more.py` | process flows 01–15 |
 | `source/export.py` | writes the SVG and makes the PNG with headless Edge |
 | `source/crop.py` | close-up of part of a PNG, for checking by eye |

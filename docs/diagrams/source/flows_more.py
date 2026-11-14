@@ -31,7 +31,7 @@ def overview():
     f.n("a7", Ad, 7, "start", "Admin signs in (Flow 02)")
     f.n("s8", S, 8, "sub", "Restock and adjust raw materials and ready-made items (Flow 07)")
     f.n("y8", Y, 8, "process", "Save the change; update the kiosk menu live; queue low-stock alerts")
-    f.n("a8", Ad, 8, "sub", "Products and their recipes, bulk import, users, kiosk QR code (Flows 08, 09, 10, 14)")
+    f.n("a8", Ad, 8, "sub", "Products and their recipes, bulk import, users, kiosk QR code, raw materials (Flows 08, 09, 10, 14, 15)")
     f.n("y9", Y, 9, "end", "End")
     f.n("a9", Ad, 9, "sub", "Reports and exports from paid orders (Flow 12)")
     f.n("a10", Ad, 10, "end", "End")
@@ -545,4 +545,68 @@ def qr():
     f.e("png", "post")
     f.e("post", "scan")
     f.e("scan", "flow3")
+    return f
+
+
+def raw_materials():
+    f = Flow("raw-material-management", "15", "Adding, editing and removing raw materials (Admin)",
+             ["Admin", "Web app", "API server"],
+             W + "app/admin/raw-materials/page.tsx, " + W + "components/admin/RawMaterialForm.tsx, " + W + "components/admin/ConfirmDialog.tsx, "
+             + API + "raw-materials/routes.ts, " + API + "raw-materials/service.ts (createRawMaterial, updateRawMaterial, deleteRawMaterial)",
+             notes=[
+                 "Only an Admin sees + Add raw material, Edit and Remove item; the API refuses them from Staff (authorize(\"admin\")). Staff restock and adjust stock (Flow 07).",
+                 "The unit (g, ml or pc) is fixed once the raw material is created, because recipes and the movement log are written in it; stock itself changes only through Adjust (Flow 07).",
+                 "The form has the name, category, unit and opening stock (new only), minimum level and cost per unit, and In use when editing. Unticking In use keeps the raw material and its history but stops it being added to new recipes; saving a recipe that uses it puts it back in use.",
+                 "Removing deletes the raw material's stock movements and low-stock alerts with it. A raw material in a recipe can't be removed, checked in the form, by the server and by the database (RESTRICT on recipe items).",
+             ])
+    Ad, Wb, A = f.lanes
+    f.n("start", Ad, 0, "start", "Open Raw materials (14)")
+    f.n("what", Ad, 1, "decision", "Add or edit, or remove?")
+    f.n("fill", Ad, 2, "io", "Fill in the form and press Save (14c, 14h)")
+    f.n("check", Wb, 3, "decision", "Name given, amounts 0 or more?")
+    f.n("send", Wb, 4, "process", "Save (POST /api/raw-materials or PUT /api/raw-materials/:id)")
+    f.n("valid", A, 5, "decision", "No other raw material with that name?")
+    f.n("msg", Wb, 6, "io", "Show the server's message")
+    f.n("save", A, 6, "process", "Save it; log any opening stock as a restock; re-check the dishes using it")
+    f.n("done", Wb, 7, "io", "Close the form; show “… added / saved”; reload the list")
+    f.n("end1", Ad, 8, "end", "End")
+    f.n("remove", Ad, 9, "io", "Press Edit, then Remove item (14h)")
+    f.n("used", Wb, 10, "decision", "In a dish's recipe?")
+    f.n("ask", Ad, 11, "io", "“Remove …?”: its movement history goes too; can't be undone (14i)")
+    f.n("named", Wb, 11, "io", "Name the dishes: take it out of their recipes first (Products → Edit), or untick In use")
+    f.n("sure", Ad, 12, "decision", "Yes, remove?")
+    f.n("end2", Wb, 12, "end", "End")
+    f.n("end3", Ad, 13, "end", "End (back to the form)")
+    f.n("send2", Wb, 13, "process", "DELETE /api/raw-materials/:id")
+    f.n("free", A, 14, "decision", "Still in no recipe?")
+    f.n("refused", Wb, 15, "io", "Close the confirmation; show the message in the form")
+    f.n("delete", A, 15, "process", "Delete it with its stock movements and low-stock alerts")
+    f.n("end4", Ad, 15, "end", "End")
+    f.n("removed", Wb, 16, "io", "Close the form; show “… removed”; reload the list")
+    f.n("end5", Ad, 17, "end", "End")
+    f.e("start", "what")
+    f.e("what", "fill", "Add / edit", exit="l", entry="l")
+    f.e("what", "remove", "Remove", exit="r", side="r")
+    f.e("fill", "check")
+    f.e("check", "fill", "No", exit="l", entry="r")
+    f.e("check", "send", "Yes")
+    f.e("send", "valid", exit="r")
+    f.e("valid", "msg", "No", exit="l", entry="r")
+    f.e("msg", "fill", exit="l", entry="r")
+    f.e("valid", "save", "Yes")
+    f.e("save", "done")
+    f.e("done", "end1")
+    f.e("remove", "used", exit="r")
+    f.e("used", "named", "Yes")
+    f.e("used", "ask", "No", exit="l")
+    f.e("named", "end2")
+    f.e("ask", "sure")
+    f.e("sure", "end3", "No (Cancel)")
+    f.e("sure", "send2", "Yes", exit="r")
+    f.e("send2", "free", exit="r")
+    f.e("free", "refused", "No", exit="l", entry="r")
+    f.e("free", "delete", "Yes")
+    f.e("refused", "end4", exit="l", entry="r")
+    f.e("delete", "removed")
+    f.e("removed", "end5")
     return f
