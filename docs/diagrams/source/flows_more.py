@@ -13,25 +13,25 @@ def overview():
              notes=[
                  "Each double-edged box is drawn step by step in the flow it names.",
                  "An Admin can also do everything in the Staff lane (role checks in apps/api/src/middleware/authorize.ts).",
-                 "The worker also runs on its own clock: every hour it logs the items at or below their minimum, and every night at 2:00 AM (Manila) it backs up the database to cloud storage. Low-stock emails run only when email is set up, and the backup only when cloud storage is set up (apps/worker/src/index.ts).",
+                 "The worker also runs on its own clock: every hour it logs the items at or below their minimum, and every night at 11:00 PM (Manila) it backs up the database to cloud storage. Low-stock emails run only when email is set up, and the backup only when cloud storage is set up (apps/worker/src/index.ts).",
              ])
     C, S, Y, X, Ad = f.lanes
     f.n("c0", C, 0, "start", "Arrives at the kiosk, or scans the QR code with a phone")
     f.n("c1", C, 1, "sub", "Orders at the kiosk (Flow 03)")
-    f.n("y1", Y, 1, "process", "Check stock; save the order (pending) with an estimated preparation time")
+    f.n("y1", Y, 1, "process", "Check stock (each dish's raw materials, or a ready-made item's pieces); save the order (pending) with an estimated preparation time")
     f.n("y2", Y, 2, "decision", "Pay at the counter or online?")
-    f.n("s3", S, 3, "sub", "Confirm the order, then collect payment (Flow 04)")
+    f.n("s3", S, 3, "sub", "Take payment at the counter, cash or GCash / Maya; ring up walk-in orders (Flow 04)")
     f.n("y3", Y, 3, "sub", "Online payment with QR Ph (Flow 05)", partial=True)
-    f.n("y4", Y, 4, "process", "Mark paid; deduct stock; create kitchen tasks; update the kiosk menu live")
+    f.n("y4", Y, 4, "process", "Mark paid; deduct raw materials by recipe (pieces for ready-made items); create kitchen tasks; update the kiosk menu live")
     f.n("x4", X, 4, "process", "Every minute: email waiting low-stock alerts")
-    f.n("s5", S, 5, "sub", "Prepare the dishes on the kitchen display (Flow 06)")
+    f.n("s5", S, 5, "sub", "Prepare the dishes on the kitchen display (Flow 06); cancel a paid order if needed (Flow 11)")
     f.n("x5", X, 5, "end", "End")
     f.n("c6", C, 6, "end", "Collects the order when its number shows under Ready for pickup")
     f.n("s7", S, 7, "start", "Staff signs in (Flow 02)")
     f.n("a7", Ad, 7, "start", "Admin signs in (Flow 02)")
-    f.n("s8", S, 8, "sub", "Adjust stock; look up barcodes (Flows 07, 11)")
+    f.n("s8", S, 8, "sub", "Restock and adjust raw materials and ready-made items (Flow 07)")
     f.n("y8", Y, 8, "process", "Save the change; update the kiosk menu live; queue low-stock alerts")
-    f.n("a8", Ad, 8, "sub", "Products, bulk import, users, kiosk QR code (Flows 08, 09, 10, 14)")
+    f.n("a8", Ad, 8, "sub", "Products and their recipes, bulk import, users, kiosk QR code (Flows 08, 09, 10, 14)")
     f.n("y9", Y, 9, "end", "End")
     f.n("a9", Ad, 9, "sub", "Reports and exports from paid orders (Flow 12)")
     f.n("a10", Ad, 10, "end", "End")
@@ -133,7 +133,7 @@ def kitchen():
              notes=[
                  "The order's status follows its dishes (confirmed → preparing → ready), and Handed over completes it. The counter's status board (24) is the customer's ready notice; a QR customer's phone receipt doesn't update by itself (a limitation).",
                  "Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress → Completed.",
-                 "At any step until Handed over, Staff or an Admin can press Cancel order and give a reason (18c): the order is cancelled and leaves the display and the board, dishes still Pending go back into stock, and it goes to the payment queue as NEEDS ATTENTION until staff refund the customer and record it.",
+                 "The kitchen display doesn't cancel orders (panel feedback): until Handed over, staff cancel a paid order on Orders awaiting payment › Paid orders (Flow 11), and its card leaves the display.",
                  "Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing fails the display says so and tries again with the next update or within 30 seconds.",
              ])
     S, K, A = f.lanes
@@ -190,20 +190,20 @@ def stock():
              "apps/worker/src/index.ts, apps/worker/src/jobs/sendLowStockAlerts.ts, lowStockSweep.ts",
              notes=[
                  "Reasons: Restock / delivery received, Customer return, Damaged goods, Spoilage, Manual correction (recount), Other. Damaged goods and Spoilage can only lower stock, in the form and again on the server.",
-                 "A recipe dish has no count of its own: its stock is the servings its raw materials can make, so it changes through its raw materials.",
+                 "Every dish is made from a bill of materials, so it has no count of its own: its stock is the servings its raw materials can make, and it changes through them. Items sold as they are (the Ready-made category) are counted in pieces. Every change shows in Stock movements (14g).",
                  "Separately, every hour the worker writes the items at or below their minimum to its log (lowStockSweep).",
              ])
     S, Wb, A, X = f.lanes
     f.n("start", S, 0, "start", "Stock changes: delivery, recount, spoilage, damage or a return")
     f.n("paid", A, 0, "sub", "A paid order deducts its stock automatically (Flows 04, 05)")
-    f.n("open", S, 1, "process", "Press Adjust on Inventory (13), Barcode lookup (15) or Raw materials (14)")
+    f.n("open", S, 1, "process", "Press Adjust on Raw materials (14) or on its Ready-made tab (14f)")
     f.n("enter", S, 2, "io", "Enter the amount (add / remove / set exact), a reason and an optional note (13b, 14b)")
     f.n("check", Wb, 3, "decision", "Changes the stock, reason chosen, result 0 or more, direction allowed?")
-    f.n("send", Wb, 4, "process", "Send the change (PATCH /api/inventory/:id or /api/raw-materials/:id/stock)")
-    f.n("valid", A, 5, "decision", "Accepted? (reason given, not a recipe dish, enough stock to remove)")
+    f.n("send", Wb, 4, "process", "Send the change (PATCH /api/raw-materials/:id/stock, or /api/inventory/:id for a ready-made item)")
+    f.n("valid", A, 5, "decision", "Accepted? (reason given, a raw material or ready-made item, enough stock to remove)")
     f.n("msg", Wb, 6, "io", "Show the server's message")
     f.n("save", A, 6, "process", "Update the stock in one statement; log who changed it, by how much and why")
-    f.n("avail", A, 7, "process", "Recalculate sold-out for the product, or every dish using the raw material")
+    f.n("avail", A, 7, "process", "Recalculate sold-out for every dish using the raw material, or for the ready-made item")
     f.n("live", A, 8, "process", "Send “inventory:updated”: the kiosk menu and the stock pages refresh")
     f.n("crossed", A, 9, "decision", "Did the item just reach its minimum? (database trigger)")
     f.n("end0", Wb, 9, "end", "End")
@@ -242,19 +242,19 @@ def products():
              W + "app/admin/products/page.tsx, " + W + "components/admin/ProductForm.tsx, " + W + "components/admin/ProductDetailsFields.tsx, " + W + "lib/imageResize.ts, "
              + API + "products/routes.ts, " + API + "products/service.ts, " + API + "products/image.ts, " + API + "nutrition/routes.ts",
              notes=[
-                 "Form checks (web), each shown under its field: name required; price ₱0.00 or more; cost blank or ₱0.00 or more; preparation time whole minutes 0–120; stock and minimum whole numbers, or a recipe with at least one complete row.",
+                 "Form checks (web), each shown under its field: name required; price ₱0.00 or more; cost blank or ₱0.00 or more; preparation time whole minutes 0–120; a recipe with at least one complete row, or for a ready-made item whole pieces and minimum.",
                  "Only an Admin can open Products; the API refuses product changes from Staff (authorize(\"admin\")).",
-                 "Cancel in the form or the delete dialog closes it without changes. The form also sets ingredients, allergens (a checklist, with suggestions from the ingredients) and nutrition per serving, typed, looked up in USDA FoodData Central, or calculated from the recipe (12b, 12c, 14d).",
+                 "Cancel in the form or the delete dialog closes it without changes. The form also sets the dish's special-instruction options (or switches them off), ingredients, allergens (a checklist, with suggestions from the ingredients) and nutrition per serving, typed, looked up in USDA FoodData Central, or calculated from the recipe (12b, 12c, 14d).",
              ])
     Ad, Wb, A = f.lanes
     f.n("start", Ad, 0, "start", "Open Products (12)")
     f.n("what", Ad, 1, "decision", "Add or edit, or delete?")
-    f.n("fill", Ad, 2, "io", "Fill in the product form, with ingredients, allergens and nutrition, and press Save (12b, 12c)")
+    f.n("fill", Ad, 2, "io", "Fill in the product form: the recipe (or, in Ready-made, pieces and minimum), instruction options, ingredients, allergens and nutrition; press Save (12b, 12c, 12e)")
     f.n("check", Wb, 3, "decision", "Every field valid?")
     f.n("send", Wb, 4, "process", "Save (POST /api/products or PUT /api/products/:id)")
-    f.n("valid", A, 5, "decision", "Category and raw materials exist; barcode not used by another product?")
-    f.n("msg", Wb, 6, "io", "Show the message (a barcode clash appears under Barcode)")
-    f.n("save", A, 6, "process", "Save the product with its stock record or recipe; update the sold-out state")
+    f.n("valid", A, 5, "decision", "Category and raw materials exist; a dish has a recipe, a ready-made item none?")
+    f.n("msg", Wb, 6, "io", "Show the server's message")
+    f.n("save", A, 6, "process", "Save the product with its recipe (its raw materials put back in use) or its pieces; update the sold-out state")
     f.n("photo", Wb, 7, "decision", "Photo added or removed?")
     f.n("upload", Wb, 8, "process", "Upload the photo, made smaller in the browser, or delete it")
     f.n("photook", A, 9, "decision", "Photo saved?")
@@ -296,30 +296,30 @@ def products():
 
 
 def bulk_import():
-    f = Flow("bulk-import", "09", "Bulk product import from CSV or Excel (Admin)",
+    f = Flow("bulk-import", "09", "Bulk import of products and recipes from CSV or Excel (Admin)",
              ["Admin", "Web app", "API server"],
              W + "app/admin/import/page.tsx, " + API + "products/routes.ts, " + API + "products/bulkImport.ts, " + API + "products/xlsxImport.ts",
              notes=[
-                 "Row checks: name required (150 characters at most), category must match an existing one, price required and 0 or more, cost 0 or more if given, stock and minimum whole numbers of 0 or more, barcode 64 characters at most.",
-                 "Rows are imported one by one, not all-or-nothing: a row that fails at import time is listed as an error while the others are saved.",
-                 "The template can be downloaded as .xlsx (with a category list) or .csv.",
+                 "Products rows: name required (150 characters at most), category must match an existing one, price required and 0 or more, cost 0 or more if given. Recipes rows: the dish must be in Products or on the menu, the raw material must exist, the amount must be above 0, each raw material once per dish.",
+                 "A new dish needs its recipe rows; a dish with a bad recipe row isn't saved at all rather than with half a recipe; items in the Ready-made category take no recipe. Dishes are imported one by one: one that fails at import time is listed as an error while the others are saved.",
+                 "Templates: an .xlsx with both sheets and lists of categories and raw materials, or a .csv for each table.",
              ])
     Ad, Wb, A = f.lanes
     f.n("start", Ad, 0, "start", "Open Bulk import (16)")
-    f.n("load", Ad, 1, "io", "Choose or drop a .csv or .xlsx file, or paste CSV into the box")
+    f.n("load", Ad, 1, "io", "Choose or drop a .csv or .xlsx file, or paste CSV into the Products or Recipes box")
     f.n("bad", Wb, 2, "decision", "An old .xls, or an .xlsx over 2 MB?")
     f.n("xlsx", Wb, 3, "decision", "Excel file (.xlsx)?")
-    f.n("convert", A, 4, "process", "Read the first sheet that has rows; turn it into CSV; list columns left out")
-    f.n("box", Wb, 5, "process", "Put the CSV in the box (rows can be edited there)")
+    f.n("convert", A, 4, "process", "Find the Products and Recipes tables on their sheets; turn each into CSV; list columns left out")
+    f.n("box", Wb, 5, "process", "Put each table in its box (rows can be edited there); a CSV goes to the table its header matches")
     f.n("dry", Wb, 6, "process", "Half a second after any change: check every row without saving")
-    f.n("check", A, 6, "process", "Check each row; a matching barcode means update, otherwise create")
-    f.n("preview", Wb, 7, "io", "Show the preview: NEW / UPDATE / ERROR per row (16)")
+    f.n("check", A, 6, "process", "Check each row; a dish whose name is on the menu is updated, others created; check each recipe row")
+    f.n("preview", Wb, 7, "io", "Show the preview: NEW / UPDATE / ERROR per dish and recipe row, with warnings (16)")
     f.n("errors", Wb, 8, "decision", "Any row with an error?")
     f.n("fix", Ad, 8, "io", "Fix the rows in the box or in the file")
-    f.n("press", Ad, 9, "io", "Press Import N rows")
-    f.n("send", Wb, 10, "process", "Send the rows (POST /api/products/bulk-import)")
-    f.n("import", A, 10, "process", "Import each row: update the product with that barcode, or create one")
-    f.n("result", Wb, 11, "io", "Show the result: created, updated, errors; the button reads Imported (16b)")
+    f.n("press", Ad, 9, "io", "Press Import")
+    f.n("send", Wb, 10, "process", "Send both tables (POST /api/products/bulk-import)")
+    f.n("import", A, 10, "process", "Import each dish with its recipe; recipe rows for dishes already on the menu replace their recipe")
+    f.n("result", Wb, 11, "io", "Show the result: created, updated, recipes set, errors; the button reads Imported (16b)")
     f.n("end", Ad, 12, "end", "End")
     f.e("start", "load")
     f.e("load", "bad")
@@ -402,49 +402,47 @@ def users():
     return f
 
 
-def barcode():
-    f = Flow("barcode-lookup", "11", "Barcode lookup",
-             ["Staff / Admin", "Web app", "API server"],
-             W + "app/admin/barcode/page.tsx, " + W + "hooks/useBarcodeScanner.ts, " + API + "products/routes.ts (GET /barcode/:code)",
+def cancel_paid():
+    f = Flow("cancel-paid-order", "11", "Cancelling a paid order and the refund",
+             ["Customer", "Staff (cashier)", "API server"],
+             W + "components/staff/PaidOrders.tsx, " + W + "app/staff/orders/page.tsx, " + API + "kitchen/service.ts (cancelKitchenOrder), "
+             + API + "inventory/fulfillment.ts (returnStockForLines), " + API + "orders/service.ts (markAttentionSortedOut)",
              notes=[
-                 "“Adjust its stock? No” goes back to scanning the next item. A scanner types the code and presses Enter; a scan is caught even when the field isn't focused. The last 5 codes stay listed and can be looked up again with one tap.",
-                 "For a recipe dish the result shows the servings left and a Raw materials button instead of Adjust stock. The shown stock updates live.",
+                 "Staff cancel paid orders on Orders awaiting payment › Paid orders (19f); the kitchen display no longer has Cancel order (panel feedback). Any signed-in Staff or Admin can do it, until the kitchen presses Handed over.",
+                 "Dishes still not started go back into stock, logged as a customer return under the person who cancelled; a dish started or done counts as used. The returns show in Stock movements (14g).",
+                 "The system can't send money back, so the refund happens outside it (cash from the drawer, or GCash / Maya back to the customer), and staff record it. A late or repeated online payment event can't undo a refund.",
              ])
-    S, Wb, A = f.lanes
-    f.n("start", S, 0, "start", "Open Barcode lookup (15)")
-    f.n("scan", S, 1, "io", "Scan with the barcode reader, or type the code and press Enter")
-    f.n("clean", Wb, 2, "decision", "Empty, or longer than 64 characters?")
-    f.n("look", Wb, 3, "process", "Look up the code (GET /api/products/barcode/:code)")
-    f.n("find", A, 3, "process", "Find the product with this barcode")
-    f.n("fail", Wb, 4, "decision", "Lookup failed (no connection or server error)?")
-    f.n("retry", S, 4, "io", "Sees “Couldn't look up …”; presses Try again")
-    f.n("found", Wb, 5, "decision", "Product found?")
-    f.n("show", Wb, 6, "io", "Show name, category, price, cost (Admin only), stock and minimum")
-    f.n("adjust", S, 7, "decision", "Adjust its stock?")
-    f.n("flow7", S, 8, "sub", "Adjust stock (Flow 07)")
-    f.n("admin", Wb, 9, "decision", "Signed in as Admin?")
-    f.n("ask", S, 9, "io", "Sees “… ask an administrator to add the product”")
-    f.n("offer", Wb, 10, "process", "Offer “Add product with this barcode”")
-    f.n("end1", S, 10, "end", "End")
-    f.n("flow8", S, 11, "sub", "Add the product with the barcode filled in (Flow 08)")
-    f.e("start", "scan")
-    f.e("scan", "clean")
-    f.e("clean", "scan", "Yes (message)", exit="l", entry="r")
-    f.e("clean", "look", "No")
-    f.e("look", "find", exit="r", entry="l")
-    f.e("find", "fail")
-    f.e("fail", "retry", "Yes", exit="l", entry="r")
-    f.e("retry", "look", exit="l")
-    f.e("fail", "found", "No")
-    f.e("found", "show", "Yes")
-    f.e("found", "admin", "No", exit="r")
-    f.e("show", "adjust")
-    f.e("adjust", "flow7", "Yes")
-    f.e("adjust", "scan", "No", exit="l", entry="l")
-    f.e("admin", "ask", "No", exit="l", entry="r")
-    f.e("admin", "offer", "Yes")
-    f.e("offer", "flow8")
-    f.e("ask", "end1")
+    C, S, A = f.lanes
+    f.n("start", C, 0, "start", "Leaves after paying, or a dish can't be made")
+    f.n("open", S, 1, "io", "Paid orders (19f): find the order; each dish shows not started, cooking or done")
+    f.n("press", S, 2, "io", "Press Cancel order; pick or type a reason; press Yes, cancel order")
+    f.n("still", A, 3, "decision", "Still in the kitchen (not handed over, not cancelled)?")
+    f.n("msg", S, 4, "io", "Show “… was already handed over / is already cancelled”")
+    f.n("txn", A, 4, "process", "In one transaction: cancel with the reason; put back the stock of dishes not started; flag NEEDS ATTENTION: refund ₱… (how it was paid)")
+    f.n("end1", S, 5, "end", "End")
+    f.n("live", A, 5, "process", "The order leaves the kitchen display and the board; update the kiosk menu live")
+    f.n("queue", S, 6, "io", "The order shows in the Queue (19) as NEEDS ATTENTION with the refund note")
+    f.n("refund", C, 7, "io", "Is refunded at the counter (outside the system)")
+    f.n("sorted", S, 8, "process", "Press Refunded: mark as sorted out")
+    f.n("same", A, 9, "decision", "Note unchanged since staff read it?")
+    f.n("newnote", S, 10, "io", "Show the new note to read first")
+    f.n("save", A, 10, "process", "Record the payment as refunded, with the time; the order leaves the Queue (the note stays in Transactions, 23)")
+    f.n("end2", A, 11, "end", "End")
+    f.e("start", "open")
+    f.e("open", "press")
+    f.e("press", "still", exit="r")
+    f.e("still", "msg", "No", exit="l")
+    f.e("still", "txn", "Yes")
+    f.e("msg", "end1")
+    f.e("txn", "live")
+    f.e("live", "queue", exit="l", entry="r")
+    f.e("queue", "refund", exit="l", entry="t")
+    f.e("refund", "sorted", exit="r", entry="l")
+    f.e("sorted", "same", exit="r")
+    f.e("same", "newnote", "No", exit="l")
+    f.e("newnote", "sorted", exit="l", entry="l")
+    f.e("same", "save", "Yes")
+    f.e("save", "end2")
     return f
 
 

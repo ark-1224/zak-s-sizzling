@@ -1,179 +1,214 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2660" viewBox="0 0 810 2660">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="3062" viewBox="0 0 810 3062">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="2660" fill="#ffffff"/>
-<text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 04  Counter payment, confirmation and cancelling</text>
+<rect x="0" y="0" width="810" height="3062" fill="#ffffff"/>
+<text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 04  Counter point of sale: taking payment and walk-in orders</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
-<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/staff/orders/page.tsx, apps/api/src/modules/payments/routes.ts,</text>
-<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/payments/service.ts (confirmCounterPayment), apps/api/src/modules/inventory/fulfillment.ts</text>
-<text x="30" y="114" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">(deductStockForOrder), apps/api/src/modules/orders/service.ts (listOrders, cancelOrder),</text>
-<text x="30" y="129" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/kitchen/service.ts</text>
-<rect x="30" y="152" width="250" height="2182" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
-<rect x="30" y="152" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="155.0" y="179" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Customer</text>
-<rect x="280" y="152" width="250" height="2182" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
-<rect x="280" y="152" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="405.0" y="179" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Staff (cashier)</text>
-<rect x="530" y="152" width="250" height="2182" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
-<rect x="530" y="152" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="179" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
-<path d="M155.0 283.5 L155.0 311.2 L405.0 311.2 L405.0 339.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M503.0 364.0 L557.0 364.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 404.0 L655.0 427.5 L405.0 427.5 L405.0 451.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 501.0 L405.0 548.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 628.0 L405.0 675.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="408.0" y="631.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="411.0" y="643.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M503.0 588.0 L520.0 588.0 L520.0 1882.0 L405.0 1882.0 L405.0 1907.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="522" y="610.5" width="139.1" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="525" y="622.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No (never came back)</text>
-<path d="M503.0 700.0 L655.0 700.0 L655.0 772.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M557.0 812.0 L405.0 812.0 L405.0 891.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="532.89" y="794.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="551.0" y="806.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M655.0 852.0 L655.0 876.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="855.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="867.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M405.0 956.5 L405.0 1015.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 971.5 L655.0 996.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M557.0 1036.0 L514.0 1036.0 L514.0 1148.0 L496.0 1148.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="532.89" y="1018.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="551.0" y="1030.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M655.0 1076.0 L655.0 1115.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="1079.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="1091.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M405.0 1188.0 L405.0 1220.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 1300.0 L405.0 1351.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 1180.5 L655.0 1220.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M655.0 1300.0 L655.0 1347.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M557.0 1260.0 L540.0 1260.0 L540.0 1434.0 L405.0 1434.0 L405.0 1444.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 1524.0 L405.0 1563.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M405.0 1628.5 L405.0 1648.2 L155.0 1648.2 L155.0 1668.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M155.0 1748.0 L155.0 1799.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M503.0 1932.0 L655.0 1932.0 L655.0 2004.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<path d="M557.0 2044.0 L405.0 2044.0 L405.0 2131.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="532.89" y="2026.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="551.0" y="2038.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
-<path d="M655.0 2084.0 L655.0 2123.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="658.0" y="2087.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
-<text x="661.0" y="2099.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
-<path d="M655.0 2188.5 L655.0 2247.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
-<rect x="57.0" y="220.5" width="196" height="63" rx="31.5" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="241.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Brings the order number</text>
-<text x="155.0" y="256.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">from the receipt (08) to</text>
-<text x="155.0" y="271.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">the counter</text>
-<rect x="307.0" y="339.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="361.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Open Orders awaiting</text>
-<text x="405.0" y="376.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment (19)</text>
-<rect x="557.0" y="324.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="346.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">List unpaid, not-cancelled</text>
-<text x="655.0" y="361.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">orders (and orders flagged</text>
-<text x="655.0" y="376.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">for attention), newest</text>
-<text x="655.0" y="391.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">first</text>
-<polygon points="321.0,451.0 503.0,451.0 489.0,501.0 307.0,501.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="473.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Find the order by its</text>
-<text x="405.0" y="488.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number</text>
-<polygon points="405.0,548.0 503.0,588.0 405.0,628.0 307.0,588.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="585.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Customer pays for</text>
-<text x="405.0" y="599.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">this order?</text>
-<rect x="307.0" y="675.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="697.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Press Confirm order</text>
-<text x="405.0" y="712.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(“Checking stock…”)</text>
-<polygon points="655.0,772.0 753.0,812.0 655.0,852.0 557.0,812.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="809.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Still unpaid and</text>
-<text x="655.0" y="823.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">not cancelled?</text>
-<polygon points="321.0,891.5 503.0,891.5 489.0,956.5 307.0,956.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the server&#x27;s</text>
-<text x="405.0" y="928.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">message (already paid /</text>
-<text x="405.0" y="943.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">cancelled)</text>
-<rect x="557.0" y="876.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="898.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">In one transaction: mark</text>
-<text x="655.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">paid (counter) and deduct</text>
-<text x="655.0" y="928.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">each dish&#x27;s stock (units,</text>
-<text x="655.0" y="943.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">or raw materials by</text>
-<text x="655.0" y="958.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">recipe)</text>
-<rect x="307.0" y="1015.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1040.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<polygon points="655.0,996.0 753.0,1036.0 655.0,1076.0 557.0,1036.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1033.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Enough stock for</text>
-<text x="655.0" y="1047.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">every dish?</text>
-<polygon points="321.0,1108.0 503.0,1108.0 489.0,1188.0 307.0,1188.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1130.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Nothing deducted, order</text>
-<text x="405.0" y="1145.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stays unpaid: “… change</text>
-<text x="405.0" y="1160.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the order before</text>
-<text x="405.0" y="1175.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">collecting payment”</text>
-<rect x="557.0" y="1115.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1137.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Confirm the order; update</text>
-<text x="655.0" y="1152.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">dish availability on the</text>
-<text x="655.0" y="1167.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kiosk (live)</text>
-<rect x="307.0" y="1220.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text x="405.0" y="1242.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Change the order with the</text>
-<text x="405.0" y="1257.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">customer (no screen for</text>
-<text x="405.0" y="1272.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it: cancel and order</text>
-<text x="405.0" y="1287.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">again)</text>
-<rect x="557.0" y="1220.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="1242.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Create one kitchen task</text>
-<text x="655.0" y="1257.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">per dish and the estimated</text>
-<text x="655.0" y="1272.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">ready time; notify the</text>
-<text x="655.0" y="1287.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kitchen display</text>
-<rect x="307.0" y="1351.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1376.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<rect x="557.0" y="1347.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<line x1="566.0" y1="1347.0" x2="566.0" y2="1397.0" stroke="#222222" stroke-width="1.2"/>
-<line x1="744.0" y1="1347.0" x2="744.0" y2="1397.0" stroke="#222222" stroke-width="1.2"/>
-<text x="655.0" y="1369.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Kitchen fulfilment (Flow</text>
-<text x="655.0" y="1384.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">06)</text>
-<polygon points="321.0,1444.0 503.0,1444.0 489.0,1524.0 307.0,1524.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1466.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “ZK-… confirmed</text>
-<text x="405.0" y="1481.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and sent to the</text>
-<text x="405.0" y="1496.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kitchen. Collect ₱…</text>
-<text x="405.0" y="1511.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Ready at about …”</text>
-<rect x="307.0" y="1563.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1585.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Collect cash or card</text>
-<text x="405.0" y="1600.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">payment (outside the</text>
-<text x="405.0" y="1615.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">system)</text>
-<polygon points="71.0,1668.0 253.0,1668.0 239.0,1748.0 57.0,1748.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1690.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Pays; watches the</text>
-<text x="155.0" y="1705.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">screen at the counter</text>
-<text x="155.0" y="1720.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">for the order number</text>
-<text x="155.0" y="1735.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(24)</text>
-<rect x="57.0" y="1799.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="155.0" y="1824.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<rect x="307.0" y="1907.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="1929.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Press Cancel order, then</text>
-<text x="405.0" y="1944.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“Yes, cancel order”</text>
-<polygon points="655.0,2004.0 753.0,2044.0 655.0,2084.0 557.0,2044.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="2041.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Still pending and</text>
-<text x="655.0" y="2055.1400000000003" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">unpaid?</text>
-<polygon points="321.0,2131.0 503.0,2131.0 489.0,2181.0 307.0,2181.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="405.0" y="2153.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “… already paid /</text>
-<text x="405.0" y="2168.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">already cancelled”</text>
-<rect x="557.0" y="2123.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="2145.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Mark the order cancelled;</text>
-<text x="655.0" y="2160.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it leaves the queue (no</text>
-<text x="655.0" y="2175.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stock was deducted)</text>
-<rect x="557.0" y="2247.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
-<text x="655.0" y="2272.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
-<text x="30" y="2368" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
-<rect x="30" y="2382" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
-<text x="82" y="2399" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
-<rect x="182.64" y="2382" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="234.64" y="2399" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
-<polygon points="363.52,2382 385.52,2395.0 363.52,2408 341.52,2395.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="393.52" y="2399" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
-<polygon points="483.44,2382 519.44,2382 511.44000000000005,2408 475.44,2408" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<text x="527.44" y="2399" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
-<rect x="30" y="2420" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
-<line x1="36" y1="2420" x2="36" y2="2446" stroke="#222222"/><line x1="68" y1="2420" x2="68" y2="2446" stroke="#222222"/>
-<text x="82" y="2437" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
-<rect x="263.76" y="2420" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
-<text x="315.76" y="2437" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
-<text x="30" y="2484" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="30" y="2504" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Staff confirm first and collect the money after: confirming checks and deducts the stock, so a shortage is found</text>
-<text x="30" y="2521" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   before any money changes hands. Marking paid, deducting and confirming happen in one database transaction; a</text>
-<text x="30" y="2538" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   shortage rolls all of it back.</text>
-<text x="30" y="2555" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• PARTIAL: the message asks staff to change the order with the customer, but no screen edits an existing order</text>
-<text x="30" y="2572" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   (the API has endpoints to change or remove order items, unused by the web app). In practice the order is</text>
-<text x="30" y="2589" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   cancelled and placed again.</text>
-<text x="30" y="2606" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The list reloads by itself when an order is placed, paid, edited or cancelled (orders:changed); a new order is</text>
-<text x="30" y="2623" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   marked NEW for a minute.</text>
+<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/staff/orders/page.tsx, apps/web/src/components/staff/PosNewOrder.tsx,</text>
+<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/web/src/components/staff/PaymentPanel.tsx, apps/web/src/components/staff/CounterReceipt.tsx,</text>
+<text x="30" y="114" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/orders/routes.ts, apps/api/src/modules/payments/service.ts (confirmCounterPayment),</text>
+<text x="30" y="129" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/inventory/fulfillment.ts (deductStockForOrder), apps/api/src/modules/orders/service.ts (listOrders,</text>
+<text x="30" y="144" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">cancelOrder)</text>
+<rect x="30" y="167" width="250" height="2518" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="30" y="167" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="155.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Customer</text>
+<rect x="280" y="167" width="250" height="2518" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
+<rect x="280" y="167" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="405.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Staff (cashier)</text>
+<rect x="530" y="167" width="250" height="2518" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="530" y="167" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="655.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
+<path d="M155.0 298.5 L155.0 318.8 L405.0 318.8 L405.0 339.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 419.0 L405.0 443.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="408.0" y="422.5" width="86.66" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="411.0" y="434.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No (walk-in)</text>
+<path d="M307.0 379.0 L290.0 379.0 L290.0 827.0 L314.0 827.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="292" y="401.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="295" y="413.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M496.0 491.0 L540.0 491.0 L540.0 603.0 L557.0 603.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 635.5 L655.0 675.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 715.0 L496.0 715.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="697.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="709.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M314.0 715.0 L296.0 715.0 L296.0 491.0 L314.0 491.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 755.0 L655.0 765.0 L520.0 765.0 L520.0 939.0 L496.0 939.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="758.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="770.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M405.0 859.5 L405.0 884.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M314.0 939.0 L155.0 939.0 L155.0 1011.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M253.0 1051.0 L302.0 1051.0 L302.0 1163.0 L307.0 1163.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="256.0" y="1033.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="259.0" y="1045.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M155.0 1091.0 L155.0 1251.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="158.0" y="1094.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="161.0" y="1106.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
+<path d="M503.0 1163.0 L655.0 1163.0 L655.0 1215.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 1275.0 L514.0 1275.0 L514.0 1387.0 L496.0 1387.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="1257.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="1269.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M655.0 1335.0 L655.0 1339.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="1338.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="1350.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M405.0 1412.0 L405.0 1478.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 1434.5 L655.0 1459.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 1499.0 L508.0 1499.0 L508.0 1611.0 L496.0 1611.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="1481.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="1493.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M655.0 1539.0 L655.0 1571.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="1542.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="1554.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M405.0 1651.0 L405.0 1683.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 1651.0 L655.0 1698.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 1748.0 L655.0 1773.0 L502.0 1773.0 L502.0 1835.0 L496.0 1835.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M314.0 1835.0 L155.0 1835.0 L155.0 1907.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M155.0 1987.0 L155.0 2038.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 2195.0 L405.0 2258.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M503.0 2283.0 L655.0 2283.0 L655.0 2355.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 2395.0 L405.0 2395.0 L405.0 2482.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="2377.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="2389.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M655.0 2435.0 L655.0 2474.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="2438.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="2450.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M655.0 2539.5 L655.0 2598.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 2532.0 L405.0 2598.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="57.0" y="235.5" width="196" height="63" rx="31.5" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="256.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Comes to the counter, with</text>
+<text x="155.0" y="271.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">an order number from the</text>
+<text x="155.0" y="286.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">kiosk (08) or to order</text>
+<polygon points="405.0,339.0 503.0,379.0 405.0,419.0 307.0,379.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="376.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Ordered at the</text>
+<text x="405.0" y="390.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">kiosk?</text>
+<polygon points="321.0,443.5 503.0,443.5 489.0,538.5 307.0,538.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="465.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">New order (19e): add</text>
+<text x="405.0" y="480.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">dishes with their</text>
+<text x="405.0" y="495.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">instructions, dine in</text>
+<text x="405.0" y="510.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">or take out; press</text>
+<text x="405.0" y="525.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Charge</text>
+<rect x="557.0" y="570.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="592.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Check stock; save a</text>
+<text x="655.0" y="607.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">counter order (source</text>
+<text x="655.0" y="622.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">counter, pending)</text>
+<polygon points="655.0,675.0 753.0,715.0 655.0,755.0 557.0,715.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="712.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Every dish</text>
+<text x="655.0" y="726.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">available?</text>
+<polygon points="321.0,690.0 503.0,690.0 489.0,740.0 307.0,740.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="712.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show which dish ran</text>
+<text x="405.0" y="727.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">out; the menu reloads</text>
+<polygon points="321.0,794.5 503.0,794.5 489.0,859.5 307.0,859.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="816.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Queue (19): find the</text>
+<text x="405.0" y="831.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">order by its number;</text>
+<text x="405.0" y="846.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">press Take payment</text>
+<polygon points="321.0,884.0 503.0,884.0 489.0,994.0 307.0,994.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="906.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Payment step (19c):</text>
+<text x="405.0" y="921.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Cash with the cash</text>
+<text x="405.0" y="936.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">received (change</text>
+<text x="405.0" y="951.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">shown), or GCash / Maya</text>
+<text x="405.0" y="966.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">with the reference</text>
+<text x="405.0" y="981.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">number</text>
+<polygon points="155.0,1011.0 253.0,1051.0 155.0,1091.0 57.0,1051.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1055.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Pays now?</text>
+<rect x="307.0" y="1138.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1160.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Press Confirm … payment</text>
+<text x="405.0" y="1175.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(“Checking stock…”)</text>
+<rect x="57.0" y="1251.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1272.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Not now: the order waits</text>
+<text x="155.0" y="1287.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">in the Queue, unpaid</text>
+<polygon points="655.0,1215.0 753.0,1275.0 655.0,1335.0 557.0,1275.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1251.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Unpaid, not</text>
+<text x="655.0" y="1265.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">cancelled, cash</text>
+<text x="655.0" y="1279.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">covers the total,</text>
+<text x="655.0" y="1293.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">reference not</text>
+<text x="655.0" y="1307.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">used before?</text>
+<polygon points="321.0,1362.0 503.0,1362.0 489.0,1412.0 307.0,1412.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1384.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the server&#x27;s</text>
+<text x="405.0" y="1399.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">message</text>
+<rect x="557.0" y="1339.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">In one transaction: mark</text>
+<text x="655.0" y="1376.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">paid (cash, GCash or</text>
+<text x="655.0" y="1391.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Maya); deduct each dish&#x27;s</text>
+<text x="655.0" y="1406.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">raw materials, or a</text>
+<text x="655.0" y="1421.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">ready-made item&#x27;s pieces</text>
+<rect x="307.0" y="1478.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1503.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<polygon points="655.0,1459.0 753.0,1499.0 655.0,1539.0 557.0,1499.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1496.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Enough stock for</text>
+<text x="655.0" y="1510.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">every dish?</text>
+<polygon points="321.0,1571.0 503.0,1571.0 489.0,1651.0 307.0,1651.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1593.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Nothing deducted, order</text>
+<text x="405.0" y="1608.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stays unpaid: hand the</text>
+<text x="405.0" y="1623.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">money back and change</text>
+<text x="405.0" y="1638.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the order</text>
+<rect x="557.0" y="1571.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1593.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Confirm the order; create</text>
+<text x="655.0" y="1608.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">one kitchen task per dish</text>
+<text x="655.0" y="1623.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and the ready time; update</text>
+<text x="655.0" y="1638.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the kiosk menu live</text>
+<rect x="307.0" y="1683.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="405.0" y="1705.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Change the order with the</text>
+<text x="405.0" y="1720.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">customer (no screen for</text>
+<text x="405.0" y="1735.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it: cancel and order</text>
+<text x="405.0" y="1750.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">again)</text>
+<rect x="557.0" y="1698.0" width="196" height="50" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<line x1="566.0" y1="1698.0" x2="566.0" y2="1748.0" stroke="#222222" stroke-width="1.2"/>
+<line x1="744.0" y1="1698.0" x2="744.0" y2="1748.0" stroke="#222222" stroke-width="1.2"/>
+<text x="655.0" y="1720.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Kitchen fulfilment (Flow</text>
+<text x="655.0" y="1735.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">06)</text>
+<polygon points="321.0,1795.0 503.0,1795.0 489.0,1875.0 307.0,1875.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1817.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Receipt (19d): items,</text>
+<text x="405.0" y="1832.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">total, how it was paid,</text>
+<text x="405.0" y="1847.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">change; Print receipt</text>
+<text x="405.0" y="1862.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">on the counter printer</text>
+<polygon points="71.0,1907.0 253.0,1907.0 239.0,1987.0 57.0,1987.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1929.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Takes the receipt;</text>
+<text x="155.0" y="1944.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">watches the screen at</text>
+<text x="155.0" y="1959.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the counter for the</text>
+<text x="155.0" y="1974.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">order number (24)</text>
+<rect x="57.0" y="2038.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="2063.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<rect x="307.0" y="2147.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="2168.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">An order in the Queue is</text>
+<text x="405.0" y="2183.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">never paid for</text>
+<rect x="307.0" y="2258.0" width="196" height="50" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="2280.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Press Cancel order, then</text>
+<text x="405.0" y="2295.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">“Yes, cancel order”</text>
+<polygon points="655.0,2355.0 753.0,2395.0 655.0,2435.0 557.0,2395.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="2392.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Still pending and</text>
+<text x="655.0" y="2406.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">unpaid?</text>
+<polygon points="321.0,2482.0 503.0,2482.0 489.0,2532.0 307.0,2532.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="2504.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show “… already paid /</text>
+<text x="405.0" y="2519.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">already cancelled”</text>
+<rect x="557.0" y="2474.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="2496.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Mark the order cancelled;</text>
+<text x="655.0" y="2511.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">it leaves the Queue (no</text>
+<text x="655.0" y="2526.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stock was deducted)</text>
+<rect x="307.0" y="2598.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="2623.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<rect x="557.0" y="2598.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="2623.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">End</text>
+<text x="30" y="2719" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
+<rect x="30" y="2733" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
+<text x="82" y="2750" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
+<rect x="182.64" y="2733" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="234.64" y="2750" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
+<polygon points="363.52,2733 385.52,2746.0 363.52,2759 341.52,2746.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="393.52" y="2750" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
+<polygon points="483.44,2733 519.44,2733 511.44000000000005,2759 475.44,2759" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="527.44" y="2750" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
+<rect x="30" y="2771" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<line x1="36" y1="2771" x2="36" y2="2797" stroke="#222222"/><line x1="68" y1="2771" x2="68" y2="2797" stroke="#222222"/>
+<text x="82" y="2788" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
+<rect x="263.76" y="2771" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="315.76" y="2788" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
+<text x="30" y="2835" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="30" y="2855" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Taking payment checks and deducts the stock before the money is kept: marking paid, deducting each dish&#x27;s raw</text>
+<text x="30" y="2872" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   materials (or a ready-made item&#x27;s pieces) and confirming happen in one database transaction; a shortage rolls</text>
+<text x="30" y="2889" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   all of it back.</text>
+<text x="30" y="2906" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Cash records the cash received, for the change on the receipt. GCash and Maya are paid to the shop&#x27;s own account</text>
+<text x="30" y="2923" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   and recorded with the reference number from the customer&#x27;s phone (no PayMongo); a reference number can be</text>
+<text x="30" y="2940" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   recorded once.</text>
+<text x="30" y="2957" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• PARTIAL: the message asks staff to change the order with the customer, but no screen edits an existing order</text>
+<text x="30" y="2974" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   (the API has endpoints to change or remove order items, unused by the web app). In practice the order is</text>
+<text x="30" y="2991" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   cancelled and placed again.</text>
+<text x="30" y="3008" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The Queue reloads by itself when an order is placed, paid, edited or cancelled (orders:changed). A paid order</text>
+<text x="30" y="3025" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   that has to be cancelled later is Flow 11.</text>
 </svg>

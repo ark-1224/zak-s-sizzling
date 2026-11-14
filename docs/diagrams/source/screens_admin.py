@@ -314,7 +314,7 @@ def products():
     return f
 
 
-def instructions_box(f, x, y, w):
+def instructions_box(f, x, y, w, chips=("Extra spicy", "No onions", "Extra rice")):
     """Special instructions on the kiosk, set per dish (ProductForm.tsx, InstructionOptionsField)."""
     f.rect(x, y, w, 150, fill=FILL2, stroke=LINE, r=6)
     f.text(x + 12, y + 22, "Special instructions on the kiosk", size=12, bold=True, fill=INK2)
@@ -322,7 +322,9 @@ def instructions_box(f, x, y, w):
     f.text(x + w - 170, y + 22, "Offer special instructions", size=12)
     f.wrap(x + 12, y + 44, w - 24, "Quick options customers can tap, sent to the kitchen with the order. Customers can also type a note.", size=11, fill=INK3)
     cx = x + 12
-    for name in ["Extra spicy", "No onions", "Extra rice"]:
+    if not chips:
+        f.text(x + 12, y + 91, "No quick options: customers can only type a note.", size=12, fill=INK3)
+    for name in chips:
         cw = text_width(name, 12) + 34
         f.rect(cx, y + 74, cw, 26, fill=WHITE, stroke=LINE, r=13)
         f.text(cx + 10, y + 91, name + "  ×", size=12)
@@ -383,7 +385,7 @@ def product_form_fields(f, x, y, w, mode):
         f.text(x + w - 12, ry + 22, "Current stock makes 12 servings", size=12, anchor="end", fill=INK2)
         f.text(x + 12, ry + 54, "Per serving: Raw material 150 g, Raw material 1 pc", size=12, fill=INK3)
         y += 242
-    y = instructions_box(f, x, y, w)
+    y = instructions_box(f, x, y, w, chips=() if ready else ("Extra spicy", "No onions", "Extra rice"))
     f.textarea(x, y + 18, w, 64, label="Description")
     y += 104
     y = details_fields(f, x, y, w, not ready)
@@ -982,7 +984,7 @@ def new_order():
         f.img(tx + 10, ty + 10, 34, 34, r=4)
         f.text(tx + 52, ty + 26, "Dish name", size=13, bold=True, fill=INK3 if out else INK)
         f.text(tx + 10, ty + 86, "₱000.00", size=13, fill=INK3 if out else INK)
-        f.text(tx + tw - 10, ty + 86, "SOLD OUT" if out else f"{[12, 8, 0, 22][i % 4]} left", size=10, anchor="end", fill=INK3, bold=out)
+        f.text(tx + tw - 10, ty + 86, "SOLD OUT" if out else f"{[12, 8, 5, 22][i % 4]} left", size=10, anchor="end", fill=INK3, bold=out)
     cx = CX + mw + 18
     top = card(f, cx, y - 96, 340, 520, "Order · 3 items")
     ly = top + 16
@@ -1032,7 +1034,7 @@ def paid_orders():
             y += 112
         else:
             bx = CX + CW - 18 - 330
-            f.rect(bx, y + 12, 330, 250, fill=WHITE, stroke=INK, r=6, sw=1.5)
+            f.rect(bx, y + 12, 330, 296, fill=WHITE, stroke=INK, r=6, sw=1.5)
             f.wrap(bx + 14, y + 34, 300, "Cancel ZK-XXXXXX? Dishes not started go back into stock; you then refund the customer.", size=12)
             cy = y + 74
             cx2 = bx + 14

@@ -17,6 +17,12 @@ let staff: string;
 beforeAll(async () => {
   customer = await kioskToken();
   staff = await loginAs("staff");
+  // The board lists at most 30 orders being prepared, oldest first: hand over the orders
+  // earlier test files left in the kitchen, so this file's orders are on it whatever ran before.
+  await prisma.order.updateMany({
+    where: { status: { in: ["confirmed", "preparing", "ready"] } },
+    data: { status: "completed", handedOverAt: new Date() },
+  });
 });
 
 const auth = (token: string) => ({ Authorization: `Bearer ${token}` });

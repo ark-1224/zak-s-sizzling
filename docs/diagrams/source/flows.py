@@ -161,73 +161,83 @@ def ordering():
 
 
 def counter_payment():
-    f = Flow("counter-payment", "04", "Counter payment, confirmation and cancelling",
+    f = Flow("counter-payment", "04", "Counter point of sale: taking payment and walk-in orders",
              ["Customer", "Staff (cashier)", "API server"],
-             W + "app/staff/orders/page.tsx, " + API + "payments/routes.ts, " + API + "payments/service.ts (confirmCounterPayment), "
-             + API + "inventory/fulfillment.ts (deductStockForOrder), " + API + "orders/service.ts (listOrders, cancelOrder), " + API + "kitchen/service.ts",
+             W + "app/staff/orders/page.tsx, " + W + "components/staff/PosNewOrder.tsx, " + W + "components/staff/PaymentPanel.tsx, " + W + "components/staff/CounterReceipt.tsx, "
+             + API + "orders/routes.ts, " + API + "payments/service.ts (confirmCounterPayment), " + API + "inventory/fulfillment.ts (deductStockForOrder), " + API + "orders/service.ts (listOrders, cancelOrder)",
              notes=[
-                 "Staff confirm first and collect the money after: confirming checks and deducts the stock, so a shortage is found before any money changes hands. Marking paid, deducting and confirming happen in one database transaction; a shortage rolls all of it back.",
+                 "Taking payment checks and deducts the stock before the money is kept: marking paid, deducting each dish's raw materials (or a ready-made item's pieces) and confirming happen in one database transaction; a shortage rolls all of it back.",
+                 "Cash records the cash received, for the change on the receipt. GCash and Maya are paid to the shop's own account and recorded with the reference number from the customer's phone (no PayMongo); a reference number can be recorded once.",
                  "PARTIAL: the message asks staff to change the order with the customer, but no screen edits an existing order (the API has endpoints to change or remove order items, unused by the web app). In practice the order is cancelled and placed again.",
-                 "The list reloads by itself when an order is placed, paid, edited or cancelled (orders:changed); a new order is marked NEW for a minute.",
+                 "The Queue reloads by itself when an order is placed, paid, edited or cancelled (orders:changed). A paid order that has to be cancelled later is Flow 11.",
              ])
     C, S, A = f.lanes
-    f.n("start", C, 0, "start", "Brings the order number from the receipt (08) to the counter")
-    f.n("open", S, 1, "process", "Open Orders awaiting payment (19)")
-    f.n("list", A, 1, "process", "List unpaid, not-cancelled orders (and orders flagged for attention), newest first")
-    f.n("find", S, 2, "io", "Find the order by its number")
-    f.n("pays", S, 3, "decision", "Customer pays for this order?")
-    f.n("confirm", S, 4, "process", "Press Confirm order (“Checking stock…”)")
-    f.n("payable", A, 5, "decision", "Still unpaid and not cancelled?")
-    f.n("msg1", S, 6, "io", "Show the server's message (already paid / cancelled)")
-    f.n("txn", A, 6, "process", "In one transaction: mark paid (counter) and deduct each dish's stock (units, or raw materials by recipe)")
-    f.n("end1", S, 7, "end", "End")
-    f.n("enough", A, 7, "decision", "Enough stock for every dish?")
-    f.n("short", S, 8, "io", "Nothing deducted, order stays unpaid: “… change the order before collecting payment”")
-    f.n("ok", A, 8, "process", "Confirm the order; update dish availability on the kiosk (live)")
-    f.n("change", S, 9, "process", "Change the order with the customer (no screen for it: cancel and order again)", partial=True)
-    f.n("tasks", A, 9, "process", "Create one kitchen task per dish and the estimated ready time; notify the kitchen display")
-    f.n("end2", S, 10, "end", "End")
-    f.n("kitchen", A, 10, "sub", "Kitchen fulfilment (Flow 06)")
-    f.n("done", S, 11, "io", "Show “ZK-… confirmed and sent to the kitchen. Collect ₱… Ready at about …”")
-    f.n("collect", S, 12, "process", "Collect cash or card payment (outside the system)")
-    f.n("wait", C, 13, "io", "Pays; watches the screen at the counter for the order number (24)")
-    f.n("end3", C, 14, "end", "End")
-    f.n("cancel", S, 15, "process", "Press Cancel order, then “Yes, cancel order”")
-    f.n("cancelok", A, 16, "decision", "Still pending and unpaid?")
-    f.n("msg2", S, 17, "io", "Show “… already paid / already cancelled”")
-    f.n("cancelled", A, 17, "process", "Mark the order cancelled; it leaves the queue (no stock was deducted)")
-    f.n("end4", A, 18, "end", "End")
-    f.e("start", "open")
-    f.e("open", "list", exit="r", entry="l")
-    f.e("list", "find")
-    f.e("find", "pays")
-    f.e("pays", "confirm", "Yes")
-    f.e("pays", "cancel", "No (never came back)", exit="r")
-    f.e("confirm", "payable", exit="r")
-    f.e("payable", "msg1", "No", exit="l")
-    f.e("payable", "txn", "Yes")
+    f.n("start", C, 0, "start", "Comes to the counter, with an order number from the kiosk (08) or to order")
+    f.n("kiosk", S, 1, "decision", "Ordered at the kiosk?")
+    f.n("pick", S, 2, "io", "New order (19e): add dishes with their instructions, dine in or take out; press Charge")
+    f.n("place", A, 3, "process", "Check stock; save a counter order (source counter, pending)")
+    f.n("placed", A, 4, "decision", "Every dish available?")
+    f.n("placemsg", S, 4, "io", "Show which dish ran out; the menu reloads")
+    f.n("find", S, 5, "io", "Queue (19): find the order by its number; press Take payment")
+    f.n("panel", S, 6, "io", "Payment step (19c): Cash with the cash received (change shown), or GCash / Maya with the reference number")
+    f.n("pays", C, 7, "decision", "Pays now?")
+    f.n("confirm", S, 8, "process", "Press Confirm … payment (“Checking stock…”)")
+    f.n("later", C, 9, "end", "Not now: the order waits in the Queue, unpaid")
+    f.n("valid", A, 9, "decision", "Unpaid, not cancelled, cash covers the total, reference not used before?")
+    f.n("msg1", S, 10, "io", "Show the server's message")
+    f.n("txn", A, 10, "process", "In one transaction: mark paid (cash, GCash or Maya); deduct each dish's raw materials, or a ready-made item's pieces")
+    f.n("end1", S, 11, "end", "End")
+    f.n("enough", A, 11, "decision", "Enough stock for every dish?")
+    f.n("short", S, 12, "io", "Nothing deducted, order stays unpaid: hand the money back and change the order")
+    f.n("ok", A, 12, "process", "Confirm the order; create one kitchen task per dish and the ready time; update the kiosk menu live")
+    f.n("change", S, 13, "process", "Change the order with the customer (no screen for it: cancel and order again)", partial=True)
+    f.n("kitchen", A, 13, "sub", "Kitchen fulfilment (Flow 06)")
+    f.n("receipt", S, 14, "io", "Receipt (19d): items, total, how it was paid, change; Print receipt on the counter printer")
+    f.n("wait", C, 15, "io", "Takes the receipt; watches the screen at the counter for the order number (24)")
+    f.n("end3", C, 16, "end", "End")
+    f.n("never", S, 17, "start", "An order in the Queue is never paid for")
+    f.n("cancel", S, 18, "process", "Press Cancel order, then “Yes, cancel order”")
+    f.n("cancelok", A, 19, "decision", "Still pending and unpaid?")
+    f.n("msg2", S, 20, "io", "Show “… already paid / already cancelled”")
+    f.n("cancelled", A, 20, "process", "Mark the order cancelled; it leaves the Queue (no stock was deducted)")
+    f.n("end2", S, 21, "end", "End")
+    f.n("end4", A, 21, "end", "End")
+    f.e("start", "kiosk")
+    f.e("kiosk", "pick", "No (walk-in)")
+    f.e("kiosk", "find", "Yes", exit="l", entry="l")
+    f.e("pick", "place", exit="r", entry="l")
+    f.e("place", "placed")
+    f.e("placed", "placemsg", "No", exit="l", entry="r")
+    f.e("placemsg", "pick", exit="l", entry="l")
+    f.e("placed", "panel", "Yes", exit="b", entry="r")
+    f.e("find", "panel")
+    f.e("panel", "pays", exit="l", entry="t")
+    f.e("pays", "confirm", "Yes", exit="r", entry="l")
+    f.e("pays", "later", "No")
+    f.e("confirm", "valid", exit="r")
+    f.e("valid", "msg1", "No", exit="l", entry="r")
+    f.e("valid", "txn", "Yes")
     f.e("msg1", "end1")
     f.e("txn", "enough")
     f.e("enough", "short", "No", exit="l", entry="r")
     f.e("enough", "ok", "Yes")
     f.e("short", "change")
-    f.e("change", "end2")
-    f.e("ok", "tasks")
-    f.e("tasks", "kitchen")
-    f.e("tasks", "done", exit="l")
-    f.e("done", "collect")
-    f.e("collect", "wait")
+    f.e("ok", "kitchen")
+    f.e("kitchen", "receipt", exit="b", entry="r")
+    f.e("receipt", "wait", exit="l", entry="t")
     f.e("wait", "end3")
+    f.e("never", "cancel")
     f.e("cancel", "cancelok", exit="r")
     f.e("cancelok", "msg2", "No", exit="l")
     f.e("cancelok", "cancelled", "Yes")
     f.e("cancelled", "end4")
+    f.e("msg2", "end2")
     return f
 
 
-from flows_more import bulk_import, barcode, idle, kitchen, online_payment, overview, products, qr, reports, stock, users  # noqa: E402
+from flows_more import bulk_import, cancel_paid, idle, kitchen, online_payment, overview, products, qr, reports, stock, users  # noqa: E402
 
-FLOWS_DEF = [overview, login, ordering, counter_payment, online_payment, kitchen, stock, products, bulk_import, users, barcode, reports, idle, qr]
+FLOWS_DEF = [overview, login, ordering, counter_payment, online_payment, kitchen, stock, products, bulk_import, users, cancel_paid, reports, idle, qr]
 
 
 def _render(make):

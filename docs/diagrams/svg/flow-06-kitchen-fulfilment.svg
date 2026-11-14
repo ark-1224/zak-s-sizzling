@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2567" viewBox="0 0 810 2567">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2550" viewBox="0 0 810 2550">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="2567" fill="#ffffff"/>
+<rect x="0" y="0" width="810" height="2550" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 06  Kitchen fulfilment</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
 <text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/kitchen/page.tsx, apps/web/src/app/board/page.tsx, apps/web/src/lib/receiptPrinter.ts,</text>
@@ -147,9 +147,8 @@
 <text x="30" y="2411" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   itself (a limitation).</text>
 <text x="30" y="2428" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Any signed-in Staff or Admin can use the kitchen display. A dish only moves forward: Pending → In Progress →</text>
 <text x="30" y="2445" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Completed.</text>
-<text x="30" y="2462" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• At any step until Handed over, Staff or an Admin can press Cancel order and give a reason (18c): the order is</text>
-<text x="30" y="2479" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   cancelled and leaves the display and the board, dishes still Pending go back into stock, and it goes to the</text>
-<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   payment queue as NEEDS ATTENTION until staff refund the customer and record it.</text>
-<text x="30" y="2513" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing</text>
-<text x="30" y="2530" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   fails the display says so and tries again with the next update or within 30 seconds.</text>
+<text x="30" y="2462" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The kitchen display doesn&#x27;t cancel orders (panel feedback): until Handed over, staff cancel a paid order on</text>
+<text x="30" y="2479" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   Orders awaiting payment › Paid orders (Flow 11), and its card leaves the display.</text>
+<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Kitchen tickets print only on the device with the kitchen printer (print-service/), once per order; if printing</text>
+<text x="30" y="2513" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   fails the display says so and tries again with the next update or within 30 seconds.</text>
 </svg>
