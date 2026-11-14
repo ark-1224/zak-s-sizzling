@@ -4,6 +4,8 @@ import { authorize } from "../../middleware/authorize";
 import { HttpError } from "../../middleware/errorHandler";
 import { buildReportTable, EXPORT_CONTENT_TYPE, renderCsv, renderPdf, renderXlsx, type ExportFormat, type ReportType } from "./export";
 import { getInventoryMovement, getProfitability, getSalesReport, getTopProducts } from "./service";
+import { getFoodCostReport, getUsageReport } from "./stockReports";
+import { reportPeriodSchema } from "../inventory/schema";
 
 export const reportsRouter = Router();
 
@@ -59,6 +61,26 @@ reportsRouter.get("/profitability", authenticate, authorize("admin"), async (req
 // come from the same table, so they always carry the same columns and figures.
 const REPORT_TYPES: ReportType[] = ["sales", "top-products", "profitability", "inventory-movement"];
 const FORMATS: ExportFormat[] = ["csv", "xlsx", "pdf"];
+
+// Usage and waste per item for a period of Manila days (default the last 14).
+reportsRouter.get("/usage", authenticate, authorize("admin"), async (req, res, next) => {
+  try {
+    const { from, to } = reportPeriodSchema.parse(req.query);
+    res.json(await getUsageReport(from, to));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Food cost from recipes and from market purchases, and each trip against its sales.
+reportsRouter.get("/food-cost", authenticate, authorize("admin"), async (req, res, next) => {
+  try {
+    const { from, to } = reportPeriodSchema.parse(req.query);
+    res.json(await getFoodCostReport(from, to));
+  } catch (err) {
+    next(err);
+  }
+});
 
 reportsRouter.get("/export", authenticate, authorize("admin"), async (req, res, next) => {
   try {

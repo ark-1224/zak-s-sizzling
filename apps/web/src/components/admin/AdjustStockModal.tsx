@@ -19,14 +19,17 @@ export const REASON_LABELS: Record<AdjustmentReason, string> = {
   spoilage: "Spoilage",
   correction: "Manual correction (recount)",
   other: "Other",
+  dropped: "Dropped",
+  over_prepped: "Over-prepped (cooked too much)",
 };
 
 const REASONS = Object.entries(REASON_LABELS) as [AdjustmentReason, string][];
 
 // Damaged goods and spoilage only ever take stock away (UI review #5). The API refuses
 // an increase with these reasons too (DECREASE_ONLY_REASONS in inventory/schema.ts).
-export const DECREASE_ONLY_REASONS: readonly AdjustmentReason[] = ["damaged", "spoilage"];
-export const DECREASE_ONLY_MESSAGE = "Damaged goods and spoilage can only lower the stock.";
+// Waste: these four are added up in Analytics > Usage and waste.
+export const DECREASE_ONLY_REASONS: readonly AdjustmentReason[] = ["damaged", "spoilage", "dropped", "over_prepped"];
+export const DECREASE_ONLY_MESSAGE = "Waste (damaged, spoiled, dropped or over-prepped) can only lower the stock.";
 export const isDecreaseOnly = (reason: AdjustmentReason | "") => reason !== "" && DECREASE_ONLY_REASONS.includes(reason);
 
 /** The reason dropdown's options, starting with an empty "Choose a reason" so nothing is picked by default. */

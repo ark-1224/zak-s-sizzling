@@ -303,6 +303,7 @@ describe("toProductDTO", () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     inventory: { id: 1, productId: "p-1", stockQty: 12, minStockThreshold: 5, updatedAt: new Date() },
+    purchaseUnits: [],
   };
 
   it("converts database decimals to plain numbers and flattens stock", () => {
@@ -323,8 +324,8 @@ describe("toProductDTO", () => {
       ...base,
       tracking: "recipe",
       recipeItems: [
-        { rawMaterialId: "m-pork", qtyPerServing: new Prisma.Decimal("150"), rawMaterial: { name: "Pork", unit: "g", stockQty: new Prisma.Decimal("1000") } },
-        { rawMaterialId: "m-onion", qtyPerServing: new Prisma.Decimal("20"), rawMaterial: { name: "Onion", unit: "g", stockQty: new Prisma.Decimal("50") } },
+        { rawMaterialId: "m-pork", qtyPerServing: new Prisma.Decimal("150"), rawMaterial: { name: "Pork", unit: "g", stockQty: new Prisma.Decimal("1000"), costPerUnit: null } },
+        { rawMaterialId: "m-onion", qtyPerServing: new Prisma.Decimal("20"), rawMaterial: { name: "Onion", unit: "g", stockQty: new Prisma.Decimal("50"), costPerUnit: null } },
       ],
     } as never);
 

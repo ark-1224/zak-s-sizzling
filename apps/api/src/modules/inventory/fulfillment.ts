@@ -2,6 +2,7 @@ import { Prisma, type StockTracking } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { getIO } from "../../websocket";
 import { HttpError } from "../../middleware/errorHandler";
+import { costWhenPaid } from "./costing";
 
 /**
  * Stock checks and deduction for orders, covering both tracking modes
@@ -196,6 +197,10 @@ export async function deductStockForOrder(tx: Db, orderId: string): Promise<Touc
   }
 
   if (shortages.length > 0) throw new StockShortageError(shortages);
+  // Each line keeps what one serving cost at today's prices, for food cost later.
+  for (const item of items) {
+    await tx.orderItem.update({ where: { id: item.id }, data: { unitCost: costWhenPaid(item.product) } });
+  }
   return { productIds: [...needs.units.keys()], materialIds: [...needs.materials.keys()] };
 }
 

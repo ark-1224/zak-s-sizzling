@@ -39,6 +39,7 @@ const NAV_GROUPS: NavGroup[] = [
       { href: "/admin/products", label: "Products", short: "Products", icon: "products", adminOnly: true },
       { href: "/admin/categories", label: "Categories", short: "Categories", icon: "categories", adminOnly: true },
       { href: "/admin/raw-materials", label: "Raw materials", short: "Materials", icon: "materials" },
+      { href: "/admin/purchases", label: "Market purchases", short: "Market", icon: "basket", adminOnly: true },
       { href: "/admin/import", label: "Bulk import", short: "Import", icon: "import", adminOnly: true },
     ],
   },

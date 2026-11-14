@@ -62,6 +62,12 @@ export interface Product {
   instructionOptions: string[];
   /** False hides special instructions (options and the typed note) for this dish on the kiosk. */
   allowInstructions: boolean;
+  /** A dish's cost from its recipe at the raw materials' cost per unit; admins only. */
+  recipeCost?: number | null;
+  /** False when a raw material in the recipe has no cost yet, so recipeCost is too low (or null). */
+  recipeCostComplete?: boolean;
+  /** A ready-made item's market units, par level, safety stock and freshness. */
+  planning?: StockPlanning;
 }
 
 export interface AuthUser {
@@ -328,7 +334,8 @@ export interface BulkImportSummary {
   };
 }
 
-export type AdjustmentReason = "restock" | "return" | "damaged" | "spoilage" | "correction" | "other";
+/** "damaged", "spoilage", "dropped" and "over_prepped" are waste: they only lower the stock. */
+export type AdjustmentReason = "restock" | "return" | "damaged" | "spoilage" | "correction" | "other" | "dropped" | "over_prepped";
 
 export interface StockAdjustmentDTO {
   id: string;
@@ -383,6 +390,8 @@ export interface RawMaterialDTO {
   nutrition: RawMaterialNutrition | null;
   /** Grams in one piece (pc) or one ml (ml); null for g, or when not set. */
   gramsPerUnit: number | null;
+  /** Market units, par level, safety stock and freshness. */
+  planning: StockPlanning;
 }
 
 export interface NutritionPer100g {
@@ -452,4 +461,296 @@ export interface RawMaterialMovementDTO {
   orderNumber: string | null;
   adjustedByName: string | null;
   createdAt: string;
+}
+
+// --- Market purchasing and the palengke cycle -------------------------------------------
+
+/** How a stock item is kept, which sets how long it stays fresh. */
+export type StorageType = "frozen" | "chilled" | "room";
+
+/** A stock item is a raw material or a ready-made item (a product counted in pieces). */
+export type StockItemKind = "raw_material" | "ready_made";
+
+/** A unit the item is bought in at the market, and how many base units (g, ml, pieces) one is. */
+export interface PurchaseUnitDTO {
+  id: string;
+  name: string;
+  qtyInBase: number;
+}
+
+export interface PurchaseUnitInput {
+  name: string;
+  qtyInBase: number;
+}
+
+/** Planning fields shared by raw materials and ready-made items, in base units. */
+export interface StockPlanning {
+  /** The most to keep on hand: the shopping list never plans above it. */
+  parLevel: number | null;
+  /** A buffer kept on top of the expected usage until the next trip. */
+  safetyStock: number | null;
+  storage: StorageType | null;
+  /** Days a purchase stays fresh in its storage; null = no shelf-life warning. */
+  shelfLifeDays: number | null;
+  purchaseUnits: PurchaseUnitDTO[];
+}
+
+export interface StockPlanningInput {
+  parLevel?: number | null;
+  safetyStock?: number | null;
+  storage?: StorageType | null;
+  shelfLifeDays?: number | null;
+  /** Replaces the item's market units. */
+  purchaseUnits?: PurchaseUnitInput[];
+}
+
+export type PurchaseKind = "market_trip" | "top_up";
+
+export interface PurchaseLineDTO {
+  id: string;
+  kind: StockItemKind;
+  itemId: string;
+  itemName: string;
+  baseUnit: MaterialUnit;
+  unitName: string;
+  unitQtyInBase: number;
+  qtyUnits: number;
+  qtyBase: number;
+  lineTotal: number;
+  /** Price of one market unit; null when nothing was bought. */
+  pricePerUnit: number | null;
+  /** From the shopping list, to compare with what was bought. */
+  plannedUnits: number | null;
+  /** A packaged item's printed expiry date (YYYY-MM-DD). */
+  expiresOn: string | null;
+}
+
+/** One market receipt (GET /api/purchases, admins only). */
+export interface PurchaseDTO {
+  id: string;
+  /** YYYY-MM-DD */
+  purchasedOn: string;
+  kind: PurchaseKind;
+  store: string | null;
+  note: string | null;
+  totalAmount: number;
+  createdByName: string;
+  createdAt: string;
+  lines: PurchaseLineDTO[];
+}
+
+export interface CreatePurchaseLineInput {
+  kind: StockItemKind;
+  itemId: string;
+  /** One of the item's market units, or its base unit ("g", "ml", "pc"). */
+  unitName: string;
+  qtyUnits: number;
+  lineTotal: number;
+  plannedUnits?: number;
+  expiresOn?: string;
+}
+
+export interface CreatePurchaseInput {
+  purchasedOn: string;
+  kind: PurchaseKind;
+  store?: string;
+  note?: string;
+  lines: CreatePurchaseLineInput[];
+}
+
+export interface PricePointDTO {
+  purchasedOn: string;
+  unitName: string;
+  qtyUnits: number;
+  lineTotal: number;
+  pricePerUnit: number;
+  /** Price of one base unit (g, ml, piece), comparable across market units. */
+  pricePerBase: number;
+  store: string | null;
+}
+
+/** An item's prices over time, oldest first (GET /api/purchases/prices). */
+export interface PriceHistoryDTO {
+  kind: StockItemKind;
+  itemId: string;
+  itemName: string;
+  baseUnit: MaterialUnit;
+  points: PricePointDTO[];
+}
+
+export interface ShoppingListItemDTO {
+  kind: StockItemKind;
+  itemId: string;
+  itemName: string;
+  baseUnit: MaterialUnit;
+  onHand: number;
+  /** Average used per day over the recent window (sales and waste). */
+  avgDailyUsage: number;
+  /** Days the purchase has to cover: until the next trip, or less if it won't stay fresh. */
+  coverDays: number;
+  safetyStock: number;
+  parLevel: number | null;
+  /** How much to have after the trip: usage over coverDays + safety stock, up to par. */
+  targetQty: number;
+  /** How much to buy, in base units. */
+  buyBase: number;
+  /** The market unit to buy it in (the last one bought, else the first, else the base unit). */
+  unitName: string;
+  unitQtyInBase: number;
+  /** How many market units to buy, rounded up. */
+  buyUnits: number;
+  lastPricePerUnit: number | null;
+  estimatedCost: number | null;
+  /** True when it won't stay fresh until the next trip: plan a top-up. */
+  shortShelfLife: boolean;
+  shelfLifeDays: number | null;
+}
+
+/** What to buy on the next market trip (GET /api/purchases/shopping-list, admins only). */
+export interface ShoppingListDTO {
+  days: number;
+  usageWindowDays: number;
+  items: ShoppingListItemDTO[];
+  estimatedTotal: number;
+  /** Items to buy with no price yet, left out of estimatedTotal. */
+  itemsWithoutPrice: number;
+}
+
+export interface StockCountLineDTO {
+  kind: StockItemKind;
+  itemId: string;
+  itemName: string;
+  baseUnit: MaterialUnit;
+  /** What the system expected when counted. */
+  systemQty: number;
+  countedQty: number;
+  /** counted − system: negative is missing stock. */
+  difference: number;
+  /** Admins only. */
+  differenceValue?: number | null;
+  /** What happened since the previous count of this item (base units). */
+  since: { previousCountedQty: number | null; purchased: number; sold: number; wasted: number; otherAdjustments: number };
+}
+
+/** A physical count and its variance (GET /api/inventory/counts/:id). */
+export interface StockCountDTO {
+  id: string;
+  countedAt: string;
+  note: string | null;
+  createdByName: string;
+  previousCountAt: string | null;
+  lines: StockCountLineDTO[];
+  /** Admins only. */
+  totalDifferenceValue?: number | null;
+}
+
+export interface StockCountSummaryDTO {
+  id: string;
+  countedAt: string;
+  createdByName: string;
+  itemCount: number;
+  /** Items whose count differed from the system. */
+  itemsOff: number;
+  /** Admins only. */
+  totalDifferenceValue?: number | null;
+}
+
+export interface CreateStockCountInput {
+  note?: string;
+  lines: { kind: StockItemKind; itemId: string; countedQty: number }[];
+}
+
+export interface UsageRowDTO {
+  kind: StockItemKind;
+  itemId: string;
+  itemName: string;
+  baseUnit: MaterialUnit;
+  /** Used by sales (base units). */
+  used: number;
+  /** Thrown away: damaged, spoiled, dropped, over-prepped. */
+  wasted: number;
+  purchased: number;
+  avgDailyUsage: number;
+  onHand: number;
+  usedValue: number | null;
+  wastedValue: number | null;
+}
+
+/** Usage and waste per item for a period (GET /api/reports/usage, admins only). */
+export interface UsageReportDTO {
+  from: string;
+  to: string;
+  days: number;
+  rows: UsageRowDTO[];
+  totalWastedValue: number;
+  wasteByReason: { reason: AdjustmentReason; value: number }[];
+}
+
+/** An item to use soon or throw out (GET /api/inventory/freshness). */
+export interface FreshnessWarningDTO {
+  kind: StockItemKind;
+  itemId: string;
+  itemName: string;
+  baseUnit: MaterialUnit;
+  onHand: number;
+  status: "expired" | "use_soon";
+  /** From the days it stays fresh in storage, or from a printed expiry date. */
+  basis: "shelf_life" | "printed_date";
+  /** When the oldest stock still on hand was bought (YYYY-MM-DD). */
+  boughtOn: string | null;
+  /** When it goes off (YYYY-MM-DD). */
+  goesOffOn: string;
+  daysLeft: number;
+  storage: StorageType | null;
+}
+
+export interface FoodCostTripDTO {
+  purchaseId: string;
+  purchasedOn: string;
+  /** The next market trip (exclusive), or null for the current one. */
+  untilOn: string | null;
+  /** The trip plus the top-ups until the next trip. */
+  spent: number;
+  topUps: number;
+  /** Sales paid from the trip until the next one. */
+  sales: number;
+  /** spent ÷ sales; null with no sales. */
+  ratio: number | null;
+}
+
+/** Food cost for a period (GET /api/reports/food-cost, admins only). */
+export interface FoodCostReportDTO {
+  from: string;
+  to: string;
+  sales: number;
+  /** What the dishes sold cost, from their recipes when paid (sales with a cost only). */
+  recipeCost: number;
+  salesWithCost: number;
+  /** recipeCost ÷ salesWithCost. */
+  recipeFoodCostPct: number | null;
+  /** What was spent at the market in the period. */
+  purchases: number;
+  /** purchases ÷ sales. */
+  purchaseFoodCostPct: number | null;
+  /** Sales of dishes whose cost wasn't known when paid. */
+  uncostedSales: number;
+  trips: FoodCostTripDTO[];
+}
+
+/** A raw material in use or a ready-made item (GET /api/inventory/items). */
+export interface StockItemDTO {
+  kind: StockItemKind;
+  itemId: string;
+  name: string;
+  baseUnit: MaterialUnit;
+  onHand: number;
+  /** Admins only. */
+  costPerBase?: number | null;
+  minStock: number;
+  parLevel: number | null;
+  safetyStock: number | null;
+  storage: StorageType | null;
+  shelfLifeDays: number | null;
+  /** Market units, smallest first. */
+  units: { name: string; qtyInBase: number }[];
 }

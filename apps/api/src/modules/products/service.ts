@@ -1,5 +1,7 @@
 import { prisma } from "../../lib/prisma";
-import type { Nutrition, Product, UserRole } from "@zaks/shared-types";
+import type { Nutrition, Product, StockPlanningInput, UserRole } from "@zaks/shared-types";
+import { servingCost } from "../inventory/costing";
+import { assertPlanning, planningColumns, savePurchaseUnits, toPlanningDTO } from "../purchasing/planning";
 import { Prisma } from "@prisma/client";
 import { refreshAvailability, servingsAvailable } from "../inventory/fulfillment";
 import { applyStockChange } from "../inventory/service";
@@ -13,12 +15,14 @@ export const PRODUCT_DTO_INCLUDE = {
   recipeItems: { include: { rawMaterial: true }, orderBy: { rawMaterial: { name: "asc" } } },
   // Only whether there's a photo and its version, never the bytes (products/image.ts).
   image: { select: { updatedAt: true } },
+  purchaseUnits: true,
 } satisfies Prisma.ProductInclude;
 
 type ProductWithRelations = Prisma.ProductGetPayload<{ include: typeof PRODUCT_DTO_INCLUDE }>;
 
 export function toProductDTO(p: ProductWithRelations): Product {
   const isRecipe = p.tracking === "recipe";
+  const costed = isRecipe ? servingCost(p) : null;
   return {
     id: p.id,
     name: p.name,
@@ -62,6 +66,8 @@ export function toProductDTO(p: ProductWithRelations): Product {
           qtyPerServing: Number(r.qtyPerServing),
         }))
       : undefined,
+    ...(costed ? { recipeCost: costed.cost === null ? null : Number(costed.cost.toDecimalPlaces(2)), recipeCostComplete: costed.complete } : {}),
+    planning: isRecipe ? undefined : toPlanningDTO(p.inventory, p.purchaseUnits),
   };
 }
 
@@ -69,7 +75,7 @@ export function toProductDTO(p: ProductWithRelations): Product {
  *  (kiosk customers, anonymous visitors, staff) gets the product without them. */
 export function withAdminFieldsForRole<T extends Product | Product[]>(products: T, role: UserRole | undefined): T {
   if (role === "admin") return products;
-  const strip = ({ cost: _cost, recipe: _recipe, ...rest }: Product): Product => rest;
+  const strip = ({ cost: _cost, recipe: _recipe, recipeCost: _recipeCost, recipeCostComplete: _complete, ...rest }: Product): Product => rest;
   return (Array.isArray(products) ? products.map(strip) : strip(products)) as T;
 }
 
@@ -112,6 +118,8 @@ export interface ProductInput {
   ingredients?: string[];
   allergens?: string[];
   nutrition?: Nutrition;
+  /** Ready-made items only: market units, par level, safety stock and freshness. */
+  planning?: StockPlanningInput;
 }
 
 const NEEDS_RECIPE = "A dish needs at least one raw material in its recipe";
@@ -201,6 +209,7 @@ export async function createProduct(input: ProductInput): Promise<Product> {
 /** A ready-made item (a bottled drink) has no recipe: it's counted in pieces. */
 async function createReadyMadeItem(input: ProductInput): Promise<Product> {
   if (input.recipe?.length) throw new HttpError(400, READY_MADE_NO_RECIPE);
+  if (input.planning) assertPlanning(input.planning, true);
   const stockQty = input.stockQty ?? 0;
   const product = await prisma.product.create({
     data: {
@@ -215,9 +224,10 @@ async function createReadyMadeItem(input: ProductInput): Promise<Product> {
       // Served as it is, so no kitchen time unless the form says otherwise.
       prepMinutes: input.prepMinutes ?? 0,
       ...detailColumns(input),
-      inventory: { create: { stockQty, minStockThreshold: input.minStockThreshold ?? 0 } },
+      inventory: { create: { stockQty, minStockThreshold: input.minStockThreshold ?? 0, ...planningColumns(input.planning ?? {}) } },
     },
   });
+  await savePurchaseUnits(prisma, { productId: product.id }, input.planning?.purchaseUnits);
   await refreshAvailability({ productIds: [product.id], materialIds: [] });
   return getProductDTO(product.id);
 }
@@ -233,6 +243,7 @@ export async function updateProduct(id: string, input: Partial<ProductInput> & {
 
   if (readyMade) {
     if (input.recipe?.length) throw new HttpError(400, READY_MADE_NO_RECIPE);
+    if (input.planning) assertPlanning(input.planning, true);
   } else {
     // A dish without a recipe yet (one moved out of Ready-made, or counted in units before
     // bill of materials) must get one with this save; a dish that has one may keep it.
@@ -259,6 +270,10 @@ export async function updateProduct(id: string, input: Partial<ProductInput> & {
       // A dish moved into Ready-made is counted in pieces from now on, so its recipe goes.
       if (!wasCountedInPieces) await tx.recipeItem.deleteMany({ where: { productId: id } });
       if (!current.inventory) await tx.inventory.create({ data: { productId: id, stockQty: 0, minStockThreshold: 0 } });
+      if (input.planning) {
+        await tx.inventory.update({ where: { productId: id }, data: planningColumns(input.planning) });
+        await savePurchaseUnits(tx, { productId: id }, input.planning.purchaseUnits);
+      }
     } else if (input.recipe) {
       // Saving a recipe replaces the old one.
       await tx.recipeItem.deleteMany({ where: { productId: id } });

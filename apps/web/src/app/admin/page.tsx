@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { FreshnessNotice } from "@/components/admin/FreshnessNotice";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import Link from "next/link";
 import { getStoredUser } from "@/lib/auth";
@@ -102,6 +103,8 @@ export default function AdminDashboardPage() {
           </Link>
         </div>
       )}
+
+      <FreshnessNotice link />
 
       <div className={`grid grid-cols-1 gap-3.5 sm:grid-cols-2 ${isAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
         <KpiTile label="Active SKUs" value={String(products.length)} sub={`${categoryCount} categories`} />

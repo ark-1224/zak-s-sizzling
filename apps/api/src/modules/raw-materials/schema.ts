@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { adjustmentReasonSchema } from "../inventory/schema";
+import { stockPlanningSchema } from "../purchasing/planning";
 
 // Amounts are in the raw material's base unit (g, ml or pc), up to 3 decimal places,
 // matching the Decimal(12, 3) columns. See docs/design/raw-material-stock.md.
@@ -24,7 +25,7 @@ export const createRawMaterialSchema = z.object({
   stockQty: amount.default(0),
   minStockThreshold: amount.default(0),
   costPerUnit: z.number().nonnegative().max(1_000_000).optional(),
-});
+}).merge(stockPlanningSchema);
 
 // Nutrition per 100 g, from a USDA food (fdcId) or typed in. Calories top out at 900
 // (pure fat); grams of anything can't exceed the 100 g.
@@ -49,7 +50,7 @@ export const updateRawMaterialSchema = z.object({
   nutrition: rawMaterialNutritionSchema.nullable().optional(),
   // Grams in one piece (pc) or one ml (ml), e.g. an egg is about 50 g.
   gramsPerUnit: z.number().positive().max(100_000).nullable().optional(),
-});
+}).merge(stockPlanningSchema);
 
 // Exactly one of setQty ("counted it, set the number") or delta ("add or remove this
 // much"), always with a reason, so every movement in the log is explainable.

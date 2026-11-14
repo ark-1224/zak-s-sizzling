@@ -5,6 +5,7 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { formatMaterialQty, UNIT_LABELS } from "@/lib/units";
 import { RAW_MATERIAL_CATEGORIES } from "@/lib/rawMaterialCategories";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { PlanningFields, planningPayload, planningState, type PlanningState } from "@/components/admin/PlanningFields";
 import {
   AdmButton,
   admInputClass,
@@ -38,6 +39,7 @@ export function RawMaterialForm({
   const [minStockThreshold, setMinStockThreshold] = useState(material?.minStockThreshold.toString() ?? "0");
   const [costPerUnit, setCostPerUnit] = useState(material?.costPerUnit?.toString() ?? "");
   const [isActive, setIsActive] = useState(material?.isActive ?? true);
+  const [planning, setPlanning] = useState<PlanningState>(() => planningState(material?.planning));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -66,6 +68,11 @@ export function RawMaterialForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const planned = planningPayload(planning, false);
+    if (!planned.ok) {
+      setError(planned.error);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -79,6 +86,7 @@ export function RawMaterialForm({
             minStockThreshold: Number(minStockThreshold),
             costPerUnit: costPerUnit === "" ? null : Number(costPerUnit),
             isActive,
+            ...planned.value,
           }),
         });
         onSaved(saved, false);
@@ -93,6 +101,7 @@ export function RawMaterialForm({
             stockQty: Number(stockQty),
             minStockThreshold: Number(minStockThreshold),
             costPerUnit: costPerUnit === "" ? undefined : Number(costPerUnit),
+            ...planned.value,
           }),
         });
         onSaved(saved, true);
@@ -171,6 +180,8 @@ export function RawMaterialForm({
             />
           </Field>
         </div>
+
+        <PlanningFields baseUnit={material?.unit ?? unit} value={planning} onChange={setPlanning} />
 
         {material && (
           <label className="mb-4 flex min-h-11 items-center gap-2.5 text-base md:min-h-0 md:text-sm">

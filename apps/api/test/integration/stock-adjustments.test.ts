@@ -59,7 +59,7 @@ describe("adjusting a product's stock (Staff)", () => {
     const res = await adjust(body);
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe("Damaged goods and spoilage can only lower the stock");
+    expect(res.body.error).toBe("Waste (damaged, spoiled, dropped or over-prepped) can only lower the stock");
     expect(await stock()).toBe(before);
     expect(await logCount()).toBe(logged);
   });

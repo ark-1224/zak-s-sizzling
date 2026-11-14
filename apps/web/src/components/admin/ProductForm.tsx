@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PlanningFields, planningPayload, planningState, type PlanningState } from "@/components/admin/PlanningFields";
 import { ProductDetailsFields, type NutritionText } from "@/components/admin/ProductDetailsFields";
 import { apiFetch, apiUrl, ApiError } from "@/lib/api-client";
 import { ImageResizeError, resizeProductPhoto, type ResizedImage } from "@/lib/imageResize";
@@ -72,6 +73,8 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
   const initialPieces = countedInPieces ? String(product?.stockQty ?? 0) : "0";
   const [pieces, setPieces] = useState(initialPieces);
   const [minPieces, setMinPieces] = useState(countedInPieces ? String(product?.minStockThreshold ?? 0) : "0");
+  // A ready-made item's market units, par level, safety stock and freshness.
+  const [planning, setPlanning] = useState<PlanningState>(() => planningState(product?.planning));
   const [materials, setMaterials] = useState<RawMaterialDTO[]>([]);
   const [ingredients, setIngredients] = useState<string[]>(product?.ingredients ?? []);
   const [allergens, setAllergens] = useState<string[]>(product?.allergens ?? []);
@@ -184,6 +187,12 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
       focusField(firstInvalid);
       return;
     }
+    const planned = readyMade ? planningPayload(planning, true) : null;
+    if (planned && !planned.ok) {
+      setError(planned.error);
+      return;
+    }
+    const planningValue = planned?.ok ? planned.value : undefined;
     setSaving(true);
     setError(null);
     try {
@@ -191,7 +200,8 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
         name: name.trim(),
         categoryId: Number(categoryId),
         price: Number(price),
-        cost: cost === "" ? undefined : Number(cost),
+        // A dish's cost comes from its recipe; a ready-made item's is its cost per piece.
+        ...(readyMade ? { cost: cost === "" ? undefined : Number(cost) } : {}),
         description: description || undefined,
         icon: icon || undefined,
         prepMinutes: Number(prepMinutes),
@@ -201,6 +211,7 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
           ? {
               ...(pieces.trim() !== initialPieces || !countedInPieces ? { stockQty: Number(pieces) } : {}),
               minStockThreshold: Number(minPieces),
+              planning: planningValue,
             }
           : { recipe: recipe.map((r) => ({ rawMaterialId: r.rawMaterialId, qtyPerServing: Number(r.qty) })) }),
         instructionOptions,
@@ -323,7 +334,8 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
               className={`font-adm-mono ${admInputClass}`}
             />
           </Field>
-          <Field label="Cost (₱)" error={fieldErrors.cost} errorId="pf-cost-error">
+          {readyMade ? (
+          <Field label="Cost per piece (₱)" error={fieldErrors.cost} errorId="pf-cost-error">
             <input
               {...inputProps("cost")}
               type="number"
@@ -339,6 +351,9 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
               className={`font-adm-mono ${admInputClass}`}
             />
           </Field>
+          ) : (
+            <RecipeCost recipe={recipe} materialById={materialById} price={price} />
+          )}
         </div>
 
         <Field label="Preparation time (minutes)" required error={fieldErrors.prepMinutes} errorId="pf-prepMinutes-error">
@@ -410,7 +425,8 @@ export function ProductForm({ product, categories, onClose, onSaved }: ProductFo
                 />
               </Field>
             </div>
-            <p className="text-sm text-adm-ink-3">At or below the minimum, it counts as needing restock on the dashboard.</p>
+            <p className="mb-3 text-sm text-adm-ink-3">At or below the minimum, it counts as needing restock on the dashboard.</p>
+            <PlanningFields baseUnit="pc" value={planning} onChange={setPlanning} />
           </div>
         ) : (
           <div
@@ -782,5 +798,38 @@ function FieldError({ id, message }: { id: string; message: string }) {
     <span id={id} className="mt-1 block text-base text-adm-bad md:text-sm">
       {message}
     </span>
+  );
+}
+
+/** A dish's cost from its recipe at the raw materials' latest market prices, and its margin. */
+function RecipeCost({
+  recipe,
+  materialById,
+  price,
+}: {
+  recipe: { rawMaterialId: string; qty: string }[];
+  materialById: Map<string, { name: string; costPerUnit?: number | null }>;
+  price: string;
+}) {
+  const rows = recipe.filter((r) => r.rawMaterialId && Number(r.qty) > 0);
+  const missing = rows.filter((r) => materialById.get(r.rawMaterialId)?.costPerUnit == null).map((r) => materialById.get(r.rawMaterialId)?.name ?? "?");
+  const cost = rows.reduce((sum, r) => sum + Number(r.qty) * (materialById.get(r.rawMaterialId)?.costPerUnit ?? 0), 0);
+  const priceValue = Number(price);
+  const margin = rows.length > 0 && missing.length === 0 && priceValue > 0 ? ((priceValue - cost) / priceValue) * 100 : null;
+  return (
+    <div className="mb-3">
+      <span className={admLabelClass}>Cost from the recipe</span>
+      <div className="flex min-h-11 items-center rounded-[5px] border border-adm-line-soft bg-adm-surface px-3 md:min-h-0 md:py-2.25">
+        <span className="font-adm-mono text-base md:text-sm">
+          {rows.length === 0 ? "—" : `₱${cost.toFixed(2)}`}
+          {margin !== null && <span className="text-adm-ink-3"> · margin {margin.toFixed(0)}%</span>}
+        </span>
+      </div>
+      <span className="mt-1 block text-sm text-adm-ink-3">
+        {missing.length > 0
+          ? `No price yet for ${missing.join(", ")}: record a market purchase to complete it.`
+          : "From the raw materials' latest market prices."}
+      </span>
+    </div>
   );
 }

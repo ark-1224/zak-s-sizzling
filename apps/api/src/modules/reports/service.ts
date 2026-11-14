@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { servingCost } from "../inventory/costing";
 import { servingsAvailable } from "../inventory/fulfillment";
 import { averageOrderValue } from "./metrics";
 import type { InventoryMovementPoint, ProfitabilityPoint, SalesReportPoint, TopProductPoint } from "@zaks/shared-types";
@@ -120,7 +121,9 @@ export async function getInventoryMovement(): Promise<InventoryMovementPoint[]> 
 export async function getProfitability(): Promise<ProfitabilityPoint[]> {
   const [topProducts, products] = await Promise.all([
     getTopProducts(1000),
-    prisma.product.findMany({ select: { id: true, name: true, price: true, cost: true } }),
+    prisma.product.findMany({
+      select: { id: true, name: true, price: true, cost: true, tracking: true, recipeItems: { select: { qtyPerServing: true, rawMaterial: { select: { costPerUnit: true } } } } },
+    }),
   ]);
 
   const soldByProduct = new Map(topProducts.map((p) => [p.productId, p.qtySold]));
@@ -128,7 +131,10 @@ export async function getProfitability(): Promise<ProfitabilityPoint[]> {
   return products
     .map((p) => {
       const price = Number(p.price);
-      const cost = p.cost ? Number(p.cost) : null;
+      // A dish costs its recipe at the raw materials' latest market prices; only a complete
+      // cost counts, so a missing price never overstates the margin.
+      const serving = servingCost(p);
+      const cost = serving.complete && serving.cost !== null ? Math.round(Number(serving.cost) * 100) / 100 : null;
       const qtySold = soldByProduct.get(p.id) ?? 0;
       const marginPct = cost !== null && price > 0 ? ((price - cost) / price) * 100 : null;
       const grossProfit = cost !== null ? qtySold * (price - cost) : null;

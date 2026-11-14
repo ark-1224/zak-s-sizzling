@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import { StockCountTab } from "@/components/admin/StockCountTab";
+import { FreshnessNotice } from "@/components/admin/FreshnessNotice";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { apiFetch, ApiError } from "@/lib/api-client";
@@ -33,7 +35,7 @@ function movementLabel(m: StockMovementDTO) {
 }
 
 type Filter = "all" | "low" | "out";
-type Tab = "materials" | "dishes" | "ready-made" | "movements";
+type Tab = "materials" | "dishes" | "ready-made" | "movements" | "count";
 
 const FILTER_LABELS: Record<Filter, string> = { all: "All", low: "Needs restock", out: "Out of stock" };
 
@@ -108,7 +110,7 @@ function RawMaterialsContent() {
   const router = useRouter();
   const pathname = usePathname();
   const tabParam = params.get("tab");
-  const tab: Tab = tabParam === "dishes" || tabParam === "ready-made" || tabParam === "movements" ? tabParam : "materials";
+  const tab: Tab = tabParam === "dishes" || tabParam === "ready-made" || tabParam === "movements" || tabParam === "count" ? tabParam : "materials";
   const filterParam = params.get("filter");
   const filter: Filter = filterParam === "low" || filterParam === "out" ? filterParam : "all";
 
@@ -116,7 +118,7 @@ function RawMaterialsContent() {
   function navigate(next: { tab?: Tab; filter?: Filter }) {
     const query = new URLSearchParams();
     const nextTab = next.tab ?? tab;
-    const nextFilter = next.tab === "dishes" || next.tab === "movements" ? "all" : (next.filter ?? filter);
+    const nextFilter = next.tab === "dishes" || next.tab === "movements" || next.tab === "count" ? "all" : (next.filter ?? filter);
     if (nextTab !== "materials") query.set("tab", nextTab);
     if (nextFilter !== "all") query.set("filter", nextFilter);
     const qs = query.toString();
@@ -245,13 +247,14 @@ function RawMaterialsContent() {
       <SuccessMessage text={success.text} onDismiss={success.clear} />
       {message && <div className="text-base text-adm-bad md:text-sm">{message}</div>}
 
-      <div role="tablist" aria-label="Inventory view" className="flex gap-1 self-start rounded-[6px] border border-adm-line bg-adm-surface p-1">
+      <div role="tablist" aria-label="Inventory view" className="flex flex-wrap gap-1 self-start rounded-[6px] border border-adm-line bg-adm-surface p-1">
         {(
           [
             ["materials", "Raw materials"],
             ["dishes", "Dishes (servings)"],
             ["ready-made", "Ready-made (pieces)"],
             ["movements", "Stock movements"],
+            ["count", "Stock count"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -273,6 +276,8 @@ function RawMaterialsContent() {
         <DishServings materials={materials} products={products} error={productsError} isAdmin={isAdmin} />
       ) : tab === "movements" ? (
         <StockMovements materials={materials} readyMade={readyMade} version={version} />
+      ) : tab === "count" ? (
+        <StockCountTab isAdmin={isAdmin} onCounted={refresh} />
       ) : tab === "ready-made" ? (
         <ReadyMadeStock
           items={products && readyMade}
@@ -287,6 +292,7 @@ function RawMaterialsContent() {
         />
       ) : (
       <>
+      <FreshnessNotice />
       {lowAll.length > 0 && filter === "all" && !narrowed && (
         <div className="rounded-[6px] border border-adm-warn bg-adm-warn-soft p-4">
           <div className="mb-1 font-medium text-adm-ink">

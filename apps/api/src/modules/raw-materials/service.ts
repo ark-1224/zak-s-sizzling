@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
-import type { AdjustmentReason, RawMaterialCategory, RawMaterialDTO, RawMaterialMovementDTO, RawMaterialNutrition, UserRole } from "@zaks/shared-types";
+import type { AdjustmentReason, RawMaterialCategory, RawMaterialDTO, RawMaterialMovementDTO, RawMaterialNutrition, StockPlanningInput, UserRole } from "@zaks/shared-types";
+import { assertPlanning, planningColumns, savePurchaseUnits, toPlanningDTO } from "../purchasing/planning";
 import { prisma } from "../../lib/prisma";
 import { HttpError } from "../../middleware/errorHandler";
 import { refreshAvailability } from "../inventory/fulfillment";
@@ -11,6 +12,7 @@ import { DECREASE_ONLY_MESSAGE, DECREASE_ONLY_REASONS } from "../inventory/schem
 
 const RAW_MATERIAL_INCLUDE = {
   recipeItems: { include: { product: { select: { id: true, name: true } } }, orderBy: { product: { name: "asc" } } },
+  purchaseUnits: true,
 } satisfies Prisma.RawMaterialInclude;
 
 type RawMaterialWithRecipes = Prisma.RawMaterialGetPayload<{ include: typeof RAW_MATERIAL_INCLUDE }>;
@@ -41,6 +43,7 @@ function toRawMaterialDTO(m: RawMaterialWithRecipes): RawMaterialDTO {
             },
           },
     gramsPerUnit: m.gramsPerUnit === null ? null : Number(m.gramsPerUnit),
+    planning: toPlanningDTO(m, m.purchaseUnits),
   };
 }
 
@@ -66,7 +69,7 @@ export async function listRawMaterials(): Promise<RawMaterialDTO[]> {
   return rows.map(toRawMaterialDTO);
 }
 
-export interface CreateRawMaterialInput {
+export interface CreateRawMaterialInput extends StockPlanningInput {
   name: string;
   unit: "g" | "ml" | "pc";
   category?: RawMaterialCategory;
@@ -77,6 +80,7 @@ export interface CreateRawMaterialInput {
 
 /** Creates a raw material; any opening stock is logged as a restock. */
 export async function createRawMaterial(input: CreateRawMaterialInput, createdById: string): Promise<RawMaterialDTO> {
+  assertPlanning(input, false);
   try {
     const material = await prisma.$transaction(async (tx) => {
       const created = await tx.rawMaterial.create({
@@ -87,8 +91,10 @@ export async function createRawMaterial(input: CreateRawMaterialInput, createdBy
           stockQty: decimal(input.stockQty),
           minStockThreshold: decimal(input.minStockThreshold),
           costPerUnit: input.costPerUnit,
+          ...planningColumns(input),
         },
       });
+      await savePurchaseUnits(tx, { rawMaterialId: created.id }, input.purchaseUnits);
       if (created.stockQty.gt(0)) {
         await tx.rawMaterialMovement.create({
           data: {
@@ -112,7 +118,7 @@ export async function createRawMaterial(input: CreateRawMaterialInput, createdBy
   }
 }
 
-export interface UpdateRawMaterialInput {
+export interface UpdateRawMaterialInput extends StockPlanningInput {
   name?: string;
   category?: RawMaterialCategory;
   minStockThreshold?: number;
@@ -141,18 +147,27 @@ function nutritionColumns(nutrition: RawMaterialNutrition | null | undefined) {
 export async function updateRawMaterial(id: string, input: UpdateRawMaterialInput): Promise<RawMaterialDTO> {
   const existing = await prisma.rawMaterial.findUnique({ where: { id } });
   if (!existing) throw new HttpError(404, "Raw material not found");
+  assertPlanning(
+    { parLevel: input.parLevel === undefined ? (existing.parLevel === null ? null : Number(existing.parLevel)) : input.parLevel,
+      safetyStock: input.safetyStock === undefined ? (existing.safetyStock === null ? null : Number(existing.safetyStock)) : input.safetyStock },
+    false
+  );
   try {
-    await prisma.rawMaterial.update({
-      where: { id },
-      data: {
-        name: input.name,
-        category: input.category,
-        minStockThreshold: input.minStockThreshold === undefined ? undefined : decimal(input.minStockThreshold),
-        costPerUnit: input.costPerUnit,
-        isActive: input.isActive,
-        ...nutritionColumns(input.nutrition),
-        gramsPerUnit: input.gramsPerUnit,
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.rawMaterial.update({
+        where: { id },
+        data: {
+          name: input.name,
+          category: input.category,
+          minStockThreshold: input.minStockThreshold === undefined ? undefined : decimal(input.minStockThreshold),
+          costPerUnit: input.costPerUnit,
+          isActive: input.isActive,
+          ...nutritionColumns(input.nutrition),
+          gramsPerUnit: input.gramsPerUnit,
+          ...planningColumns(input),
+        },
+      });
+      await savePurchaseUnits(tx, { rawMaterialId: id }, input.purchaseUnits);
     });
   } catch (err) {
     if (isUniqueViolation(err)) throw new HttpError(409, "A raw material with that name already exists");

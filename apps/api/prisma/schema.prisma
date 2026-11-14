@@ -69,6 +69,9 @@ enum AdjustmentReason {
   spoilage
   correction
   other
+  // Waste reasons (decrease only), with damaged and spoilage.
+  dropped
+  over_prepped
 
   @@map("adjustment_reason")
 }
@@ -105,6 +108,23 @@ enum RawMaterialCategory {
   @@map("raw_material_category")
 }
 
+/// How a stock item is kept, for how long it stays fresh (shelf-life warnings).
+enum StorageType {
+  frozen
+  chilled
+  room
+
+  @@map("storage_type")
+}
+
+/// A market purchase: the regular trip to the palengke, or a small top-up in between.
+enum PurchaseKind {
+  market_trip
+  top_up
+
+  @@map("purchase_kind")
+}
+
 enum MovementType {
   sale
   adjustment
@@ -134,6 +154,8 @@ model User {
   stockAdjustments     StockAdjustment[]
   rawMaterialMovements RawMaterialMovement[]
   loginCodes           LoginCode[]
+  purchases            Purchase[]
+  stockCounts          StockCount[]
 
   @@index([roleId])
   @@map("users")
@@ -212,6 +234,9 @@ model Product {
   recipeItems        RecipeItem[]
   lowStockAlerts     LowStockAlert[]
   image              ProductImage?
+  purchaseUnits      PurchaseUnit[]
+  purchaseLines      PurchaseLine[]
+  stockCountLines    StockCountLine[]
 
   @@unique([barcode])
   @@index([categoryId])
@@ -238,6 +263,11 @@ model Inventory {
   product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   stockQty          Int      @default(0) @map("stock_qty")
   minStockThreshold Int      @default(5) @map("min_stock_threshold")
+  // Planning for the market trip (shopping list) and freshness, as on raw materials.
+  parLevel          Int?         @map("par_level")
+  safetyStock       Int?         @map("safety_stock")
+  storage           StorageType?
+  shelfLifeDays     Int?         @map("shelf_life_days")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   @@map("inventory")
@@ -257,6 +287,10 @@ model StockAdjustment {
   newQty       Int              @map("new_qty")
   reason       AdjustmentReason
   note         String?          @db.VarChar(200)
+  purchaseId   String?          @map("purchase_id") @db.Uuid
+  purchase     Purchase?        @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+  stockCountId String?          @map("stock_count_id") @db.Uuid
+  stockCount   StockCount?      @relation(fields: [stockCountId], references: [id], onDelete: SetNull)
   adjustedById String           @map("adjusted_by_id") @db.Uuid
   adjustedBy   User             @relation(fields: [adjustedById], references: [id])
   createdAt    DateTime         @default(now()) @map("created_at")
@@ -313,6 +347,9 @@ model OrderItem {
   qty                 Int
   cancelledQty        Int          @default(0) @map("cancelled_qty")
   unitPrice           Decimal      @map("unit_price") @db.Decimal(10, 2)
+  // What one serving cost when it was paid (its recipe at the raw materials' prices, or a
+  // ready-made item's cost); null when a price was missing. Food cost uses it.
+  unitCost            Decimal?     @map("unit_cost") @db.Decimal(12, 4)
   subtotal            Decimal      @db.Decimal(10, 2)
   specialInstructions String?      @map("special_instructions") @db.VarChar(140)
   createdAt           DateTime     @default(now()) @map("created_at")
@@ -379,9 +416,18 @@ model RawMaterial {
   gramsPerUnit      Decimal?              @map("grams_per_unit") @db.Decimal(8, 3)
   createdAt         DateTime              @default(now()) @map("created_at")
   updatedAt         DateTime              @updatedAt @map("updated_at")
+  // Planning for the market trip: the most to keep on hand (par), a buffer that is never
+  // planned away (safety stock), and how long a purchase stays fresh in its storage.
+  parLevel          Decimal?              @map("par_level") @db.Decimal(12, 3)
+  safetyStock       Decimal?              @map("safety_stock") @db.Decimal(12, 3)
+  storage           StorageType?
+  shelfLifeDays     Int?                  @map("shelf_life_days")
   recipeItems       RecipeItem[]
   movements         RawMaterialMovement[]
   lowStockAlerts    LowStockAlert[]
+  purchaseUnits     PurchaseUnit[]
+  purchaseLines     PurchaseLine[]
+  stockCountLines   StockCountLine[]
 
   @@map("raw_materials")
 }
@@ -413,6 +459,10 @@ model RawMaterialMovement {
   reason        AdjustmentReason?
   orderId       String?           @map("order_id") @db.Uuid
   order         Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  purchaseId    String?           @map("purchase_id") @db.Uuid
+  purchase      Purchase?         @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
+  stockCountId  String?           @map("stock_count_id") @db.Uuid
+  stockCount    StockCount?       @relation(fields: [stockCountId], references: [id], onDelete: SetNull)
   adjustedById  String?           @map("adjusted_by_id") @db.Uuid
   adjustedBy    User?             @relation(fields: [adjustedById], references: [id])
   note          String?           @db.VarChar(200)
@@ -452,4 +502,103 @@ model LowStockAlert {
   @@index([productId])
   @@index([rawMaterialId])
   @@map("low_stock_alerts")
+}
+
+// --- Market purchasing (docs/design: the palengke cycle) --------------------------------
+// A stock item is a raw material or a ready-made item (a product counted in pieces); each
+// row below points at exactly one of them (a CHECK in the migration).
+
+/// A unit the item is bought in at the market ("kg", "tray", "sack", "tali"), with how
+/// many base units (g, ml or pieces) one of it is.
+model PurchaseUnit {
+  id            String       @id @default(uuid()) @db.Uuid
+  rawMaterialId String?      @map("raw_material_id") @db.Uuid
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+  productId     String?      @map("product_id") @db.Uuid
+  product       Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name          String       @db.VarChar(40)
+  qtyInBase     Decimal      @map("qty_in_base") @db.Decimal(12, 3)
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  @@unique([rawMaterialId, name])
+  @@unique([productId, name])
+  @@map("purchase_units")
+}
+
+/// One market receipt (resibo), entered by the owner after the trip.
+model Purchase {
+  id                   String                @id @default(uuid()) @db.Uuid
+  purchasedOn          DateTime              @map("purchased_on") @db.Date
+  kind                 PurchaseKind          @default(market_trip)
+  store                String?               @db.VarChar(120)
+  note                 String?               @db.VarChar(200)
+  totalAmount          Decimal               @map("total_amount") @db.Decimal(10, 2)
+  createdById          String                @map("created_by_id") @db.Uuid
+  createdBy            User                  @relation(fields: [createdById], references: [id])
+  createdAt            DateTime              @default(now()) @map("created_at")
+  lines                PurchaseLine[]
+  rawMaterialMovements RawMaterialMovement[]
+  stockAdjustments     StockAdjustment[]
+
+  @@index([purchasedOn])
+  @@map("purchases")
+}
+
+/// One line of a receipt: how much of an item was bought, in which market unit, for how much.
+model PurchaseLine {
+  id            String       @id @default(uuid()) @db.Uuid
+  purchaseId    String       @map("purchase_id") @db.Uuid
+  purchase      Purchase     @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  rawMaterialId String?      @map("raw_material_id") @db.Uuid
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+  productId     String?      @map("product_id") @db.Uuid
+  product       Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // The unit as bought, copied so a later change to the item's units doesn't rewrite history.
+  unitName      String       @map("unit_name") @db.VarChar(40)
+  unitQtyInBase Decimal      @map("unit_qty_in_base") @db.Decimal(12, 3)
+  qtyUnits      Decimal      @map("qty_units") @db.Decimal(10, 3)
+  qtyBase       Decimal      @map("qty_base") @db.Decimal(12, 3)
+  lineTotal     Decimal      @map("line_total") @db.Decimal(10, 2)
+  // From the shopping list: how much was planned, to compare with what was bought.
+  plannedUnits  Decimal?     @map("planned_units") @db.Decimal(10, 3)
+  // A packaged item's printed expiry date (fresh goods have none: they use shelf life).
+  expiresOn     DateTime?    @map("expires_on") @db.Date
+
+  @@index([purchaseId])
+  @@index([rawMaterialId])
+  @@index([productId])
+  @@map("purchase_lines")
+}
+
+/// A physical count of the stock (planned before each market trip), for variance.
+model StockCount {
+  id                   String                @id @default(uuid()) @db.Uuid
+  countedAt            DateTime              @default(now()) @map("counted_at")
+  note                 String?               @db.VarChar(200)
+  createdById          String                @map("created_by_id") @db.Uuid
+  createdBy            User                  @relation(fields: [createdById], references: [id])
+  lines                StockCountLine[]
+  rawMaterialMovements RawMaterialMovement[]
+  stockAdjustments     StockAdjustment[]
+
+  @@index([countedAt])
+  @@map("stock_counts")
+}
+
+/// One item of a count: what the system expected and what was counted.
+model StockCountLine {
+  id            String       @id @default(uuid()) @db.Uuid
+  stockCountId  String       @map("stock_count_id") @db.Uuid
+  stockCount    StockCount   @relation(fields: [stockCountId], references: [id], onDelete: Cascade)
+  rawMaterialId String?      @map("raw_material_id") @db.Uuid
+  rawMaterial   RawMaterial? @relation(fields: [rawMaterialId], references: [id], onDelete: Cascade)
+  productId     String?      @map("product_id") @db.Uuid
+  product       Product?     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  systemQty     Decimal      @map("system_qty") @db.Decimal(12, 3)
+  countedQty    Decimal      @map("counted_qty") @db.Decimal(12, 3)
+  // Cost per base unit at the time, so the variance keeps its peso value.
+  unitCost      Decimal?     @map("unit_cost") @db.Decimal(12, 4)
+
+  @@index([stockCountId])
+  @@map("stock_count_lines")
 }

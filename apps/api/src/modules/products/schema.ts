@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { stockPlanningSchema } from "../purchasing/planning";
 
 // The product form: name, category, price, cost, description and the dish's bill of
 // materials (its recipe), plus the ingredients, allergens and nutrition the kiosk shows
@@ -61,6 +62,8 @@ export const createProductSchema = z.object({
   allergens: z.array(z.enum(ALLERGENS)).max(ALLERGENS.length).optional(),
   // Per serving; values the admin doesn't know stay null (the kiosk leaves them out).
   nutrition: nutritionSchema.optional(),
+  // Ready-made items only: market units, par level, safety stock and freshness.
+  planning: stockPlanningSchema.optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial().extend({

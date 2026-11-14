@@ -28,7 +28,8 @@ export type IconName =
   | "cash"
   | "phone"
   | "history"
-  | "categories";
+  | "categories"
+  | "basket";
 
 const SHAPES: Record<IconName, React.ReactNode> = {
   dashboard: (
@@ -62,6 +63,13 @@ const SHAPES: Record<IconName, React.ReactNode> = {
     <>
       <path d="M3.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2M17 3.5h2A1.5 1.5 0 0 1 20.5 5v2M20.5 17v2a1.5 1.5 0 0 1-1.5 1.5h-2M7 20.5H5A1.5 1.5 0 0 1 3.5 19v-2" />
       <path d="M7.5 8v8M10 8v8M13 8v8M16.5 8v8" />
+    </>
+  ),
+  basket: (
+    <>
+      <path d="M3.5 9.5h17l-1.6 9.1a2 2 0 0 1-2 1.65H7.1a2 2 0 0 1-2-1.65z" />
+      <path d="m8 9.5 3-5.5M16 9.5l-3-5.5" />
+      <path d="M9.5 13v4M14.5 13v4" />
     </>
   ),
   import: (

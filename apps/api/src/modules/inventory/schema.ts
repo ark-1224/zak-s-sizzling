@@ -4,12 +4,14 @@ import { z } from "zod";
 // "add/remove N units" (returns, damage, spoilage, manual corrections per the
 // manuscript's Stock Adjustments feature). A reason is required whenever the quantity
 // actually changes, so every entry in the stock_adjustments log is explainable.
-export const adjustmentReasonSchema = z.enum(["restock", "return", "damaged", "spoilage", "correction", "other"]);
+export const adjustmentReasonSchema = z.enum(["restock", "return", "damaged", "spoilage", "correction", "other", "dropped", "over_prepped"]);
 
-// Damaged goods and spoilage only ever take stock away, so these reasons must lower the
-// count (UI review #5). The web forms apply the same rule; this keeps the log honest.
-export const DECREASE_ONLY_REASONS: readonly z.infer<typeof adjustmentReasonSchema>[] = ["damaged", "spoilage"];
-export const DECREASE_ONLY_MESSAGE = "Damaged goods and spoilage can only lower the stock";
+// Waste: damaged goods, spoilage, dropped and over-prepped food only ever take stock away,
+// so these reasons must lower the count (UI review #5). The web forms apply the same rule;
+// this keeps the log honest. The waste report (reports/usage.ts) adds them up.
+export const WASTE_REASONS = ["damaged", "spoilage", "dropped", "over_prepped"] as const;
+export const DECREASE_ONLY_REASONS: readonly z.infer<typeof adjustmentReasonSchema>[] = WASTE_REASONS;
+export const DECREASE_ONLY_MESSAGE = "Waste (damaged, spoiled, dropped or over-prepped) can only lower the stock";
 
 export const adjustStockSchema = z
   .object({
@@ -40,4 +42,19 @@ export const stockMovementQuerySchema = z
     to: day.optional(),
     limit: z.coerce.number().int().min(1).max(300).default(150),
   })
+  .refine((v) => !v.from || !v.to || v.from <= v.to, { message: "The start date must be on or before the end date", path: ["from"] });
+
+// The count sheet: what was counted for each item (base units; whole pieces for
+// ready-made items, checked in counts.ts). Only the items sent are counted.
+export const createStockCountSchema = z.object({
+  note: z.string().trim().max(200).optional(),
+  lines: z
+    .array(z.object({ kind: z.enum(["raw_material", "ready_made"]), itemId: z.string().uuid(), countedQty: z.number().min(0).max(100_000_000) }))
+    .min(1, "Count at least one item")
+    .max(500),
+});
+
+// A report period in Manila days, both included (usage, waste, food cost).
+export const reportPeriodSchema = z
+  .object({ from: day.optional(), to: day.optional() })
   .refine((v) => !v.from || !v.to || v.from <= v.to, { message: "The start date must be on or before the end date", path: ["from"] });

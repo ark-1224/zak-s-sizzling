@@ -15,6 +15,7 @@ import { ordersRouter } from "./modules/orders/routes";
 import { paymentsRouter } from "./modules/payments/routes";
 import { nutritionRouter } from "./modules/nutrition/routes";
 import { productsRouter } from "./modules/products/routes";
+import { purchasingRouter } from "./modules/purchasing/routes";
 import { rawMaterialsRouter } from "./modules/raw-materials/routes";
 import { reportsRouter } from "./modules/reports/routes";
 import { usersRouter } from "./modules/users/routes";
@@ -59,6 +60,7 @@ export function createApp() {
   app.use("/api/orders", ordersRouter);
   app.use("/api/payments", paymentsRouter);
   app.use("/api/products", productsRouter);
+  app.use("/api/purchases", purchasingRouter);
   app.use("/api/raw-materials", rawMaterialsRouter);
   app.use("/api/reports", reportsRouter);
   app.use("/api/users", usersRouter);

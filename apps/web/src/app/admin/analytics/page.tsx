@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { StockReports } from "@/components/admin/StockReports";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { downloadAuthenticated } from "@/lib/download";
@@ -293,6 +294,8 @@ export default function AnalyticsPage() {
           )}
         </Card>
       </div>
+
+      <StockReports />
 
       <Card
         title="Inventory movement · sold all time, stock now"
