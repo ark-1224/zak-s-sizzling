@@ -47,6 +47,8 @@ WIREFRAME_DESC = {
     "14e": "Dishes (servings) tab: each dish's servings and the raw material that limits it, or NO RECIPE.",
     "14f": "Ready-made (pieces) tab: bottled drinks and other items counted in pieces, with Adjust.",
     "14g": "Stock movements tab: one filterable log of raw-material and ready-made stock changes.",
+    "14h": "Edit-raw-material popup with Remove item, refused for a raw material still in a dish's recipe (Admin only).",
+    "14i": "Confirmation before removing a raw material, warning that its movement history goes with it.",
     "16": "Bulk import with Products and Recipes tables from one Excel file, and a preview with errors and a warning.",
     "16b": "Bulk import after importing: the result card with recipes set.",
     "17": "Analytics: period switch, KPI tiles (with average order value), sales chart, top products, profitability, inventory movement, exports.",

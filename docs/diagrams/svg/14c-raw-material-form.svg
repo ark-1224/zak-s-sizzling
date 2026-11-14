@@ -6,8 +6,8 @@
 <text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Category is one of a fixed list (Meat &amp; seafood, Vegetables &amp; fruit, Rice &amp; noodles, Sauces &amp; seasonings, Oils &amp; fats, Dairy &amp; eggs, Drinks &amp; ice, Others), Others by default; raw</text>
 <text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   materials that existed before were sorted by their names when categories were added.</text>
-<text x="24" y="1080" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Edit (same popup, “EDIT RAW MATERIAL”): the unit is locked, there is no opening stock, and an “In use (unticked materials can&#x27;t be added to new recipes)” tick box is added. Stock itself</text>
-<text x="24" y="1099" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   is changed only through Adjust (14b). “Measured in” offers grams (g), millilitres (ml) or pieces (pc).</text>
+<text x="24" y="1080" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Edit is the same popup (14h): the unit is locked, there is no opening stock, and it adds an In use tick box and Remove item. Stock itself is changed only through Adjust (14b). “Measured</text>
+<text x="24" y="1099" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   in” offers grams (g), millilitres (ml) or pieces (pc).</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="900"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="900" fill="#ffffff"/>
 <rect x="0" y="0" width="1280" height="900" rx="0" fill="#f3f3f3" stroke="none"/>
 <rect x="0" y="0" width="256" height="900" rx="0" fill="#ffffff" stroke="none"/>

@@ -674,7 +674,42 @@ def raw_form():
     f.inp(x + half + 12, y + 286, half, 38, label="Cost per g (₱)", placeholder="Optional")
     f.btn_row(x + w, y + 342, [("Cancel", "secondary"), ("Add raw material", "primary")], h=38)
     f.add_note("Category is one of a fixed list (Meat & seafood, Vegetables & fruit, Rice & noodles, Sauces & seasonings, Oils & fats, Dairy & eggs, Drinks & ice, Others), Others by default; raw materials that existed before were sorted by their names when categories were added.")
-    f.add_note("Edit (same popup, “EDIT RAW MATERIAL”): the unit is locked, there is no opening stock, and an “In use (unticked materials can't be added to new recipes)” tick box is added. Stock itself is changed only through Adjust (14b). “Measured in” offers grams (g), millilitres (ml) or pieces (pc).")
+    f.add_note("Edit is the same popup (14h): the unit is locked, there is no opening stock, and it adds an In use tick box and Remove item. Stock itself is changed only through Adjust (14b). “Measured in” offers grams (g), millilitres (ml) or pieces (pc).")
+    return f
+
+
+def raw_form_edit():
+    f = admin_page("14h", "Edit raw material (popup): Remove item refused", "/admin/raw-materials  (popup)", C + "RawMaterialForm.tsx", h=900, access=ADMIN)
+    raw_base(f)
+    x, y, w = modal(f, 448, 540, y=140)
+    f.text(x, y + 12, "EDIT RAW MATERIAL", size=11, fill=INK3, bold=True)
+    f.text(x, y + 40, "Raw material name", size=18, bold=True)
+    half = (w - 12) / 2
+    f.inp(x, y + 82, w, 38, label="Name", value="Raw material name")
+    f.inp(x, y + 150, w, 38, label="Category", value="Vegetables & fruit", select=True)
+    f.inp(x, y + 218, w, 38, label="Measured in", value="grams (g)")
+    f.rect(x, y + 218, w, 38, fill=FILL2, stroke=LINE_SOFT, r=4, opacity=0.6)
+    f.inp(x, y + 286, half, 38, label="Minimum level (g)", value="000")
+    f.inp(x + half + 12, y + 286, half, 38, label="Cost per g (₱)", value="0.00")
+    f.checkbox(x, y + 338, checked=True, size=16)
+    f.text(x + 26, y + 351, "In use (unticked materials can't be added to new recipes)", size=13)
+    f.wrap(x, y + 382, w, "Raw material name is in the recipe of Dish A, Dish B, Dish C. Take it out of those recipes first (Products → Edit), or untick In use.", size=13, fill=INK, bold=True)
+    f.btn(x, y + 462, 128, 38, "Remove item", kind="danger")
+    f.btn_row(x + w, y + 462, [("Cancel", "secondary"), ("Save changes", "primary")], h=38)
+    f.add_note("Remove item (Admin only) on a raw material that a dish's recipe still uses doesn't ask: it names the dishes, as here, and nothing is removed. The server refuses it too (DELETE /api/raw-materials/:id answers 409 with the dishes), even if a recipe gains it at the same moment.")
+    f.add_note("On a raw material no recipe uses, Remove item asks first (14i). Unticking In use keeps the raw material and its history but stops it being added to new recipes.")
+    return f
+
+
+def raw_remove():
+    f = admin_page("14i", "Remove raw material: confirmation", "/admin/raw-materials  (popup)", C + "ConfirmDialog.tsx, " + C + "RawMaterialForm.tsx", h=800, access=ADMIN)
+    raw_base(f)
+    x, y, w = modal(f, 448, 212)
+    f.text(x, y + 22, "Remove Raw material name?", size=18, bold=True)
+    f.wrap(x, y + 52, w, "It leaves the raw materials list with its 0 g on hand, and its stock movement history is deleted too. This can't be undone. To keep the history, untick In use instead.", size=13, fill=INK2)
+    f.btn_row(x + w, y + 120, [("Cancel", "secondary"), ("Yes, remove", "danger")], h=38)
+    f.add_note("Opened by Remove item in the Edit popup (14h) for a raw material no recipe uses. Yes, remove deletes it (DELETE /api/raw-materials/:id), closes the popup and shows “… removed”; its name can then be used for a new raw material. Cancel goes back to the Edit popup.")
+    f.add_note("If the server refuses (for example a recipe gained it meanwhile), the confirmation closes and the message shows in the Edit popup.")
     return f
 
 
@@ -1318,7 +1353,7 @@ def status_board():
 
 
 SCREENS = [login, login_error, login_code, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_form_ready,
-           product_delete, raw_materials, raw_adjust, raw_form, raw_nutrition, raw_dishes, raw_ready, adjust_stock, raw_movements,
+           product_delete, raw_materials, raw_adjust, raw_form, raw_form_edit, raw_remove, raw_nutrition, raw_dishes, raw_ready, adjust_stock, raw_movements,
            bulk_import, bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, payment_panel, counter_receipt,
            new_order, paid_orders, users, invite_user, confirm_change, edit_user, kiosk_qr, kiosk_qr_invalid, categories, transactions,
            status_board]
@@ -1327,7 +1362,8 @@ SLUGS = {
     "10": "login", "10b": "login-error", "10c": "login-code", "11": "dashboard", "11b": "dashboard-staff", "12": "products",
     "12b": "product-form-add", "12c": "product-form-recipe", "12d": "product-delete", "12e": "product-form-ready-made",
     "13b": "adjust-stock", "14": "raw-materials", "14b": "raw-material-adjust", "14c": "raw-material-form",
-    "14d": "raw-material-nutrition", "14e": "raw-materials-dishes", "14f": "raw-materials-ready-made", "14g": "stock-movements",
+    "14d": "raw-material-nutrition", "14e": "raw-materials-dishes", "14f": "raw-materials-ready-made", "14g": "stock-movements", "14h": "raw-material-edit-remove",
+    "14i": "raw-material-remove",
     "16": "bulk-import-preview", "16b": "bulk-import-result", "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty",
     "19": "orders-awaiting-payment", "19b": "orders-awaiting-payment-empty", "19c": "take-payment", "19d": "counter-receipt",
     "19e": "new-order", "19f": "paid-orders", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",
