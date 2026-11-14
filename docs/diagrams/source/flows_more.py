@@ -31,7 +31,7 @@ def overview():
     f.n("a7", Ad, 7, "start", "Admin signs in (Flow 02)")
     f.n("s8", S, 8, "sub", "Restock and adjust raw materials and ready-made items (Flow 07)")
     f.n("y8", Y, 8, "process", "Save the change; update the kiosk menu live; queue low-stock alerts")
-    f.n("a8", Ad, 8, "sub", "Products and their recipes, bulk import, users, kiosk QR code, raw materials (Flows 08, 09, 10, 14, 15)")
+    f.n("a8", Ad, 8, "sub", "Products and their recipes, bulk import, users, kiosk QR code, raw materials, market purchases (Flows 08, 09, 10, 14, 15, 16)")
     f.n("y9", Y, 9, "end", "End")
     f.n("a9", Ad, 9, "sub", "Reports and exports from paid orders (Flow 12)")
     f.n("a10", Ad, 10, "end", "End")
@@ -189,7 +189,8 @@ def stock():
              + API + "raw-materials/service.ts, " + API + "inventory/fulfillment.ts, apps/api/prisma/migrations/*low_stock_alerts*, "
              "apps/worker/src/index.ts, apps/worker/src/jobs/sendLowStockAlerts.ts, lowStockSweep.ts",
              notes=[
-                 "Reasons: Restock / delivery received, Customer return, Damaged goods, Spoilage, Manual correction (recount), Other. Damaged goods and Spoilage can only lower stock, in the form and again on the server.",
+                 "Reasons: Restock / delivery received, Customer return, Damaged goods, Spoilage, Dropped, Over-prepped, Manual correction (recount), Other. The four waste reasons (damaged, spoiled, dropped, over-prepped) can only lower stock, in the form and again on the server, and are added up in Analytics (17b).",
+                 "Market purchases are the main way stock comes in: recording a receipt adds every item's stock at once and updates its price (Flow 16). The count before each trip is Flow 16 too.",
                  "Every dish is made from a bill of materials, so it has no count of its own: its stock is the servings its raw materials can make, and it changes through them. Items sold as they are (the Ready-made category) are counted in pieces. Every change shows in Stock movements (14g).",
                  "Separately, every hour the worker writes the items at or below their minimum to its log (lowStockSweep).",
              ])
@@ -565,6 +566,7 @@ def raw_materials():
                  "Only an Admin sees + Add raw material, Edit and Remove item; the API refuses them from Staff (authorize(\"admin\")). Staff restock and adjust stock (Flow 07).",
                  "The unit (g, ml or pc) is fixed once the raw material is created, because recipes and the movement log are written in it; stock itself changes only through Adjust (Flow 07).",
                  "The form has the name, category, unit and opening stock (new only), minimum level and cost per unit, and In use when editing. Unticking In use keeps the raw material and its history but stops it being added to new recipes; saving a recipe that uses it puts it back in use.",
+                 "The form's Market trip section sets the units it's bought in (1 kg = 1000 g), the par level, the safety stock, how it's stored and the days it stays fresh, used by Flow 16.",
                  "Removing deletes the raw material's stock movements and low-stock alerts with it. A raw material in a recipe can't be removed, checked in the form, by the server and by the database (RESTRICT on recipe items).",
              ])
     Ad, Wb, A = f.lanes
@@ -617,4 +619,56 @@ def raw_materials():
     f.e("refused", "end4", exit="l", entry="r")
     f.e("delete", "removed")
     f.e("removed", "end5")
+    return f
+
+
+def market_cycle():
+    f = Flow("market-trip-cycle", "16", "The market trip cycle (count, shopping list, palengke, receipts)",
+             ["Owner (Admin)", "Staff", "API server"],
+             W + "components/admin/StockCountTab.tsx, " + W + "app/admin/purchases/page.tsx, " + W + "components/admin/purchasing/PurchaseForm.tsx, "
+             + W + "components/admin/StockReports.tsx, " + API + "inventory/counts.ts, " + API + "purchasing/shoppingList.ts, "
+             + API + "purchasing/service.ts (createPurchase), " + API + "inventory/freshness.ts, " + API + "reports/stockReports.ts",
+             notes=[
+                 "The shop restocks by buying at the local public market (palengke) about every two weeks, with small top-ups in between. There are no suppliers, purchase orders or delivery lead times: the shopping list is the plan and the receipt (resibo) the record.",
+                 "The shopping list is a fixed rule over the last 28 days of sales and waste, not a forecast: usage per day × the days to cover (until the next trip, or fewer if it won't stay fresh) + safety stock, never above par, minus what's on hand, rounded up to market units.",
+                 "Recording a purchase is the owner's (Administrator's) work, since it carries prices. The price paid becomes the item's cost per unit, so recipe costs, margins and food cost follow the market. Freshness assumes the oldest stock is used first; stock is one number per item, not batches.",
+             ])
+    O, S, A = f.lanes
+    f.n("start", O, 0, "start", "About every two weeks, before the market trip")
+    f.n("count", S, 1, "io", "Stock count (14j): count what's there and save; the system's figure is hidden")
+    f.n("countsrv", A, 2, "process", "Set each counted item's stock; record expected against counted: the variance (14k)")
+    f.n("list", O, 3, "io", "Shopping list (25): days until the next trip; the items to buy and the cash to bring")
+    f.n("listsrv", A, 4, "process", "Usage per day × days to cover + safety stock, up to par, minus on hand, in market units")
+    f.n("trip", O, 5, "process", "Buy at the palengke (outside the system); keep the resibo")
+    f.n("record", O, 6, "io", "Record the trip from the list (25b): what was bought, in market units, and what was paid")
+    f.n("valid", A, 7, "decision", "Known units, whole pieces, no future date, a price only with something bought?")
+    f.n("msg", O, 8, "io", "Show the message; fix the line")
+    f.n("save", A, 9, "process", "In one transaction: save the purchase; add each item's stock (a restock linked to it); the price paid becomes its cost")
+    f.n("after", A, 10, "process", "Recipe costs follow the new prices; sold-out dishes come back on the kiosk; low-stock alerts clear")
+    f.n("during", S, 11, "sub", "Two weeks of sales deduct the stock (Flows 03, 04, 06)")
+    f.n("waste", S, 12, "io", "Food thrown away: Adjust with Spoiled, Dropped or Over-prepped (Flow 07)")
+    f.n("fresh", A, 13, "process", "Shelf-life warnings on the dashboard: oldest stock near its days fresh, or a printed date within 7 days")
+    f.n("topup", O, 14, "decision", "Something running out before the next trip?")
+    f.n("topupbuy", O, 15, "io", "Buy it and record a top-up purchase")
+    f.n("reports", O, 17, "io", "Analytics (17b): food cost from recipes and from purchases, each trip against its sales, usage and waste")
+    f.n("end", O, 18, "end", "Next cycle: count again")
+    f.e("start", "count", exit="r", entry="t")
+    f.e("count", "countsrv", exit="r", entry="t")
+    f.e("countsrv", "list", exit="l", entry="t")
+    f.e("list", "listsrv", exit="r", entry="t")
+    f.e("listsrv", "trip", exit="l", entry="t")
+    f.e("trip", "record")
+    f.e("record", "valid", exit="r", entry="t")
+    f.e("valid", "msg", "No", exit="l", entry="r")
+    f.e("msg", "record", exit="l", entry="l")
+    f.e("valid", "save", "Yes")
+    f.e("save", "after")
+    f.e("after", "during", exit="l", entry="t")
+    f.e("during", "waste")
+    f.e("waste", "fresh", exit="r", entry="t")
+    f.e("fresh", "topup", exit="l", entry="t")
+    f.e("topup", "topupbuy", "Yes")
+    f.e("topupbuy", "record", exit="l", entry="l")
+    f.e("topup", "reports", "No", exit="r", side="r")
+    f.e("reports", "end")
     return f

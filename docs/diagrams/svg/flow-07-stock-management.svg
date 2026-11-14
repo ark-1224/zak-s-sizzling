@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="2034" viewBox="0 0 1060 2034">
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="2068" viewBox="0 0 1060 2068">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="1060" height="2034" fill="#ffffff"/>
+<rect x="0" y="0" width="1060" height="2068" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 07  Stock adjustments, live sold-out and low-stock alerts</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
 <text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/components/admin/AdjustStockModal.tsx, apps/web/src/components/admin/RawMaterialAdjustModal.tsx,</text>
@@ -149,9 +149,11 @@
 <rect x="30" y="1845" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
 <text x="82" y="1862" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
 <text x="30" y="1909" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
-<text x="30" y="1929" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Reasons: Restock / delivery received, Customer return, Damaged goods, Spoilage, Manual correction (recount), Other. Damaged goods and Spoilage can only</text>
-<text x="30" y="1946" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   lower stock, in the form and again on the server.</text>
-<text x="30" y="1963" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Every dish is made from a bill of materials, so it has no count of its own: its stock is the servings its raw materials can make, and it changes</text>
-<text x="30" y="1980" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   through them. Items sold as they are (the Ready-made category) are counted in pieces. Every change shows in Stock movements (14g).</text>
-<text x="30" y="1997" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Separately, every hour the worker writes the items at or below their minimum to its log (lowStockSweep).</text>
+<text x="30" y="1929" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Reasons: Restock / delivery received, Customer return, Damaged goods, Spoilage, Dropped, Over-prepped, Manual correction (recount), Other. The four</text>
+<text x="30" y="1946" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   waste reasons (damaged, spoiled, dropped, over-prepped) can only lower stock, in the form and again on the server, and are added up in Analytics (17b).</text>
+<text x="30" y="1963" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Market purchases are the main way stock comes in: recording a receipt adds every item&#x27;s stock at once and updates its price (Flow 16). The count before</text>
+<text x="30" y="1980" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   each trip is Flow 16 too.</text>
+<text x="30" y="1997" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Every dish is made from a bill of materials, so it has no count of its own: its stock is the servings its raw materials can make, and it changes</text>
+<text x="30" y="2014" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   through them. Items sold as they are (the Ready-made category) are counted in pieces. Every change shows in Stock movements (14g).</text>
+<text x="30" y="2031" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Separately, every hour the worker writes the items at or below their minimum to its log (lowStockSweep).</text>
 </svg>

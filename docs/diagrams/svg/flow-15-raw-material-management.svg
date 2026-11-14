@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2550" viewBox="0 0 810 2550">
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2584" viewBox="0 0 810 2584">
 <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
-<rect x="0" y="0" width="810" height="2550" fill="#ffffff"/>
+<rect x="0" y="0" width="810" height="2584" fill="#ffffff"/>
 <text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 15  Adding, editing and removing raw materials (Admin)</text>
 <text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
 <text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/app/admin/raw-materials/page.tsx, apps/web/src/components/admin/RawMaterialForm.tsx,</text>
@@ -164,6 +164,8 @@
 <text x="30" y="2445" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The form has the name, category, unit and opening stock (new only), minimum level and cost per unit, and In use</text>
 <text x="30" y="2462" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   when editing. Unticking In use keeps the raw material and its history but stops it being added to new recipes;</text>
 <text x="30" y="2479" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   saving a recipe that uses it puts it back in use.</text>
-<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Removing deletes the raw material&#x27;s stock movements and low-stock alerts with it. A raw material in a recipe</text>
-<text x="30" y="2513" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   can&#x27;t be removed, checked in the form, by the server and by the database (RESTRICT on recipe items).</text>
+<text x="30" y="2496" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The form&#x27;s Market trip section sets the units it&#x27;s bought in (1 kg = 1000 g), the par level, the safety stock,</text>
+<text x="30" y="2513" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   how it&#x27;s stored and the days it stays fresh, used by Flow 16.</text>
+<text x="30" y="2530" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Removing deletes the raw material&#x27;s stock movements and low-stock alerts with it. A raw material in a recipe</text>
+<text x="30" y="2547" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   can&#x27;t be removed, checked in the form, by the server and by the database (RESTRICT on recipe items).</text>
 </svg>

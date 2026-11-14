@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1267" viewBox="0 0 1328 1267">
+<rect x="0" y="0" width="1328" height="1267" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">14k  Raw materials: the count&#x27;s variance</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/raw-materials?tab=count   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/admin/StockCountTab.tsx, apps/api/src/modules/inventory/counts.ts, apps/web/src/components/admin/AdminShell.tsx</text>
+<text x="24" y="1182" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="1202" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Variance (inventory record inaccuracy): expected (what sales, purchases and recorded waste left) against counted. Negative is stock missing that nothing recorded explains: portioning,</text>
+<text x="24" y="1221" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   unrecorded waste or loss. Since the last count shows what was bought, sold and wasted since the item&#x27;s previous count, to trace a gap.</text>
+<text x="24" y="1240" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The peso value of each difference and the total use the cost per unit when counted, and are shown to the Administrator only; Staff see the quantities.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="1060"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="1060" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="1060" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="256" height="1060" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="256" y1="0" x2="256" y2="1060" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="20" y="20" width="32" height="32" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="20" y1="20" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="20" x2="20" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<text x="62" y="33" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Zak&#x27;s Sizzling Hub</text>
+<text x="62" y="49" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">STOCK INVENTORY</text>
+<text x="24" y="92" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OPERATIONS</text>
+<circle cx="36" cy="123" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="128" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Dashboard</text>
+<circle cx="36" cy="163" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Products</text>
+<circle cx="36" cy="203" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="208" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Categories</text>
+<circle cx="36" cy="243" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="248" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Raw materials</text>
+<circle cx="36" cy="283" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Market purchases</text>
+<circle cx="36" cy="323" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="328" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Bulk import</text>
+<text x="24" y="360" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
+<circle cx="36" cy="391" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<circle cx="36" cy="431" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="436" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Transactions</text>
+<text x="24" y="468" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
+<circle cx="36" cy="499" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kitchen display</text>
+<circle cx="36" cy="539" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="544" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Orders awaiting payment</text>
+<text x="24" y="576" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
+<circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<circle cx="36" cy="647" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="652" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
+<rect x="12" y="904" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="926" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
+<circle cx="40" cy="956" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="40" y="960" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
+<text x="64" y="952" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
+<text x="64" y="970" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="24" y="988" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="128.0" y="1012.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
+<circle cx="84" cy="1008" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="280" y="36" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">INVENTORY · BILL OF MATERIALS</text>
+<text x="280" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">Raw materials</text>
+<rect x="1090.62" y="42" width="165.38" height="36" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="1173.31" y="64.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">+ Add raw material</text>
+<rect x="280" y="94" width="723.7499999999999" height="44" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="348.16499999999996" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Raw materials</text>
+<text x="491.31499999999994" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Dishes (servings)</text>
+<text x="656.6949999999999" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Ready-made (pieces)</text>
+<text x="814.665" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Stock movements</text>
+<rect x="886.2399999999999" y="98" width="113.50999999999999" height="36" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="942.9949999999999" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Stock count</text>
+<rect x="280" y="154" width="976" height="386" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="184" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Variance · counted Nov 15, 8:10 AM · 2 of 5 off</text>
+<line x1="280" y1="202" x2="1256" y2="202" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="228" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Value of the difference: −₱000.00 missing that no sale or recorded waste explains.</text>
+<rect x="280" y="246" width="976" height="30" rx="0" fill="#f3f3f3" stroke="none" stroke-width="1"/>
+<text x="292" y="265.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">ITEM</text>
+<text x="531.52" y="265.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">EXPECTED</text>
+<text x="638.88" y="265.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">COUNTED</text>
+<text x="814.56" y="265.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">DIFFERENCE</text>
+<text x="838.56" y="265.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">SINCE THE LAST COUNT</text>
+<line x1="280" y1="276" x2="1256" y2="276" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="303.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Raw material</text>
+<text x="531.52" y="303.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24.6 kg</text>
+<text x="638.88" y="303.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24.5 kg</text>
+<text x="814.56" y="303.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">−100 g  (−₱5.00)</text>
+<text x="838.56" y="303.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">first count · bought 25 kg · sold 400 g · wasted 0 g</text>
+<line x1="280" y1="322" x2="1256" y2="322" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="349.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Raw material</text>
+<text x="531.52" y="349.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">6.25 kg</text>
+<text x="638.88" y="349.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">6.1 kg</text>
+<text x="814.56" y="349.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">−150 g  (−₱54.00)</text>
+<text x="838.56" y="349.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">counted 6.3 kg · bought 2 kg · sold 1.9 kg · wasted 250 g</text>
+<line x1="280" y1="368" x2="1256" y2="368" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="395.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
+<text x="531.52" y="395.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24 pc</text>
+<text x="638.88" y="395.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24 pc</text>
+<rect x="662.88" y="381.0" width="59.9" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="692.83" y="394.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">MATCHES</text>
+<text x="838.56" y="395.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">first count · bought 24 pc · sold 0 pc · wasted 0 pc</text>
+<line x1="280" y1="414" x2="1256" y2="414" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="441.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Raw material</text>
+<text x="531.52" y="441.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">30 pc</text>
+<text x="638.88" y="441.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">30 pc</text>
+<rect x="662.88" y="427.0" width="59.9" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="692.83" y="440.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">MATCHES</text>
+<text x="838.56" y="441.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">first count · bought 30 pc · sold 0 pc · wasted 0 pc</text>
+<line x1="280" y1="460" x2="1256" y2="460" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="487.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Raw material</text>
+<text x="531.52" y="487.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">1.2 L</text>
+<text x="638.88" y="487.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">1.2 L</text>
+<rect x="662.88" y="473.0" width="59.9" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="692.83" y="486.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">MATCHES</text>
+<text x="838.56" y="487.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">counted 2 L · bought 0 ml · sold 800 ml · wasted 0 ml</text>
+<text x="280" y="562" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">Count what&#x27;s actually there, before each market trip. Leave an item blank to skip it. The system&#x27;s figure shows after saving, so it doesn&#x27;t sway</text>
+<text x="280" y="579.55" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#555555">the count; saving sets the stock to what you counted.</text>
+<rect x="280" y="594" width="976" height="300" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="624" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Count sheet · 2 of 34 counted</text>
+<line x1="280" y1="642" x2="1256" y2="642" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="298" y="656" width="300" height="36" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="308" y="678.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">Search items</text>
+<text x="298" y="730" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">Raw material</text>
+<rect x="1036" y="710" width="150" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1046" y="731.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">24500</text>
+<text x="1196" y="732" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">g</text>
+<line x1="280" y1="750" x2="1256" y2="750" stroke="#cfcfcf" stroke-width="1"/>
+<text x="298" y="776" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">Raw material</text>
+<rect x="1036" y="756" width="150" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1196" y="778" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">g</text>
+<line x1="280" y1="796" x2="1256" y2="796" stroke="#cfcfcf" stroke-width="1"/>
+<text x="298" y="822" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">Ready-made item  ready-made</text>
+<rect x="1036" y="802" width="150" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1046" y="823.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">24</text>
+<text x="1196" y="824" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">pc</text>
+<line x1="280" y1="842" x2="1256" y2="842" stroke="#cfcfcf" stroke-width="1"/>
+<rect x="1116" y="850" width="122" height="36" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="1177.0" y="872.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Save count</text>
+</g><rect x="0" y="0" width="1280" height="1060" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

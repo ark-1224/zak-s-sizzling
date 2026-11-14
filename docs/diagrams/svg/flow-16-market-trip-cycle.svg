@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="810" height="2692" viewBox="0 0 810 2692">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#222222"/></marker></defs>
+<rect x="0" y="0" width="810" height="2692" fill="#ffffff"/>
+<text x="30" y="40" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" fill="#222222">Flow 16  The market trip cycle (count, shopping list, palengke, receipts)</text>
+<text x="30" y="64" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Swimlane activity diagram · one lane per actor · read top to bottom</text>
+<text x="30" y="84" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Based on: apps/web/src/components/admin/StockCountTab.tsx, apps/web/src/app/admin/purchases/page.tsx,</text>
+<text x="30" y="99" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/web/src/components/admin/purchasing/PurchaseForm.tsx, apps/web/src/components/admin/StockReports.tsx,</text>
+<text x="30" y="114" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/inventory/counts.ts, apps/api/src/modules/purchasing/shoppingList.ts,</text>
+<text x="30" y="129" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/purchasing/service.ts (createPurchase), apps/api/src/modules/inventory/freshness.ts,</text>
+<text x="30" y="144" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">apps/api/src/modules/reports/stockReports.ts</text>
+<rect x="30" y="167" width="250" height="2182" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="30" y="167" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="155.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Owner (Admin)</text>
+<rect x="280" y="167" width="250" height="2182" fill="#f6f6f6" stroke="#222222" stroke-width="1.2"/>
+<rect x="280" y="167" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="405.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">Staff</text>
+<rect x="530" y="167" width="250" height="2182" fill="#ffffff" stroke="#222222" stroke-width="1.2"/>
+<rect x="530" y="167" width="250" height="44" fill="#dcdcdc" stroke="#222222" stroke-width="1.2"/>
+<text x="655.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="middle" fill="#222222">API server</text>
+<path d="M253.0 267.0 L405.0 267.0 L405.0 339.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M496.0 379.0 L655.0 379.0 L655.0 451.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 491.0 L155.0 491.0 L155.0 563.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M246.0 603.0 L655.0 603.0 L655.0 675.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 715.0 L155.0 715.0 L155.0 794.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M155.0 859.5 L155.0 891.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M246.0 939.0 L655.0 939.0 L655.0 991.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 1051.0 L270.0 1051.0 L270.0 1163.0 L246.0 1163.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="532.89" y="1033.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="551.0" y="1045.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="end" fill="#222222">No</text>
+<path d="M64.0 1163.0 L40.0 1163.0 L40.0 939.0 L64.0 939.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M655.0 1111.0 L655.0 1227.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="658.0" y="1114.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="661.0" y="1126.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M655.0 1322.5 L655.0 1339.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 1387.0 L405.0 1387.0 L405.0 1466.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M405.0 1531.5 L405.0 1571.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M496.0 1611.0 L655.0 1611.0 L655.0 1683.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M557.0 1723.0 L155.0 1723.0 L155.0 1789.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M155.0 1881.0 L155.0 1922.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="158.0" y="1884.5" width="27.665" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="161.0" y="1896.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">Yes</text>
+<path d="M64.0 1947.0 L40.0 1947.0 L40.0 939.0 L64.0 939.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<path d="M253.0 1835.0 L264.0 1835.0 L264.0 2121.0 L155.0 2121.0 L155.0 2123.5" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="266" y="1857.5" width="21.11" height="16.5" fill="#ffffff" opacity="0.9"/>
+<text x="269" y="1869.0" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" text-anchor="start" fill="#222222">No</text>
+<path d="M155.0 2218.5 L155.0 2262.0" fill="none" stroke="#222222" stroke-width="1.4" marker-end="url(#arrow)"/>
+<rect x="57.0" y="243.0" width="196" height="48" rx="24.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="264.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">About every two weeks,</text>
+<text x="155.0" y="279.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">before the market trip</text>
+<polygon points="321.0,339.0 503.0,339.0 489.0,419.0 307.0,419.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="361.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Stock count (14j):</text>
+<text x="405.0" y="376.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">count what&#x27;s there and</text>
+<text x="405.0" y="391.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">save; the system&#x27;s</text>
+<text x="405.0" y="406.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">figure is hidden</text>
+<rect x="557.0" y="451.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="473.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Set each counted item&#x27;s</text>
+<text x="655.0" y="488.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">stock; record expected</text>
+<text x="655.0" y="503.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">against counted: the</text>
+<text x="655.0" y="518.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">variance (14k)</text>
+<polygon points="71.0,563.0 253.0,563.0 239.0,643.0 57.0,643.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="585.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Shopping list (25):</text>
+<text x="155.0" y="600.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">days until the next</text>
+<text x="155.0" y="615.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">trip; the items to buy</text>
+<text x="155.0" y="630.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">and the cash to bring</text>
+<rect x="557.0" y="675.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="697.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Usage per day × days to</text>
+<text x="655.0" y="712.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">cover + safety stock, up</text>
+<text x="655.0" y="727.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">to par, minus on hand, in</text>
+<text x="655.0" y="742.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">market units</text>
+<rect x="57.0" y="794.5" width="196" height="65" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="816.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Buy at the palengke</text>
+<text x="155.0" y="831.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(outside the system); keep</text>
+<text x="155.0" y="846.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the resibo</text>
+<polygon points="71.0,891.5 253.0,891.5 239.0,986.5 57.0,986.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="913.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Record the trip from</text>
+<text x="155.0" y="928.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the list (25b): what</text>
+<text x="155.0" y="943.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">was bought, in market</text>
+<text x="155.0" y="958.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">units, and what was</text>
+<text x="155.0" y="973.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">paid</text>
+<polygon points="655.0,991.0 753.0,1051.0 655.0,1111.0 557.0,1051.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1027.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Known units,</text>
+<text x="655.0" y="1041.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">whole pieces, no</text>
+<text x="655.0" y="1055.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">future date, a</text>
+<text x="655.0" y="1069.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">price only with</text>
+<text x="655.0" y="1083.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">something bought?</text>
+<polygon points="71.0,1138.0 253.0,1138.0 239.0,1188.0 57.0,1188.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1160.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Show the message; fix</text>
+<text x="155.0" y="1175.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the line</text>
+<rect x="557.0" y="1227.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1249.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">In one transaction: save</text>
+<text x="655.0" y="1264.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">the purchase; add each</text>
+<text x="655.0" y="1279.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">item&#x27;s stock (a restock</text>
+<text x="655.0" y="1294.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">linked to it); the price</text>
+<text x="655.0" y="1309.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">paid becomes its cost</text>
+<rect x="557.0" y="1339.5" width="196" height="95" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1361.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Recipe costs follow the</text>
+<text x="655.0" y="1376.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">new prices; sold-out</text>
+<text x="655.0" y="1391.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">dishes come back on the</text>
+<text x="655.0" y="1406.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">kiosk; low-stock alerts</text>
+<text x="655.0" y="1421.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">clear</text>
+<rect x="307.0" y="1466.5" width="196" height="65" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<line x1="316.0" y1="1466.5" x2="316.0" y2="1531.5" stroke="#222222" stroke-width="1.2"/>
+<line x1="494.0" y1="1466.5" x2="494.0" y2="1531.5" stroke="#222222" stroke-width="1.2"/>
+<text x="405.0" y="1488.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Two weeks of sales</text>
+<text x="405.0" y="1503.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">deduct the stock (Flows</text>
+<text x="405.0" y="1518.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">03, 04, 06)</text>
+<polygon points="321.0,1571.0 503.0,1571.0 489.0,1651.0 307.0,1651.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="405.0" y="1593.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Food thrown away:</text>
+<text x="405.0" y="1608.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Adjust with Spoiled,</text>
+<text x="405.0" y="1623.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Dropped or Over-prepped</text>
+<text x="405.0" y="1638.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">(Flow 07)</text>
+<rect x="557.0" y="1683.0" width="196" height="80" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="655.0" y="1705.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Shelf-life warnings on the</text>
+<text x="655.0" y="1720.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">dashboard: oldest stock</text>
+<text x="655.0" y="1735.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">near its days fresh, or a</text>
+<text x="655.0" y="1750.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">printed date within 7 days</text>
+<polygon points="155.0,1789.0 253.0,1835.0 155.0,1881.0 57.0,1835.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1825.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">Something running</text>
+<text x="155.0" y="1839.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">out before the</text>
+<text x="155.0" y="1853.14" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="400" text-anchor="middle" fill="#222222">next trip?</text>
+<polygon points="71.0,1922.0 253.0,1922.0 239.0,1972.0 57.0,1972.0" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="1944.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Buy it and record a</text>
+<text x="155.0" y="1959.0" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">top-up purchase</text>
+<polygon points="71.0,2123.5 253.0,2123.5 239.0,2218.5 57.0,2218.5" fill="#ffffff" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="2145.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">Analytics (17b): food</text>
+<text x="155.0" y="2160.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">cost from recipes and</text>
+<text x="155.0" y="2175.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">from purchases, each</text>
+<text x="155.0" y="2190.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">trip against its sales,</text>
+<text x="155.0" y="2205.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="400" text-anchor="middle" fill="#222222">usage and waste</text>
+<rect x="57.0" y="2262.0" width="196" height="42" rx="21.0" fill="#e9e9e9" stroke="#222222" stroke-width="1.6"/>
+<text x="155.0" y="2287.5" font-family="Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" text-anchor="middle" fill="#222222">Next cycle: count again</text>
+<text x="30" y="2383" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Legend</text>
+<rect x="30" y="2397" width="44" height="26" rx="13" fill="#e9e9e9" stroke="#222222" stroke-width="1.4"/>
+<text x="82" y="2414" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Start / end</text>
+<rect x="182.64" y="2397" width="44" height="26" rx="3" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="234.64" y="2414" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Process step</text>
+<polygon points="363.52,2397 385.52,2410.0 363.52,2423 341.52,2410.0" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="393.52" y="2414" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Decision</text>
+<polygon points="483.44,2397 519.44,2397 511.44000000000005,2423 475.44,2423" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<text x="527.44" y="2414" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Input / output</text>
+<rect x="30" y="2435" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4"/>
+<line x1="36" y1="2435" x2="36" y2="2461" stroke="#222222"/><line x1="68" y1="2435" x2="68" y2="2461" stroke="#222222"/>
+<text x="82" y="2452" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Shown in another diagram</text>
+<rect x="263.76" y="2435" width="44" height="26" fill="#ffffff" stroke="#222222" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="315.76" y="2452" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#555555">Partial in the code</text>
+<text x="30" y="2499" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="30" y="2519" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The shop restocks by buying at the local public market (palengke) about every two weeks, with small top-ups in</text>
+<text x="30" y="2536" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   between. There are no suppliers, purchase orders or delivery lead times: the shopping list is the plan and the</text>
+<text x="30" y="2553" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   receipt (resibo) the record.</text>
+<text x="30" y="2570" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• The shopping list is a fixed rule over the last 28 days of sales and waste, not a forecast: usage per day × the</text>
+<text x="30" y="2587" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   days to cover (until the next trip, or fewer if it won&#x27;t stay fresh) + safety stock, never above par, minus</text>
+<text x="30" y="2604" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   what&#x27;s on hand, rounded up to market units.</text>
+<text x="30" y="2621" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">• Recording a purchase is the owner&#x27;s (Administrator&#x27;s) work, since it carries prices. The price paid becomes the</text>
+<text x="30" y="2638" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   item&#x27;s cost per unit, so recipe costs, margins and food cost follow the market. Freshness assumes the oldest</text>
+<text x="30" y="2655" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555" xml:space="preserve">   stock is used first; stock is one number per item, not batches.</text>
+</svg>

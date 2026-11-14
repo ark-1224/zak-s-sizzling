@@ -243,9 +243,9 @@ def counter_payment():
     return f
 
 
-from flows_more import bulk_import, cancel_paid, idle, kitchen, online_payment, overview, products, qr, raw_materials, reports, stock, users  # noqa: E402
+from flows_more import bulk_import, cancel_paid, idle, kitchen, market_cycle, online_payment, overview, products, qr, raw_materials, reports, stock, users  # noqa: E402
 
-FLOWS_DEF = [overview, login, ordering, counter_payment, online_payment, kitchen, stock, products, bulk_import, users, cancel_paid, reports, idle, qr, raw_materials]
+FLOWS_DEF = [overview, login, ordering, counter_payment, online_payment, kitchen, stock, products, bulk_import, users, cancel_paid, reports, idle, qr, raw_materials, market_cycle]
 
 
 def _render(make):

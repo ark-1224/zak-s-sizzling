@@ -42,99 +42,104 @@
 <text x="314" y="127" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">5 items at or below minimum stock</text>
 <rect x="1136" y="105" width="104" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <text x="1188.0" y="126.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">See more</text>
-<rect x="280.0" y="168" width="316.0" height="116" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="296.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ACTIVE SKUS</text>
-<text x="296.0" y="230" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">20</text>
-<text x="296.0" y="254" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">6 categories</text>
-<rect x="610.0" y="168" width="316.0" height="116" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="626.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">NEEDS RESTOCK</text>
-<text x="626.0" y="230" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">5</text>
-<text x="626.0" y="254" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Items at or below minimum</text>
-<text x="910.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="end" fill="#555555">→</text>
-<rect x="940.0" y="168" width="316.0" height="116" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="956.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OUT OF STOCK</text>
-<text x="956.0" y="230" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">1</text>
-<text x="956.0" y="254" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Items with none left</text>
-<text x="1240.0" y="194" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="end" fill="#555555">→</text>
-<rect x="280" y="302" width="976" height="574" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="298" y="332" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Servings available per dish (pieces for ready-made items)</text>
-<line x1="280" y1="350" x2="1256" y2="350" stroke="#9a9a9a" stroke-width="1"/>
-<rect x="280" y="350" width="976" height="30" rx="0" fill="#f3f3f3" stroke="none" stroke-width="1"/>
-<text x="292" y="369.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">PRODUCT</text>
-<text x="662.88" y="369.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">CATEGORY</text>
-<text x="990.24" y="369.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">SERVINGS / PIECES</text>
-<text x="1014.24" y="369.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">LEVEL</text>
-<line x1="280" y1="380" x2="1256" y2="380" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="407.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
-<text x="662.88" y="407.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
-<text x="990.24" y="407.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">12 servings</text>
-<rect x="1014.24" y="400.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="400.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="393.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1201.7" y="406.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
-<line x1="280" y1="426" x2="1256" y2="426" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="453.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
-<text x="662.88" y="453.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
-<text x="990.24" y="453.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">0 servings</text>
-<rect x="1014.24" y="446.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="446.0" width="3.2752000000000003" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="439.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1204.55" y="452.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OUT</text>
-<line x1="280" y1="472" x2="1256" y2="472" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="499.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
-<text x="662.88" y="499.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
-<text x="990.24" y="499.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24 pieces</text>
-<rect x="1014.24" y="492.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="492.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="485.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1201.7" y="498.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
-<line x1="280" y1="518" x2="1256" y2="518" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="545.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
-<text x="662.88" y="545.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
-<text x="990.24" y="545.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">4 pieces</text>
-<rect x="1014.24" y="538.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="538.0" width="57.316" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="531.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1204.55" y="544.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">LOW</text>
-<line x1="280" y1="564" x2="1256" y2="564" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="591.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
-<text x="662.88" y="591.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
-<text x="990.24" y="591.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">12 servings</text>
-<rect x="1014.24" y="584.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="584.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="577.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1201.7" y="590.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
-<line x1="280" y1="610" x2="1256" y2="610" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="637.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
-<text x="662.88" y="637.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
-<text x="990.24" y="637.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">0 servings</text>
-<rect x="1014.24" y="630.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="630.0" width="3.2752000000000003" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="623.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1204.55" y="636.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OUT</text>
-<line x1="280" y1="656" x2="1256" y2="656" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="683.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
-<text x="662.88" y="683.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
-<text x="990.24" y="683.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24 pieces</text>
-<rect x="1014.24" y="676.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="676.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="669.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1201.7" y="682.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
-<line x1="280" y1="702" x2="1256" y2="702" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="729.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
-<text x="662.88" y="729.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
-<text x="990.24" y="729.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">4 pieces</text>
-<rect x="1014.24" y="722.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="722.0" width="57.316" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="715.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1204.55" y="728.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">LOW</text>
-<line x1="280" y1="748" x2="1256" y2="748" stroke="#cfcfcf" stroke-width="1"/>
-<text x="292" y="775.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
-<text x="662.88" y="775.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
-<text x="990.24" y="775.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">12 servings</text>
-<rect x="1014.24" y="768.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
-<rect x="1014.24" y="768.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
-<rect x="1186.0" y="761.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
-<text x="1201.7" y="774.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
+<rect x="280" y="160" width="976" height="64" rx="6" fill="#ffffff" stroke="#555555" stroke-width="1.5"/>
+<text x="298" y="184" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">2 items to use soon · 1 past its fresh days</text>
+<text x="298" y="206" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#555555">Raw material (2.4 kg): went off Nov 13, bought Nov 7. Check it before using.  ·  Ready-made item (12 pc): goes off Nov 20 (printed date), in 5 days.</text>
+<rect x="1136" y="175" width="104" height="34" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1188.0" y="196.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">See items</text>
+<rect x="280.0" y="242" width="316.0" height="116" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="296.0" y="268" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ACTIVE SKUS</text>
+<text x="296.0" y="304" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">20</text>
+<text x="296.0" y="328" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">6 categories</text>
+<rect x="610.0" y="242" width="316.0" height="116" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="626.0" y="268" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">NEEDS RESTOCK</text>
+<text x="626.0" y="304" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">5</text>
+<text x="626.0" y="328" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Items at or below minimum</text>
+<text x="910.0" y="268" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="end" fill="#555555">→</text>
+<rect x="940.0" y="242" width="316.0" height="116" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="956.0" y="268" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OUT OF STOCK</text>
+<text x="956.0" y="304" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">1</text>
+<text x="956.0" y="328" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Items with none left</text>
+<text x="1240.0" y="268" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="end" fill="#555555">→</text>
+<rect x="280" y="376" width="976" height="500" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="406" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Servings available per dish (pieces for ready-made items)</text>
+<line x1="280" y1="424" x2="1256" y2="424" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="280" y="424" width="976" height="30" rx="0" fill="#f3f3f3" stroke="none" stroke-width="1"/>
+<text x="292" y="443.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">PRODUCT</text>
+<text x="662.88" y="443.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">CATEGORY</text>
+<text x="990.24" y="443.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a">SERVINGS / PIECES</text>
+<text x="1014.24" y="443.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">LEVEL</text>
+<line x1="280" y1="454" x2="1256" y2="454" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="481.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
+<text x="662.88" y="481.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
+<text x="990.24" y="481.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">12 servings</text>
+<rect x="1014.24" y="474.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="474.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="467.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1201.7" y="480.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
+<line x1="280" y1="500" x2="1256" y2="500" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="527.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
+<text x="662.88" y="527.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
+<text x="990.24" y="527.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">0 servings</text>
+<rect x="1014.24" y="520.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="520.0" width="3.2752000000000003" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="513.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1204.55" y="526.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OUT</text>
+<line x1="280" y1="546" x2="1256" y2="546" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="573.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
+<text x="662.88" y="573.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
+<text x="990.24" y="573.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24 pieces</text>
+<rect x="1014.24" y="566.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="566.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="559.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1201.7" y="572.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
+<line x1="280" y1="592" x2="1256" y2="592" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="619.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
+<text x="662.88" y="619.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
+<text x="990.24" y="619.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">4 pieces</text>
+<rect x="1014.24" y="612.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="612.0" width="57.316" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="605.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1204.55" y="618.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">LOW</text>
+<line x1="280" y1="638" x2="1256" y2="638" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="665.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
+<text x="662.88" y="665.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
+<text x="990.24" y="665.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">12 servings</text>
+<rect x="1014.24" y="658.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="658.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="651.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1201.7" y="664.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
+<line x1="280" y1="684" x2="1256" y2="684" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="711.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
+<text x="662.88" y="711.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
+<text x="990.24" y="711.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">0 servings</text>
+<rect x="1014.24" y="704.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="704.0" width="3.2752000000000003" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="697.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1204.55" y="710.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OUT</text>
+<line x1="280" y1="730" x2="1256" y2="730" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="757.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
+<text x="662.88" y="757.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
+<text x="990.24" y="757.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">24 pieces</text>
+<rect x="1014.24" y="750.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="750.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="743.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1201.7" y="756.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
+<line x1="280" y1="776" x2="1256" y2="776" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="803.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made item</text>
+<text x="662.88" y="803.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Ready-made</text>
+<text x="990.24" y="803.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">4 pieces</text>
+<rect x="1014.24" y="796.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="796.0" width="57.316" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="789.0" width="37.099999999999994" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1204.55" y="802.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">LOW</text>
+<line x1="280" y1="822" x2="1256" y2="822" stroke="#cfcfcf" stroke-width="1"/>
+<text x="292" y="849.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Dish name</text>
+<text x="662.88" y="849.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">Category</text>
+<text x="990.24" y="849.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="end" fill="#222222">12 servings</text>
+<rect x="1014.24" y="842.0" width="163.76000000000002" height="6" rx="3" fill="#e2e2e2" stroke="none"/>
+<rect x="1014.24" y="842.0" width="163.76000000000002" height="6" rx="3" fill="#555555" stroke="none"/>
+<rect x="1186.0" y="835.0" width="31.4" height="19" rx="3" fill="#ffffff" stroke="#555555" stroke-width="1"/>
+<text x="1201.7" y="848.1" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" text-anchor="middle" fill="#555555">OK</text>
 </g><rect x="0" y="0" width="1280" height="900" fill="none" stroke="#222222" stroke-width="2"/></g>
 </svg>

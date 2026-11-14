@@ -49,8 +49,11 @@ WIREFRAME_DESC = {
     "14g": "Stock movements tab: one filterable log of raw-material and ready-made stock changes.",
     "14h": "Edit-raw-material popup with Remove item, refused for a raw material still in a dish's recipe (Admin only).",
     "14i": "Confirmation before removing a raw material, warning that its movement history goes with it.",
+    "14j": "Stock count tab: the count sheet before each market trip, the system's figure hidden while counting.",
+    "14k": "The count's variance: expected against counted, its peso value, and what was bought, sold and wasted since the last count.",
     "16": "Bulk import with Products and Recipes tables from one Excel file, and a preview with errors and a warning.",
     "16b": "Bulk import after importing: the result card with recipes set.",
+    "17b": "Analytics, food cost (from recipes and from market purchases, each trip against its sales) and usage and waste per item.",
     "17": "Analytics: period switch, KPI tiles (with average order value), sales chart, top products, profitability, inventory movement, exports.",
     "18": "Kitchen display: a READY card with Handed over, and order cards with per-dish Start preparing / Mark done (no cancelling).",
     "18b": "Kitchen display with no active orders.",
@@ -69,6 +72,10 @@ WIREFRAME_DESC = {
     "21b": "Kiosk QR code page with an invalid address.",
     "22": "Categories (Admin): add form, the rail's order with ↑ ↓, Edit and Delete with confirmation, and the built-in Ready-made category.",
     "23": "Transactions (Admin): filters, totals with average order value, orders with one opened to its items and timeline.",
+    "25": "Market purchases, Shopping list: what to buy for the next trip in market units, with the cash to bring.",
+    "25b": "Recording a market trip from the shopping list: one line per resibo item, in market units, with what was paid.",
+    "25c": "Purchases: the receipts recorded, each with planned against bought.",
+    "25d": "Price history: an item's price on each purchase, with the change and the trend.",
     "24": "Order status board on the screen at the counter: Preparing and Ready for pickup order numbers.",
 }
 
@@ -88,6 +95,7 @@ FLOW_DESC = {
     "13": "The 60 + 20 second idle timer that resets the kiosk for the next customer.",
     "14": "Generating, printing or downloading the kiosk QR code, and a customer scanning it.",
     "15": "Admin adds or edits a raw material (name, category, unit, minimum, cost, In use) or removes one after a confirmation; refused while a recipe uses it.",
+    "16": "The palengke cycle every two weeks: stock count and variance, shopping list, recording the receipts (stock and prices), waste and shelf-life warnings during the cycle, food cost and usage reports.",
 }
 
 
@@ -178,7 +186,7 @@ def main():
         "| `source/screens_kiosk.py` | wireframes 01–09 |",
         "| `source/screens_admin.py` | wireframes 10–21 |",
         "| `source/swimlane.py` | swimlane layout, symbols and connector routing |",
-        "| `source/flows.py`, `source/flows_more.py` | process flows 01–15 |",
+        "| `source/flows.py`, `source/flows_more.py` | process flows 01–16 |",
         "| `source/export.py` | writes the SVG and makes the PNG with headless Edge |",
         "| `source/crop.py` | close-up of part of a PNG, for checking by eye |",
         "",

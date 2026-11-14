@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1205" viewBox="0 0 1328 1205">
+<rect x="0" y="0" width="1328" height="1205" fill="#ffffff"/>
+<text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">25b  Market purchases: recording the trip</text>
+<text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/purchases   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin only (admin site, signed in)</text>
+<text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/admin/purchasing/PurchaseForm.tsx, apps/api/src/modules/purchasing/service.ts, apps/web/src/components/admin/AdminShell.tsx</text>
+<text x="24" y="1082" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
+<text x="24" y="1102" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• After the trip the owner enters each resibo: one line per item, in the unit it was bought in (its market units, or g / ml / pc), with what was paid for the line; “= 6000 g” shows the</text>
+<text x="24" y="1121" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   conversion. A line with 0 bought records an item that wasn&#x27;t found (here the bottle). A printed expiry date can be added for packaged goods.</text>
+<text x="24" y="1140" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Save purchase (POST /api/purchases, Administrator only) adds each item&#x27;s stock, logged as a restock linked to the purchase, and makes the price paid its cost per unit, so recipe costs</text>
+<text x="24" y="1159" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   and food cost follow the market. Refused: a unit the item doesn&#x27;t have, part of a piece, a future date, a price with nothing bought, or a dish (its stock is its raw materials). A</text>
+<text x="24" y="1178" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   purchase isn&#x27;t edited afterwards; a mistake is corrected with Adjust.</text>
+<g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="960"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="960" fill="#ffffff"/>
+<rect x="0" y="0" width="1280" height="960" rx="0" fill="#f3f3f3" stroke="none"/>
+<rect x="0" y="0" width="256" height="960" rx="0" fill="#ffffff" stroke="none"/>
+<line x1="256" y1="0" x2="256" y2="960" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="20" y="20" width="32" height="32" rx="6" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<line x1="20" y1="20" x2="52" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<line x1="52" y1="20" x2="20" y2="52" stroke="#c9c9c9" stroke-width="1"/>
+<text x="62" y="33" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Zak&#x27;s Sizzling Hub</text>
+<text x="62" y="49" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">STOCK INVENTORY</text>
+<text x="24" y="92" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">OPERATIONS</text>
+<circle cx="36" cy="123" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="128" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Dashboard</text>
+<circle cx="36" cy="163" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="168" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Products</text>
+<circle cx="36" cy="203" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="208" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Categories</text>
+<circle cx="36" cy="243" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="248" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Raw materials</text>
+<rect x="12" y="264" width="232" height="38" rx="6" fill="#e2e2e2" stroke="none"/>
+<circle cx="36" cy="283" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Market purchases</text>
+<circle cx="36" cy="323" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="328" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Bulk import</text>
+<text x="24" y="360" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
+<circle cx="36" cy="391" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<circle cx="36" cy="431" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="436" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Transactions</text>
+<text x="24" y="468" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
+<circle cx="36" cy="499" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kitchen display</text>
+<circle cx="36" cy="539" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="544" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Orders awaiting payment</text>
+<text x="24" y="576" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
+<circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<circle cx="36" cy="647" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="652" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
+<rect x="12" y="804" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="24" y="826" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
+<circle cx="40" cy="856" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
+<text x="40" y="860" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">AB</text>
+<text x="64" y="852" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Full name</text>
+<text x="64" y="870" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#8a8a8a">Admin</text>
+<rect x="24" y="888" width="208" height="40" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="128.0" y="912.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Log out</text>
+<circle cx="84" cy="908" r="7" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="280" y="36" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">INVENTORY · PALENGKE RESTOCKING</text>
+<text x="280" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">Market purchases</text>
+<rect x="280" y="94" width="976" height="610" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="124" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">Record the market trip (from the shopping list)</text>
+<line x1="280" y1="142" x2="1256" y2="142" stroke="#9a9a9a" stroke-width="1"/>
+<text x="298" y="167" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Date bought</text>
+<rect x="298" y="174" width="226.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="308" y="197.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">11/15/2026</text>
+<text x="536.0" y="167" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Kind</text>
+<rect x="536.0" y="174" width="226.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="546.0" y="197.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">Market trip</text>
+<text x="746.0" y="197.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<text x="774.0" y="167" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Store or stall (optional)</text>
+<rect x="774.0" y="174" width="452.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="784.0" y="197.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">e.g. Bacoor public market</text>
+<rect x="298" y="238" width="940" height="30" rx="0" fill="#f3f3f3" stroke="none" stroke-width="1"/>
+<text x="310" y="257.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">ITEM</text>
+<text x="592.0" y="257.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">BOUGHT</text>
+<text x="742.4" y="257.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">UNIT</text>
+<text x="864.6" y="257.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">PAID (₱)</text>
+<text x="1005.6" y="257.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="start" fill="#8a8a8a">PRINTED EXPIRY</text>
+<text x="1226.0" y="257.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" font-weight="700" text-anchor="end" fill="#8a8a8a"></text>
+<line x1="298" y1="268" x2="1238" y2="268" stroke="#cfcfcf" stroke-width="1"/>
+<text x="310" y="291.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Raw material</text>
+<text x="310" y="308.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Planned 6 kg</text>
+<rect x="586.0" y="272" width="138.4" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="596.0" y="291.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">6</text>
+<text x="588.0" y="317" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" text-anchor="start" fill="#8a8a8a">= 6000 g</text>
+<rect x="736.4" y="278" width="110.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="746.4" y="298.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">kg</text>
+<text x="830.6" y="298.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="858.6" y="278" width="129.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="868.6" y="298.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">2,160.00</text>
+<rect x="999.6" y="278" width="157.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1009.6" y="298.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">mm/dd/yyyy</text>
+<rect x="1185.16" y="279.0" width="38.84" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1204.5800000000002" y="298.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">×</text>
+<line x1="298" y1="320" x2="1238" y2="320" stroke="#cfcfcf" stroke-width="1"/>
+<text x="310" y="343.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Raw material</text>
+<text x="310" y="360.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Planned 1 sack</text>
+<rect x="586.0" y="330" width="138.4" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="596.0" y="350.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">1</text>
+<rect x="736.4" y="330" width="110.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="746.4" y="350.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">sack</text>
+<text x="830.6" y="350.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="858.6" y="330" width="129.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="868.6" y="350.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">1,250.00</text>
+<rect x="999.6" y="330" width="157.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1009.6" y="350.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">mm/dd/yyyy</text>
+<rect x="1185.16" y="331.0" width="38.84" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1204.5800000000002" y="350.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">×</text>
+<line x1="298" y1="372" x2="1238" y2="372" stroke="#cfcfcf" stroke-width="1"/>
+<text x="310" y="395.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Raw material</text>
+<text x="310" y="412.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Planned 5 tray</text>
+<rect x="586.0" y="376" width="138.4" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="596.0" y="395.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">4</text>
+<text x="588.0" y="421" font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="400" text-anchor="start" fill="#8a8a8a">= 120 pc</text>
+<rect x="736.4" y="382" width="110.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="746.4" y="402.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">tray</text>
+<text x="830.6" y="402.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="858.6" y="382" width="129.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="868.6" y="402.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">960.00</text>
+<rect x="999.6" y="382" width="157.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1009.6" y="402.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">mm/dd/yyyy</text>
+<rect x="1185.16" y="383.0" width="38.84" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1204.5800000000002" y="402.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">×</text>
+<line x1="298" y1="424" x2="1238" y2="424" stroke="#cfcfcf" stroke-width="1"/>
+<text x="310" y="447.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Ready-made item</text>
+<text x="310" y="464.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Planned 2 case</text>
+<rect x="586.0" y="434" width="138.4" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="596.0" y="454.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">2</text>
+<rect x="736.4" y="434" width="110.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="746.4" y="454.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">case</text>
+<text x="830.6" y="454.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="858.6" y="434" width="129.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="868.6" y="454.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">960.00</text>
+<rect x="999.6" y="434" width="157.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1009.6" y="454.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">11/30/2026</text>
+<rect x="1185.16" y="435.0" width="38.84" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1204.5800000000002" y="454.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">×</text>
+<line x1="298" y1="476" x2="1238" y2="476" stroke="#cfcfcf" stroke-width="1"/>
+<text x="310" y="499.0" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="start" fill="#222222">Raw material</text>
+<text x="310" y="516.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#8a8a8a">Planned 1 bottle</text>
+<rect x="586.0" y="486" width="138.4" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="596.0" y="506.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">0</text>
+<rect x="736.4" y="486" width="110.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="746.4" y="506.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">bottle</text>
+<text x="830.6" y="506.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="858.6" y="486" width="129.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="868.6" y="506.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">0.00</text>
+<rect x="999.6" y="486" width="157.2" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1009.6" y="506.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">mm/dd/yyyy</text>
+<rect x="1185.16" y="487.0" width="38.84" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1204.5800000000002" y="506.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">×</text>
+<rect x="298" y="542" width="110" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="353.0" y="561.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">+ Add a line</text>
+<text x="1238" y="562" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="end" fill="#222222">Receipt total ₱5,330.00</text>
+<rect x="1109.67" y="592" width="128.32999999999998" height="38" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="1173.835" y="615.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Save purchase</text>
+<rect x="1023.21" y="592" width="76.46" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="1061.44" y="615.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Cancel</text>
+</g><rect x="0" y="0" width="1280" height="960" fill="none" stroke="#222222" stroke-width="2"/></g>
+</svg>

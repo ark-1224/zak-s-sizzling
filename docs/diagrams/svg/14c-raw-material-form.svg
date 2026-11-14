@@ -1,13 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1126" viewBox="0 0 1328 1126">
-<rect x="0" y="0" width="1328" height="1126" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1328" height="1183" viewBox="0 0 1328 1183">
+<rect x="0" y="0" width="1328" height="1183" fill="#ffffff"/>
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">14c  Add raw material (popup)</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/raw-materials  (popup)   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin only (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/admin/RawMaterialForm.tsx, apps/web/src/lib/rawMaterialCategories.ts, apps/web/src/components/admin/AdminShell.tsx</text>
 <text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Category is one of a fixed list (Meat &amp; seafood, Vegetables &amp; fruit, Rice &amp; noodles, Sauces &amp; seasonings, Oils &amp; fats, Dairy &amp; eggs, Drinks &amp; ice, Others), Others by default; raw</text>
 <text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   materials that existed before were sorted by their names when categories were added.</text>
-<text x="24" y="1080" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Edit is the same popup (14h): the unit is locked, there is no opening stock, and it adds an In use tick box and Remove item. Stock itself is changed only through Adjust (14b). “Measured</text>
-<text x="24" y="1099" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   in” offers grams (g), millilitres (ml) or pieces (pc).</text>
+<text x="24" y="1080" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Market trip: the units it&#x27;s bought in at the palengke (unit conversion, here 1 kg = 1000 g; + Add a market unit), the par level (the most to keep), the safety stock (a buffer), how it&#x27;s</text>
+<text x="24" y="1099" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   stored and the days it stays fresh. They feed the shopping list (25), shelf-life warnings (11) and the purchase form (25b). A ready-made item&#x27;s form (12e) has the same section, in</text>
+<text x="24" y="1118" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   pieces.</text>
+<text x="24" y="1137" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Edit is the same popup (14h): the unit is locked, there is no opening stock, and it adds an In use tick box and Remove item. Stock itself is changed only through Adjust (14b). “Measured</text>
+<text x="24" y="1156" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   in” offers grams (g), millilitres (ml) or pieces (pc).</text>
 <g transform="translate(24,92)"><clipPath id="frame"><rect x="0" y="0" width="1280" height="900"/></clipPath><g clip-path="url(#frame)"><rect x="0" y="0" width="1280" height="900" fill="#ffffff"/>
 <rect x="0" y="0" width="1280" height="900" rx="0" fill="#f3f3f3" stroke="none"/>
 <rect x="0" y="0" width="256" height="900" rx="0" fill="#ffffff" stroke="none"/>
@@ -27,22 +30,24 @@
 <circle cx="36" cy="243" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
 <text x="56" y="248" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Raw materials</text>
 <circle cx="36" cy="283" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Bulk import</text>
-<text x="24" y="320" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
-<circle cx="36" cy="351" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="356" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<text x="56" y="288" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Market purchases</text>
+<circle cx="36" cy="323" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="328" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Bulk import</text>
+<text x="24" y="360" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SALES</text>
 <circle cx="36" cy="391" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Transactions</text>
-<text x="24" y="428" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
-<circle cx="36" cy="459" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="464" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kitchen display</text>
+<text x="56" y="396" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Analytics</text>
+<circle cx="36" cy="431" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="436" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Transactions</text>
+<text x="24" y="468" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">FRONT OF HOUSE</text>
 <circle cx="36" cy="499" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Orders awaiting payment</text>
-<text x="24" y="536" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
-<circle cx="36" cy="567" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="572" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<text x="56" y="504" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kitchen display</text>
+<circle cx="36" cy="539" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="544" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Orders awaiting payment</text>
+<text x="24" y="576" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">ADMINISTRATION</text>
 <circle cx="36" cy="607" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
-<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
+<text x="56" y="612" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Users &amp; roles</text>
+<circle cx="36" cy="647" r="8" fill="#ffffff" stroke="#8a8a8a" stroke-width="1"/>
+<text x="56" y="652" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="400" text-anchor="start" fill="#555555">Kiosk QR code</text>
 <rect x="12" y="744" width="232" height="140" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <text x="24" y="766" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">SIGNED IN AS</text>
 <circle cx="40" cy="796" r="16" fill="#e2e2e2" stroke="#9a9a9a" stroke-width="1"/>
@@ -56,12 +61,13 @@
 <text x="280" y="70" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" text-anchor="start" fill="#222222">Raw materials</text>
 <rect x="1090.62" y="42" width="165.38" height="36" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
 <text x="1173.31" y="64.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">+ Add raw material</text>
-<rect x="280" y="94" width="610.2399999999999" height="44" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<rect x="280" y="94" width="723.7499999999999" height="44" rx="6" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <rect x="284" y="98" width="128.32999999999998" height="36" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
 <text x="348.16499999999996" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Raw materials</text>
 <text x="491.31499999999994" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Dishes (servings)</text>
 <text x="656.6949999999999" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Ready-made (pieces)</text>
 <text x="814.665" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Stock movements</text>
+<text x="942.9949999999999" y="120.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Stock count</text>
 <rect x="280" y="154" width="976" height="64" rx="6" fill="#ffffff" stroke="#555555" stroke-width="1.5"/>
 <circle cx="300" cy="176" r="4" fill="#555555" stroke="#555555" stroke-width="1"/>
 <text x="314" y="181" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="700" text-anchor="start" fill="#222222">2 raw materials at or below minimum level</text>
@@ -170,32 +176,57 @@
 <rect x="1000.0400000000002" y="622.0" width="73.03999999999999" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
 <text x="1036.5600000000002" y="641.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#555555">Adjust</text>
 <rect x="0" y="0" width="1280" height="900" rx="0" fill="#000000" stroke="none" stroke-width="1" fill-opacity="0.45"/>
-<rect x="416.0" y="236.0" width="448" height="428" rx="8" fill="#ffffff" stroke="#555555" stroke-width="2"/>
-<text x="444.0" y="276.0" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">NEW RAW MATERIAL</text>
-<text x="444.0" y="304.0" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="start" fill="#222222">Add a raw material</text>
-<text x="444.0" y="339.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Name</text>
-<rect x="444.0" y="346.0" width="392" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="454.0" y="369.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">e.g. Pork belly</text>
-<text x="444.0" y="407.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Category</text>
-<rect x="444.0" y="414.0" width="392" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="454.0" y="437.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">Meat &amp; seafood</text>
-<text x="820.0" y="437.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
-<text x="444.0" y="475.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Measured in</text>
-<rect x="444.0" y="482.0" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="454.0" y="505.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">grams (g)</text>
-<text x="618.0" y="505.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
-<text x="646.0" y="475.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Opening stock (g)</text>
-<rect x="646.0" y="482.0" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="656.0" y="505.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">0</text>
-<text x="444.0" y="543.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Minimum level (g)</text>
-<rect x="444.0" y="550.0" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="454.0" y="573.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">0</text>
-<text x="646.0" y="543.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Cost per g (₱)</text>
-<rect x="646.0" y="550.0" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="656.0" y="573.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">Optional</text>
-<rect x="685.44" y="606.0" width="150.56" height="38" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
-<text x="760.72" y="629.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Add raw material</text>
-<rect x="598.98" y="606.0" width="76.46" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
-<text x="637.21" y="629.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Cancel</text>
+<rect x="416.0" y="40" width="448" height="700" rx="8" fill="#ffffff" stroke="#555555" stroke-width="2"/>
+<text x="444.0" y="80" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="start" fill="#8a8a8a">NEW RAW MATERIAL</text>
+<text x="444.0" y="108" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" text-anchor="start" fill="#222222">Add a raw material</text>
+<text x="444.0" y="143" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Name</text>
+<rect x="444.0" y="150" width="392" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="454.0" y="173.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">e.g. Pork belly</text>
+<text x="444.0" y="211" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Category</text>
+<rect x="444.0" y="218" width="392" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="454.0" y="241.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">Meat &amp; seafood</text>
+<text x="820.0" y="241.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<text x="444.0" y="279" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Measured in</text>
+<rect x="444.0" y="286" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="454.0" y="309.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">grams (g)</text>
+<text x="618.0" y="309.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<text x="646.0" y="279" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Opening stock (g)</text>
+<rect x="646.0" y="286" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="656.0" y="309.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">0</text>
+<text x="444.0" y="347" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Minimum level (g)</text>
+<rect x="444.0" y="354" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="454.0" y="377.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#222222">0</text>
+<text x="646.0" y="347" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Cost per g (₱)</text>
+<rect x="646.0" y="354" width="190.0" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="656.0" y="377.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">Optional</text>
+<rect x="444.0" y="412" width="392" height="250" rx="6" fill="#ffffff" stroke="#cfcfcf" stroke-width="1"/>
+<text x="456.0" y="432" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Market trip</text>
+<text x="456.0" y="456" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Bought at the market in</text>
+<text x="456.0" y="488" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">1</text>
+<rect x="472.0" y="468" width="90" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="482.0" y="488.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">kg</text>
+<text x="572.0" y="488" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">=</text>
+<rect x="588.0" y="468" width="90" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="598.0" y="488.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">1000</text>
+<text x="688.0" y="488" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="400" text-anchor="start" fill="#8a8a8a">g</text>
+<rect x="790.0" y="468" width="34" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="807.0" y="488.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">×</text>
+<rect x="456.0" y="508" width="150" height="26" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="531.0" y="524.96" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" text-anchor="middle" fill="#555555">+ Add a market unit</text>
+<text x="456.0" y="545" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Par level (g)</text>
+<rect x="456.0" y="552" width="178.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="466.0" y="572.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">8000</text>
+<text x="646.0" y="545" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" text-anchor="start" fill="#555555">Safety stock (g)</text>
+<rect x="646.0" y="552" width="178.0" height="32" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="656.0" y="572.32" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="start" fill="#222222">1000</text>
+<rect x="456.0" y="622" width="178.0" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="466.0" y="640.96" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#222222">Frozen (freezer)</text>
+<text x="618.0" y="641.0" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="400" text-anchor="middle" fill="#555555">▾</text>
+<rect x="646.0" y="622" width="178.0" height="30" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="656.0" y="640.96" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="400" text-anchor="start" fill="#222222">30 days fresh</text>
+<rect x="685.44" y="680" width="150.56" height="38" rx="4" fill="#555555" stroke="#555555" stroke-width="1"/>
+<text x="760.72" y="703.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#ffffff">Add raw material</text>
+<rect x="598.98" y="680" width="76.46" height="38" rx="4" fill="#ffffff" stroke="#9a9a9a" stroke-width="1"/>
+<text x="637.21" y="703.68" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" text-anchor="middle" fill="#555555">Cancel</text>
 </g><rect x="0" y="0" width="1280" height="900" fill="none" stroke="#222222" stroke-width="2"/></g>
 </svg>

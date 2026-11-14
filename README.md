@@ -366,6 +366,63 @@ order is paid. Offline/PWA support was removed from scope.
   its minimum level at 10 servings' worth. Each restock is in Stock movements with the
   note "Restocked for 50 servings of every dish".
 
+- **Cancelling some dishes; the counter's receipt printer (15 November 2026)** — on Orders
+  awaiting payment, **Cancel order** asks which dishes, and how many of each, to cancel
+  (every dish starts ticked, so cancelling a whole order is still one click). In the Queue
+  the dishes come off the unpaid order and its total, and the payment waiting for it, go
+  down. In Paid orders a reason is required and the rules of a full cancel apply to the
+  dishes chosen: those the kitchen hasn't started go back into stock, the rest stays in the
+  kitchen, and the amount to refund is flagged in the Queue (Mark as sorted out keeps the
+  payment as paid). Cancelling every dish left cancels the whole order, as before (`POST
+  /api/orders/:id/cancel-items`; migration `order_item_cancelled_qty` records what was
+  cancelled after payment, so Stock movements shows the sale and its return). **Print
+  receipt** prints on the counter's own thermal printer once Orders awaiting payment is
+  opened there with `?printer=1` (the print service, `print-service/`, now also prints the
+  cash received and change, or the GCash / Maya reference, and any refund), falling back to
+  the browser's printing. Fixed on the way: the print service treated every job as abandoned
+  on newer Node versions (nothing printed), and editing an unpaid order's items left the
+  waiting payment at the old amount. Verified with integration tests (`cancel-items.test.ts`)
+  and in the browser.
+
+- **Market purchasing and the palengke cycle (15 November 2026)** — the shop restocks at the
+  local public market about every two weeks, with top-ups in between, so the inventory now
+  follows that cycle (no suppliers, purchase orders or lead times; see Limitations):
+  - **Market units (unit conversion)**: each raw material and ready-made item can list the
+    units it's bought in ("1 kg = 1000 g", "1 tray = 30 pc", "1 case = 24 pc"), set in its
+    form's Market trip section, with its **par level**, **safety stock**, **storage**
+    (frozen, chilled, room) and **days it stays fresh**.
+  - **Market purchases** (new page, Administrator): the owner records each resibo after the
+    trip, one line per item in its market unit with what was paid (`POST /api/purchases`).
+    Saving adds the stock (a restock linked to the purchase) and makes the price paid the
+    item's cost per unit. **Purchases** lists the receipts, planned against bought;
+    **Price history** shows each item's price over time.
+  - **Shopping list** (`GET /api/purchases/shopping-list?days=14`): usage per day over the
+    last 28 days (sales and waste) × the days to cover, plus the safety stock, never above
+    par, minus what's on hand, rounded up to market units, with the cash to bring. An item
+    that won't stay fresh until the next trip is bought for its fresh days only. A fixed rule,
+    not a forecast. *Record the trip from this list* fills the purchase form.
+  - **Recipe cost, margin and food cost**: a dish's cost is its recipe at the raw materials'
+    latest prices (shown in the product form with its margin; the profitability report uses
+    it). Each sale saves its cost when paid (`order_items.unit_cost`). Analytics adds **Food
+    cost** (from recipes, and from what was spent at the market) with each market trip's
+    spending against the sales until the next trip (puhunan vs benta), and **Usage and
+    waste** per item (`GET /api/reports/food-cost`, `/api/reports/usage`).
+  - **Waste**: Adjust has two more waste reasons, Dropped and Over-prepped (with Damaged
+    goods and Spoilage, decrease only), totalled with their peso value.
+  - **Stock count and variance**: a Stock count tab on Raw materials (Staff and Admin) for
+    the count before each trip; the system's figure is hidden while counting. Saving sets the
+    stock to the count and shows the variance, expected against counted, with what was
+    bought, sold and wasted since the item's previous count (`/api/inventory/counts`).
+  - **Shelf-life warnings** on the dashboard and Raw materials (`GET /api/inventory/freshness`):
+    the oldest stock on hand (assuming the oldest is used first) near or past its days fresh,
+    or a packaged item within 7 days of its printed expiry date.
+
+  Migration `market_purchasing` adds the tables (`purchase_units`, `purchases`,
+  `purchase_lines`, `stock_counts`, `stock_count_lines`), the planning columns, the sale's
+  cost and the waste reasons. Verified with unit tests (`market.test.ts`: the shopping-list
+  rule, freshness and recipe cost) and integration tests (`market-purchasing.test.ts`), and
+  every changed page compiles and loads on the dev server.
+
 ## Prerequisites
 
 - Node.js 20+ and npm

@@ -1,129 +1,279 @@
-%% Entity Relationship Diagram, generated from apps/api/prisma/schema.prisma.
-%% Table and column names are the PostgreSQL names (@@map / @map), which is what the database stores.
-%% Enum types: user_role (admin, staff, customer); order_status (pending, confirmed, preparing, ready,
-%% completed, cancelled); payment_method (gcash, maya, counter); payment_status (pending, paid, failed,
-%% refunded); kitchen_status (pending, in_progress, completed); adjustment_reason (restock, return,
-%% damaged, spoilage, correction, other).
-%% Lengths: users.name 120, users.email 160, categories.name 80, categories.icon 8, products.name 150,
-%% products.barcode 64, products.icon 8, stock_adjustments.note 200, orders.order_number 20,
-%% orders.customer_name 120, orders.kiosk_session_id 64, orders.source 20,
-%% order_items.special_instructions 140, payments.reference 100.
+%% Entity Relationship Diagram, generated from apps/api/prisma/schema.prisma by erd_from_schema.py.
+%% Table and column names are the PostgreSQL names (@@map / @map). Enum types: user_role (admin, staff, customer); order_status (pending, confirmed, preparing, ready, completed, cancelled); order_type (dine_in, take_out); payment_method (gcash, maya, counter, qrph); payment_status (pending, paid, failed, refunded); kitchen_status (pending, in_progress, completed); adjustment_reason (restock, return, damaged, spoilage, correction, other, dropped, over_prepped); stock_tracking (unit, recipe); material_unit (g, ml, pc); raw_material_category (meat_seafood, produce, rice_noodles, sauces_seasonings, oils_fats, dairy_eggs, drinks_ice, others); storage_type (frozen, chilled, room); purchase_kind (market_trip, top_up); movement_type (sale, adjustment, restock).
 
 erDiagram
-    roles ||--o{ users : "is assigned to"
-    users ||--o{ stock_adjustments : "records"
-    categories ||--o{ products : "groups"
-    products ||--o| inventory : "has stock level in"
-    products ||--o{ stock_adjustments : "is adjusted by"
-    products ||--o{ order_items : "is ordered as"
-    orders ||--o{ order_items : "contains"
-    orders ||--o| payments : "is paid by"
-    order_items ||--o| kitchen_tasks : "is prepared as"
+    categories ||--o{ products : "category_id"
+    order_items ||--o| kitchen_tasks : "order_item_id"
+    orders ||--o{ order_items : "order_id"
+    orders ||--o{ raw_material_movements : "order_id"
+    orders ||--o| payments : "order_id"
+    products ||--o{ low_stock_alerts : "product_id"
+    products ||--o{ order_items : "product_id"
+    products ||--o{ product_images : "product_id"
+    products ||--o{ purchase_lines : "product_id"
+    products ||--o{ purchase_units : "product_id"
+    products ||--o{ recipe_items : "product_id"
+    products ||--o{ stock_adjustments : "product_id"
+    products ||--o{ stock_count_lines : "product_id"
+    products ||--o| inventory : "product_id"
+    purchases ||--o{ purchase_lines : "purchase_id"
+    purchases ||--o{ raw_material_movements : "purchase_id"
+    purchases ||--o{ stock_adjustments : "purchase_id"
+    raw_materials ||--o{ low_stock_alerts : "raw_material_id"
+    raw_materials ||--o{ purchase_lines : "raw_material_id"
+    raw_materials ||--o{ purchase_units : "raw_material_id"
+    raw_materials ||--o{ raw_material_movements : "raw_material_id"
+    raw_materials ||--o{ recipe_items : "raw_material_id"
+    raw_materials ||--o{ stock_count_lines : "raw_material_id"
+    roles ||--o{ users : "role_id"
+    stock_counts ||--o{ raw_material_movements : "stock_count_id"
+    stock_counts ||--o{ stock_adjustments : "stock_count_id"
+    stock_counts ||--o{ stock_count_lines : "stock_count_id"
+    users ||--o{ login_codes : "user_id"
+    users ||--o{ purchases : "created_by_id"
+    users ||--o{ raw_material_movements : "adjusted_by_id"
+    users ||--o{ stock_adjustments : "adjusted_by_id"
+    users ||--o{ stock_counts : "created_by_id"
 
     roles {
         int id PK
         user_role name UK
     }
-
     users {
         uuid id PK
         varchar name
         varchar email UK
-        text password_hash
-        int role_id FK "references roles.id"
-        boolean is_active "default true"
+        varchar password_hash
+        int role_id FK
+        boolean is_active
         timestamp created_at
         timestamp updated_at
     }
-
+    login_codes {
+        uuid id PK
+        uuid user_id FK
+        varchar code_hash
+        int attempts
+        int sends
+        timestamp sent_at
+        timestamp expires_at
+        timestamp used_at
+        timestamp revoked_at
+        timestamp created_at
+    }
     categories {
         int id PK
         varchar name UK
-        varchar icon "nullable"
-        int sort_order "default 0"
-        boolean is_new "default false"
+        varchar icon
+        int sort_order
+        boolean is_new
+        boolean is_ready_made
     }
-
     products {
         uuid id PK
         varchar name
-        decimal price "10,2"
-        varchar barcode UK "nullable"
-        int category_id FK "references categories.id"
-        text description "nullable"
-        varchar icon "nullable"
-        decimal cost "10,2, nullable"
-        text_array ingredients "default empty"
-        text_array allergens "default empty"
-        int calories "nullable"
-        decimal protein_g "6,2, nullable"
-        decimal carbs_g "6,2, nullable"
-        decimal sugar_g "6,2, nullable"
-        boolean is_available "default true"
+        decimal price
+        varchar barcode UK
+        int category_id FK
+        varchar description
+        varchar icon
+        decimal cost
+        varchar ingredients
+        varchar allergens
+        int calories
+        decimal protein_g
+        decimal carbs_g
+        decimal sugar_g
+        boolean is_available
+        stock_tracking tracking
+        varchar instruction_options
+        boolean allow_instructions
+        int prep_minutes
         timestamp created_at
         timestamp updated_at
     }
-
-    inventory {
-        int id PK
-        uuid product_id FK,UK "references products.id, cascade delete"
-        int stock_qty "default 0"
-        int min_stock_threshold "default 5"
+    product_images {
+        uuid product_id PK, FK
+        bytes data
+        varchar content_type
         timestamp updated_at
     }
-
+    inventory {
+        int id PK
+        uuid product_id UK, FK
+        int stock_qty
+        int min_stock_threshold
+        int par_level
+        int safety_stock
+        storage_type storage
+        int shelf_life_days
+        timestamp updated_at
+    }
     stock_adjustments {
         uuid id PK
-        uuid product_id FK "references products.id, cascade delete"
+        uuid product_id FK
         int delta
         int previous_qty
         int new_qty
         adjustment_reason reason
-        varchar note "nullable"
-        uuid adjusted_by_id FK "references users.id"
+        varchar note
+        uuid purchase_id FK
+        uuid stock_count_id FK
+        uuid adjusted_by_id FK
         timestamp created_at
     }
-
     orders {
         uuid id PK
         varchar order_number UK
-        varchar customer_name "nullable"
-        varchar kiosk_session_id "nullable"
-        varchar source "default kiosk"
-        order_status status "default pending"
-        decimal total_amount "10,2, default 0"
+        varchar customer_name
+        varchar kiosk_session_id
+        varchar source
+        order_status status
+        order_type order_type
+        decimal total_amount
+        boolean stock_issue
+        varchar stock_issue_note
+        int estimated_prep_minutes
+        timestamp estimated_ready_at
+        timestamp handed_over_at
+        timestamp cancelled_at
+        varchar cancel_reason
         timestamp created_at
         timestamp updated_at
     }
-
     order_items {
         uuid id PK
-        uuid order_id FK "references orders.id, cascade delete"
-        uuid product_id FK "references products.id"
+        uuid order_id FK
+        uuid product_id FK
         int qty
-        decimal unit_price "10,2"
-        decimal subtotal "10,2"
-        varchar special_instructions "nullable"
+        int cancelled_qty
+        decimal unit_price
+        decimal unit_cost
+        decimal subtotal
+        varchar special_instructions
         timestamp created_at
     }
-
     payments {
         uuid id PK
-        uuid order_id FK,UK "references orders.id, cascade delete"
+        uuid order_id UK, FK
         payment_method method
-        payment_status status "default pending"
-        decimal amount "10,2"
-        varchar reference UK "nullable"
-        jsonb gateway_payload "nullable"
-        timestamp paid_at "nullable"
+        payment_status status
+        decimal amount
+        varchar reference UK
+        decimal amount_tendered
+        json gateway_payload
+        timestamp paid_at
+        timestamp refunded_at
         timestamp created_at
     }
-
     kitchen_tasks {
         uuid id PK
-        uuid order_item_id FK,UK "references order_items.id, cascade delete"
-        kitchen_status status "default pending"
-        timestamp started_at "nullable"
-        timestamp completed_at "nullable"
+        uuid order_item_id UK, FK
+        kitchen_status status
+        timestamp started_at
+        timestamp completed_at
         timestamp created_at
+    }
+    raw_materials {
+        uuid id PK
+        varchar name UK
+        material_unit unit
+        raw_material_category category
+        decimal stock_qty
+        decimal min_stock_threshold
+        decimal cost_per_unit
+        boolean is_active
+        int fdc_id
+        varchar fdc_description
+        decimal kcal_per_100g
+        decimal protein_per_100g
+        decimal carbs_per_100g
+        decimal sugar_per_100g
+        decimal grams_per_unit
+        timestamp created_at
+        timestamp updated_at
+        decimal par_level
+        decimal safety_stock
+        storage_type storage
+        int shelf_life_days
+    }
+    recipe_items {
+        uuid product_id FK
+        uuid raw_material_id FK
+        decimal qty_per_serving
+    }
+    raw_material_movements {
+        uuid id PK
+        uuid raw_material_id FK
+        decimal delta
+        decimal previous_qty
+        decimal new_qty
+        movement_type type
+        adjustment_reason reason
+        uuid order_id FK
+        uuid purchase_id FK
+        uuid stock_count_id FK
+        uuid adjusted_by_id FK
+        varchar note
+        timestamp created_at
+    }
+    low_stock_alerts {
+        uuid id PK
+        uuid product_id FK
+        uuid raw_material_id FK
+        varchar item_name
+        decimal stock_qty
+        decimal min_stock_threshold
+        material_unit unit
+        timestamp created_at
+        timestamp sent_at
+        int attempts
+        varchar last_error
+        timestamp resolved_at
+    }
+    purchase_units {
+        uuid id PK
+        uuid raw_material_id FK
+        uuid product_id FK
+        varchar name
+        decimal qty_in_base
+        timestamp created_at
+    }
+    purchases {
+        uuid id PK
+        timestamp purchased_on
+        purchase_kind kind
+        varchar store
+        varchar note
+        decimal total_amount
+        uuid created_by_id FK
+        timestamp created_at
+    }
+    purchase_lines {
+        uuid id PK
+        uuid purchase_id FK
+        uuid raw_material_id FK
+        uuid product_id FK
+        varchar unit_name
+        decimal unit_qty_in_base
+        decimal qty_units
+        decimal qty_base
+        decimal line_total
+        decimal planned_units
+        timestamp expires_on
+    }
+    stock_counts {
+        uuid id PK
+        timestamp counted_at
+        varchar note
+        uuid created_by_id FK
+    }
+    stock_count_lines {
+        uuid id PK
+        uuid stock_count_id FK
+        uuid raw_material_id FK
+        uuid product_id FK
+        decimal system_qty
+        decimal counted_qty
+        decimal unit_cost
     }

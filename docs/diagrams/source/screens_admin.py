@@ -17,7 +17,7 @@ C = "apps/web/src/components/admin/"
 
 NAV = [
     ("Operations", [("Dashboard", "/admin", False), ("Products", "/admin/products", True), ("Categories", "/admin/categories", True),
-                    ("Raw materials", "/admin/raw-materials", False), ("Bulk import", "/admin/import", True)]),
+                    ("Raw materials", "/admin/raw-materials", False), ("Market purchases", "/admin/purchases", True), ("Bulk import", "/admin/import", True)]),
     ("Sales", [("Analytics", "/admin/analytics", True), ("Transactions", "/admin/transactions", True)]),
     ("Front of house", [("Kitchen display", "/kitchen", False), ("Orders awaiting payment", "/staff/orders", False)]),
     ("Administration", [("Users & roles", "/admin/users", True), ("Kiosk QR code", "/admin/kiosk-qr", True)]),
@@ -256,7 +256,12 @@ def dashboard_page(role):
     f.circle(CX + 20, y + 28, 4, fill=INK2, stroke=INK2)
     f.text(CX + 34, y + 33, "5 items at or below minimum stock", size=14, bold=True)
     f.btn(CX + CW - 120, y + 11, 104, 34, "See more", size=13)
-    y += 74
+    y += 66
+    f.rect(CX, y, CW, 64, fill=WHITE, stroke=INK2, r=6, sw=1.5)
+    f.text(CX + 18, y + 24, "2 items to use soon · 1 past its fresh days", size=14, bold=True)
+    f.text(CX + 18, y + 46, "Raw material (2.4 kg): went off Nov 13, bought Nov 7. Check it before using.  ·  Ready-made item (12 pc): goes off Nov 20 (printed date), in 5 days.", size=12, fill=INK2)
+    f.btn(CX + CW - 120, y + 15, 104, 34, "See items", size=13)
+    y += 82
     tiles = [("Active SKUs", "20", "6 categories", False)]
     if not staff:
         tiles.append(("Inventory value", "₱00,000", "At cost · 30 of 34 items have a cost", False))
@@ -278,6 +283,7 @@ def dashboard_page(role):
         f.add_note("Landing page after sign-in. Every dish is made from a bill of materials (panel feedback), so stock is counted in raw materials, plus the ready-made items (sold as they are, counted in pieces). The notice and the Needs restock / Out of stock tiles count both.")
         f.add_note("The notice shows only when something is at or below its minimum. See more and Needs restock open Raw materials filtered to what needs restocking (14, ?filter=low), Out of stock to what has none left (?filter=out); when only ready-made items match, they open the Ready-made tab (14f).")
         f.add_note("Level: OK, LOW (a ready-made item at or below its minimum) or OUT. A dish runs low when one of its raw materials does, which the notice reports. Inventory value is the raw materials and ready-made items at cost.")
+        f.add_note("The second notice (GET /api/inventory/freshness) lists items to use soon: the oldest stock on hand (assuming the oldest is used first) near or past the days it stays fresh, counted from its market purchase, or a packaged item within 7 days of its printed date. See items opens Raw materials, which shows the same notice.")
     return f
 
 
@@ -353,7 +359,11 @@ def product_form_fields(f, x, y, w, mode):
     f.wrap(x + 96, y + 90, w - 96, "Optional. Without a photo, the kiosk shows the icon. JPEG, PNG or WebP; it's made smaller before uploading.", size=11, fill=INK3)
     y += 136
     f.inp(x, y, half, 38, label="Price (₱) *", value="" if edit else "000.00", invalid=edit)
-    f.inp(x + half + 12, y, half, 38, label="Cost (₱)", placeholder="Optional")
+    if ready:
+        f.inp(x + half + 12, y, half, 38, label="Cost per piece (₱)", value="00.00")
+    else:
+        f.inp(x + half + 12, y, half, 38, label="Cost from the recipe", value="₱000.00 · margin 00%")
+        f.rect(x + half + 12, y + 18, half, 38, fill=FILL2, stroke=LINE_SOFT, r=4, opacity=0.5)
     if edit:
         f.text(x, y + 56, "Enter a price.", size=12, bold=True)
         y += 18
@@ -488,14 +498,14 @@ def product_delete():
 
 
 # --- 14 raw materials (the inventory) ----------------------------------------------------
-RAW_TABS = ["Raw materials", "Dishes (servings)", "Ready-made (pieces)", "Stock movements"]
+RAW_TABS = ["Raw materials", "Dishes (servings)", "Ready-made (pieces)", "Stock movements", "Stock count"]
 RAW_FILES = A + "admin/raw-materials/page.tsx"
 
 
 def raw_base(f, role="admin", tab=0):
     admin = role == "admin"
     y = page_header(f, "Inventory · bill of materials", "Raw materials", [("+ Add raw material", "primary")] if admin else ())
-    y = tabbar(f, CX, y, RAW_TABS, tab) + 16
+    y = tabbar(f, CX, y, RAW_TABS, min(tab, 4)) + 16
     if tab == 0:
         banner(f, y, "2 raw materials at or below minimum level", "Raw material (1.2 kg left), Raw material (800 g left)")
         y += 80
@@ -531,6 +541,10 @@ def raw_base(f, role="admin", tab=0):
         rows = [["Ready-made item", "24 pcs", "6 pcs", P(f, "OK"), B(f, "Adjust")], ["Ready-made item", "4 pcs", "6 pcs", P(f, "LOW"), B(f, "Adjust")],
                 ["Ready-made item", "36 pcs", "10 pcs", P(f, "OK"), B(f, "Adjust")], ["Ready-made item", "12 pcs", "5 pcs", P(f, "OK"), B(f, "Adjust")]]
         f.table(CX, y + 56, CW, [("Item", 0.4, "left"), ("On hand", 0.13, "right"), ("Min", 0.13, "right"), ("Status", 0.14, "left"), ("Actions", 0.2, "right")], rows, rowh=46)
+    elif tab == 4:
+        stock_count_body(f, y, result=False)
+    elif tab == 5:
+        stock_count_body(f, y, result=True)
     else:
         fw = 170
         for i, (label, value) in enumerate([("Show", "Raw materials and ready-made"), ("Item", "All items"), ("Change", "All changes")]):
@@ -662,7 +676,7 @@ def raw_nutrition():
 def raw_form():
     f = admin_page("14c", "Add raw material (popup)", "/admin/raw-materials  (popup)", C + "RawMaterialForm.tsx, apps/web/src/lib/rawMaterialCategories.ts", h=900, access=ADMIN)
     raw_base(f)
-    x, y, w = modal(f, 448, 428)
+    x, y, w = modal(f, 448, 700, y=40)
     f.text(x, y + 12, "NEW RAW MATERIAL", size=11, fill=INK3, bold=True)
     f.text(x, y + 40, "Add a raw material", size=18, bold=True)
     half = (w - 12) / 2
@@ -672,8 +686,10 @@ def raw_form():
     f.inp(x + half + 12, y + 218, half, 38, label="Opening stock (g)", value="0")
     f.inp(x, y + 286, half, 38, label="Minimum level (g)", value="0")
     f.inp(x + half + 12, y + 286, half, 38, label="Cost per g (₱)", placeholder="Optional")
-    f.btn_row(x + w, y + 342, [("Cancel", "secondary"), ("Add raw material", "primary")], h=38)
+    planning_fieldset(f, x, y + 344, w, "g")
+    f.btn_row(x + w, y + 612, [("Cancel", "secondary"), ("Add raw material", "primary")], h=38)
     f.add_note("Category is one of a fixed list (Meat & seafood, Vegetables & fruit, Rice & noodles, Sauces & seasonings, Oils & fats, Dairy & eggs, Drinks & ice, Others), Others by default; raw materials that existed before were sorted by their names when categories were added.")
+    f.add_note("Market trip: the units it's bought in at the palengke (unit conversion, here 1 kg = 1000 g; + Add a market unit), the par level (the most to keep), the safety stock (a buffer), how it's stored and the days it stays fresh. They feed the shopping list (25), shelf-life warnings (11) and the purchase form (25b). A ready-made item's form (12e) has the same section, in pieces.")
     f.add_note("Edit is the same popup (14h): the unit is locked, there is no opening stock, and it adds an In use tick box and Remove item. Stock itself is changed only through Adjust (14b). “Measured in” offers grams (g), millilitres (ml) or pieces (pc).")
     return f
 
@@ -833,6 +849,203 @@ def analytics():
     f.add_note("Daily / Weekly / Monthly changes the sales chart and the Revenue, Orders and Average order value tiles (last 14 days / 8 weeks / 6 months). Average order value = revenue ÷ paid orders (“—” with none); the chart's hover shows each period's revenue, orders and average. Top products, profitability and movement are all-time; Needs restock is right now.")
     f.add_note("The sales export (CSV, Excel, PDF) has an Average order value column.")
     f.add_note("Each card exports its report as CSV, Excel or PDF (GET /api/reports/export). Empty states: “No sales in this period” (with “Try a longer period above.”), “No sales yet”, and “No products have a cost recorded yet — add one in Products to see margins here.”")
+    return f
+
+
+def planning_fieldset(f, x, y, w, unit):
+    """The Market trip section of a raw material or ready-made item's form (PlanningFields.tsx)."""
+    f.rect(x, y, w, 250, fill=WHITE, stroke=LINE_SOFT, r=6)
+    f.text(x + 12, y + 20, "Market trip", size=12, bold=True, fill=INK2)
+    f.text(x + 12, y + 44, "Bought at the market in", size=12, bold=True, fill=INK2)
+    f.text(x + 12, y + 76, "1", size=13, fill=INK3)
+    f.inp(x + 28, y + 56, 90, 32, value="kg", size=12)
+    f.text(x + 128, y + 76, "=", size=13, fill=INK3)
+    f.inp(x + 144, y + 56, 90, 32, value="1000", size=12)
+    f.text(x + 244, y + 76, unit, size=13, fill=INK3)
+    f.btn(x + w - 46, y + 56, 34, 32, "×", size=13)
+    f.btn(x + 12, y + 96, 150, 26, "+ Add a market unit", size=11)
+    half = (w - 36) / 2
+    f.inp(x + 12, y + 140, half, 32, label="Par level (" + unit + ")", value="8000", size=12)
+    f.inp(x + 24 + half, y + 140, half, 32, label="Safety stock (" + unit + ")", value="1000", size=12)
+    f.inp(x + 12, y + 210, half, 30, value="Frozen (freezer)", select=True, size=11)
+    f.inp(x + 24 + half, y + 210, half, 30, value="30 days fresh", size=11)
+
+
+def stock_count_body(f, y, result):
+    if result:
+        top = card(f, CX, y, CW, 386, "Variance · counted Nov 15, 8:10 AM · 2 of 5 off")
+        f.text(CX + 18, top + 26, "Value of the difference: −₱000.00 missing that no sale or recorded waste explains.", size=13, bold=True)
+        rows = [["Raw material", "24.6 kg", "24.5 kg", "−100 g  (−₱5.00)", "first count · bought 25 kg · sold 400 g · wasted 0 g"],
+                ["Raw material", "6.25 kg", "6.1 kg", "−150 g  (−₱54.00)", "counted 6.3 kg · bought 2 kg · sold 1.9 kg · wasted 250 g"],
+                ["Ready-made item", "24 pc", "24 pc", P(f, "MATCHES"), "first count · bought 24 pc · sold 0 pc · wasted 0 pc"],
+                ["Raw material", "30 pc", "30 pc", P(f, "MATCHES"), "first count · bought 30 pc · sold 0 pc · wasted 0 pc"],
+                ["Raw material", "1.2 L", "1.2 L", P(f, "MATCHES"), "counted 2 L · bought 0 ml · sold 800 ml · wasted 0 ml"]]
+        f.table(CX, top + 44, CW, [("Item", 0.16, "left"), ("Expected", 0.11, "right"), ("Counted", 0.11, "right"), ("Difference", 0.18, "right"), ("Since the last count", 0.44, "left")], rows, rowh=46)
+        y += 404
+    f.wrap(CX, y + 4, CW, "Count what's actually there, before each market trip. Leave an item blank to skip it. The system's figure shows after saving, so it doesn't sway the count; saving sets the stock to what you counted.", size=13, fill=INK2)
+    y += 36
+    h = 300 if result else 420
+    top = card(f, CX, y, CW, h, "Count sheet · 2 of 34 counted")
+    f.inp(CX + 18, top + 14, 300, 36, placeholder="Search items")
+    ry = top + 64
+    for name, val, unit in [("Raw material", "24500", "g"), ("Raw material", "", "g"), ("Ready-made item  ready-made", "24", "pc"), ("Raw material", "", "pc"), ("Raw material", "", "ml")][: 3 if result else 5]:
+        f.text(CX + 18, ry + 24, name, size=13)
+        f.inp(CX + CW - 220, ry + 4, 150, 34, value=val, size=12)
+        f.text(CX + CW - 60, ry + 26, unit, size=12, fill=INK3)
+        f.line(CX, ry + 44, CX + CW, ry + 44, stroke=LINE_SOFT)
+        ry += 46
+    f.btn(CX + CW - 140, top + h - 92 + (0 if result else 40), 122, 36, "Save count", kind="primary")
+
+
+def stock_count():
+    f = admin_page("14j", "Raw materials: Stock count (count sheet)", "/admin/raw-materials?tab=count", C + "StockCountTab.tsx, " + RAW_FILES, h=860)
+    raw_base(f, tab=4)
+    f.add_note("The count sheet, done before each market trip (about every two weeks): Staff and the Administrator type what's actually there for each raw material and ready-made item (whole pieces for ready-made). The system's figure is hidden while counting, so it doesn't sway the count.")
+    f.add_note("Save count asks first, then sets each counted item's stock to the count (a correction in Stock movements, “Stock count”) and records the expected figure: POST /api/inventory/counts. The variance shows next (14k). Past counts are listed below the sheet with Variance to open one.")
+    return f
+
+
+def stock_count_result():
+    f = admin_page("14k", "Raw materials: the count's variance", "/admin/raw-materials?tab=count", C + "StockCountTab.tsx, apps/api/src/modules/inventory/counts.ts", h=1060)
+    raw_base(f, tab=5)
+    f.add_note("Variance (inventory record inaccuracy): expected (what sales, purchases and recorded waste left) against counted. Negative is stock missing that nothing recorded explains: portioning, unrecorded waste or loss. Since the last count shows what was bought, sold and wasted since the item's previous count, to trace a gap.")
+    f.add_note("The peso value of each difference and the total use the cost per unit when counted, and are shown to the Administrator only; Staff see the quantities.")
+    return f
+
+
+# --- 25 market purchases (the palengke cycle) --------------------------------------------
+MARKET_FILES = A + "admin/purchases/page.tsx, " + C + "purchasing/PurchasingViews.tsx"
+
+
+def market_header(f, tab, form=False):
+    y = page_header(f, "Inventory · palengke restocking", "Market purchases", () if form else [("+ Record a purchase", "primary")])
+    return y, tab
+
+
+def market_tabs(f, y, tab):
+    return tabbar(f, CX, y, ["Shopping list", "Purchases", "Price history"], tab) + 16
+
+
+def shopping_list():
+    f = admin_page("25", "Market purchases: Shopping list", "/admin/purchases", MARKET_FILES + ", apps/api/src/modules/purchasing/shoppingList.ts", h=900, access=ADMIN, active="/admin/purchases")
+    y, _ = market_header(f, 0)
+    y = market_tabs(f, y, 0)
+    f.inp(CX, y + 18, 176, 38, label="Days until the next trip", value="14")
+    f.btn_row(CX + CW, y + 18, [("Print list", "secondary"), ("Record the trip from this list", "primary")], h=38)
+    y += 74
+    f.wrap(CX, y, CW, "For each item: what sales and waste used per day over the last 28 days × the days to cover, plus the safety stock, never above the par level, minus what's on hand, rounded up to market units. A rule over recent usage, not a forecast.", size=13, fill=INK2)
+    y += 44
+    top = card(f, CX, y, CW, 84 + 6 * 50, "Shopping list · 6 items · about ₱0,000.00 to bring")
+    rows = [["Raw material", "1.1 kg", "420 g", T2(f, "6 kg", "needs 5.4 kg"), "₱0,000.00"],
+            ["Raw material", "3.2 kg", "1.6 kg", T2(f, "1 sack", "needs 21.6 kg"), "₱0,000.00"],
+            [T2(f, "Raw material", "Stays fresh 3 days: bought for 3 days only. Plan a top-up."), "100 g", "350 g", T2(f, "2 kg", "needs 1.05 kg"), "₱000.00"],
+            ["Raw material", "6 pc", "9 pc", T2(f, "5 tray", "needs 132 pc"), "₱0,000.00"],
+            ["Ready-made item", "4 pc", "3 pc", T2(f, "2 case", "needs 44 pc"), "₱000.00"],
+            ["Raw material", "200 ml", "40 ml", T2(f, "1 bottle", "needs 760 ml"), "no price yet"]]
+    f.table(CX, top, CW, [("Item", 0.36, "left"), ("On hand", 0.12, "right"), ("Used / day", 0.12, "right"), ("Buy", 0.22, "left"), ("About", 0.18, "right")], rows, rowh=50)
+    f.add_note("Before each market trip (the owner goes about every two weeks): GET /api/purchases/shopping-list?days=14. Days until the next trip is remembered on the device. Items whose stock covers the trip aren't listed; an item with no price yet is left out of the total.")
+    f.add_note("An item that won't stay fresh until the next trip (not frozen) is bought only for its fresh days, with a reminder to plan a top-up. Print list prints the page; Record the trip from this list opens the purchase form (25b) with each line's planned amount filled in.")
+    return f
+
+
+def purchase_form():
+    f = admin_page("25b", "Market purchases: recording the trip", "/admin/purchases", C + "purchasing/PurchaseForm.tsx, apps/api/src/modules/purchasing/service.ts", h=960, access=ADMIN, active="/admin/purchases")
+    y, _ = market_header(f, 0, form=True)
+    top = card(f, CX, y, CW, 610, "Record the market trip (from the shopping list)")
+    q = (CW - 36 - 36) / 4
+    f.inp(CX + 18, top + 32, q, 38, label="Date bought", value="11/15/2026")
+    f.inp(CX + 30 + q, top + 32, q, 38, label="Kind", value="Market trip", select=True)
+    f.inp(CX + 42 + 2 * q, top + 32, 2 * q, 38, label="Store or stall (optional)", placeholder="e.g. Bacoor public market")
+    ty = top + 96
+    cols = [("Item", 0.3, "left"), ("Bought", 0.16, "left"), ("Unit", 0.13, "left"), ("Paid (₱)", 0.15, "left"), ("Printed expiry", 0.18, "left"), ("", 0.08, "right")]
+
+    def inp_cell(value, select=False, under=None):
+        def draw(x, yy, w, h):
+            f.inp(x + 6, yy + (4 if under else 10), w - 12, 30 if under else 32, value=value, select=select, size=12)
+            if under:
+                f.text(x + 8, yy + h - 3, under, size=10, fill=INK3)
+        return draw
+
+    rows = [[T2(f, "Raw material", "Planned 6 kg"), inp_cell("6", under="= 6000 g"), inp_cell("kg", True), inp_cell("2,160.00"), inp_cell("mm/dd/yyyy"), B(f, "×")],
+            [T2(f, "Raw material", "Planned 1 sack"), inp_cell("1"), inp_cell("sack", True), inp_cell("1,250.00"), inp_cell("mm/dd/yyyy"), B(f, "×")],
+            [T2(f, "Raw material", "Planned 5 tray"), inp_cell("4", under="= 120 pc"), inp_cell("tray", True), inp_cell("960.00"), inp_cell("mm/dd/yyyy"), B(f, "×")],
+            [T2(f, "Ready-made item", "Planned 2 case"), inp_cell("2"), inp_cell("case", True), inp_cell("960.00"), inp_cell("11/30/2026"), B(f, "×")],
+            [T2(f, "Raw material", "Planned 1 bottle"), inp_cell("0"), inp_cell("bottle", True), inp_cell("0.00"), inp_cell("mm/dd/yyyy"), B(f, "×")]]
+    end = f.table(CX + 18, ty, CW - 36, cols, rows, rowh=52)
+    f.btn(CX + 18, end + 14, 110, 30, "+ Add a line", size=12)
+    f.text(CX + CW - 18, end + 34, "Receipt total ₱5,330.00", size=14, bold=True, anchor="end")
+    f.btn_row(CX + CW - 18, end + 64, [("Cancel", "secondary"), ("Save purchase", "primary")], h=38)
+    f.add_note("After the trip the owner enters each resibo: one line per item, in the unit it was bought in (its market units, or g / ml / pc), with what was paid for the line; “= 6000 g” shows the conversion. A line with 0 bought records an item that wasn't found (here the bottle). A printed expiry date can be added for packaged goods.")
+    f.add_note("Save purchase (POST /api/purchases, Administrator only) adds each item's stock, logged as a restock linked to the purchase, and makes the price paid its cost per unit, so recipe costs and food cost follow the market. Refused: a unit the item doesn't have, part of a piece, a future date, a price with nothing bought, or a dish (its stock is its raw materials). A purchase isn't edited afterwards; a mistake is corrected with Adjust.")
+    return f
+
+
+def purchase_list():
+    f = admin_page("25c", "Market purchases: Purchases (planned against bought)", "/admin/purchases?tab=purchases", MARKET_FILES, h=860, access=ADMIN, active="/admin/purchases")
+    y, _ = market_header(f, 1)
+    y = market_tabs(f, y, 1)
+    top = card(f, CX, y, CW, 470)
+    f.text(CX + 18, top + 30, "Nov 15", size=14, bold=True)
+    px = CX + 80 + f.pill(CX + 80, top + 16, "MARKET TRIP", size=10) + 10
+    f.text(px, top + 30, "Bacoor public market", size=13, fill=INK2)
+    f.text(CX + CW - 18, top + 30, "₱5,330.00", size=14, bold=True, anchor="end")
+    f.text(CX + 18, top + 52, "5 lines · recorded by Full name", size=12, fill=INK3)
+    rows = [["Raw material", "6 kg", "6 kg", "₱360.00/kg", "₱2,160.00"], ["Raw material", "1 sack", "1 sack", "₱1,250.00/sack", "₱1,250.00"],
+            [T2(f, "Raw material", ""), "5 tray", T2(f, "4 tray", "less than planned"), "₱240.00/tray", "₱960.00"],
+            [T2(f, "Ready-made item", "expires Nov 30"), "2 case", "2 case", "₱480.00/case", "₱960.00"], ["Raw material", "1 bottle", "not found", "—", "₱0.00"]]
+    end = f.table(CX + 18, top + 70, CW - 36, [("Item", 0.3, "left"), ("Planned", 0.15, "left"), ("Bought", 0.2, "left"), ("Price", 0.18, "right"), ("Paid", 0.17, "right")], rows, rowh=44)
+    f.line(CX, end + 18, CX + CW, end + 18, stroke=LINE_SOFT)
+    f.text(CX + 18, end + 48, "Nov 9", size=14, bold=True)
+    px = CX + 80 + f.pill(CX + 80, end + 34, "TOP-UP", size=10) + 10
+    f.text(px, end + 48, "—", size=13, fill=INK2)
+    f.text(CX + CW - 18, end + 48, "₱720.00", size=14, bold=True, anchor="end")
+    f.add_note("The receipts recorded so far, newest first (GET /api/purchases); a row opens to its lines with planned against bought (from the shopping list), the price per market unit and any printed expiry date. Market trip or top-up between trips.")
+    return f
+
+
+def price_history():
+    f = admin_page("25d", "Market purchases: Price history", "/admin/purchases?tab=prices", MARKET_FILES, h=820, access=ADMIN, active="/admin/purchases")
+    y, _ = market_header(f, 2)
+    y = market_tabs(f, y, 2)
+    f.inp(CX, y + 18, 320, 38, label="Item", value="Raw material", select=True)
+    y += 74
+    top = card(f, CX, y, CW, 380, "Raw material · price per g over time")
+    pts = [(0, 40), (80, 36), (160, 30), (240, 34), (320, 22), (400, 14)]
+    for (x1, y1), (x2, y2) in zip(pts, pts[1:]):
+        f.line(CX + 30 + x1, top + 10 + y1, CX + 30 + x2, top + 10 + y2, stroke=INK, sw=2)
+    rows = [[T2(f, "Nov 15", "Bacoor public market"), "6 kg", "₱360.00/kg", "▲ 12.5%"], ["Nov 1", "5 kg", "₱320.00/kg", "▲ 3.2%"],
+            ["Oct 18", "5 kg", "₱310.00/kg", "▼ 1.6%"], ["Oct 4", "6 kg", "₱315.00/kg", "—"]]
+    f.table(CX, top + 70, CW, [("Bought", 0.34, "left"), ("Amount", 0.2, "left"), ("Price", 0.24, "right"), ("Change", 0.22, "right")], rows, rowh=44)
+    f.add_note("Each item's price on every purchase, newest first, with the change from the purchase before (GET /api/purchases/prices); the line above shows the trend per base unit, so purchases in different market units compare. A rise shows ▲, a drop ▼.")
+    return f
+
+
+def analytics_stock():
+    f = admin_page("17b", "Analytics: food cost, and usage and waste", "/admin/analytics", C + "StockReports.tsx, apps/api/src/modules/reports/stockReports.ts", h=1000, access=ADMIN, active="/admin/analytics")
+    y = page_header(f, "Visual analytics & reports", "Performance")
+    f.text(CX, y + 4, "(sales chart, top products and profitability above, as in 17)", size=12, fill=INK3)
+    y += 20
+    f.inp(CX, y + 18, 160, 38, label="From", value="11/02/2026")
+    f.inp(CX + 172, y + 18, 160, 38, label="To", value="11/15/2026")
+    y += 74
+    top = card(f, CX, y, CW, 330, "Food cost · Nov 2 to Nov 15")
+    w3 = (CW - 36) / 3
+    for i, (label, value, sub) in enumerate([("From recipes", "31.4%", "₱0,000.00 cost of ₱00,000.00 sold"), ("From market purchases", "36.8%", "₱0,000.00 spent · ₱00,000.00 sales"), ("Sales without a cost", "₱000.00", "Dishes sold before their prices were known")]):
+        f.text(CX + 18 + i * w3, top + 26, label.upper(), size=11, fill=INK3, bold=True)
+        f.text(CX + 18 + i * w3, top + 60, value, size=24, bold=True)
+        f.text(CX + 18 + i * w3, top + 82, sub, size=12, fill=INK3)
+    f.table(CX, top + 106, CW, [("Market trip", 0.34, "left"), ("Spent (with top-ups)", 0.22, "right"), ("Sales until next trip", 0.22, "right"), ("Spent ÷ sales", 0.22, "right")],
+            [["Nov 1 to Nov 15", T2(f, "₱0,000.00", "incl. ₱720.00 top-ups"), "₱00,000.00", "34.9%"], ["Nov 15 (current)", "₱0,000.00", "₱0,000.00", "—"]], rowh=48)
+    y += 348
+    top = card(f, CX, y, CW, f.h - y - 24, "Usage and waste · 14 days · waste ₱000.00")
+    f.text(CX + 18, top + 24, "Waste by reason: Spoilage ₱000.00 · Dropped ₱00.00 · Over-prepped ₱00.00", size=13)
+    rows = [["Raw material", T2(f, "6.4 kg", "₱0,000.00"), "457 g", T2(f, "250 g", "₱90.00"), "7 kg", "1.1 kg"],
+            ["Raw material", T2(f, "22 kg", "₱0,000.00"), "1.6 kg", "0 g", "25 kg", "3.2 kg"],
+            ["Ready-made item", T2(f, "40 pc", "₱800.00"), "3 pc", "0 pc", "48 pc", "8 pc"],
+            ["Raw material", T2(f, "126 pc", "₱000.00"), "9 pc", T2(f, "6 pc", "₱48.00"), "120 pc", "6 pc"]]
+    f.table(CX, top + 40, CW, [("Item", 0.28, "left"), ("Used", 0.15, "right"), ("Per day", 0.13, "right"), ("Wasted", 0.15, "right"), ("Bought", 0.14, "right"), ("On hand", 0.15, "right")], rows, rowh=48)
+    f.add_note("Two reports for the palengke cycle over a period of days (default the last 14, one market cycle): GET /api/reports/food-cost and /api/reports/usage. Food cost from recipes uses each sale's cost saved when it was paid; from market purchases, what was actually spent. A purchase figure well above the recipe one points to waste, over-portioning or stock not yet used.")
+    f.add_note("Market trip rows (puhunan vs benta): each trip plus its top-ups until the next trip, against the sales in the same days. Usage and waste: used by sales, the average per day, wasted (damaged, spoiled, dropped, over-prepped, with its value at today's cost), bought, and on hand.")
     return f
 
 
@@ -1412,19 +1625,19 @@ def status_board():
 
 
 SCREENS = [login, login_error, login_code, dashboard, dashboard_staff, products, product_form, product_form_recipe, product_form_ready,
-           product_delete, raw_materials, raw_adjust, raw_form, raw_form_edit, raw_remove, raw_nutrition, raw_dishes, raw_ready, adjust_stock, raw_movements,
-           bulk_import, bulk_import_result, analytics, kitchen, kitchen_empty, orders, orders_empty, payment_panel, counter_receipt,
+           product_delete, raw_materials, raw_adjust, raw_form, raw_form_edit, raw_remove, stock_count, stock_count_result, raw_nutrition, raw_dishes, raw_ready, adjust_stock, raw_movements,
+           bulk_import, bulk_import_result, analytics, analytics_stock, kitchen, kitchen_empty, orders, orders_empty, payment_panel, counter_receipt,
            new_order, paid_orders, counter_receipt_cancelled, users, invite_user, confirm_change, edit_user, kiosk_qr, kiosk_qr_invalid, categories, transactions,
-           status_board]
+           status_board, shopping_list, purchase_form, purchase_list, price_history]
 
 SLUGS = {
     "10": "login", "10b": "login-error", "10c": "login-code", "11": "dashboard", "11b": "dashboard-staff", "12": "products",
     "12b": "product-form-add", "12c": "product-form-recipe", "12d": "product-delete", "12e": "product-form-ready-made",
     "13b": "adjust-stock", "14": "raw-materials", "14b": "raw-material-adjust", "14c": "raw-material-form",
     "14d": "raw-material-nutrition", "14e": "raw-materials-dishes", "14f": "raw-materials-ready-made", "14g": "stock-movements", "14h": "raw-material-edit-remove",
-    "14i": "raw-material-remove",
-    "16": "bulk-import-preview", "16b": "bulk-import-result", "17": "analytics", "18": "kitchen-display", "18b": "kitchen-display-empty",
+    "14i": "raw-material-remove", "14j": "stock-count", "14k": "stock-count-variance",
+    "16": "bulk-import-preview", "16b": "bulk-import-result", "17": "analytics", "17b": "analytics-food-cost-usage", "18": "kitchen-display", "18b": "kitchen-display-empty",
     "19": "orders-awaiting-payment", "19b": "orders-awaiting-payment-empty", "19c": "take-payment", "19d": "counter-receipt",
     "19e": "new-order", "19f": "paid-orders", "19g": "counter-receipt-cancelled-dish", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",
-    "20d": "edit-user", "21": "kiosk-qr", "21b": "kiosk-qr-invalid", "22": "categories", "23": "transactions", "24": "order-status-board",
+    "20d": "edit-user", "21": "kiosk-qr", "21b": "kiosk-qr-invalid", "22": "categories", "23": "transactions", "24": "order-status-board", "25": "shopping-list", "25b": "record-purchase", "25c": "purchases", "25d": "price-history",
 }
