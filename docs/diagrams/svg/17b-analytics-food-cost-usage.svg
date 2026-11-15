@@ -3,6 +3,8 @@
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">17b  Analytics: food cost, and usage and waste</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/analytics   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin only (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/admin/StockReports.tsx, apps/api/src/modules/reports/stockReports.ts, apps/web/src/components/admin/AdminShell.tsx</text>
+<rect x="1179.67" y="12" width="124.33" height="28" rx="14" fill="#222222"/>
+<text x="1241.835" y="31" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">ADMINISTRATOR</text>
 <text x="24" y="1122" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1142" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Two reports for the palengke cycle over a period of days (default the last 14, one market cycle): GET /api/reports/food-cost and /api/reports/usage. Food cost from recipes uses each</text>
 <text x="24" y="1161" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   sale&#x27;s cost saved when it was paid; from market purchases, what was actually spent. A purchase figure well above the recipe one points to waste, over-portioning or stock not yet used.</text>

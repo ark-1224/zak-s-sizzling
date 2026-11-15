@@ -3,6 +3,8 @@
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">12  Products</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/products   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin only (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/admin/products/page.tsx, apps/web/src/components/admin/AdminShell.tsx</text>
+<rect x="1179.67" y="12" width="124.33" height="28" rx="14" fill="#222222"/>
+<text x="1241.835" y="31" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">ADMINISTRATOR</text>
 <text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Search matches name or category and works together with the category filter. With no match: “No products match … ” and a Clear search / Show all categories button.</text>
 <text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Recipe: how many raw materials the dish&#x27;s bill of materials has, “No recipe yet” (the dish is sold out until it gets one), or “Ready-made (pieces)” for an item in the Ready-made</text>

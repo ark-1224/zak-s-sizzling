@@ -5,6 +5,7 @@ files always match the images. Run after build.py: python docs/diagrams/source/r
 from pathlib import Path
 
 import flows
+import roles
 import screens_admin
 import screens_kiosk
 
@@ -51,6 +52,8 @@ WIREFRAME_DESC = {
     "14i": "Confirmation before removing a raw material, warning that its movement history goes with it.",
     "14j": "Stock count tab: the count sheet before each market trip, the system's figure hidden while counting.",
     "14k": "The count's variance: expected against counted, its peso value, and what was bought, sold and wasted since the last count.",
+    "14l": "The Raw materials tab as Staff see it: Adjust only, no + Add raw material, Edit or Nutrition.",
+    "14m": "The count's variance as Staff see it: quantities only, no peso values.",
     "16": "Bulk import with Products and Recipes tables from one Excel file, and a preview with errors and a warning.",
     "16b": "Bulk import after importing: the result card with recipes set.",
     "17b": "Analytics, food cost (from recipes and from market purchases, each trip against its sales) and usage and waste per item.",
@@ -104,7 +107,7 @@ def main():
         "# Diagrams: Zak's Sizzling Hub",
         "",
         "Wireframes of every screen built in the code, and process flows of the system, for the thesis paper and the panel defense. "
-        "They document the code as it is (13 November 2026); nothing in the app was changed to make them.",
+        "They document the code as it is (15 November 2026); nothing in the app was changed to make them.",
         "",
         "- `png/` high-resolution images for the paper (at least ~3000 px wide, about 300 dpi across A4).",
         "- `svg/` the same diagrams as vector images (scale without blur; open in a browser, Inkscape or diagrams.net).",
@@ -118,6 +121,12 @@ def main():
         "Dish, category and person data are placeholders (“Dish name”, “₱000.00”); labels, fields and buttons are the real ones from the code. "
         "Numbers with a letter (03b, 12c, …) are states or popups of the screen with the same number.",
         "",
+        "Wireframes are grouped by **role**: Customer, Staff and Administrator. Each screen is listed under the role that mainly uses it and is "
+        "drawn as that role sees it (the Staff menu or the Administrator's full menu, and only the buttons and figures that role gets); "
+        "a tag at the top right of each frame names the role. The Administrator can open every Staff screen as well. "
+        "Where the two roles see a screen differently, both versions are drawn: 11 and 11b (dashboard), 14 and 14l (raw materials), "
+        "14k and 14m (the count's variance).",
+        "",
         "The kiosk is drawn at its 1024 × 600 touchscreen size; the back office at a 1280 px wide desktop, at full page length.",
         "",
         "**Process flows** are swimlane activity diagrams: one column per actor, read top to bottom, with standard flowchart symbols "
@@ -126,15 +135,20 @@ def main():
         "",
         "## Wireframes",
         "",
-        "| File | Screen | Route | What it shows | Based on |",
-        "|---|---|---|---|---|",
     ]
+    frames = {}
     for module in (screens_kiosk, screens_admin):
         for make in module.SCREENS:
             f = make()
-            name = f"{f.number}-{module.SLUGS[f.number]}"
+            frames[f.number] = (f, f"{f.number}-{module.SLUGS[f.number]}")
+    assert set(frames) == set(roles.CUSTOMER + roles.STAFF + roles.ADMIN)
+    for section, numbers, intro in roles.SECTIONS:
+        lines += [f"### {section} ({len(numbers)})", "", intro, "", "| File | Screen | Route | What it shows | Based on |", "|---|---|---|---|---|"]
+        for number in numbers:
+            f, name = frames[number]
             files = f.files.replace("apps/web/src/", "")
             lines.append(f"| [{name}.png](png/{name}.png) | {f.name} | `{f.route}` | {WIREFRAME_DESC[f.number]} | {files} |")
+        lines.append("")
     lines += [
         "",
         "Code paths in the wireframe table are relative to `apps/web/src/`.",
@@ -184,7 +198,8 @@ def main():
         "|---|---|",
         "| `source/wf.py` | wireframe building blocks (boxes, buttons, inputs, tables, popups) |",
         "| `source/screens_kiosk.py` | wireframes 01–09 |",
-        "| `source/screens_admin.py` | wireframes 10–21 |",
+        "| `source/screens_admin.py` | wireframes 10–25 |",
+        "| `source/roles.py` | which role each wireframe belongs to (README sections and the role tag) |",
         "| `source/swimlane.py` | swimlane layout, symbols and connector routing |",
         "| `source/flows.py`, `source/flows_more.py` | process flows 01–16 |",
         "| `source/export.py` | writes the SVG and makes the PNG with headless Edge |",

@@ -28,7 +28,8 @@ def admin_page(number, name, route, files, h=800, access=BOTH, role="admin", act
     h = max(h, 900)  # room for the whole sidebar menu above the signed-in box
     f = Wireframe(number, name, route, files + ", " + C + "AdminShell.tsx", W, h, SIZE, access)
     f.rect(0, 0, W, h, fill=FILL2, stroke=None)
-    sidebar(f, role, active or route)
+    f.view_role = role
+    sidebar(f, role, (active or route).split("?")[0].split("  ")[0])
     return f
 
 
@@ -530,21 +531,21 @@ def raw_base(f, role="admin", tab=0):
                 [T2(f, "Dish name", "Category"), "4", "Raw material (600 g left)", "Raw material 150 g, Raw material 20 ml"],
                 [T2(f, "Dish name", "Category"), "12", "Raw material (12 pc left)", "Raw material 1 pc, Raw material 200 g"],
                 [T2(f, "Dish name", "Category"), "25", "Raw material (5 kg left)", "Raw material 200 g"],
-                [T2(f, "Dish name", "Category"), P(f, "NO RECIPE", filled=True), "Add its recipe in Products", "—"]]
+                [T2(f, "Dish name", "Category"), P(f, "NO RECIPE", filled=True), "Add its recipe in Products" if admin else "Ask an administrator to add its recipe", "—"]]
         f.table(CX, y + 56, CW, [("Dish", 0.22, "left"), ("Servings", 0.1, "right"), ("Limited by", 0.28, "left"), ("Recipe", 0.4, "left")], rows, rowh=50)
     elif tab == 2:
         chip_row(f, CX, y, ["All (4)", "Needs restock (1)", "Out of stock (0)"])
         y += 46
         top = card(f, CX, y, CW, 56 + 30 + 4 * 46)
-        f.wrap(CX + 18, y + 24, CW - 36, "Sold as they are, so they have no recipe: each order takes one piece, and the item shows as sold out at 0. Add one on the Products page in the Ready-made category.", size=12, fill=INK2)
+        f.wrap(CX + 18, y + 24, CW - 36, "Sold as they are, so they have no recipe: each order takes one piece, and the item shows as sold out at 0." + (" Add one on the Products page in the Ready-made category." if admin else ""), size=12, fill=INK2)
         f.line(CX, y + 56, CX + CW, y + 56, stroke=LINE)
         rows = [["Ready-made item", "24 pcs", "6 pcs", P(f, "OK"), B(f, "Adjust")], ["Ready-made item", "4 pcs", "6 pcs", P(f, "LOW"), B(f, "Adjust")],
                 ["Ready-made item", "36 pcs", "10 pcs", P(f, "OK"), B(f, "Adjust")], ["Ready-made item", "12 pcs", "5 pcs", P(f, "OK"), B(f, "Adjust")]]
         f.table(CX, y + 56, CW, [("Item", 0.4, "left"), ("On hand", 0.13, "right"), ("Min", 0.13, "right"), ("Status", 0.14, "left"), ("Actions", 0.2, "right")], rows, rowh=46)
     elif tab == 4:
-        stock_count_body(f, y, result=False)
+        stock_count_body(f, y, result=False, admin=admin)
     elif tab == 5:
-        stock_count_body(f, y, result=True)
+        stock_count_body(f, y, result=True, admin=admin)
     else:
         fw = 170
         for i, (label, value) in enumerate([("Show", "Raw materials and ready-made"), ("Item", "All items"), ("Change", "All changes")]):
@@ -573,32 +574,47 @@ def raw_materials():
     return f
 
 
+def raw_materials_staff():
+    f = admin_page("14l", "Raw materials (signed in as Staff)", "/admin/raw-materials", RAW_FILES + ", apps/web/src/lib/rawMaterialCategories.ts", h=900, role="staff")
+    raw_base(f, role="staff")
+    f.add_note("The Raw materials tab as Staff see it: the same search, category filter, chips and stock table as the Administrator (14), with Adjust (14b) on each row, but without + Add raw material, Edit and Nutrition, which are admin-only. Staff use this page to restock, record waste and take the stock count (14j).")
+    f.add_note("Staff see quantities only: costs, prices and peso values are admin-only throughout the system.")
+    return f
+
+
+def stock_count_result_staff():
+    f = admin_page("14m", "Raw materials: the count's variance (signed in as Staff)", "/admin/raw-materials?tab=count", C + "StockCountTab.tsx, apps/api/src/modules/inventory/counts.ts", h=1060, role="staff", active="/admin/raw-materials")
+    raw_base(f, role="staff", tab=5)
+    f.add_note("The variance after Staff save a count: expected against counted and the difference in quantities, with what was bought, sold and wasted since the item's previous count. The peso value of each difference and the total are left out; the Administrator sees them (14k).")
+    return f
+
+
 def raw_dishes():
-    f = admin_page("14e", "Raw materials: Dishes (servings)", "/admin/raw-materials?tab=dishes", RAW_FILES + " (DishServings)", h=800)
-    raw_base(f, tab=1)
+    f = admin_page("14e", "Raw materials: Dishes (servings)", "/admin/raw-materials?tab=dishes", RAW_FILES + " (DishServings)", h=800, role="staff", active="/admin/raw-materials")
+    raw_base(f, tab=1, role="staff")
     f.add_note("Each dish's servings: for every raw material in its recipe, the stock divided by the amount one serving uses, and the smallest of those; the raw material that runs out first is the one that limits it. Lowest first. Built from the raw materials' “used in” lists, so Staff see it too (recipes themselves are admin-only).")
     f.add_note("A dish without a recipe shows NO RECIPE (sold out on the kiosk) with “Add its recipe in Products” for an Admin, or “Ask an administrator to add its recipe” for Staff. Ready-made items are on their own tab.")
     return f
 
 
 def raw_ready():
-    f = admin_page("14f", "Raw materials: Ready-made (pieces)", "/admin/raw-materials?tab=ready-made", RAW_FILES + " (ReadyMadeStock)", h=800)
-    raw_base(f, tab=2)
+    f = admin_page("14f", "Raw materials: Ready-made (pieces)", "/admin/raw-materials?tab=ready-made", RAW_FILES + " (ReadyMadeStock)", h=800, role="staff", active="/admin/raw-materials")
+    raw_base(f, tab=2, role="staff")
     f.add_note("Items in the built-in Ready-made category (bottled drinks sold as they are): pieces on hand, minimum and status (LOW at or below the minimum, OUT at 0), with the same All / Needs restock / Out of stock chips. Adjust opens 13b, which logs who changed it and why; the changes appear in Stock movements (14g).")
     return f
 
 
 def raw_movements():
-    f = admin_page("14g", "Raw materials: Stock movements", "/admin/raw-materials?tab=movements", RAW_FILES + " (StockMovements), apps/api/src/modules/inventory/movements.ts", h=820)
-    raw_base(f, tab=3)
+    f = admin_page("14g", "Raw materials: Stock movements", "/admin/raw-materials?tab=movements", RAW_FILES + " (StockMovements), apps/api/src/modules/inventory/movements.ts", h=820, role="staff", active="/admin/raw-materials")
+    raw_base(f, tab=3, role="staff")
     f.add_note("One log of every stock change, newest first, for raw materials and ready-made items together (GET /api/inventory/movements): sales (a dish's raw materials, a ready-made item's pieces), restocks, corrections, spoilage and cancelled orders put back, with who made each change and why. It replaced the separate logs on the Raw materials and Ready-made tabs.")
     f.add_note("Filters: Show (raw materials, ready-made items or both), Item (one raw material or ready-made item), Change (sales, restocks, other adjustments) and From / To (Manila dates, both included); Clear filters resets them. Up to the latest 150 are shown. A ready-made item's sale shows the pieces sold, but not the count before and after, which isn't recorded.")
     return f
 
 
 def adjust_stock():
-    f = admin_page("13b", "Adjust stock of a ready-made item (popup)", "/admin/raw-materials?tab=ready-made  (popup)", C + "AdjustStockModal.tsx, " + RAW_FILES, h=800)
-    raw_base(f, tab=2)
+    f = admin_page("13b", "Adjust stock of a ready-made item (popup)", "/admin/raw-materials?tab=ready-made  (popup)", C + "AdjustStockModal.tsx, " + RAW_FILES, h=800, role="staff", active="/admin/raw-materials")
+    raw_base(f, role="staff", tab=2)
     x, y, w = modal(f, 448, 560)
     f.text(x, y + 12, "ADJUST STOCK", size=11, fill=INK3, bold=True)
     f.icon(x + 10, y + 38, 9)
@@ -622,8 +638,8 @@ def adjust_stock():
 
 
 def raw_adjust():
-    f = admin_page("14b", "Adjust raw material (popup)", "/admin/raw-materials  (popup)", C + "RawMaterialAdjustModal.tsx", h=900)
-    raw_base(f)
+    f = admin_page("14b", "Adjust raw material (popup)", "/admin/raw-materials  (popup)", C + "RawMaterialAdjustModal.tsx", h=900, role="staff", active="/admin/raw-materials")
+    raw_base(f, role="staff")
     x, y, w = modal(f, 448, 480)
     f.text(x, y + 12, "ADJUST RAW MATERIAL", size=11, fill=INK3, bold=True)
     f.text(x, y + 42, "Raw material", size=18, bold=True)
@@ -871,12 +887,15 @@ def planning_fieldset(f, x, y, w, unit):
     f.inp(x + 24 + half, y + 210, half, 30, value="30 days fresh", size=11)
 
 
-def stock_count_body(f, y, result):
+def stock_count_body(f, y, result, admin=True):
     if result:
         top = card(f, CX, y, CW, 386, "Variance · counted Nov 15, 8:10 AM · 2 of 5 off")
-        f.text(CX + 18, top + 26, "Value of the difference: −₱000.00 missing that no sale or recorded waste explains.", size=13, bold=True)
-        rows = [["Raw material", "24.6 kg", "24.5 kg", "−100 g  (−₱5.00)", "first count · bought 25 kg · sold 400 g · wasted 0 g"],
-                ["Raw material", "6.25 kg", "6.1 kg", "−150 g  (−₱54.00)", "counted 6.3 kg · bought 2 kg · sold 1.9 kg · wasted 250 g"],
+        if admin:
+            f.text(CX + 18, top + 26, "Value of the difference: −₱000.00 missing that no sale or recorded waste explains.", size=13, bold=True)
+        else:
+            f.text(CX + 18, top + 26, "2 items differ from what sales, purchases and recorded waste left.", size=13, bold=True)
+        rows = [["Raw material", "24.6 kg", "24.5 kg", "−100 g  (−₱5.00)" if admin else "−100 g", "first count · bought 25 kg · sold 400 g · wasted 0 g"],
+                ["Raw material", "6.25 kg", "6.1 kg", "−150 g  (−₱54.00)" if admin else "−150 g", "counted 6.3 kg · bought 2 kg · sold 1.9 kg · wasted 250 g"],
                 ["Ready-made item", "24 pc", "24 pc", P(f, "MATCHES"), "first count · bought 24 pc · sold 0 pc · wasted 0 pc"],
                 ["Raw material", "30 pc", "30 pc", P(f, "MATCHES"), "first count · bought 30 pc · sold 0 pc · wasted 0 pc"],
                 ["Raw material", "1.2 L", "1.2 L", P(f, "MATCHES"), "counted 2 L · bought 0 ml · sold 800 ml · wasted 0 ml"]]
@@ -898,8 +917,8 @@ def stock_count_body(f, y, result):
 
 
 def stock_count():
-    f = admin_page("14j", "Raw materials: Stock count (count sheet)", "/admin/raw-materials?tab=count", C + "StockCountTab.tsx, " + RAW_FILES, h=860)
-    raw_base(f, tab=4)
+    f = admin_page("14j", "Raw materials: Stock count (count sheet)", "/admin/raw-materials?tab=count", C + "StockCountTab.tsx, " + RAW_FILES, h=860, role="staff", active="/admin/raw-materials")
+    raw_base(f, tab=4, role="staff")
     f.add_note("The count sheet, done before each market trip (about every two weeks): Staff and the Administrator type what's actually there for each raw material and ready-made item (whole pieces for ready-made). The system's figure is hidden while counting, so it doesn't sway the count.")
     f.add_note("Save count asks first, then sets each counted item's stock to the count (a correction in Stock movements, “Stock count”) and records the expected figure: POST /api/inventory/counts. The variance shows next (14k). Past counts are listed below the sheet with Variance to open one.")
     return f
@@ -1051,7 +1070,7 @@ def analytics_stock():
 
 # --- 18 kitchen display ------------------------------------------------------------------
 def kitchen_page(empty):
-    f = admin_page("18b" if empty else "18", "Kitchen display" + (": no active orders" if empty else ""), "/kitchen", A + "kitchen/page.tsx", h=800, active="/kitchen")
+    f = admin_page("18b" if empty else "18", "Kitchen display" + (": no active orders" if empty else ""), "/kitchen", A + "kitchen/page.tsx", h=800, role="staff", active="/kitchen")
     f.rect(CX, 24, CW, 752, fill=FILL4, stroke=None, r=6)
     f.text(CX + 24, 66, "Kitchen Display", size=24, bold=True)
     f.text(CX + 24, 90, "0 active orders" if empty else "3 active orders · 1 ready to hand over", size=13, fill=INK2)
@@ -1183,7 +1202,7 @@ def queue_list(f, y, empty=False):
 
 
 def orders():
-    f = admin_page("19", "Orders awaiting payment: Queue (cancelling some dishes)", "/staff/orders", POS_FILES + ", " + SC + "CancelDishes.tsx", h=1000, active="/staff/orders")
+    f = admin_page("19", "Orders awaiting payment: Queue (cancelling some dishes)", "/staff/orders", POS_FILES + ", " + SC + "CancelDishes.tsx", h=1000, role="staff", active="/staff/orders")
     y = orders_header(f, 0)
     queue_list(f, y)
     f.add_note("The counter's light point of sale (panel feedback), in three tabs kept in the address: Queue, New order (19e, ?tab=new) and Paid orders (19f, ?tab=paid). The Queue lists unpaid, not-cancelled orders plus orders flagged for attention (newest first, up to 50); search ignores spaces and dashes; a walk-in order rung up on New order is tagged WALK-IN.")
@@ -1194,7 +1213,7 @@ def orders():
 
 
 def orders_empty():
-    f = admin_page("19b", "Orders awaiting payment: nothing waiting", "/staff/orders", POS_FILES, h=800, active="/staff/orders")
+    f = admin_page("19b", "Orders awaiting payment: nothing waiting", "/staff/orders", POS_FILES, h=800, role="staff", active="/staff/orders")
     y = orders_header(f, 0, queue=0)
     queue_list(f, y, empty=True)
     f.add_note("Shown only after a successful load. If loading fails, an alert “Couldn't load the orders.” with Retry appears instead. The list reloads by itself (orders:changed) when an order is placed, paid, edited or cancelled anywhere.")
@@ -1202,7 +1221,7 @@ def orders_empty():
 
 
 def payment_panel():
-    f = admin_page("19c", "Take payment (popup)", "/staff/orders  (popup)", SC + "PaymentPanel.tsx, " + POS_FILES, h=1000, active="/staff/orders")
+    f = admin_page("19c", "Take payment (popup)", "/staff/orders  (popup)", SC + "PaymentPanel.tsx, " + POS_FILES, h=1000, role="staff", active="/staff/orders")
     y = orders_header(f, 0)
     queue_list(f, y)
     x, y, w = modal(f, 448, 470, y=170)
@@ -1226,7 +1245,7 @@ def payment_panel():
 
 
 def counter_receipt():
-    f = admin_page("19d", "Counter receipt (popup)", "/staff/orders  (popup)", SC + "CounterReceipt.tsx, apps/web/src/lib/receiptPrinter.ts", h=1000, active="/staff/orders")
+    f = admin_page("19d", "Counter receipt (popup)", "/staff/orders  (popup)", SC + "CounterReceipt.tsx, apps/web/src/lib/receiptPrinter.ts", h=1000, role="staff", active="/staff/orders")
     y = orders_header(f, 0)
     queue_list(f, y)
     x, y, w = modal(f, 384, 560, y=150)
@@ -1255,7 +1274,7 @@ def counter_receipt():
 
 
 def counter_receipt_cancelled():
-    f = admin_page("19g", "Counter receipt after a dish is cancelled (printed)", "/staff/orders?tab=paid  (popup)", SC + "CounterReceipt.tsx, apps/web/src/lib/receiptPrinter.ts", h=1000, active="/staff/orders")
+    f = admin_page("19g", "Counter receipt after a dish is cancelled (printed)", "/staff/orders?tab=paid  (popup)", SC + "CounterReceipt.tsx, apps/web/src/lib/receiptPrinter.ts", h=1000, role="staff", active="/staff/orders")
     y = orders_header(f, 2)
     paid_list(f, y, cancelling=False)
     x, y, w = modal(f, 384, 540, y=150)
@@ -1284,7 +1303,7 @@ def counter_receipt_cancelled():
 
 
 def new_order():
-    f = admin_page("19e", "Orders awaiting payment: New order (walk-in)", "/staff/orders?tab=new", SC + "PosNewOrder.tsx, " + POS_FILES, h=900, active="/staff/orders")
+    f = admin_page("19e", "Orders awaiting payment: New order (walk-in)", "/staff/orders?tab=new", SC + "PosNewOrder.tsx, " + POS_FILES, h=900, role="staff", active="/staff/orders")
     y = orders_header(f, 1)
     mw = CW - 18 - 340
     f.inp(CX, y, 300, 38, placeholder="Search dishes")
@@ -1351,7 +1370,7 @@ def paid_list(f, y, cancelling=True):
 
 
 def paid_orders():
-    f = admin_page("19f", "Orders awaiting payment: Paid orders (cancelling some dishes)", "/staff/orders?tab=paid", SC + "PaidOrders.tsx, " + SC + "CancelDishes.tsx, " + POS_FILES, h=960, active="/staff/orders")
+    f = admin_page("19f", "Orders awaiting payment: Paid orders (cancelling some dishes)", "/staff/orders?tab=paid", SC + "PaidOrders.tsx, " + SC + "CancelDishes.tsx, " + POS_FILES, h=960, role="staff", active="/staff/orders")
     y = orders_header(f, 2)
     paid_list(f, y)
     f.add_note("Paid orders not yet handed over (GET /api/orders?inKitchen=1), oldest first, each dish with its kitchen progress (not started, cooking, done), the order's status and how it was paid; updates live as the kitchen works. Receipt shows the receipt again (19d, 19g).")
@@ -1628,14 +1647,14 @@ SCREENS = [login, login_error, login_code, dashboard, dashboard_staff, products,
            product_delete, raw_materials, raw_adjust, raw_form, raw_form_edit, raw_remove, stock_count, stock_count_result, raw_nutrition, raw_dishes, raw_ready, adjust_stock, raw_movements,
            bulk_import, bulk_import_result, analytics, analytics_stock, kitchen, kitchen_empty, orders, orders_empty, payment_panel, counter_receipt,
            new_order, paid_orders, counter_receipt_cancelled, users, invite_user, confirm_change, edit_user, kiosk_qr, kiosk_qr_invalid, categories, transactions,
-           status_board, shopping_list, purchase_form, purchase_list, price_history]
+           status_board, shopping_list, purchase_form, purchase_list, price_history, raw_materials_staff, stock_count_result_staff]
 
 SLUGS = {
     "10": "login", "10b": "login-error", "10c": "login-code", "11": "dashboard", "11b": "dashboard-staff", "12": "products",
     "12b": "product-form-add", "12c": "product-form-recipe", "12d": "product-delete", "12e": "product-form-ready-made",
     "13b": "adjust-stock", "14": "raw-materials", "14b": "raw-material-adjust", "14c": "raw-material-form",
     "14d": "raw-material-nutrition", "14e": "raw-materials-dishes", "14f": "raw-materials-ready-made", "14g": "stock-movements", "14h": "raw-material-edit-remove",
-    "14i": "raw-material-remove", "14j": "stock-count", "14k": "stock-count-variance",
+    "14i": "raw-material-remove", "14j": "stock-count", "14k": "stock-count-variance", "14l": "raw-materials-staff", "14m": "stock-count-variance-staff",
     "16": "bulk-import-preview", "16b": "bulk-import-result", "17": "analytics", "17b": "analytics-food-cost-usage", "18": "kitchen-display", "18b": "kitchen-display-empty",
     "19": "orders-awaiting-payment", "19b": "orders-awaiting-payment-empty", "19c": "take-payment", "19d": "counter-receipt",
     "19e": "new-order", "19f": "paid-orders", "19g": "counter-receipt-cancelled-dish", "20": "users-roles", "20b": "invite-user", "20c": "confirm-user-change",

@@ -3,6 +3,8 @@
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">06  “Still there?” idle popup</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /, /checkout, /checkout/success   ·   Screen: 1024 × 600 kiosk touchscreen, landscape   ·   Access: Customer (kiosk site, no login)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/components/kiosk/IdleTimeoutOverlay.tsx, apps/web/src/hooks/useIdleTimer.ts</text>
+<rect x="960.72" y="12" width="87.28" height="28" rx="14" fill="#222222"/>
+<text x="1004.36" y="31" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">CUSTOMER</text>
 <text x="24" y="722" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="742" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Appears after 60 seconds with no touch, key or mouse movement (not on the welcome screen). “I&#x27;m still here” restarts the timer.</text>
 <text x="24" y="761" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• With no answer for 20 more seconds the order is cleared and the kiosk goes back to the welcome screen (01).</text>

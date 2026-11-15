@@ -3,6 +3,8 @@
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">24  Order status board (screen at the counter)</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /board   ·   Screen: 1280 × 720 screen at the counter (TV or monitor), landscape   ·   Access: Anyone (no login; kiosk or admin site)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/board/page.tsx</text>
+<rect x="1216.72" y="12" width="87.28" height="28" rx="14" fill="#222222"/>
+<text x="1260.36" y="31" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">CUSTOMER</text>
 <text x="24" y="842" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="862" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The customer&#x27;s ready notice. Paid orders show under Preparing while the kitchen works on them (oldest first), then move to Ready for pickup when their last dish is done (newest first,</text>
 <text x="24" y="881" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   highlighted for 15 seconds, with a two-note chime). They leave when the kitchen presses Handed over (18).</text>

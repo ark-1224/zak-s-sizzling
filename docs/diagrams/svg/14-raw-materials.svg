@@ -3,6 +3,8 @@
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">14  Raw materials</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin/raw-materials   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/admin/raw-materials/page.tsx, apps/web/src/lib/rawMaterialCategories.ts, apps/web/src/components/admin/AdminShell.tsx</text>
+<rect x="972.19" y="12" width="331.81" height="28" rx="14" fill="#222222"/>
+<text x="1138.095" y="31" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">ADMINISTRATOR VIEW  ·  Staff version: 14l</text>
 <text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• The whole inventory (panel feedback: every dish is made from a bill of materials). Four tabs: Raw materials, Dishes (servings) (14e), Ready-made (pieces) (14f) and Stock movements (14g);</text>
 <text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   the old Inventory page (/admin/inventory) opens the Dishes tab.</text>

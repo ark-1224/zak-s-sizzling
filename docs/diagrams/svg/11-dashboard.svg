@@ -3,6 +3,8 @@
 <text x="24" y="32" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" fill="#222222">11  Live stock dashboard</text>
 <text x="24" y="54" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Route: /admin   ·   Screen: 1280 px wide desktop browser   ·   Access: Admin and Staff (admin site, signed in)</text>
 <text x="24" y="73" font-family="Arial, Helvetica, sans-serif" font-size="12.5" fill="#555555">Code: apps/web/src/app/admin/page.tsx, apps/web/src/components/admin/ui.tsx (KpiTile), apps/web/src/components/admin/AdminShell.tsx</text>
+<rect x="972.19" y="12" width="331.81" height="28" rx="14" fill="#222222"/>
+<text x="1138.095" y="31" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">ADMINISTRATOR VIEW  ·  Staff version: 11b</text>
 <text x="24" y="1022" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#222222">Notes</text>
 <text x="24" y="1042" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">• Landing page after sign-in. Every dish is made from a bill of materials (panel feedback), so stock is counted in raw materials, plus the ready-made items (sold as they are, counted in</text>
 <text x="24" y="1061" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#555555" xml:space="preserve">   pieces). The notice and the Needs restock / Out of stock tiles count both.</text>

@@ -6,6 +6,7 @@ Writes docs/diagrams/svg/*.svg and docs/diagrams/png/*.png.
 import sys
 
 from export import export
+import roles
 
 
 def wireframes(prefix=""):
@@ -17,6 +18,10 @@ def wireframes(prefix=""):
             f = make()
             if not f.number.startswith(prefix):
                 continue
+            f.view = roles.tag(f.number)
+            drawn = getattr(f, "view_role", None)
+            if drawn:  # the sidebar must match the section the screen is listed under
+                assert (drawn == "staff") == (roles.section_of(f.number) == "Staff"), f.number
             name = f"{f.number}-{module.SLUGS[f.number]}"
             w, h = f.size
             path, size = export(name, f.svg(), w, h)

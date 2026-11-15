@@ -41,6 +41,7 @@ class Wireframe:
         self.el = []
         self._clip_id = 0
         self.notes = []  # shown under the frame: states, conditions, "partial" flags
+        self.view = None  # role tag at the top right (set from roles.py)
 
     def add_note(self, text):
         self.notes.append(text)
@@ -271,6 +272,11 @@ class Wireframe:
             f'Route: {escape(self.route)}   ·   Screen: {escape(self.screen_note)}   ·   Access: {escape(self.access)}</text>',
             f'<text x="{PAD}" y="73" font-family="{FONT}" font-size="12.5" fill="{INK2}">Code: {escape(self.files)}</text>',
         ]
+        if self.view:
+            tw = text_width(self.view, 13, bold=True) + 28
+            head.append(f'<rect x="{total_w - PAD - tw}" y="12" width="{tw}" height="28" rx="14" fill="{INK}"/>')
+            head.append(f'<text x="{total_w - PAD - tw / 2}" y="31" font-family="{FONT}" font-size="13" font-weight="700" '
+                        f'fill="{WHITE}" text-anchor="middle">{escape(self.view)}</text>')
         note_lines = self._note_lines()
         if note_lines:
             ny = HEADER_H + self.h + 30
