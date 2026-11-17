@@ -3,9 +3,9 @@ rem Starts the receipt print service on a Windows computer (the counter laptop).
 rem
 rem 1. Type the receipt printer's name between = and the closing quote below, exactly as
 rem    Windows shows it in Settings > Bluetooth & devices > Printers & scanners.
-rem 2. Double-click this file to try it: the window shows "found ... in Windows".
+rem 2. Double-click this file to try it: the window shows "printer ok: ...".
 rem 3. Then run autostart-windows.bat once, so it starts by itself with Windows.
-set "PRINTER_NAME="
+set "PRINTER_NAME=RP21UB-Y"
 
 cd /d "%~dp0"
 if "%PRINTER_NAME%"=="" (
