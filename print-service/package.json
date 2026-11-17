@@ -2,7 +2,7 @@
   "name": "zaks-print-service",
   "private": true,
   "version": "0.1.0",
-  "description": "Prints the kiosk's receipt and kitchen copy on the Raspberry Pi's thermal printer",
+  "description": "Prints the receipts and kitchen tickets on the 58 mm thermal printers (Raspberry Pi or Windows)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

@@ -16,7 +16,8 @@ apps/
 packages/
   shared-types/   Types shared between web and api (entities, WS event map)
 print-service/    Runs next to each thermal printer: the customer receipt on the kiosk's
-                  Raspberry Pi, the kitchen ticket on the kitchen display's device
+                  Raspberry Pi, the kitchen ticket on the kitchen display's device, the
+                  counter receipt on the counter's Windows laptop
                   (not an npm workspace; see its README)
 ```
 
@@ -422,6 +423,21 @@ order is paid. Offline/PWA support was removed from scope.
   cost and the waste reasons. Verified with unit tests (`market.test.ts`: the shopping-list
   rule, freshness and recipe cost) and integration tests (`market-purchasing.test.ts`), and
   every changed page compiles and loads on the dev server.
+
+- **Counter receipt from a Windows laptop (17 November 2026)** — the counter uses a
+  Windows laptop with the RP21UB-Y plugged in by USB, and Windows has no `/dev/usb/lp0`.
+  The print service now also prints by the printer's **name in Windows**
+  (`PRINTER_NAME`): the same receipt bytes go to Windows' print spooler as a RAW job
+  (`print-service/windowsPrinter.js` and `raw-print.ps1`, using only PowerShell, which
+  comes with Windows), so the receipt looks the same as on the kiosk, prints without a
+  dialog and is cut. It checks the printer when it starts and before each receipt; if
+  Windows has no printer by that name or reports it offline, the receipt offers the
+  browser's printing as before. `start-windows.bat` starts it and `autostart-windows.bat`
+  makes it start with Windows. Set-up steps are in
+  [print-service/README.md](print-service/README.md#counter-laptop-on-windows). The Pi's
+  `/dev/usb/lp0` printing is unchanged. Tested on Windows without a receipt printer: the
+  printer checks, the error and offline answers, and the receipt bytes (the same buffer the
+  Pi sends); the first real print is on the counter laptop.
 
 ## Prerequisites
 

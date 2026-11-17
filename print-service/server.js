@@ -9,6 +9,11 @@
 //   awaiting payment, with the cash received and the change, or the GCash / Maya
 //   reference number; sent by apps/web/src/components/staff/CounterReceipt.tsx.
 //
+// On Linux (the Raspberry Pis) the printer is the device file PRINTER_INTERFACE
+// (/dev/usb/lp0). On Windows (the counter laptop) set PRINTER_NAME to the printer's name
+// in Windows instead: the same bytes then go through Windows' print spooler
+// (windowsPrinter.js).
+//
 // It listens on 127.0.0.1 only, so just a page open on that device can reach it.
 const express = require("express");
 const cors = require("cors");
@@ -16,6 +21,10 @@ const { ThermalPrinter, PrinterTypes } = require("node-thermal-printer");
 
 const PORT = Number(process.env.PORT) || 4000;
 const PRINTER_INTERFACE = process.env.PRINTER_INTERFACE || "/dev/usb/lp0";
+// The printer's name in Windows (Settings > Printers & scanners). When set, receipts are
+// sent to it through Windows instead of to PRINTER_INTERFACE.
+const PRINTER_NAME = (process.env.PRINTER_NAME || "").trim();
+const windowsPrinter = PRINTER_NAME ? require("./windowsPrinter") : null;
 const LINE_WIDTH = 32; // characters per line on 58 mm paper
 // Only the system's own sites may print; any other page open in the browser is refused.
 const ALLOWED_ORIGINS = (
@@ -145,6 +154,10 @@ function print(res, layout) {
 // A printer that stops answering (paper jam, unplugged mid-job) mustn't hold up the
 // queue: the page that asked gives up after 8 s and sends the job again later.
 const PRINT_TIMEOUT_MS = 10_000;
+// On Windows a job that is stopped after Windows has queued it still prints, so the limit
+// is kept under the page's 8 s: the page never offers "Print with this computer" for a
+// receipt that then prints anyway. (A receipt normally takes 1 to 2 s.)
+const WINDOWS_PRINT_TIMEOUT_MS = 7_000;
 const timeout = (ms) =>
   new Promise((_, reject) => setTimeout(() => reject(new Error(`the printer didn't answer within ${ms / 1000} s`)), ms).unref());
 
@@ -157,7 +170,13 @@ async function printNow(res, layout, pageGaveUp) {
     const printer = newPrinter();
     layout(printer);
     endSlip(printer);
-    await Promise.race([printer.execute(), timeout(PRINT_TIMEOUT_MS)]);
+    if (windowsPrinter) {
+      // Has its own time limit, which also stops the job, so it can't print after the page
+      // has given up (and sent the job again).
+      await windowsPrinter.sendRaw(PRINTER_NAME, printer.getBuffer(), { timeoutMs: WINDOWS_PRINT_TIMEOUT_MS });
+    } else {
+      await Promise.race([printer.execute(), timeout(PRINT_TIMEOUT_MS)]);
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -193,4 +212,15 @@ app.post("/print/kitchen", async (req, res) => {
   await print(res, (printer) => kitchenTicket(printer, { orderNumber, items }));
 });
 
-app.listen(PORT, "127.0.0.1", () => console.log(`print service on 127.0.0.1:${PORT} -> ${PRINTER_INTERFACE}`));
+app.listen(PORT, "127.0.0.1", () => {
+  console.log(`print service on 127.0.0.1:${PORT} -> ${PRINTER_NAME ? `Windows printer "${PRINTER_NAME}"` : PRINTER_INTERFACE}`);
+  if (windowsPrinter) {
+    // Say straight away whether the name matches a printer, rather than at the first receipt.
+    windowsPrinter
+      .checkPrinter(PRINTER_NAME)
+      .then((line) => console.log(`printer ${line}`))
+      .catch((err) => console.error(err.message));
+  } else if (process.platform === "win32" && !process.env.PRINTER_INTERFACE) {
+    console.error("On Windows, set PRINTER_NAME to the receipt printer's name (Settings > Printers & scanners); /dev/usb/lp0 is Linux only.");
+  }
+});

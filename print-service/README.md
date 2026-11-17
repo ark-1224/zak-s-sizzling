@@ -67,9 +67,10 @@ printer, or `{ "ok": false, "error": "…" }` with status 400, 403 or 500.
 
 ## Setup on each device
 
-The steps are the same on the kiosk's Pi, the kitchen device and the counter computer (a
-Raspberry Pi or another Linux computer with Node.js; the printer is reached at
-`/dev/usb/lp0`, which Windows doesn't have).
+The steps are the same on the kiosk's Pi, the kitchen device and a Linux counter computer
+(a Raspberry Pi or another Linux computer with Node.js; the printer is reached at
+`/dev/usb/lp0`). For a **Windows** counter laptop, follow
+[Counter laptop on Windows](#counter-laptop-on-windows) instead.
 
 1. Copy this folder to the device (for example `~/print-service`), then install its
    packages:
@@ -113,9 +114,86 @@ Settings, as environment variables (all optional):
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PRINTER_INTERFACE` | `/dev/usb/lp0` | Where the printer is connected |
+| `PRINTER_INTERFACE` | `/dev/usb/lp0` | Where the printer is connected (Linux) |
+| `PRINTER_NAME` | none | Windows only: the printer's name in Windows. When set, receipts go to that printer through Windows' print spooler and `PRINTER_INTERFACE` is not used. `start-windows.bat` sets it |
 | `PORT` | `4000` | Port to listen on. If you change it, set `NEXT_PUBLIC_PRINT_SERVICE_URL` on the kiosk and admin sites to match |
 | `ALLOWED_ORIGINS` | `https://web-production-ba868.up.railway.app,https://zaks-sizzling-hub-admin.up.railway.app,http://localhost:3000` | Comma-separated sites allowed to print. Requests from any other site are refused (403), so another page open in the browser can't print. Set it if a site's address changes (for example a custom domain) |
+
+## Counter laptop on Windows
+
+On Windows a USB printer has no address like `/dev/usb/lp0`, so the print service sends the
+receipt to the printer by its **name in Windows**, through Windows' own print spooler, as a
+RAW print job: the same printer commands the Raspberry Pi sends, so the receipt looks the
+same, prints without a dialog and is cut. The Windows part is `windowsPrinter.js` and
+`raw-print.ps1` (PowerShell, which comes with Windows); nothing else needs installing.
+
+### 1. Install the printer in Windows
+
+1. Plug the RP21UB-Y into the laptop with its USB cable, load paper and switch it on.
+2. Install its Windows driver from the CD or the seller's download page (often called
+   "POS-58" or "58mm thermal printer driver"), then check that it appears in
+   **Settings › Bluetooth & devices › Printers & scanners**.
+3. No driver? Add it with Windows' built-in one: **Printers & scanners › Add device ›
+   Add manually › Add a local printer or network printer with manual settings**, choose the
+   existing port **USB001** (Virtual printer port for USB), then the driver **Generic ›
+   Generic / Text Only**, and name it, for example `RP21UB-Y`. This works because the
+   receipt is sent raw: the driver only passes the bytes through.
+4. Note the printer's name exactly as Windows shows it.
+
+### 2. Install the print service
+
+1. Install **Node.js** (the LTS version) from <https://nodejs.org>, with the default options.
+2. Copy this `print-service` folder to the laptop, for example to `C:\ZaksPrint`.
+3. Open `start-windows.bat` in Notepad and type the printer's name on the line
+   `set "PRINTER_NAME="`, for example `set "PRINTER_NAME=RP21UB-Y"`. Save it.
+4. Double-click `start-windows.bat`. The first time it installs its packages (a minute,
+   needs the internet). The window should then show:
+
+   ```text
+   print service on 127.0.0.1:4000 -> Windows printer "RP21UB-Y"
+   printer ok: 'RP21UB-Y' on port USB001, driver …
+   ```
+
+   If the name is wrong, it lists the printers Windows has instead; fix the name and start it
+   again. Leave the window open while testing; closing it stops the service.
+
+### 3. Test print
+
+With the window from step 2 open, open **Windows PowerShell** and run:
+
+```powershell
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:4000/print -ContentType "application/json" -Body '{"orderNumber":"TEST-2","items":[{"qty":1,"name":"Beef Tapa","price":220}],"total":220,"orderType":"dine_in","paid":true,"paymentMethod":"counter","amountTendered":500,"change":280,"estimatedPrepMinutes":10}'
+```
+
+A receipt prints and the answer is `ok: True`.
+
+### 4. Start it with Windows
+
+Close the test window, then double-click `autostart-windows.bat` once. It puts a small
+starter in the Windows Startup folder, so the print service starts by itself, without a
+window, whenever this Windows user signs in, and starts it now. Its messages go to
+`print-service.log` in the folder. To stop it starting by itself, press **Windows+R**,
+type `shell:startup`, press Enter and delete **Zaks print service.vbs**. To stop it now,
+end **Node.js JavaScript Runtime** in Task Manager.
+
+### 5. Switch it on in the browser
+
+In Chrome or Edge on the laptop, open Orders awaiting payment once with `?printer=1`:
+`https://zaks-sizzling-hub-admin.up.railway.app/staff/orders?printer=1` (sign in if asked).
+The first time, the browser asks whether the site may access devices on the local network:
+choose **Allow**; it remembers this for the site. **Print receipt** then prints on the
+receipt printer.
+
+### Good to know
+
+- If Windows reports the printer offline, or it has no printer by that name, the receipt
+  says the printer didn't answer and offers **Print with this computer** (the browser's own
+  printing).
+- Windows keeps a print job in its queue. If the printer is switched off but Windows hasn't
+  noticed (some USB printers don't report it), the receipt waits in the queue and prints once
+  the printer is back on, rather than offering the browser's printing.
+- A receipt takes about one to two seconds; the very first one after starting can take a
+  little longer.
 
 ## Always allow the sites to use the printer (Chromium)
 
